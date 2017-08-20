@@ -7,56 +7,9 @@
 #
 #  samplerbox.py: Main file
 #
-#   SamplerBox extended by https://www.facebook.com/hanshom
-#                          see docs at  http://homspace.xs4all.nl/homspace/samplerbox
-#   April 10 2016 based on Joseph's June 19th 2015 version
-#       - Play samples in playback mode (ignoring normal note-off),
-#         driven by "mode=keyb|once|on64|loop" in definition.txt, default=once
-#       - filter the midi channel (see LOCAL CONFIG below)
-#       - Presets 1-16 instead of 0-15, so the preset/folder name and program change number correspond
-#       - Replaced 7segment display code by 16x2LCD
-#       - Use 3 buttons: one for choosing functions and two other for +/-.
-#         functions: preset, channel, volume, transpose, renewUSB/MidiMute.
-#       - Volume handling based on code by Mirco: http://www.samplerbox.org/forum/51
-#   June 18 2016
-#       - changed volume handling from process approach to API (alsaaudio) to improve stability
-#       - Included accurate velocity control by Erik Nieuwlands: http://www.nickyspride.nl/sb2/
-#       - fixed memory leak caused by ignored note-off.
-#         Done by removing playingnotes entries when same note is triggerered again, so theoretical max now 64 or 128 active notes, depending play mode.
-#         Solution may still conflict with polyphony restriction..open point for some next release..
-#   July 2 2016
-#       - Set midinote 60 to middle C (C4).
-#       - commented most print statements
-#   July 23 2016
-#       - Implemented gain parameter in definition.txt to adjust to sample set input level.
-#       - removed volume from definition.txt, this is not logical anymore (use buttons for this)
-#   July 31 2016
-#       - Implemented release parameter in definition.txt to adjust to fadeout time.
-#   August 30 2016
-#       - Implemented mode=Loo2, to enable ending loop with the same key
-#         This mimics Korgs' KAOSS and some groove boxes.
-#         Mind samples without loop markers: you have to "end" them too before playing again
-#         This explains also why there is no "once" equivalent; I think it's too inconvenient.
-#       - Added tables to init when patch loads ((sustain)playingnotes etc)
-#   November 5 2016 (about to publish)
-#       - Implemented MIDI controller volume knob. NB: it cannot read initial position, so you
-#         must use this knob once to start working properly. Initial value is 127 (max volume).
-#         When changing patches, the last value received from controller will be kept.
-#       - Replaced import "rtmidi_python as rtmidi" with rtmidi2
-#         see https://pypi.python.org/pypi/rtmidi2 for download and (install) docs
-#         Done for using multiple midi inputs (and more stability in general).
-#       - Implemented voices by AlexM: http://www.samplerbox.org/forum/184 (minor changes after testing)
-#       - Implemented "all sounds/notes off" (used by panic buttons) and changed patch load accordingly.
-#       - Implemented chords logic, starting with button control
-#       - Adapted screen and button behaviour to facilitate new features
-#       - Merged with Joseph's http://samplerbox.org/files/images/samplerbox_20160831.zip: Pi3 support + sounddevice.
-#         See Blog and http://samplerbox.org/forum/176.
-#       - Made opening of alsamixer dynamic because cardindex changes with the number of midi usb devices
-#         Plugin of a new midi device may still result in no sound, then restart or poweroff/on
-#         But alsamixer = physical volume control is now optional by local config below....
-#       - Implemented pitch-bend. Requires adaptation+regeneration of the samplerbox_audio module
-#       - Made "Presets 1-16 instead of 0-15" optional by parameter PRESETBASE
-#       - Cleaned up and made code code more robust
+#   SamplerBox extended by HansEhv
+#   see docs at  http://homspace.xs4all.nl/homspace/samplerbox
+#   changelog in changelog.txt
 #
 
 ########  LITERALS, don't change ########
@@ -73,8 +26,6 @@ VELACCURATE = "Accurate"                # velocity as played, allows for multipl
 #########################################
 
 AUDIO_DEVICE_ID = 2                     # change this number to use another soundcard, default=0
-MIXER_CARD_ID = 1                       # change this number to start checking with other card index, default=0
-MIXER_CONTROL = "Speaker"               # change this name according soundcard, default="PCM"
 SAMPLES_DIR = "/media/"                 # The root directory containing the sample-sets. Example: "/media/" to look for samples on a USB stick / SD card
 USE_SERIALPORT_MIDI = False             # Set to True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
 USE_HD44780_16x2_LCD = True             # Set to True to use a HD44780 based 16x2 LCD
@@ -86,11 +37,16 @@ sample_mode = PLAYLIVE                  # we need a default: original samplerbox
 velocity_mode = VELSAMPLE               # we need a default: original samplerbox
 volume = 87                             # the startup (alsa=output) volume (0-100), change with function buttons
 volumeCC = 1.0                          # assumed value of the volumeknob controller before first use, max=1.0 (the knob can only decrease).
-PRESETBASE = 1                          # Does the programchange / sample set start at 0 (MIDI style) or 1 (human style)
+BOXRELEASE = 30                         # 30 results in the samplerbox default (FADEOUTLENGTH=30000)
+PRESETBASE = 0                          # Does the programchange / sample set start at 0 (MIDI style) or 1 (human style)
 preset = 0 + PRESETBASE                 # the default patch to load
 PITCHRANGE = 12                         # default range of the pitchwheel in semitones (max=12 is een octave)
 PITCHBITS = 7                           # pitchwheel resolution, 0=disable, max=14 (=16384 steps)
                                         # values below 7 will produce bad results
+
+if USE_ALSA_MIXER:
+    ########## Mixercontrols I experienced, add your soundcard's specific....
+    MIXER_CONTROL = ["PCM","Speaker","Headphone"]
 
 ########## Chords definitions  # You always need index=0 (is single note, "normal play")
 
@@ -103,6 +59,7 @@ currchord=0                             # single note, "normal play"
 samples = {}
 playingnotes = {}
 sustainplayingnotes = []
+triggernotes = []
 sustain = False
 playingsounds = []
 globaltranspose = 0
@@ -110,12 +67,17 @@ voices=[]
 currvoice = 1
 midi_mute = False
 gain = 1                                # the input volume correction, change per set in definition.txt
+PRERELEASE = BOXRELEASE
 PITCHBEND = 0
+PITCHRANGE *= 2     # actually it is 12 up and 12 down
 pitchnotes = PITCHRANGE
 PITCHSTEPS = 2**PITCHBITS
 pitchneutral = PITCHSTEPS/2
 pitchdiv = 2**(14-PITCHBITS)
-
+if AUDIO_DEVICE_ID > 0:
+    MIXER_CARD_ID = AUDIO_DEVICE_ID-1  # This may vary with your HW. The jack/HDMI of PI use 1 alsa card index
+else:
+    MIXER_CARD_ID = 0
 
 #########################################
 ##  IMPORT 
@@ -152,68 +114,63 @@ class HD44780:
         self.pin_rs=pin_rs
         self.pin_e=pin_e
         self.pins_db=pins_db
-
+        self.bits=len(pins_db)
+        if  not (self.bits==4 or self.bits==8):
+            print "HD44780: use/define exactly 4 or 8 datapins"
+            exit(1)
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.pin_e, GPIO.OUT)
         GPIO.setup(self.pin_rs, GPIO.OUT)
         for pin in self.pins_db:
             GPIO.setup(pin, GPIO.OUT)
-
         self.clear()
 
     def clear(self):
         """ Blank / Reset LCD """
-        
         self.cmd(0x33) # Initialization by instruction
         msleep(5)
         self.cmd(0x33)
         usleep(100)
-        self.cmd(0x32) # set to 4-bit mode
-        self.cmd(0x28) # Function set: 4-bit mode, 2 lines
-        #self.cmd(0x38) # Function set: 8-bit mode, 2 lines
+        if self.bits==4:
+            self.cmd(0x32) # set to 4-bit mode
+            self.cmd(0x28) # Function set: 4-bit mode, 2 lines
+        else:
+            self.cmd(0x38) # Function set: 8-bit mode, 2 lines
         self.cmd(0x0C) # Display control: Display on, cursor off, cursor blink off
         self.cmd(0x06) # Entry mode set: Cursor moves to the right
         self.cmd(0x01) # Clear Display: Clears the display & set cursor position to line 1 column 0
         
-    def cmd(self, bits, char_mode=False):
+    def cmd(self, bits, char_mode=0):
         """ Send command to LCD """
-
         sleep(0.001)
         bits=bin(bits)[2:].zfill(8)
-
         GPIO.output(self.pin_rs, char_mode)
-
         for pin in self.pins_db:
-            GPIO.output(pin, False)
-
-        #for i in range(8):       # use range 4 for 4-bit operation
-        for i in range(4):       # use range 4 for 4-bit operation
+            GPIO.output(pin, 0)
+        for i in range(self.bits):
             if bits[i] == "1":
-                GPIO.output(self.pins_db[::-1][i], True)
+                GPIO.output(self.pins_db[::-1][i], 1)
+        self.toggle_enable()
+        if self.bits==4:
+            for pin in self.pins_db:
+                GPIO.output(pin, 0)
+            for i in range(4,8):
+                if bits[i] == "1":
+                    GPIO.output(self.pins_db[::-1][i-4], 1)
+            self.toggle_enable()
 
-        GPIO.output(self.pin_e, True)
+    def toggle_enable(self):
+        """ Pulse the enable flag to process data """
+        GPIO.output(self.pin_e, 0)
         usleep(1)      # command needs to be > 450 nsecs to settle
-        GPIO.output(self.pin_e, False)
-        usleep(100)    # command needs to be > 37 usecs to settle
-
-        """ 4-bit operation start """
-        for pin in self.pins_db:
-            GPIO.output(pin, False)
-
-        for i in range(4,8):
-            if bits[i] == "1":
-                GPIO.output(self.pins_db[::-1][i-4], True)
-
-        GPIO.output(self.pin_e, True)
+        GPIO.output(self.pin_e, 1)
         usleep(1)      # command needs to be > 450 nsecs to settle
-        GPIO.output(self.pin_e, False)
+        GPIO.output(self.pin_e, 0)
         usleep(100)    # command needs to be > 37 usecs to settle
-        """ 4-bit operation end """
 
     def message(self, text):
         """ Send string to LCD. Newline wraps to second line"""
-
-        self.cmd(0x01) # Clear Display: Clears the display & set cursor position to line 1 column 0
+        self.cmd(0x02)  # go home first
         x = 0
         for char in text:
             if char == '\n':
@@ -221,7 +178,7 @@ class HD44780:
                 x = 0
             else:
                 x += 1
-                if x < 17: self.cmd(ord(char),True)
+                if x < 17: self.cmd(ord(char),1)
 
 if USE_HD44780_16x2_LCD:
     import RPi.GPIO as GPIO
@@ -229,21 +186,23 @@ if USE_HD44780_16x2_LCD:
     lcd = HD44780()
 
     def display(s2):
-        #lcd.clear()
-        global basename, sample_mode, volume, globaltranspose, currvoice, currchord, chordname, buttfunc
-        if USE_ALSA_MIXER:
-            s1 = "%s %s %d%% %+d" % (chordname[currchord], sample_mode, volume, globaltranspose)
+        global basename, sample_mode, volume, globaltranspose, currvoice, currchord, chordname, button_disp, buttfunc
+        if globaltranspose == 0:
+            transpose = ""
         else:
-            s1 = "%s %s %+d" % (chordname[currchord], sample_mode, globaltranspose)
+            transpose = "%+d" % globaltranspose
+        if USE_ALSA_MIXER:
+            s1 = "%s %s %d%% %s" % (chordname[currchord], sample_mode, volume, transpose)
+        else:
+            s1 = "%s %s %s" % (chordname[currchord], sample_mode, transpose)
         if s2 == "":
             if currvoice>1: s2=str(currvoice)+":"
-            s2 += basename + " "*15
+            s2 += basename
             if buttfunc>0:
-                s2 = s2[:14] + "*"+button_disp[buttfunc]
-        #print "display: %s \\ %s" % (s1, s2)
-        #lcd.message(s1 + " "*8 + "\n" + s2 + " "*15)
-        lcd.message(s1 + "\n" + s2)
-    #lcd.clear()
+                s1 += " "*15
+                s1 = s1[:13] + "> "+button_disp[buttfunc]
+        lcd.message(s1 + " "*15 + "\n" + s2 + " "*15)
+        
     time.sleep(0.5)
     display('Start Samplerbox')
     time.sleep(0.5)
@@ -324,19 +283,24 @@ class PlayingSound:
         self.vel = vel
 
     def fadeout(self, i):
-        self.isfadeout = True
+        if self.isfadeout:
+            try: playingsounds.remove(self)
+            except: pass
+        else:
+            self.isfadeout = True
         
     def stop(self):
         try: playingsounds.remove(self) 
         except: pass
 
 class Sound:
-    def __init__(self, filename, midinote, velocity):
+    def __init__(self, filename, midinote, velocity, release):
         #print 'Reading ' + filename
         wf = waveread(filename)
         self.fname = filename
         self.midinote = midinote
         self.velocity = velocity
+        self.release = release
         if wf.getloops(): 
             self.loop = wf.getloops()[0][0]
             self.nframes = wf.getloops()[0][1] + 2
@@ -371,62 +335,65 @@ class Sound:
 ##  Setup the sound card's volume control
 #########################################
 
-FADEOUTLENGTH = 30000   # this can be adapted via %%release, see ActuallyLoad
-FADEOUT = numpy.linspace(1., 0., FADEOUTLENGTH)            # by default, float64
+FADEOUTLENGTH = 640*1000  # a large table gives reasonable results (640 up to 2 sec)
+FADEOUT = numpy.linspace(1., 0., FADEOUTLENGTH)     # by default, float64
 FADEOUT = numpy.power(FADEOUT, 6)
 FADEOUT = numpy.append(FADEOUT, numpy.zeros(FADEOUTLENGTH, numpy.float32)).astype(numpy.float32)
-
-SPEED = numpy.power(2, numpy.arange(-48.0*PITCHSTEPS, 48.0*PITCHSTEPS)/(12*PITCHSTEPS)).astype(numpy.float32)
-# Above values correspond with hard-coded overflow protection in in samplerbox_audio.pyx
+SPEEDRANGE = 48
+SPEED = numpy.power(2, numpy.arange(-1.0*SPEEDRANGE*PITCHSTEPS, 1.0*SPEEDRANGE*PITCHSTEPS)/(12*PITCHSTEPS)).astype(numpy.float32)
 
 def AudioCallback(outdata, frame_count, time_info, status):
     global playingsounds, volumeCC
     rmlist = []
     playingsounds = playingsounds[-MAX_POLYPHONY:]    
-    b = samplerbox_audio.mixaudiobuffers(playingsounds, rmlist, frame_count, FADEOUT, FADEOUTLENGTH, SPEED, PITCHBEND, PITCHSTEPS)
+    b = samplerbox_audio.mixaudiobuffers(playingsounds, rmlist, frame_count, FADEOUT, FADEOUTLENGTH, PRERELEASE, SPEED, SPEEDRANGE, PITCHBEND, PITCHSTEPS)
     for e in rmlist:
         try: playingsounds.remove(e)
         except: pass
     b *= volumeCC
     outdata[:] = b.reshape(outdata.shape)
 
+print 'Available audio devices'
+print(sounddevice.query_devices())
 try:
+    # A thing to try: add latency="low" (default is "high") to the parameters below
     sd = sounddevice.OutputStream(device=AUDIO_DEVICE_ID, blocksize=512, samplerate=44100, channels=2, dtype='int16', callback=AudioCallback)
     sd.start()
     print 'Opened audio device #%i' % AUDIO_DEVICE_ID
 except:
     display("Invalid audiodev")
     print 'Invalid audio device #%i' % AUDIO_DEVICE_ID
-    print 'Available devices:'
-    print(sounddevice.query_devices())
     exit(1)
 
 if USE_ALSA_MIXER:
     import alsaaudio
+    ok=False
     for i in range(0, 4):
-        try:
-            amix = alsaaudio.Mixer(cardindex=MIXER_CARD_ID+i,control=MIXER_CONTROL)
-            MIXER_CARD_ID+=i    # save the found value
-            i=0                 # indicate OK
-            print 'Opened Alsamixer: card id "%i", control "%s"' % (MIXER_CARD_ID, MIXER_CONTROL)
-            break
-        except:
-            pass
-    if i > 0:
+        for j in range(0, len(MIXER_CONTROL)):
+            try:
+                amix = alsaaudio.Mixer(cardindex=MIXER_CARD_ID+i,control=MIXER_CONTROL[j])
+                MIXER_CARD_ID+=i    # save the found value
+                ok=True             # indicate OK
+                print 'Opened Alsamixer: card id "%i", control "%s"' % (MIXER_CARD_ID, MIXER_CONTROL[j])
+                break
+            except:
+                pass
+        if ok: break
+    if ok:
+        def getvolume():
+            global volume
+            vol = amix.getvolume()
+            volume = int(vol[0])
+        def setvolume(volume):
+            amix.setvolume(volume)
+        setvolume(volume)
+        getvolume()
+    else:
+        USE_ALSA_MIXER=False
         display("Invalid mixerdev")
-        print 'Invalid mixer card id "%i" or control "%s"' % (MIXER_CARD_ID, MIXER_CONTROL)
-        print 'Available devices (mixer card id is "x" in "(hw:x,y)" of device #%i):' % AUDIO_DEVICE_ID
-        print(sounddevice.query_devices())
-        exit(1)
-    def getvolume():
-        global volume
-        vol = amix.getvolume()
-        volume = int(vol[0])
-    def setvolume(volume):
-        amix.setvolume(volume)
-    setvolume(volume)
-    getvolume()
-else:
+        print 'Invalid mixer card id "%i" or control "%s" --' % (MIXER_CARD_ID, MIXER_CONTROL)
+        print '-- Mixer card id is "x" in "(hw:x,y)" (if present) in opened audio device.'
+if not USE_ALSA_MIXER:
     def getvolume():
         pass
     def setvolume(volume):
@@ -439,16 +406,17 @@ else:
 #########################################
 
 def AllNotesOff():
-    global playingnotes, playingsounds, sustainplayingnotes
+    global playingnotes, playingsounds, sustainplayingnotes, triggernotes
     playingsounds = []
     playingnotes = {}
     sustainplayingnotes = []
+    triggernotes = [128]*128     # fill with unplayable note
 
 def MidiCallback(message, time_stamp):
-    global playingnotes, sustain, sustainplayingnotes
-    global preset, sample_mode, midi_mute, velocity_mode, gain, volumeCC, voices, currvoice, PITCHBEND, pitchneutral, pitchdiv
+    global playingnotes, sustain, sustainplayingnotes, triggernotes
+    global preset, sample_mode, midi_mute, velocity_mode, gain, volumeCC, voices, currvoice
+    global PRERELEASE, PITCHBEND, PITCHRANGE, pitchneutral, pitchdiv, pitchnotes
     global chordnote, currchord     # , chordname
-    ## print 'MidiCallBack called' #debug
     messagetype = message[0] >> 4
     messagechannel = (message[0] & 15) + 1
     if (messagechannel == MIDI_CHANNEL) and (midi_mute == False):
@@ -473,16 +441,6 @@ def MidiCallback(message, time_stamp):
         if messagetype == 9:    # Note on
             midinote += globaltranspose
             #print 'Note on ' + str(note) + '->' + str(midinote) + ', voice=' + str(currvoice) +', chord=' + chordname[currchord] + ' in ' + sample_mode + ', gain=' + str(gain) #debug
-            for n in range (len(chordnote[currchord])):
-              playnote=midinote+chordnote[currchord][n]
-              for m in sustainplayingnotes:   # cleanup predecessors (check if necessary
-                  if m.note == playnote:
-                      m.fadeout(50)
-                      #print 'stop sustain ' + str(playnote)
-              if playnote in playingnotes:    # cleanup predecessors
-                  for m in playingnotes[playnote]: 
-                      #print "stop note " + str(playnote)
-                      m.fadeout(50)
             try:
               if velocity_mode == VELSAMPLE:
                   velmixer = 127 * gain
@@ -490,31 +448,43 @@ def MidiCallback(message, time_stamp):
                   velmixer = velocity * gain
               for n in range (len(chordnote[currchord])):
                   playnote=midinote+chordnote[currchord][n]
+                  for m in sustainplayingnotes:   # safeguard polyphony; don't sustain double notes
+                      if m.note == playnote:
+                          m.fadeout(50)
+                          #print 'clean sustain ' + str(playnote)
+                  if triggernotes[playnote] < 128:  # cleanup in case of retrigger
+                      if playnote in playingnotes:    # occurs in once/loops modes and chords
+                          for m in playingnotes[playnote]: 
+                              #print "clean note " + str(playnote)
+                              m.fadeout(50)
+                          playingnotes[playnote] = []   # housekeeping
+                  triggernotes[playnote]=midinote   # we are last playing this one
                   #print "start note " + str(playnote)
                   playingnotes.setdefault(playnote,[]).append(samples[playnote, velocity, currvoice].play(playnote, velmixer))
             except:
-              print 'NoteOn entered exception routine'
+              #print 'Unassigned/unfilled note or other exception'
               pass
 
         elif messagetype == 8:  # Note off
             midinote += globaltranspose
             if noteoff == True:
                 #print 'Note off ' + str(note) + '->' + str(midinote) + ', voice=' + str(currvoice)    #debug
-                if midinote in playingnotes:
-                    for n in range (len(chordnote[currchord])):
-                        playnote=midinote+chordnote[currchord][n]
-                        for m in playingnotes[playnote]: 
-                            #print "stop note " + str(playnote)
-                            if sustain:
-                                #print 'Sustain note ' + str(playnote)   # debug
-                                sustainplayingnotes.append(m)
-                            else:
-                                m.fadeout(50)
-                        playingnotes[playnote] = []
+                for playnote in xrange(128):
+                    if triggernotes[playnote] == midinote:  # did we make this one play ?
+                        if playnote in playingnotes:
+                            for m in playingnotes[playnote]: 
+                                if sustain:
+                                    #print 'Sustain note ' + str(playnote)   # debug
+                                    sustainplayingnotes.append(m)
+                                else:
+                                    #print "stop note " + str(playnote)
+                                    m.fadeout(50)
+                            playingnotes[playnote] = []
+                        triggernotes[playnote] = 128  # housekeeping
 
         elif messagetype == 12: # Program change
-            #print 'Program change ' + str(note+PRESETBASE)
             preset = note+PRESETBASE
+            #print "Program change to %d=%d" % (note, preset)
             LoadSamples()
 
         elif messagetype == 14: # Pitch Bend
@@ -523,10 +493,10 @@ def MidiCallback(message, time_stamp):
         elif messagetype == 11: # control change (CC, sometimes called Continuous Controllers)
             CCnum = note
             CCval = velocity
+            #print "CCnum = " + str(CCnum) + ", CCval = " + str(CCval)
 
             if CCnum == 7:       # volume knob action (0-127)
                 volumeCC = CCval / 127.0   # force float
-                #print 'volumeCC: ' + str(velocity) + ' ==> ' + str(volumeCC)
 
             elif CCnum == 64:    # sustain pedal
                 if sample_mode == PLAYLIVE:
@@ -540,22 +510,23 @@ def MidiCallback(message, time_stamp):
                         sustain = True
                         #print 'Sustain pedal pressed'
 
-                        # CC=72: Sound controller 3 = release time
-                        # not yet implemented:
-                        #  - for performance issues
-                        #  - for impact on playing notes
+            elif CCnum == 72:           # Sound controller 3 = release time
+                PRERELEASE = CCval
                 
-            elif CCnum == 80:        # general purpose 80 used for voices
-                if CCval in voices:  # Voices start at 1, so no issues with trigger/release
+            elif CCnum == 80:           # general purpose 80 used for voices
+                if CCval in voices:     # Voices start at 1, so no issues with trigger/release
                     currvoice = CCval
                     display("")
 
-            elif CCnum == 81:        # general purpose 81 used for chords
-                if CCval > 0:        # I use MIDI CC Trigger/Release; this ignores default release value
-                    CCval -= 1       # align with table, makes it human human too :-)
+            elif CCnum == 81:           # general purpose 81 used for chords
+                if CCval > 0:           # I use MIDI CC Trigger/Release; this ignores default release value
+                    CCval -= 1          # align with table, makes it human human too :-)
                     if CCval < len(chordnote):
                         currchord = CCval
                         display("")
+
+            elif CCnum == 82:           # Pitch bend sensitivity (my controller cannot send RPN)
+                pitchnotes = (24*CCval+100)/127
 
             elif CCnum==120 or CCnum==123:    # "All sounds off" or "all notes off"
                 AllNotesOff()
@@ -587,34 +558,39 @@ basename = "None"
 
 def ActuallyLoad():    
     global preset, samples
-    global FADEOUTLENGTH, FADEOUT
+    global FADEOUTLENGTH, FADEOUT, BOXRELEASE,  PRERELEASE
     global globaltranspose, sample_mode, basename, velocity_mode, gain, voices, currvoice, PITCHRANGE, pitchnotes
     #print 'Entered ActuallyLoad'
     AllNotesOff()
-    mode=[]
-    gain = 1
-    currvoice = 1
-    pitchnotes=PITCHRANGE
-    voices = []
-    globaltranspose = 0
-    release=3  # results in FADEOUTLENGTH=30000, the samplerbox default
-    samples = {}
     currbase = basename    
 
     samplesdir = SAMPLES_DIR if os.listdir(SAMPLES_DIR) else '.'      # use current folder (containing 0 Saw) if no user media containing samples has been found
     basename = next((f for f in os.listdir(samplesdir) if f.startswith("%d " % preset)), None)      # or next(glob.iglob("blah*"), None)
+    #print "We have %s, we want %s" %(currbase, basename)
     if basename:
         if basename == currbase:      # don't waste time reloading a patch
             #print 'Kept preset %s' % basename
-            display("Kept %s" % basename)
+            display("")
             return
         dirname = os.path.join(samplesdir, basename)
-        print 
+
+    mode=[]
+    gain = 1
+    currvoice = 1
+    pitchnotes=PITCHRANGE   # fallback to the samplerbox default
+    PRERELEASE=BOXRELEASE   # fallback to the samplerbox default for the preset release time
+    voices = []
+    globaltranspose = 0
+    samples = {}
+    fillnotes = {}
+    fillnote = 'Y'          # by default we will fill/generate missing notes
+
     if not basename: 
         #print 'Preset empty: %s' % preset
         basename = "%d Empty preset" %preset
         display("")
         return
+
     #print 'Preset loading: %s ' % basename
     display("Loading %s" % basename)
     definitionfname = os.path.join(dirname, "definition.txt")
@@ -629,12 +605,22 @@ def ActuallyLoad():
                         globaltranspose = int(pattern.split('=')[1].strip())
                         continue
                     if r'%%release' in pattern:
-                        release = abs(int(pattern.split('=')[1].strip()))
+                        PRERELEASE = (int(pattern.split('=')[1].strip()))
+                        if PRERELEASE > 127:
+                            print "Release of %d limited to %d" % (PRERELEASE, 127)
+                            PRERELEASE = 127
+                        continue
+                    if r'%%fillnote' in pattern:
+                        m = pattern.split('=')[1].strip().title()
+                        if m == 'Y' or m == 'N':
+                            fillnote = m
+                        continue
                     if r'%%pitchbend' in pattern:
                         pitchnotes = abs(int(pattern.split('=')[1].strip()))
                         if pitchnotes > 12:
                             print "Pitchbend of %d limited to 12" % pitchnotes
                             pitchnotes = 12
+                        pitchnotes *= 2     # actually it is 12 up and 12 down
                         continue
                     if r'%%mode' in pattern:
                         mode = pattern.split('=')[1].strip().title()
@@ -644,13 +630,17 @@ def ActuallyLoad():
                         mode = pattern.split('=')[1].strip().title()
                         if mode == VELSAMPLE or mode == VELACCURATE: velocity_mode = mode
                         continue
-                    defaultparams = { 'midinote': '0', 'velocity': '127', 'notename': '', 'voice': '1' }
+                    #defaultparams = { 'midinote': '0', 'velocity': '127', 'notename': '', 'voice': '1' }
+                    defaultparams = { 'midinote': '0', 'velocity': '127', 'notename': '', 'voice': '1', 'release': '128', 'fillnote': fillnote }
                     if len(pattern.split(',')) > 1:
                         defaultparams.update(dict([item.split('=') for item in pattern.split(',', 1)[1].replace(' ','').replace('%', '').split(',')]))
                     pattern = pattern.split(',')[0]
                     pattern = re.escape(pattern.strip())
-                    pattern = pattern.replace(r"\%midinote", r"(?P<midinote>\d+)").replace(r"\%velocity", r"(?P<velocity>\d+)").replace(r"\%voice", r"(?P<voice>\d+)")\
+                    pattern = pattern.replace(r"\%midinote", r"(?P<midinote>\d+)").replace(r"\%velocity", r"(?P<velocity>\d+)")\
+                                     .replace(r"\%voice", r"(?P<voice>\d+)").replace(r"\%release", r"(?P<release>\d+)").replace(r"\%fillnote", r"(?P<fillnote>[YNyn]")\
                                      .replace(r"\%notename", r"(?P<notename>[A-Ga-g]#?[0-9])").replace(r"\*", r".*?").strip()    # .*? => non greedy
+                    #pattern = pattern.replace(r"\%midinote", r"(?P<midinote>\d+)").replace(r"\%velocity", r"(?P<velocity>\d+)").replace(r"\%voice", r"(?P<voice>\d+)")\
+                    #                 .replace(r"\%notename", r"(?P<notename>[A-Ga-g]#?[0-9])").replace(r"\*", r".*?").strip()    # .*? => non greedy
                     for fname in os.listdir(dirname):
                         #print 'Processing ' + fname
                         if LoadingInterrupt:
@@ -663,11 +653,14 @@ def ActuallyLoad():
                             velocity = int(info.get('velocity', defaultparams['velocity']))
                             voice = int(info.get('voice', defaultparams['voice']))
                             voices.append(voice)
+                            release = int(info.get('release', defaultparams['release']))
+                            voicefillnote = (info.get('fillnote', defaultparams['fillnote'])).title().rstrip()
                             notename = info.get('notename', defaultparams['notename'])
                             # next statement places note 60 on C3/C4/C5 with the +0/1/2. So now it is C4:
                             if notename: midinote = NOTES.index(notename[:-1].lower()) + (int(notename[-1])+1) * 12
-                            samples[midinote, velocity, voice] = Sound(os.path.join(dirname, fname), midinote, velocity)
-                            #print "sample: %s, note: %d, voice: %d" %(fname, midinote, voice)
+                            samples[midinote, velocity, voice] = Sound(os.path.join(dirname, fname), midinote, velocity, release)
+                            fillnotes[midinote, voice] = voicefillnote
+                            #print "sample: %s, note: %d, voice: %d, fillnote: %s" %(fname, midinote, voice, voicefillnote)
                 except:
                     print "Error in definition file, skipping line %s." % (i+1)
 
@@ -680,13 +673,13 @@ def ActuallyLoad():
             #print "Trying " + file
             if os.path.isfile(file):
                 #print "Processing " + file
-                samples[midinote, 127, 1] = Sound(file, midinote, 127)
+                samples[midinote, 127, 1] = Sound(file, midinote, 127, 128)
+                fillnotes[midinote, 1] = fillnote
 
     initial_keys = set(samples.keys())
     if len(initial_keys) > 0:
 
         voices = list(set(voices)) # Remove duplicates by converting to a set
-        #original not working in all cases: for voice in xrange(len(voices)):
         for voice in voices:
             for midinote in xrange(128):    # first complete velocities in found notes
                 lastvelocity = None
@@ -703,32 +696,32 @@ def ActuallyLoad():
             nexthigh = None                     # nexthigh not found yet
             for midinote in xrange(128):        # and start filling the missing notes
                 if (midinote, 1, voice) in initial_keys:
-                    nexthigh = None     # passed nexthigh
-                    lastlow = midinote  # but we got fresh low info
+                    #print "Note %d found as sample" % (midinote)
+                    if fillnotes[midinote, voice] == 'Y':  # can we use this note for filling?
+                        nexthigh = None                     # passed nexthigh
+                        lastlow = midinote                  # but we got fresh low info
                 else:
                     if not nexthigh:
                         nexthigh=260    # force highest unfilled notes to be filled with the lastlow
                         for m in xrange(midinote+1, 128):
                             if (m, 1, voice) in initial_keys:
-                                if m < nexthigh: nexthigh=m
+                                if fillnotes[m, voice] == 'Y':  # can we use this note for filling?
+                                    if m < nexthigh: nexthigh=m
+                    if (nexthigh-lastlow) > 260:     # did we find a note valid for filling?
+                        break                        # no, stop trying
                     if midinote <= 0.5+(nexthigh+lastlow)/2: m=lastlow
                     else: m=nexthigh
                     #print "Note %d will be generated from %d" % (midinote, m)
                     for velocity in xrange(128):
                         samples[midinote, velocity, voice] = samples[m, velocity, voice]
 
-        if not (release*10000)==FADEOUTLENGTH:
-            FADEOUTLENGTH=release*10000
-            #print 'Fadeoutlength changed to ' + str(FADEOUTLENGTH)
-            FADEOUT = numpy.linspace(1., 0., FADEOUTLENGTH)            # by default, float64
-            FADEOUT = numpy.power(FADEOUT, 6)
-            FADEOUT = numpy.append(FADEOUT, numpy.zeros(FADEOUTLENGTH, numpy.float32)).astype(numpy.float32)
         #print 'Preset loaded: ' + str(preset)
         display("")
 
     else:
         #print 'Preset empty: ' + str(preset)
-        display("%d Empty preset" %preset)
+        basename = "%d Empty preset" %preset
+        display("")
 
 
 #########################################
