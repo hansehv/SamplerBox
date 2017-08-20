@@ -7,6 +7,17 @@
 #
 #  samplerbox_audio.pyx: Audio engine (Cython) 
 #
+#  Originel version adapted extended by https://www.facebook.com/hanshom
+#                          see docs at  http://homspace.xs4all.nl/homspace/samplerbox
+#  June 18 2016:
+#      - implemented velocity fix by Erik Nieuwlands (http://www.nickyspride.nl/sb2/) of april 30.
+#  October 28 2016:
+#      - implemented pitch-bend and related to that:
+#      - changed note filling from 0-7 octaves to -4 - +4 octaves (keep in line py-script!)
+#        So you can get full 88 keyboard by supplying only a middle note (not recommended though)
+#        If limits are exceeded, the highest/lowest possible note will be returned instead of requested one.
+#
+#  Rebuild with "python setup.py build_ext --inplace"
 
 
 
@@ -14,13 +25,13 @@ import cython
 import numpy
 cimport numpy
 
-def mixaudiobuffers(list playingsounds, list rmlist, int frame_count, numpy.ndarray FADEOUT, int FADEOUTLENGTH, numpy.ndarray SPEED):
+def mixaudiobuffers(list playingsounds, list rmlist, int frame_count, numpy.ndarray FADEOUT, int FADEOUTLENGTH, numpy.ndarray SPEED, int PITCHBEND, int PITCHSTEPS):
     cdef int i, ii, k, l, N, length, looppos, fadeoutpos
     cdef float speed, newsz, pos, j
     cdef numpy.ndarray b = numpy.zeros(2 * frame_count, numpy.float32)      # output buffer
     cdef float* bb = <float *> (b.data)                                     # and its pointer
     cdef numpy.ndarray z
-    cdef float vel 
+    cdef float vel, pitchbend
     cdef short* zz
     cdef float* fadeout = <float *> (FADEOUT.data)
 
@@ -29,8 +40,14 @@ def mixaudiobuffers(list playingsounds, list rmlist, int frame_count, numpy.ndar
         fadeoutpos = snd.fadeoutpos
         looppos = snd.sound.loop
         length = snd.sound.nframes
-        vel = snd.vel / 127.0 
-        speed = SPEED[snd.note - snd.sound.midinote]
+        vel = snd.vel / 127.0
+        i = (48+snd.note-snd.sound.midinote) * PITCHSTEPS + PITCHBEND
+        if i < 0:                       # below zero is out of limits
+            i = 0                       # save the program by ruining the pitch :-(
+        else:                           #
+            if i > 95 * PITCHSTEPS:     # 2*48=96 and higher is out of limits
+                i = 95 * PITCHSTEPS     # save the program by ruining the pitch :-(
+        speed = SPEED[i]
         newsz = frame_count * speed
         z = snd.sound.data
         zz = <short *> (z.data)
