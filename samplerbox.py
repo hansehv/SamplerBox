@@ -7,7 +7,8 @@
 #
 #  samplerbox.py: Main file
 #
-#   June 19th 2015 version extended by https://www.facebook.com/hanshom
+#   April 10 2016
+#   SamplerBox June 19th 2015 version extended by https://www.facebook.com/hanshom
 #                          see docs at  http://homspace.xs4all.nl?start=samplerbox
 #       - Play samples in playback mode (ignoring normal note-off),
 #         driven by "mode=keyb|once|on64|loop" in definition.txt, default=once
@@ -16,6 +17,11 @@
 #       - Replaced 7segment display code by 16x2LCD
 #       - Use 3 buttons: one for choosing functions and two other for +/-.
 #         functions: preset, channel, volume, transpose, renewUSB/MidiMute.
+#   June 18 2016
+#       - changed volume handling from process approach to API (alsaaudio)
+#       - Included accurate velocity control by Erik Nieuwlands: http://www.nickyspride.nl/sb2/
+#       - fixed memory leak caused by ignored note-off. Theoretical max now 64 or 128 active notes, depending play mode.
+#         Solution may still conflict with polyphony restriction..open point for next release..
 
 
 
@@ -29,15 +35,19 @@ AUDIO_DEVICE_OUT = "Speaker"            # change this name according soundcard, 
 SAMPLES_DIR = "/media/"                 # The root directory containing the sample-sets. Example: "/media/" to look for samples on a USB stick / SD card
 USE_SERIALPORT_MIDI = False             # Set to True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
 USE_HD44780_16x2_LCD = True             # Set to True to use a HD44780 based 16x2 LCD
-USE_BUTTONS = True                      # Set to True to use momentary buttons (connected to RaspberryPi's GPIO pins) to change preset
+USE_BUTTONS = True                      # Set to True to use momentary buttons connected to RaspberryPi's GPIO pins
 MAX_POLYPHONY = 80                      # This can be set higher, but 80 is a safe value
 MIDI_CHANNEL = 11                       # midi channel
 PLAYBACK = "Once"                       # ignores loop markers and note-off ("just play the sample")
 PLAYSTOP = "On64"                       # ignores loop markers with note-off by note+64 ("just play the sample with option to stop")
 PLAYLOOP = "Loop"                       # recognize loop markers, note-off by note+64 ("just play the loop with option to stop")
 PLAYLIVE = "Keyb"                       # reacts on "keyboard" interaction
-sample_mode = PLAYBACK                  # we need a default...
+sample_mode = PLAYLIVE                  # we need a default: original samplerbox
+VELSAMPLE = "Sample"                    # velocity equals sampled value, requires multiple samples to get differentation
+VELACCURATE = "Accurate"                # velocity as played, allows for multiple (normalized!) samples for timbre
+velocity_mode = VELSAMPLE               # we need a default: original samplerbox
 
+volume = 87
 preset = 1
 midi_mute = False
 
@@ -209,12 +219,13 @@ class waveread(wave.Wave_read):
 #########################################
 
 class PlayingSound:
-    def __init__(self, sound, note):
+    def __init__(self, sound, note, vel):
         self.sound = sound
         self.pos = 0
         self.fadeoutpos = 0
         self.isfadeout = False
         self.note = note
+        self.vel = vel
 
     def fadeout(self, i):
         self.isfadeout = True
@@ -240,8 +251,9 @@ class Sound:
 
         wf.close()            
 
-    def play(self, note):
-        snd = PlayingSound(self, note)
+    def play(self, note, vel):
+        snd = PlayingSound(self, note, vel)
+        #print 'fname: ' + self.fname + ' note/vel: '+str(note)+'/'+str(vel)+' midinote: ' +str(self.midinote) + ' vel: ' + str(self.velocity)
         playingsounds.append(snd)
         return snd
 
@@ -267,8 +279,11 @@ sustain = False
 playingsounds = []
 globaltranspose = 0
 
+
 #########################################
-##  AUDIO AND MIDI CALLBACKS
+##  AUDIO CALLBACK
+##  OPEN AUDIO DEVICE   org frames_per_buffer = 512
+##  Setup the sound card's volume control
 #########################################
 
 def AudioCallback(in_data, frame_count, time_info, status):
@@ -282,10 +297,36 @@ def AudioCallback(in_data, frame_count, time_info, status):
     odata = (b.astype(numpy.int16)).tostring()   
     return (odata, pyaudio.paContinue)
 
+p = pyaudio.PyAudio()
+try:
+    stream = p.open(format = pyaudio.paInt16, channels = 2, rate = 44100, frames_per_buffer = 512, output = True, input = False, output_device_index = AUDIO_DEVICE_ID, stream_callback = AudioCallback)
+    print 'Opened audio: '+ p.get_device_info_by_index(AUDIO_DEVICE_ID)['name']
+except:
+    print "Invalid Audio Device ID: " + str(AUDIO_DEVICE_ID)
+    print "Here is a list of audio devices:"
+    for i in range(p.get_device_count()):
+        dev = p.get_device_info_by_index(i)
+        # Remove input device (not really useful on a Raspberry Pi)
+        if dev['maxOutputChannels'] > 0:
+            print str(i) + " -- " + dev['name']
+    exit(1)
+
+import alsaaudio
+amix = alsaaudio.Mixer(cardindex=AUDIO_DEVICE_ID,control=AUDIO_DEVICE_OUT)
+def getvolume():
+    global volume
+    vol = amix.getvolume()
+    volume = int(vol[0])
+amix.setvolume(volume)
+getvolume()
+
+#########################################
+##  MIDI CALLBACK
+#########################################
 
 def MidiCallback(message, time_stamp):
     global playingnotes, sustain, sustainplayingnotes
-    global preset, sample_mode, midi_mute
+    global preset, sample_mode, midi_mute, velocity_mode
     ## print 'MidiCallBack called' #debug
     messagetype = message[0] >> 4
     messagechannel = (message[0] & 15) + 1
@@ -305,8 +346,16 @@ def MidiCallback(message, time_stamp):
         if messagetype == 9:    # Note on
             midinote += globaltranspose
             print 'Note on ' + str(note) + '->' + str(midinote) + ' in ' + sample_mode #debug
+            for n in  sustainplayingnotes:    # cleanup predecessors (check if necessary
+              if n.note == midinote: n.fadeout(50)
+            if midinote in playingnotes:      # cleanup predecessors
+              for n in playingnotes[midinote]: n.fadeout(50)
             try:
-              playingnotes.setdefault(midinote,[]).append(samples[midinote, velocity].play(midinote))
+              if velocity_mode == VELSAMPLE:
+                  velmixer = 127
+              else:
+                  velmixer = velocity
+              playingnotes.setdefault(midinote,[]).append(samples[midinote, velocity].play(midinote, velmixer))
             except:
               pass
 
@@ -317,6 +366,7 @@ def MidiCallback(message, time_stamp):
                 if midinote in playingnotes:
                     for n in playingnotes[midinote]: 
                         if sustain:
+                            #  print 'Sustain ' + str(note)   # debug
                             sustainplayingnotes.append(n)
                         else:
                             n.fadeout(50)
@@ -336,18 +386,7 @@ def MidiCallback(message, time_stamp):
 
         elif (messagetype == 11) and (note == 64) and (velocity >= 64) and (sample_mode == PLAYLIVE): # sustain pedal on
             sustain = True
-
-
-import subprocess
-volume = 100
-def getvolume():
-    global volume
-    p = subprocess.Popen(["amixer","-c%d" % AUDIO_DEVICE_ID,"get","%s,0" % AUDIO_DEVICE_OUT], stdout=subprocess.PIPE)
-    out = p.stdout.read()
-    pos1=out.find("[")
-    pos2=out.find("]")
-    volume=int(out[pos1+1:pos2-1])
-getvolume()
+            print 'Sustain pedal'
 
 #########################################
 ##  LOAD SAMPLES
@@ -378,7 +417,7 @@ def ActuallyLoad():
     global preset
     global samples
     global playingsounds
-    global globaltranspose, sample_mode, basename
+    global globaltranspose, sample_mode, basename, velocity_mode
     mode=[]
     playingsounds = []
     samples = {}
@@ -405,7 +444,7 @@ def ActuallyLoad():
                 try:
                     if r'%%volume' in pattern:        # %%parameters are global parameters
                         volume = int(pattern.split('=')[1].strip())
-                        p = subprocess.Popen(["amixer","-c%d" % AUDIO_DEVICE_ID,"set","%s,0" % AUDIO_DEVICE_OUT,str(volume)+"%"], stdout=subprocess.PIPE)
+                        amix.setvolume(volume)
                         getvolume()
                         continue
                     if r'%%transpose' in pattern:
@@ -415,6 +454,11 @@ def ActuallyLoad():
                         mode = pattern.split('=')[1].strip().title()
                         if mode == PLAYBACK or mode == PLAYLIVE or mode == PLAYSTOP or mode == PLAYLOOP: sample_mode = mode
                         print 'sample mode = ' + sample_mode
+                        continue
+                    if r'%%velmode' in pattern:        # %%parameters are global parameters
+                        mode = pattern.split('=')[1].strip().title()
+                        if mode == VELSAMPLE or mode == VELACCURATE: velocity_mode = mode
+                        print 'velocity mode = ' + velocity_mode
                         continue
                     defaultparams = { 'midinote': '0', 'velocity': '127', 'notename': '' }
                     if len(pattern.split(',')) > 1:
@@ -468,26 +512,6 @@ def ActuallyLoad():
 
 
 #########################################
-##  OPEN AUDIO DEVICE   org frames_per_buffer = 512
-#########################################
-
-p = pyaudio.PyAudio()
-try:
-    stream = p.open(format = pyaudio.paInt16, channels = 2, rate = 44100, frames_per_buffer = 512, output = True, input = False, output_device_index = AUDIO_DEVICE_ID, stream_callback = AudioCallback)
-    print 'Opened audio: '+ p.get_device_info_by_index(AUDIO_DEVICE_ID)['name']
-except:
-    print "Invalid Audio Device ID: " + str(AUDIO_DEVICE_ID)
-    print "Here is a list of audio devices:"
-    for i in range(p.get_device_count()):
-        dev = p.get_device_info_by_index(i)
-        # Remove input device (not really useful on a Raspberry Pi)
-        if dev['maxOutputChannels'] > 0:
-            print str(i) + " -- " + dev['name']
-    exit(1)
-
-
-
-#########################################
 ##  LCD DISPLAY 
 ##  (HD44780 based 16x2)
 #########################################
@@ -500,8 +524,11 @@ if USE_HD44780_16x2_LCD:
     def display(s2):
         #lcd.clear()
         global basename, MIDI_CHANNEL, sample_mode, volume, globaltranspose
-        s1 = "%d %s %d%% %+d" % (MIDI_CHANNEL, sample_mode, volume, globaltranspose)
-        if s2 == "": s2 = basename
+        s1 = "%d %s %d%%%s %+d" % (MIDI_CHANNEL, sample_mode, volume, velocity_mode[0], globaltranspose)
+        if s2 == "":
+            s2 = basename + " "*15
+            if buttfunc>0:
+                s2 = s2[:14] + "*"+button_disp[buttfunc]
         print "display: %s \\ %s" % (s1, s2)
         #lcd.message(s1 + " "*8 + "\n" + s2 + " "*15)
         lcd.message(s1 + "\n" + s2)
@@ -517,8 +544,6 @@ else:
 
 #########################################
 ##  BUTTONS THREAD (RASPBERRY PI GPIO)
-##  Volume knobs based on code published by Mirco,
-##      see: http://www.samplerbox.org/forum/51
 #########################################
 
 
@@ -531,6 +556,7 @@ if USE_BUTTONS:
     butt_sel = 26
     buttfunc = 0
     button_functions=["","set: Volume","set: Midichannel","set: Transpose","RenewUSB/MidMute"]
+    button_disp=["","V","M","T","S"]
 
     def Buttons():
         global preset, basename, lastbuttontime, volume, MIDI_CHANNEL, globaltranspose, midi_mute
@@ -555,7 +581,7 @@ if USE_BUTTONS:
                     elif buttfunc==1:
                         volume-=5
                         if volume<0: volume=0
-                        p = subprocess.Popen(["amixer","-c%d" % AUDIO_DEVICE_ID,"set","%s,0" % AUDIO_DEVICE_OUT,str(volume)+"%"], stdout=subprocess.PIPE)
+                        amix.setvolume(volume)
                         getvolume()
                         display("")
                     elif buttfunc==2:
@@ -585,7 +611,7 @@ if USE_BUTTONS:
                     elif buttfunc==1:
                         volume+=5
                         if volume>100: volume=100
-                        p = subprocess.Popen(["amixer","-c%d" % AUDIO_DEVICE_ID,"set","%s,0" % AUDIO_DEVICE_OUT,str(volume)+"%"], stdout=subprocess.PIPE)
+                        amix.setvolume(volume)
                         getvolume()
                         display("")
                     elif buttfunc==2:
@@ -660,7 +686,8 @@ LoadSamples()
 
 midi_in = [rtmidi.MidiIn()]
 previous = []
-while True:
+try:
+  while True:
     for port in midi_in[0].ports:
         if port not in previous and 'Midi Through' not in port:
             midi_in.append(rtmidi.MidiIn())
@@ -669,3 +696,12 @@ while True:
             print 'Opened MIDI: '+ port
     previous = midi_in[0].ports
     time.sleep(2)
+except KeyboardInterrupt:
+   print "\nstopped by ctrl-c\n"
+except:
+   print "Other Error"
+finally:
+   display('Stopped')
+   sleep(0.5)
+   GPIO.cleanup()
+
