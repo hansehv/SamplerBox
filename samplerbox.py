@@ -38,6 +38,10 @@ velocity_mode = VELSAMPLE               # we need a default: original samplerbox
 volume = 87                             # the startup (alsa=output) volume (0-100), change with function buttons
 volumeCC = 1.0                          # assumed value of the volumeknob controller before first use, max=1.0 (the knob can only decrease).
 BOXRELEASE = 30                         # 30 results in the samplerbox default (FADEOUTLENGTH=30000)
+RELMODE= "N"                            # release samples: N=none, E=Embedded, S=Separate(not implemented)
+BOXXFADEOUT = 10                        # crossfade glues the sample to the release sample
+BOXXFADEIN = 1                          # crossfade glues the sample to the release sample
+BOXXFADEVOL = 1.0                       # crossfade glues the sample to the release sample
 PRESETBASE = 0                          # Does the programchange / sample set start at 0 (MIDI style) or 1 (human style)
 preset = 0 + PRESETBASE                 # the default patch to load
 PITCHRANGE = 12                         # default range of the pitchwheel in semitones (max=12 is een octave)
@@ -67,7 +71,7 @@ voices=[]
 currvoice = 1
 midi_mute = False
 gain = 1                                # the input volume correction, change per set in definition.txt
-PRERELEASE = BOXRELEASE
+#test PRERELEASE = BOXRELEASE
 PITCHBEND = 0
 PITCHRANGE *= 2     # actually it is 12 up and 12 down
 pitchnotes = PITCHRANGE
@@ -95,7 +99,7 @@ import threading
 from chunk import Chunk
 import struct
 import rtmidi2
-import samplerbox_audio
+import test_audio   # audio-module
 
 
 #########################################
@@ -231,6 +235,7 @@ class waveread(wave.Wave_read):
             raise Error, 'not a WAVE file'
         self._fmt_chunk_read = 0
         self._data_chunk = None
+        self._cue=0
         while 1:
             self._data_seek_needed = 1
             try:
@@ -238,9 +243,14 @@ class waveread(wave.Wave_read):
             except EOFError:
                 break
             chunkname = chunk.getname()
+            #print "Found chunk:" + chunkname
             if chunkname == 'fmt ':
-                self._read_fmt_chunk(chunk)
-                self._fmt_chunk_read = 1
+                try:
+                    self._read_fmt_chunk(chunk)
+                    self._fmt_chunk_read = 1
+                except:
+                    print "Invalid fmt chunk, please check: max sample rate = 44100, max bit rate = 24"
+                    break
             elif chunkname == 'data':
                 if not self._fmt_chunk_read:
                     raise Error, 'data chunk before fmt chunk'
@@ -248,17 +258,23 @@ class waveread(wave.Wave_read):
                 self._nframes = chunk.chunksize // self._framesize
                 self._data_seek_needed = 0
             elif chunkname == 'cue ':
-                numcue = struct.unpack('<i',chunk.read(4))[0]
-                for i in range(numcue): 
-                  id, position, datachunkid, chunkstart, blockstart, sampleoffset = struct.unpack('<iiiiii',chunk.read(24))
-                  self._cue.append(sampleoffset)
+                try:
+                    numcue = struct.unpack('<i',chunk.read(4))[0]
+                    for i in range(numcue):
+                        id, position, datachunkid, chunkstart, blockstart, sampleoffset = struct.unpack('<ii4siii',chunk.read(24))
+                        if (sampleoffset>self._cue): self._cue=sampleoffset     # we need the last one in the sample
+                        #self._cue.append(sampleoffset)                         # so we don't collect them all anymore...
+                except:
+                    print "invalid cue chunk"
             elif chunkname == 'smpl':
                 manuf, prod, sampleperiod, midiunitynote, midipitchfraction, smptefmt, smpteoffs, numsampleloops, samplerdata = struct.unpack('<iiiiiiiii',chunk.read(36))
-                for i in range(numsampleloops):
-                   cuepointid, type, start, end, fraction, playcount = struct.unpack('<iiiiii',chunk.read(24)) 
-                   self._loops.append([start,end]) 
+                #for i in range(numsampleloops):
+                if numsampleloops > 0:      # we don't need the repeat loops...
+                    cuepointid, type, start, end, fraction, playcount = struct.unpack('<iiiiii',chunk.read(24)) 
+                    self._loops.append([start,end])
             chunk.skip()
         if not self._fmt_chunk_read or not self._data_chunk:
+            print 'fmt chunk and/or data chunk missing'
             raise Error, 'fmt chunk and/or data chunk missing'
 
     def getmarkers(self):
@@ -274,14 +290,27 @@ class waveread(wave.Wave_read):
 #########################################
 
 class PlayingSound:
-    def __init__(self, sound, note, vel):
+    def __init__(self, sound, note, vel, pos, end, loop):
         self.sound = sound
-        self.pos = 0
+        self.pos = pos
+        self.end = end
+        self.loop = loop
         self.fadeoutpos = 0
         self.isfadeout = False
+        if pos > 0 : self.isfadein = True
+        else       : self.isfadein = False
         self.note = note
         self.vel = vel
 
+    def __str__(self):
+        return "<PlayingSound note: '%i', velocity: '%i', pos: '%i'>" %(self.note, self.vel, self.pos)
+
+    def playingnote(self):
+        return self.note
+
+    def playingvelocity(self):
+        return self.vel
+    
     def fadeout(self, i):
         if self.isfadeout:
             try: playingsounds.remove(self)
@@ -294,27 +323,49 @@ class PlayingSound:
         except: pass
 
 class Sound:
-    def __init__(self, filename, midinote, velocity, release):
-        #print 'Reading ' + filename
+    def __init__(self, filename, midinote, velocity, release, xfadeout, xfadein, xfadevol):
+        global RELMODE
+        print 'Reading ' + filename
         wf = waveread(filename)
         self.fname = filename
         self.midinote = midinote
         self.velocity = velocity
         self.release = release
-        if wf.getloops(): 
+        self.xfadein = xfadein
+        self.xfadevol = xfadevol
+        self.eof = wf.getnframes()
+        if wf.getloops():
             self.loop = wf.getloops()[0][0]
             self.nframes = wf.getloops()[0][1] + 2
+            self.relmark = wf.getmarkers()
+            if self.relmark < self.nframes:
+                self.relmark = self.nframes # a release marker before loop-end cannot be right
+                self.eof = self.nframes     # so we just stick to the loop to save processing and memory
+            else:
+                if RELMODE == "E":          # we have found valid release marker,
+                    self.release = xfadeout # so we can process the sample switching !
         else:
-            self.loop = -1
-            self.nframes = wf.getnframes()
+            self.loop = -1              # a release marker without loop is unpredictable,
+            self.relmark = self.eof     # creating a small loop before it is dangerous as we cannot trust this marker
+            self.nframes = self.eof     # so we use full length with samplerbox autorelease
 
-        self.data = self.frames2array(wf.readframes(self.nframes), wf.getsampwidth(), wf.getnchannels())
+        #print "fill self.data" + filename + ": loopstart: " + str(self.loop) + " loopend: " + str(self.nframes) + " relmark " + str(self.relmark) + " EOF: " + str(self.eof)
+        self.data = self.frames2array(wf.readframes(self.eof), wf.getsampwidth(), wf.getnchannels())
 
         wf.close()            
 
-    def play(self, note, vel):
-        snd = PlayingSound(self, note, vel)
-        #print 'fname: ' + self.fname + ' note/vel: '+str(note)+'/'+str(vel)+' midinote: ' +str(self.midinote) + ' vel: ' + str(self.velocity)
+    def play(self, note, vel, pos):
+        if pos < 0:     # playing of release part of sample is requested
+            pos = self.relmark  # so where does it start
+            end = self.eof      # and when does it end
+            loop = -1           # a release marker does not loop
+            vel = vel*self.xfadevol     # apply the defined volume correction
+        else:
+            end = self.nframes  # otherwise we play till end of loop/file as determined by the sample
+            loop = self.loop    # and we loop as determined by the sample
+        snd = PlayingSound(self, note, vel, pos, end, loop)
+        #print snd
+        #print 'play fname: ' + self.fname + ' note/vel: '+str(note)+'/'+str(vel)+' midinote: ' +str(self.midinote) + ' vel: '+str(vel) + ' loopstart: '+str(self.loop) + ' loopend: '+str(self.nframes) + ' relmark: '+str(self.relmark) + ' play-end: '+str(end) +" nframes: "+str(self.nframes) + ' EOF: '+str(self.eof) + ' pos: '+str(pos)
         playingsounds.append(snd)
         return snd
 
@@ -322,7 +373,7 @@ class Sound:
         if sampwidth == 2:
             npdata = numpy.fromstring(data, dtype = numpy.int16)
         elif sampwidth == 3:
-            npdata = samplerbox_audio.binary24_to_int16(data, len(data)/3)
+            npdata = test_audio.binary24_to_int16(data, len(data)/3)    # audio-module
         if numchan == 1: 
             npdata = numpy.repeat(npdata, 2)
         return npdata
@@ -345,9 +396,12 @@ SPEED = numpy.power(2, numpy.arange(-1.0*SPEEDRANGE*PITCHSTEPS, 1.0*SPEEDRANGE*P
 def AudioCallback(outdata, frame_count, time_info, status):
     global playingsounds, volumeCC
     rmlist = []
-    playingsounds = playingsounds[-MAX_POLYPHONY:]    
-    b = samplerbox_audio.mixaudiobuffers(playingsounds, rmlist, frame_count, FADEOUT, FADEOUTLENGTH, PRERELEASE, SPEED, SPEEDRANGE, PITCHBEND, PITCHSTEPS)
+    playingsounds = playingsounds[-MAX_POLYPHONY:]
+    # audio-module:
+    b = test_audio.mixaudiobuffers(playingsounds, rmlist, frame_count, FADEOUT, FADEOUTLENGTH, SPEED, SPEEDRANGE, PITCHBEND, PITCHSTEPS)
+    #b = samplerbox_audio.mixaudiobuffers(playingsounds, rmlist, frame_count, FADEOUT, FADEOUTLENGTH, PRERELEASE, SPEED, SPEEDRANGE, PITCHBEND, PITCHSTEPS)
     for e in rmlist:
+        #print "remove " +str(e) + ", note: " + str(e.playingnote())
         try: playingsounds.remove(e)
         except: pass
     b *= volumeCC
@@ -356,7 +410,6 @@ def AudioCallback(outdata, frame_count, time_info, status):
 print 'Available audio devices'
 print(sounddevice.query_devices())
 try:
-    # A thing to try: add latency="low" (default is "high") to the parameters below
     sd = sounddevice.OutputStream(device=AUDIO_DEVICE_ID, blocksize=512, samplerate=44100, channels=2, dtype='int16', callback=AudioCallback)
     sd.start()
     print 'Opened audio device #%i' % AUDIO_DEVICE_ID
@@ -413,7 +466,7 @@ def AllNotesOff():
     triggernotes = [128]*128     # fill with unplayable note
 
 def MidiCallback(message, time_stamp):
-    global playingnotes, sustain, sustainplayingnotes, triggernotes
+    global playingnotes, sustain, sustainplayingnotes, triggernotes, RELMODE
     global preset, sample_mode, midi_mute, velocity_mode, gain, volumeCC, voices, currvoice
     global PRERELEASE, PITCHBEND, PITCHRANGE, pitchneutral, pitchdiv, pitchnotes
     global chordnote, currchord     # , chordname
@@ -459,10 +512,10 @@ def MidiCallback(message, time_stamp):
                               m.fadeout(50)
                           playingnotes[playnote] = []   # housekeeping
                   triggernotes[playnote]=midinote   # we are last playing this one
-                  #print "start note " + str(playnote)
-                  playingnotes.setdefault(playnote,[]).append(samples[playnote, velocity, currvoice].play(playnote, velmixer))
+                  print "start note " + str(playnote)
+                  playingnotes.setdefault(playnote,[]).append(samples[playnote, velocity, currvoice].play(playnote, velmixer, 0))
             except:
-              #print 'Unassigned/unfilled note or other exception'
+              print 'Unassigned/unfilled note or other exception'
               pass
 
         elif messagetype == 8:  # Note off
@@ -477,10 +530,13 @@ def MidiCallback(message, time_stamp):
                                     #print 'Sustain note ' + str(playnote)   # debug
                                     sustainplayingnotes.append(m)
                                 else:
-                                    #print "stop note " + str(playnote)
+                                    #print "Stop note " + str(playnote)
+                                    velmixer = m.playingvelocity() # get org value for release sample
                                     m.fadeout(50)
                             playingnotes[playnote] = []
-                        triggernotes[playnote] = 128  # housekeeping
+                            if RELMODE == 'E':
+                                playingnotes.setdefault(playnote,[]).append(samples[playnote, velocity, currvoice].play(playnote, velmixer*gain, -1))
+                            triggernotes[playnote] = 128  # housekeeping
 
         elif messagetype == 12: # Program change
             preset = note+PRESETBASE
@@ -557,9 +613,8 @@ NOTES = ["c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"]
 basename = "None"
 
 def ActuallyLoad():    
-    global preset, samples
-    global FADEOUTLENGTH, FADEOUT, BOXRELEASE,  PRERELEASE
-    global globaltranspose, sample_mode, basename, velocity_mode, gain, voices, currvoice, PITCHRANGE, pitchnotes
+    global preset, samples, BOXRELEASE, PRERELEASE, BOXXFADEIN, PREXFADEIN
+    global globaltranspose, sample_mode, basename, velocity_mode, gain, voices, currvoice, PITCHRANGE, pitchnotes, RELMODE
     #print 'Entered ActuallyLoad'
     AllNotesOff()
     currbase = basename    
@@ -578,12 +633,16 @@ def ActuallyLoad():
     gain = 1
     currvoice = 1
     pitchnotes=PITCHRANGE   # fallback to the samplerbox default
-    PRERELEASE=BOXRELEASE   # fallback to the samplerbox default for the preset release time
+    PRERELEASE=BOXRELEASE   # fallback to the samplerbox default
+    PREXFADEOUT=BOXXFADEOUT # fallback to the samplerbox default
+    PREXFADEIN=BOXXFADEIN   # fallback to the samplerbox default
+    PREXFADEVOL=BOXXFADEVOL # fallback to the samplerbox default
     voices = []
     globaltranspose = 0
     samples = {}
     fillnotes = {}
     fillnote = 'Y'          # by default we will fill/generate missing notes
+    RELMODE = 'E'           # test
 
     if not basename: 
         #print 'Preset empty: %s' % preset
@@ -610,6 +669,21 @@ def ActuallyLoad():
                             print "Release of %d limited to %d" % (PRERELEASE, 127)
                             PRERELEASE = 127
                         continue
+                    if r'%%xfadeout' in pattern:
+                        PREXFADEOUT = (int(pattern.split('=')[1].strip()))
+                        if PREXFADEOUT > 127:
+                            print "xfadeout of %d limited to %d" % (PREXFADEOUT, 127)
+                            PREXFADEOUT = 127
+                        continue
+                    if r'%%xfadein' in pattern:
+                        PREXFADEIN = (int(pattern.split('=')[1].strip()))
+                        if PREXFADEIN > 127:
+                            print "xfadein of %d limited to %d" % (PREXFADEIN, 127)
+                            PREXFADEIN = 127
+                        continue
+                    if r'%%xfadevol' in pattern:
+                        xfadevol = abs(float(pattern.split('=')[1].strip()))
+                        continue
                     if r'%%fillnote' in pattern:
                         m = pattern.split('=')[1].strip().title()
                         if m == 'Y' or m == 'N':
@@ -631,16 +705,15 @@ def ActuallyLoad():
                         if mode == VELSAMPLE or mode == VELACCURATE: velocity_mode = mode
                         continue
                     #defaultparams = { 'midinote': '0', 'velocity': '127', 'notename': '', 'voice': '1' }
-                    defaultparams = { 'midinote': '0', 'velocity': '127', 'notename': '', 'voice': '1', 'release': '128', 'fillnote': fillnote }
+                    defaultparams = { 'midinote': '0', 'velocity': '127', 'notename': '', 'voice': '1', 'release': PRERELEASE, 'xfadeout': PREXFADEOUT, 'xfadein': PREXFADEIN, 'xfadevol': PREXFADEVOL, 'fillnote': fillnote }
                     if len(pattern.split(',')) > 1:
                         defaultparams.update(dict([item.split('=') for item in pattern.split(',', 1)[1].replace(' ','').replace('%', '').split(',')]))
                     pattern = pattern.split(',')[0]
                     pattern = re.escape(pattern.strip())
                     pattern = pattern.replace(r"\%midinote", r"(?P<midinote>\d+)").replace(r"\%velocity", r"(?P<velocity>\d+)")\
-                                     .replace(r"\%voice", r"(?P<voice>\d+)").replace(r"\%release", r"(?P<release>\d+)").replace(r"\%fillnote", r"(?P<fillnote>[YNyn]")\
+                                     .replace(r"\%voice", r"(?P<voice>\d+)").replace(r"\%fillnote", r"(?P<fillnote>[YNyn]")\
+                                     .replace(r"\%release", r"(?P<release>\d+)").replace(r"\%xfadeout", r"(?P<xfadeout>\d+)").replace(r"\%xfadein", r"(?P<xfadein>\d+)")\
                                      .replace(r"\%notename", r"(?P<notename>[A-Ga-g]#?[0-9])").replace(r"\*", r".*?").strip()    # .*? => non greedy
-                    #pattern = pattern.replace(r"\%midinote", r"(?P<midinote>\d+)").replace(r"\%velocity", r"(?P<velocity>\d+)").replace(r"\%voice", r"(?P<voice>\d+)")\
-                    #                 .replace(r"\%notename", r"(?P<notename>[A-Ga-g]#?[0-9])").replace(r"\*", r".*?").strip()    # .*? => non greedy
                     for fname in os.listdir(dirname):
                         #print 'Processing ' + fname
                         if LoadingInterrupt:
@@ -654,13 +727,19 @@ def ActuallyLoad():
                             voice = int(info.get('voice', defaultparams['voice']))
                             voices.append(voice)
                             release = int(info.get('release', defaultparams['release']))
+                            if (release>127): release=127
+                            xfadeout = int(info.get('xfadeout', defaultparams['xfadeout']))
+                            if (xfadeout>127): xfadeout=127
+                            xfadein = int(info.get('xfadein', defaultparams['xfadein']))
+                            if (xfadein>127): xfadein=127
+                            xfadevol = abs(float(info.get('xfadevol', defaultparams['xfadevol'])))
                             voicefillnote = (info.get('fillnote', defaultparams['fillnote'])).title().rstrip()
                             notename = info.get('notename', defaultparams['notename'])
                             # next statement places note 60 on C3/C4/C5 with the +0/1/2. So now it is C4:
                             if notename: midinote = NOTES.index(notename[:-1].lower()) + (int(notename[-1])+1) * 12
-                            samples[midinote, velocity, voice] = Sound(os.path.join(dirname, fname), midinote, velocity, release)
+                            samples[midinote, velocity, voice] = Sound(os.path.join(dirname, fname), midinote, velocity, release, xfadeout, xfadein, xfadevol)
                             fillnotes[midinote, voice] = voicefillnote
-                            #print "sample: %s, note: %d, voice: %d, fillnote: %s" %(fname, midinote, voice, voicefillnote)
+                            #print "sample: %s, note: %d, voice: %d, fillnote: %s, release: %s, xfadein: %s" %(fname, midinote, voice, voicefillnote, release, xfadein)
                 except:
                     print "Error in definition file, skipping line %s." % (i+1)
 
