@@ -1,0 +1,63 @@
+This file contains changelog of samplerbox.py
+For changes on samplerbox_audio.pyx, see top of the source file
+For changes on the image, see http://homspace.xs4all.nl/homspace/samplerbox/SBbuild.html
+
+#   April 10 2016 based on Joseph's June 19th 2015 version
+#       - Play samples in playback mode (ignoring normal note-off),
+#         driven by "mode=keyb|once|on64|loop" in definition.txt, default=once
+#       - filter the midi channel (see LOCAL CONFIG below)
+#       - Presets 1-16 instead of 0-15, so the preset/folder name and program change number correspond
+#       - Replaced 7segment display code by 16x2LCD
+#       - Use 3 buttons: one for choosing functions and two other for +/-.
+#         functions: preset, channel, volume, transpose, renewUSB/MidiMute.
+#       - Volume handling based on code by Mirco: http://www.samplerbox.org/forum/51
+#   June 18 2016
+#       - changed volume handling from process approach to API (alsaaudio) to improve stability
+#       - Included accurate velocity control by Erik Nieuwlands: http://www.nickyspride.nl/sb2/
+#       - fixed memory leak caused by ignored note-off.
+#         Done by removing playingnotes entries when same note is triggerered again, so theoretical max now 64 or 128 active notes, depending play mode.
+#         Solution may still conflict with polyphony restriction..open point for some next release..
+#   July 2 2016
+#       - Set midinote 60 to middle C (C4).
+#       - commented most print statements
+#   July 23 2016
+#       - Implemented gain parameter in definition.txt to adjust to sample set input level.
+#       - removed volume from definition.txt, this is not logical anymore (use buttons for this)
+#   July 31 2016
+#       - Implemented release parameter in definition.txt to adjust to fadeout time.
+#   August 30 2016
+#       - Implemented mode=Loo2, to enable ending loop with the same key
+#         This mimics Korgs' KAOSS and some groove boxes.
+#         Mind samples without loop markers: you have to "end" them too before playing again
+#         This explains also why there is no "once" equivalent; I think it's too inconvenient.
+#       - Added tables to init when patch loads ((sustain)playingnotes etc)
+#   November 5 2016
+#       - Implemented MIDI controller volume knob. NB: it cannot read initial position, so you
+#         must use this knob once to start working properly. Initial value is 127 (max volume).
+#         When changing patches, the last value received from controller will be kept.
+#       - Replaced import "rtmidi_python as rtmidi" with rtmidi2
+#         see https://pypi.python.org/pypi/rtmidi2 for download and (install) docs
+#         Done for using multiple midi inputs (and more stability in general).
+#       - Implemented voices by AlexM: http://www.samplerbox.org/forum/184 (minor changes after testing)
+#       - Implemented "all sounds/notes off" (used by panic buttons) and changed patch load accordingly.
+#       - Implemented chords logic, starting with button control
+#       - Adapted screen and button behaviour to facilitate new features
+#       - Merged with Joseph's http://samplerbox.org/files/images/samplerbox_20160831.zip: Pi3 support + sounddevice.
+#         See Blog and http://samplerbox.org/forum/176.
+#       - Made opening of alsamixer dynamic because cardindex changes with the number of midi usb devices
+#         Plugin of a new midi device may still result in no sound, then restart or poweroff/on
+#         Alsamixer = physical volume control is now optional by local config
+#       - Implemented pitch-bend. Requires adaptation+regeneration of the samplerbox_audio module
+#       - Made "Presets 1-16 instead of 0-15" optional by parameter PRESETBASE
+#       - Cleaned up and made code code more robust
+#   November 18-20 2016 (no impact on samplerbox_audio.pyx)
+#       - Improved chords logic (now stops the notes originally started and not obsoleted by other chord)
+#         Switching chords while playing is now OK and when playing overlapping chords, the last takes precedence
+#       - Several bugfixes: 2*16 display and sustain-with-chords logic
+#   December 2016 (needs recompile of samplerbox_audio.pyx)
+#       - Pitchbend depth can be adjusted via midi controller
+#       - Release/fadeout can be adapted per note in config.txt and via midi controller
+#   January 2017
+#       - Control generation of missing notes (%%/%fillnote)
+#   June 2017
+#       - Enable "sensing" of (currently a limited set of) soundcards for the alsamixer
