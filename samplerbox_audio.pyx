@@ -20,6 +20,7 @@ def mixaudiobuffers(list playingsounds, list rmlist, int frame_count, numpy.ndar
     cdef numpy.ndarray b = numpy.zeros(2 * frame_count, numpy.float32)      # output buffer
     cdef float* bb = <float *> (b.data)                                     # and its pointer
     cdef numpy.ndarray z
+    cdef float vel 
     cdef short* zz
     cdef float* fadeout = <float *> (FADEOUT.data)
 
@@ -28,6 +29,7 @@ def mixaudiobuffers(list playingsounds, list rmlist, int frame_count, numpy.ndar
         fadeoutpos = snd.fadeoutpos
         looppos = snd.sound.loop
         length = snd.sound.nframes
+        vel = snd.vel / 127.0 
         speed = SPEED[snd.note - snd.sound.midinote]
         newsz = frame_count * speed
         z = snd.sound.data
@@ -53,8 +55,8 @@ def mixaudiobuffers(list playingsounds, list rmlist, int frame_count, numpy.ndar
                     ii = 0
                     j = pos + ii * speed   
                     k = <int> j       
-                bb[2 * i] += (zz[2 * k] + (j - k) * (zz[2 * k + 2] - zz[2 * k])) * fadeout[fadeoutpos + i]                   # linear interpolation
-                bb[2 * i + 1] += (zz[2 * k + 1] + (j - k) * (zz[2 * k + 3] - zz[2 * k + 1])) * fadeout[fadeoutpos + i]        
+                bb[2 * i] += (zz[2 * k] + (j - k) * (zz[2 * k + 2] - zz[2 * k])) * fadeout[fadeoutpos + i] * vel                  # linear interpolation
+                bb[2 * i + 1] += (zz[2 * k + 1] + (j - k) * (zz[2 * k + 3] - zz[2 * k + 1])) *fadeout[fadeoutpos + i] * vel        
             snd.fadeoutpos += i
 
         else:
@@ -69,8 +71,8 @@ def mixaudiobuffers(list playingsounds, list rmlist, int frame_count, numpy.ndar
                     ii = 0
                     j = pos + ii * speed   
                     k = <int> j  
-                bb[2 * i] += zz[2 * k] + (j - k) * (zz[2 * k + 2] - zz[2 * k])                                               # linear interpolation
-                bb[2 * i + 1] += zz[2 * k + 1] + (j - k) * (zz[2 * k + 3] - zz[2 * k + 1])
+                bb[2 * i] += (zz[2 * k] + (j - k) * (zz[2 * k + 2] - zz[2 * k])) * vel                                               # linear interpolation
+                bb[2 * i + 1] += (zz[2 * k + 1] + (j - k) * (zz[2 * k + 3] - zz[2 * k + 1])) *vel 
 
         snd.pos += ii * speed
 
