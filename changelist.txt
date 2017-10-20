@@ -71,3 +71,12 @@ July 2017
 September 2017
     - Added possibility to play in scales (using existing chords) giving a real "autochord" facility.
     - bugfix: chord=0 and scale=0 added to panic = all-notes/controllers-off.
+October 2017
+    - Enabled setting mode and gain on sample level
+    - Removed the +64 method (affects Loop and On64)
+      On64 replaced by Onc2 (hit same key again to stop)
+      Loop mode now uses 127-note stop.
+    - Introduced %%stopnotes to indicate where the stop area begins.
+      Filling of notes is restricted to the area between %fillnotes and 127-%%stopnotes
+    - Introduced "effects track": voice=0. Samples in here will overrule the respective notes in all defined voices.
+      Voice0 cannot be played separately and %fillnotes is disabled (so it's individual notes only)
