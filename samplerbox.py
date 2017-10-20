@@ -52,46 +52,11 @@ if USE_ALSA_MIXER:
     ########## Mixercontrols I experienced, add your soundcard's specific....
     MIXER_CONTROL = ["PCM","Speaker","Headphone"]
 
-########## Chords & Scales definitions  # You always need index=0 (is single note, "normal play")
+########## Chords definitions  # You always need index=0 (is single note, "normal play")
 
 chordname=["","Maj","Min","Augm","Dim","Sus2","Sus4","Dom7","Maj7","Min7","MiMa7","hDim7","Dim7","Aug7","AuMa7","D7S4"]
 chordnote=[[0],[0,4,7],[0,3,7],[0,4,8],[0,3,6],[0,2,7],[0,5,7],[0,4,7,10],[0,4,7,11],[0,3,7,10],[0,3,7,11],[0,3,6,10],[0,3,6,9],[0,4,8,10],[0,4,8,11],[0,5,7,10]]
 currchord=0                             # single note, "normal play"
-
-scalename=["","C","D","E","F","G","A","B","Cm","Dm","Em","Fm","Gm","Am","Bm"]
-scalechord=[
-    [0,0,0,0,0,0,0,0,0,0,0,0],  # 0
-    [1,0,2,0,2,1,0,1,0,2,1,4],  # C
-    [1,3,1,0,2,0,2,1,0,1,0,2],  # D
-    [0,2,1,3,1,0,2,0,2,1,0,1],  # E
-    [1,2,0,1,4,1,2,0,2,0,1,0],  # F
-    [1,0,1,0,2,1,3,1,0,2,0,2],  # G
-    [0,2,1,0,1,0,2,1,3,1,0,2],  # A
-    [0,2,0,2,1,0,1,0,2,1,0,1],  # B
-    [2,0,4,1,0,2,0,2,1,0,1,0],  # Cm
-    [1,0,2,0,4,1,0,2,0,2,1,0],  # Dm
-    [1,0,1,0,2,0,3,1,0,2,0,2],  # Em
-    [2,1,0,1,0,0,2,4,1,0,2,0],  # Fm
-    [2,0,2,1,0,1,0,2,0,4,1,0],  # Gm
-    [1,0,2,0,2,1,0,1,0,2,0,4],  # Am
-    [0,3,1,0,2,0,2,1,0,1,0,2]   # Bm
-    ]
-currscale=0
-notename=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]  # 0 in scalechord table
-#    ["Maj","C#","Min","D#","Min","Maj","F#","Maj","G#","Min","Maj","Dim"], # C
-#    ["Maj","Augm","Maj","D#","Min","F","Min","Maj","G#","Maj","A#","Min"], # D
-#    ["C","Min","Maj","Augm","Maj","F","Min","G","Min","Maj","A#","Maj"],   # E
-#    ["Maj","Min","D","Maj","Dim","Maj","Min","G","Min","A","Maj","B"],     # F
-#    ["Maj","C#","Maj","D#","Min","Maj","Augm","Maj","G#","Min","A#","Min"],# G
-#    ["C","Min","Maj","D#","Maj","F","Min","Maj","Augm","Maj","A#","Min"],  # A
-#    ["C","Min","D","Min","Maj","F","Maj","G","Min","Maj","A#","Maj"],      # B
-#    ["Min","C#","Dim","Maj","E","Min","F#","Min","Maj","A","Maj","B"],     # Cm
-#    ["Maj","C#","Min","D#","Dim","Maj","F#","Min","G#","Min","Maj","B"],   # Dm
-#    ["Maj","C#","Maj","D#","Min","F","Augm","Maj","G#","Min","A#","Min"],  # Em
-#    ["Min","Maj","D","Maj","E","F","Min","Dim","Maj","A","Min","B"],       # Fm
-#    ["Min","C#","Min","Maj","E","Maj","F#","Min","G#","Dim","Maj","B"],    # Gm
-#    ["Maj","C#","Min","D#","Min","Maj","F#","Maj","G#","Min","A#","Dim"],  # Am
-#    ["C","Augm","Maj","D#","Min","F","Min","Maj","G#","Maj","A#","Min"]    # Bm
 
 ########## Initialize other globals, don't change
 
@@ -134,7 +99,7 @@ import threading
 from chunk import Chunk
 import struct
 import rtmidi2
-import test_audio   # audio-module
+import samplerbox_audio   # audio-module
 
 
 #########################################
@@ -225,15 +190,15 @@ if USE_HD44780_16x2_LCD:
     lcd = HD44780()
 
     def display(s2):
-        global basename, sample_mode, volume, globaltranspose, currvoice, currchord, chordname, scalename, currscale, button_disp, buttfunc
+        global basename, sample_mode, volume, globaltranspose, currvoice, currchord, chordname, button_disp, buttfunc
         if globaltranspose == 0:
             transpose = ""
         else:
             transpose = "%+d" % globaltranspose
         if USE_ALSA_MIXER:
-            s1 = "%s%s %s %d%% %s" % (scalename[currscale], chordname[currchord], sample_mode, volume, transpose)
+            s1 = "%s %s %d%% %s" % (chordname[currchord], sample_mode, volume, transpose)
         else:
-            s1 = "%s%s %s %s" % (scalename[currscale], chordname[currchord], sample_mode, transpose)
+            s1 = "%s %s %s" % (chordname[currchord], sample_mode, transpose)
         if s2 == "":
             if currvoice>1: s2=str(currvoice)+":"
             s2 += basename
@@ -360,7 +325,7 @@ class PlayingSound:
 class Sound:
     def __init__(self, filename, midinote, velocity, release, xfadeout, xfadein, xfadevol):
         global RELMODE
-        #print 'Reading ' + filename
+        print 'Reading ' + filename
         wf = waveread(filename)
         self.fname = filename
         self.midinote = midinote
@@ -399,6 +364,7 @@ class Sound:
             end = self.nframes  # otherwise we play till end of loop/file as determined by the sample
             loop = self.loop    # and we loop as determined by the sample
         snd = PlayingSound(self, note, vel, pos, end, loop)
+        #print snd
         #print 'play fname: ' + self.fname + ' note/vel: '+str(note)+'/'+str(vel)+' midinote: ' +str(self.midinote) + ' vel: '+str(vel) + ' loopstart: '+str(self.loop) + ' loopend: '+str(self.nframes) + ' relmark: '+str(self.relmark) + ' play-end: '+str(end) +" nframes: "+str(self.nframes) + ' EOF: '+str(self.eof) + ' pos: '+str(pos)
         playingsounds.append(snd)
         return snd
@@ -407,7 +373,7 @@ class Sound:
         if sampwidth == 2:
             npdata = numpy.fromstring(data, dtype = numpy.int16)
         elif sampwidth == 3:
-            npdata = test_audio.binary24_to_int16(data, len(data)/3)    # audio-module
+            npdata = samplerbox_audio.binary24_to_int16(data, len(data)/3)    # audio-module
         if numchan == 1: 
             npdata = numpy.repeat(npdata, 2)
         return npdata
@@ -432,8 +398,7 @@ def AudioCallback(outdata, frame_count, time_info, status):
     rmlist = []
     playingsounds = playingsounds[-MAX_POLYPHONY:]
     # audio-module:
-    b = test_audio.mixaudiobuffers(playingsounds, rmlist, frame_count, FADEOUT, FADEOUTLENGTH, SPEED, SPEEDRANGE, PITCHBEND, PITCHSTEPS)
-    #b = samplerbox_audio.mixaudiobuffers(playingsounds, rmlist, frame_count, FADEOUT, FADEOUTLENGTH, PRERELEASE, SPEED, SPEEDRANGE, PITCHBEND, PITCHSTEPS)
+    b = samplerbox_audio.mixaudiobuffers(playingsounds, rmlist, frame_count, FADEOUT, FADEOUTLENGTH, SPEED, SPEEDRANGE, PITCHBEND, PITCHSTEPS)
     for e in rmlist:
         #print "remove " +str(e) + ", note: " + str(e.playingnote())
         try: playingsounds.remove(e)
@@ -493,22 +458,19 @@ if not USE_ALSA_MIXER:
 #########################################
 
 def AllNotesOff():
-    global playingnotes, playingsounds, sustainplayingnotes, triggernotes, currchord, currscale
+    global playingnotes, playingsounds, sustainplayingnotes, triggernotes
     playingsounds = []
     playingnotes = {}
     sustainplayingnotes = []
     triggernotes = [128]*128     # fill with unplayable note
-    currchord = 0
-    currscale = 0
 
 def MidiCallback(message, time_stamp):
     global playingnotes, sustain, sustainplayingnotes, triggernotes, RELMODE
     global preset, sample_mode, midi_mute, velocity_mode, gain, volumeCC, voices, currvoice
     global PRERELEASE, PITCHBEND, PITCHRANGE, pitchneutral, pitchdiv, pitchnotes
-    global chordnote, currchord, chordname, scalechord, currscale, notename
+    global chordnote, currchord     # , chordname
     messagetype = message[0] >> 4
     messagechannel = (message[0] & 15) + 1
-    #print 'Channel %d, message %d' % (messagechannel , messagetype)
     if (messagechannel == MIDI_CHANNEL) and (midi_mute == False):
         note = message[1] if len(message) > 1 else None
         midinote = note
@@ -536,11 +498,6 @@ def MidiCallback(message, time_stamp):
                   velmixer = 127 * gain
               else:
                   velmixer = velocity * gain
-              if currscale>0:               # scales require a chords mix
-                  m = int(midinote/12)      # do a "remainder midinote/12" without...
-                  currchord = scalechord[currscale][midinote-m*12]  # ...having to import the full math module
-                  # display("")     # !! use this for testing only as it causes serious latency !!
-                  print "Playing %s in %s giving %s" %(notename[midinote-m*12], scalename[currscale], chordname[currchord])
               for n in range (len(chordnote[currchord])):
                   playnote=midinote+chordnote[currchord][n]
                   for m in sustainplayingnotes:   # safeguard polyphony; don't sustain double notes
@@ -554,8 +511,7 @@ def MidiCallback(message, time_stamp):
                               m.fadeout(50)
                           playingnotes[playnote] = []   # housekeeping
                   triggernotes[playnote]=midinote   # we are last playing this one
-                  #print "start note " + str(playnote)
-                  #stops hier moet de set van voices aangezet
+                  print "start note " + str(playnote)
                   playingnotes.setdefault(playnote,[]).append(samples[playnote, velocity, currvoice].play(playnote, velmixer, 0))
             except:
               print 'Unassigned/unfilled note or other exception'
@@ -577,7 +533,6 @@ def MidiCallback(message, time_stamp):
                                     velmixer = m.playingvelocity() # get org value for release sample
                                     m.fadeout(50)
                             playingnotes[playnote] = []
-                            #stops hier moet de set van voices aangezet
                             if RELMODE == 'E':
                                 playingnotes.setdefault(playnote,[]).append(samples[playnote, velocity, currvoice].play(playnote, velmixer*gain, -1))
                             triggernotes[playnote] = 128  # housekeeping
@@ -593,7 +548,7 @@ def MidiCallback(message, time_stamp):
         elif messagetype == 11: # control change (CC, sometimes called Continuous Controllers)
             CCnum = note
             CCval = velocity
-            #print "CCnum = %d, CCval = %d" % (CCnum, CCval)
+            #print "CCnum = " + str(CCnum) + ", CCval = " + str(CCval)
 
             if CCnum == 7:       # volume knob action (0-127)
                 volumeCC = CCval / 127.0   # force float
@@ -618,17 +573,11 @@ def MidiCallback(message, time_stamp):
                     currvoice = CCval
                     display("")
 
-            elif CCnum == 81:           # general purpose 81 used for chords and scales
+            elif CCnum == 81:           # general purpose 81 used for chords
                 if CCval > 0:           # I use MIDI CC Trigger/Release; this ignores default release value
                     CCval -= 1          # align with table, makes it human human too :-)
                     if CCval < len(chordnote):
                         currchord = CCval
-                        currscale = 0
-                        display("")
-                    CCval -= 99         # values 100-112 used for scales (theoretically, currently 100-107)
-                    if CCval > -1 and CCval < len(scalechord):
-                        currscale = CCval
-                        currchord = 0
                         display("")
 
             elif CCnum == 82:           # Pitch bend sensitivity (my controller cannot send RPN)
@@ -865,16 +814,16 @@ if USE_BUTTONS:
     butt_down = 13  # values of butt_up/down/sel depend on physical wiring
     butt_sel = 26   # values of butt_up/down/sel depend on physical wiring
     buttfunc = 0
-    button_functions=["","Volume","Midichannel","Transpose","RenewUSB/MidMute","Play Chord:","Use Scale:"]
-    button_disp=["","V","M","T","X","C","S"]  # take care, these values can used elsewhere for testing
+    button_functions=["","Volume","Midichannel","Transpose","RenewUSB/MidMute","Play Chord:"]
+    button_disp=["","V","M","T","S","C"]  # take care, these values are used below for testing
 
     def Button_display():
-        global volume, MIDI_CHANNEL, globaltranspose, buttfunc, button_functions, chordname, currchord, scalename, currscale
-        function_value=[""," %d%%"%(volume)," %d"%(MIDI_CHANNEL)," %+d"%(globaltranspose),""," %s"%(chordname[currchord])," %s"%(scalename[currscale])]
+        global volume, MIDI_CHANNEL, globaltranspose, buttfunc, button_functions, chordname, currchord
+        function_value=[""," %d%%"%(volume)," %d"%(MIDI_CHANNEL)," %+d"%(globaltranspose),""," %s"%(chordname[currchord])]
         display(button_functions[buttfunc]+function_value[buttfunc])
         
     def Buttons():
-        global preset, basename, lastbuttontime, volume, MIDI_CHANNEL, globaltranspose, midi_mute, chordname, currchord, scalename, currscale
+        global preset, basename, lastbuttontime, volume, MIDI_CHANNEL, globaltranspose, midi_mute, chordname, currchord
         global buttfunc, button_functions, butt_up, butt_down, butt_sel, button_disp
 
         GPIO.setmode(GPIO.BCM)
@@ -915,14 +864,8 @@ if USE_BUTTONS:
                             midi_mute = False
                             Button_display()
                     elif buttfunc==5:
-                        currscale=0     # scale and chord mode are mutually exclusive
                         currchord -= 1
                         if currchord<0: currchord=len(chordname)-1
-                        Button_display()
-                    elif buttfunc==6:
-                        currchord=0     # scale and chord mode are mutually exclusive
-                        currscale-=1
-                        if currscale<0: currscale=len(scalename)-1
                         Button_display()
 
                 elif not GPIO.input(butt_up):
@@ -952,14 +895,8 @@ if USE_BUTTONS:
                         LoadSamples()
                         #Button_display()
                     elif buttfunc==5:
-                        currscale=0     # scale and chord mode are mutually exclusive
                         currchord += 1
                         if currchord>=len(chordname): currchord=0
-                        Button_display()
-                    elif buttfunc==6:
-                        churrchord=0     # scale and chord mode are mutually exclusive
-                        currscale += 1
-                        if currscale>=len(scalename): currscale=0
                         Button_display()
 
                 elif not GPIO.input(butt_sel):
