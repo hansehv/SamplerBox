@@ -134,7 +134,7 @@ import threading
 from chunk import Chunk
 import struct
 import rtmidi2
-import test_audio   # audio-module
+import samplerbox_audio   # audio-module
 
 
 #########################################
@@ -407,7 +407,7 @@ class Sound:
         if sampwidth == 2:
             npdata = numpy.fromstring(data, dtype = numpy.int16)
         elif sampwidth == 3:
-            npdata = test_audio.binary24_to_int16(data, len(data)/3)    # audio-module
+            npdata = samplerbox_audio.binary24_to_int16(data, len(data)/3)    # audio-module
         if numchan == 1: 
             npdata = numpy.repeat(npdata, 2)
         return npdata
@@ -432,8 +432,7 @@ def AudioCallback(outdata, frame_count, time_info, status):
     rmlist = []
     playingsounds = playingsounds[-MAX_POLYPHONY:]
     # audio-module:
-    b = test_audio.mixaudiobuffers(playingsounds, rmlist, frame_count, FADEOUT, FADEOUTLENGTH, SPEED, SPEEDRANGE, PITCHBEND, PITCHSTEPS)
-    #b = samplerbox_audio.mixaudiobuffers(playingsounds, rmlist, frame_count, FADEOUT, FADEOUTLENGTH, PRERELEASE, SPEED, SPEEDRANGE, PITCHBEND, PITCHSTEPS)
+    b = samplerbox_audio.mixaudiobuffers(playingsounds, rmlist, frame_count, FADEOUT, FADEOUTLENGTH, SPEED, SPEEDRANGE, PITCHBEND, PITCHSTEPS)
     for e in rmlist:
         #print "remove " +str(e) + ", note: " + str(e.playingnote())
         try: playingsounds.remove(e)
