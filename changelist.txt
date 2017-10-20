@@ -66,3 +66,8 @@ July 2017
     - Implemented sampled release, release sound taken from same sample (start at last marker)
       Affected waveread and requires rebuild of samplerbox_audio module
       Grandorgue samples of pipe organs and harpsichords can now be played !
+      New parameters (%%/%) xfadeout, xfadein and xfadevol for controlling crossfading the release sample
+    - Disabled adjusting release at runtime with midi controller 72
+September 2017
+    - Added possibility to play in scales (using existing chords) giving a real "autochord" facility.
+    - bugfix: chord=0 and scale=0 added to panic = all-notes/controllers-off.
