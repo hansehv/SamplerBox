@@ -409,7 +409,7 @@ class Sound:
             self.relmark = self.eof         # no extra release processing
             self.nframes = self.eof         # and use full length (with default samplerbox release processing
 
-        print "%s %s loopmode=%d stopmode=%d gain=%.2f" % (filename, mode, self.loop, self.stopmode, self.gain)
+        #print "%s %s loopmode=%d stopmode=%d gain=%.2f" % (filename, mode, self.loop, self.stopmode, self.gain)
         self.data = self.frames2array(wf.readframes(self.eof), wf.getsampwidth(), wf.getnchannels())
 
         wf.close()            
@@ -583,8 +583,7 @@ def MidiCallback(message, time_stamp):
                     if currscale>0:               # scales require a chords mix
                         m = int(midinote/12)      # do a "remainder midinote/12" without...
                         currchord = scalechord[currscale][midinote-m*12]  # ...having to import the full math module
-                        # display("")     # !! use this for testing only as it causes serious latency !!
-                        print "Playing %s in %s giving %s" %(notename[midinote-m*12], scalename[currscale], chordname[currchord])
+                        #print "Playing %s in %s giving %s" %(notename[midinote-m*12], scalename[currscale], chordname[currchord])
                     for n in range (len(chordnote[currchord])):
                         playnote=midinote+chordnote[currchord][n]
                         for m in sustainplayingnotes:   # safeguard polyphony; don't sustain double notes
@@ -865,7 +864,7 @@ def ActuallyLoad():
             #print "Trying " + file
             if os.path.isfile(file):
                 #print "Processing " + file
-                samples[midinote, 127, 1] = Sound(file, midinote, 127, PRERELEASE, GetStopmode(PLAYLIVE), PREXFADEOUT, PREXFADEIN, PREXFADEVOL)
+                samples[midinote, 127, 1] = Sound(file, midinote, 127, PLAYLIVE, PRERELEASE, globalgain, PREXFADEOUT, PREXFADEIN, PREXFADEVOL)
                 fillnotes[midinote, 1] = fillnote
 
     initial_keys = set(samples.keys())
