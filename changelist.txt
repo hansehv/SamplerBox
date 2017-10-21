@@ -80,3 +80,4 @@ October 2017
       Filling of notes is restricted to the area between %fillnotes and 127-%%stopnotes
     - Introduced "effects track": voice=0. Samples in here will overrule the respective notes in all defined voices.
       Voice0 cannot be played separately and %fillnotes is disabled (so it's individual notes only)
+    - Fixed bugs when no definition.txt is present
