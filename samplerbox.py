@@ -65,14 +65,14 @@ scalechord=[
     [1,0,2,0,2,1,0,1,0,2,1,4],  # C
     [1,3,1,0,2,0,2,1,0,1,0,2],  # D
     [0,2,1,3,1,0,2,0,2,1,0,1],  # E
-    [1,2,0,1,4,1,2,0,2,0,1,0],  # F
+    [1,0,2,1,4,1,0,2,0,2,1,0],  # F
     [1,0,1,0,2,1,3,1,0,2,0,2],  # G
     [0,2,1,0,1,0,2,1,3,1,0,2],  # A
     [0,2,0,2,1,0,1,0,2,1,0,1],  # B
     [2,0,4,1,0,2,0,2,1,0,1,0],  # Cm
     [1,0,2,0,4,1,0,2,0,2,1,0],  # Dm
     [1,0,1,0,2,0,3,1,0,2,0,2],  # Em
-    [2,1,0,1,0,0,2,4,1,0,2,0],  # Fm
+    [2,1,0,1,0,2,2,4,1,0,2,0],  # Fm
     [2,0,2,1,0,1,0,2,0,4,1,0],  # Gm
     [1,0,2,0,2,1,0,1,0,2,0,4],  # Am
     [0,3,1,0,2,0,2,1,0,1,0,2]   # Bm
@@ -82,14 +82,14 @@ notename=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]  # 0 in scalecho
 #    ["Maj","C#","Min","D#","Min","Maj","F#","Maj","G#","Min","Maj","Dim"], # C
 #    ["Maj","Augm","Maj","D#","Min","F","Min","Maj","G#","Maj","A#","Min"], # D
 #    ["C","Min","Maj","Augm","Maj","F","Min","G","Min","Maj","A#","Maj"],   # E
-#    ["Maj","Min","D","Maj","Dim","Maj","Min","G","Min","A","Maj","B"],     # F
+#    ["Maj","C#","Min","Maj","Dim","Maj","F#","Min","G#","Min","Maj","B"],  # F
 #    ["Maj","C#","Maj","D#","Min","Maj","Augm","Maj","G#","Min","A#","Min"],# G
 #    ["C","Min","Maj","D#","Maj","F","Min","Maj","Augm","Maj","A#","Min"],  # A
 #    ["C","Min","D","Min","Maj","F","Maj","G","Min","Maj","A#","Maj"],      # B
 #    ["Min","C#","Dim","Maj","E","Min","F#","Min","Maj","A","Maj","B"],     # Cm
 #    ["Maj","C#","Min","D#","Dim","Maj","F#","Min","G#","Min","Maj","B"],   # Dm
 #    ["Maj","C#","Maj","D#","Min","F","Augm","Maj","G#","Min","A#","Min"],  # Em
-#    ["Min","Maj","D","Maj","E","F","Min","Dim","Maj","A","Min","B"],       # Fm
+#    ["Min","Maj","D","Maj","E","Min","Min","Dim","Maj","A","Min","B"],     # Fm
 #    ["Min","C#","Min","Maj","E","Maj","F#","Min","G#","Dim","Maj","B"],    # Gm
 #    ["Maj","C#","Min","D#","Min","Maj","F#","Maj","G#","Min","A#","Dim"],  # Am
 #    ["C","Augm","Maj","D#","Min","F","Min","Maj","G#","Maj","A#","Min"]    # Bm
