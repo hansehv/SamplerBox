@@ -81,3 +81,5 @@ October 2017
     - Introduced "effects track": voice=0. Samples in here will overrule the respective notes in all defined voices.
       Voice0 cannot be played separately and %fillnotes is disabled (so it's individual notes only)
     - Fixed bugs when no definition.txt is present
+November 2017
+    - Fixed errors in F and Fm scale
