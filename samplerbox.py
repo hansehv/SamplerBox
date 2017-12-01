@@ -48,6 +48,11 @@ preset = 0 + PRESETBASE                 # the default patch to load
 PITCHRANGE = 12                         # default range of the pitchwheel in semitones (max=12 is een octave)
 PITCHBITS = 7                           # pitchwheel resolution, 0=disable, max=14 (=16384 steps)
                                         # values below 7 will produce bad results
+HTTP_GUI = True                         # values for the webgui
+HTTP_PORT = 80
+HTTP_ROOT = "webgui"
+presetlist = []
+samplesdir = "."
 
 if USE_ALSA_MIXER:
     ########## Mixercontrols I experienced, add your soundcard's specific....
@@ -96,6 +101,7 @@ notename=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]  # 0 in scalecho
 
 ########## Initialize other globals, don't change
 
+ActuallyLoading="No"
 samples = {}
 playingnotes = {}
 sustainplayingnotes = []
@@ -138,7 +144,6 @@ from chunk import Chunk
 import struct
 import rtmidi2
 import samplerbox_audio   # audio-module
-
 
 #########################################
 ##  LCD DISPLAY 
@@ -253,6 +258,127 @@ else:
     def display(s):
         pass    
 
+#########################################
+##  Customized minimal webserver, together with
+##  javascripts giving buildingblocks for GUI
+#########################################
+
+if HTTP_GUI:
+    from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+    import urllib
+    from urlparse import urlparse,parse_qs
+    import shutil
+    import mimetypes
+class HTTPRequestHandler(BaseHTTPRequestHandler):
+
+    def do_GET(self):
+        global HTTP_ROOT, samplesdir
+        path = urlparse(urllib.unquote(self.path)).path
+        if path=="/SamplerBox.API":
+            self.send_API()
+        else:
+            if len(path)<2: path=HTTP_ROOT + "/index.html"
+            elif path[len(samplesdir):] != samplesdir:
+                path=HTTP_ROOT + path
+            elif samplesdir[1:] != '/': path=HTTP_ROOT + path
+            # and otherwise it's an absolute path (so it's ok as is)
+            try:
+                #print "open %s binary" % (path)
+                f = open(path, 'rb')
+            except IOError:
+                self.send_error(404, '"%s" does not exist' % (path))
+                return None
+            self.send_response(200)
+            self.send_header("Cache-Control", 'max-age=604800')  # 7 days (ss*mm*hh*dd)
+            mime_type = mimetypes.guess_type(path)
+            self.send_header("Content-type", "%s" % (mime_type[0]) )
+            fs = os.fstat(f.fileno())
+            self.send_header("Content-Length", str(fs[6]))
+            self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
+            self.end_headers()
+            shutil.copyfileobj(f, self.wfile)
+            f.close()
+        
+    def do_HEAD(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        
+    def do_POST(self):
+        global MIDI_CHANNEL,volume,volumeCC
+        global preset,globalgain,globaltranspose
+        global currvoice,currscale,currchord
+        global basename,presetlist,ActuallyLoading
+        inval=0
+        
+        length = int(self.headers.getheader('content-length'))
+        field_data = self.rfile.read(length)
+        fields=parse_qs(field_data)
+        if "SB_RenewUSB"        in fields:
+            if fields["SB_RenewUSB"][0] == "Yes":
+                basename="None"
+                ActuallyLoading="Yes"   # safety first, as these processes run in parallel
+                LoadSamples()
+        elif "SB_Preset"        in fields:
+            inval=presetlist[int(fields["SB_Preset"][0])][0]
+            if preset!=inval:
+                preset=inval;
+                ActuallyLoading="Yes"   # safety first, as these processes run in parallel
+                LoadSamples()
+            else:
+                if "SB_MidiChannel" in fields: MIDI_CHANNEL     =int(fields["SB_MidiChannel"][0])
+                if "SB_SoundVolume" in fields: volume           =int(fields["SB_SoundVolume"][0])
+                if "SB_MidiVolume"  in fields: volumeCC         =float(fields["SB_MidiVolume"][0])/100
+                if "SB_Gain"        in fields: globalgain       =float(fields["SB_Gain"][0])/100
+                if "SB_Transpose"   in fields: globaltranspose  =int(fields["SB_Transpose"][0])
+                if "SB_Voice"       in fields: currvoice        =int(fields["SB_MidiChannel"][0])
+                if "SB_Scale"       in fields:
+                    inval=int(fields["SB_Scale"][0])
+                    if currscale==inval: scalechange=False
+                    else:
+                        scalechange=True
+                        currscale=inval
+                        currchord=0
+                if "SB_Chord"       in fields and not scalechange:
+                    inval=int(fields["SB_Chord"][0])
+                    if not currchord==inval:
+                        currchord=inval
+                        currscale=0
+        self.do_GET()
+
+    def send_API(self):
+        global MIDI_CHANNEL,volume,volumeCC
+        global preset,globalgain,globaltranspose
+        global currvoice,currscale,currchord
+        varName=["SB_MidiChannel","SB_SoundVolume","SB_MidiVolume",
+                 "SB_Preset","SB_Gain","SB_Transpose",
+                 "SB_Voice","SB_Scale","SB_Chord"]
+        global chordname,scalename                      # descriptors, no need for ID_translations
+        global samplesdir,presetlist,ActuallyLoading    # internal use, no need for ID_translations
+        
+        self.send_response(200)
+        self.send_header("Content-type", 'application/javascript')
+        self.send_header("Cache-Control", 'no-cache, must-revalidate')
+        self.end_headers()
+        for i in range(len(varName)):
+            self.wfile.write("var %s;" % (varName[i]) )
+        self.wfile.write("\nvar SB_numvars=0;var SB_VarName;var SB_VarVal;var SB_Samplesdir;")
+        self.wfile.write("var SB_numpresets;var SB_Presetlist;")
+        self.wfile.write("var SB_numchords;var SB_Chordname;")
+        self.wfile.write("var SB_numscales;var SB_Scalename;")
+        self.wfile.write("\nfunction SB_GetAPI() {")
+        self.wfile.write("\n\tSB_numvars=%d;\n\tSB_varName=['%s'" % (len(varName),varName[0]) )
+        for i in range(1,len(varName)):
+            self.wfile.write(",'%s'" % (varName[i]) )
+        self.wfile.write("];\n\tSB_VarVal=[")
+        self.wfile.write("%d,%d,%d," % (MIDI_CHANNEL,volume,volumeCC*100) )
+        self.wfile.write("%d,%d,%d," % (preset,globalgain*100,globaltranspose) )
+        self.wfile.write("%d,%d,%d" % (currvoice,currscale,currchord) )
+        self.wfile.write("];SB_Samplesdir='%s';SB_Loading='%s';\n" % (samplesdir, ActuallyLoading) )
+        self.wfile.write("\tSB_numpresets=%d;SB_Presetlist=%s;\n" % (len(presetlist),presetlist) )
+        self.wfile.write("\tSB_numchords=%d;SB_Chordname=%s;\n\tSB_Chordnote=%s;\n" % (len(chordname),chordname,chordnote) )
+        self.wfile.write("\tSB_numscales=%d;SB_Scalename=%s;\n\tSB_Scalechord=%s;\n" % (len(scalename),scalename,scalechord) )
+        self.wfile.write("};")
 
 #########################################
 ##  SLIGHT MODIFICATION OF PYTHON'S WAVE MODULE
@@ -705,19 +831,32 @@ NOTES = ["c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"]
 basename = "None"
 
 def ActuallyLoad():    
-    global preset, samples, SAMPLES_DIR, BOXRELEASE, PRERELEASE, BOXXFADEIN, PREXFADEIN, BOXSTOP17, stop127
+    global preset, presetlist, samples, SAMPLES_DIR, samplesdir, BOXRELEASE, PRERELEASE, BOXXFADEIN, PREXFADEIN, BOXSTOP17, stop127
     global globaltranspose, BOXSAMPLE_MODE, basename, BOXVELOCITY_MODE, velocity_mode, globalgain, voices, currvoice, PITCHRANGE, pitchnotes, RELSAMPLE
+    global ActuallyLoading
+    ActuallyLoading="Yes"
     #print 'Entered ActuallyLoad'
     AllNotesOff()
     currbase = basename    
 
     samplesdir = SAMPLES_DIR if os.listdir(SAMPLES_DIR) else '.'      # use current folder (containing 0 Saw) if no user media containing samples has been found
-    basename = next((f for f in os.listdir(samplesdir) if f.startswith("%d " % preset)), None)      # or next(glob.iglob("blah*"), None)
+    #basename = next((f for f in os.listdir(samplesdir) if f.startswith("%d " % preset)), None)      # or next(glob.iglob("blah*"), None)
+    presetlist=[]
+    for f in os.listdir(samplesdir):
+        #print f
+        if re.match(r'[0-9]* .*', f):
+            if os.path.isdir(os.path.join(samplesdir,f)):
+                p=int(re.search('\d* ', f).group(0).strip())
+                presetlist.append([p,f])
+                if p==preset: basename=f
+    presetlist=sorted(presetlist,key=lambda presetlist: presetlist[0])  # sort without having to import operator modules
+
     print "We have %s, we want %s" %(currbase, basename)
     if basename:
         if basename == currbase:      # don't waste time reloading a patch
             #print 'Kept preset %s' % basename
             display("")
+            ActuallyLoading="No"
             return
         dirname = os.path.join(samplesdir, basename)
 
@@ -743,6 +882,7 @@ def ActuallyLoad():
         #print 'Preset empty: %s' % preset
         basename = "%d Empty preset" %preset
         display("")
+        ActuallyLoading="No"
         return
 
     #print 'Preset loading: %s ' % basename
@@ -819,6 +959,7 @@ def ActuallyLoad():
                         #print 'Processing ' + fname
                         if LoadingInterrupt:
                             #print 'Loading % s interrupted...' % dirname
+                            ActuallyLoading="No"
                             return
                         m = re.match(pattern, fname)
                         if m:
@@ -857,7 +998,8 @@ def ActuallyLoad():
 
     else:
         for midinote in range(128):
-            if LoadingInterrupt: 
+            if LoadingInterrupt:
+                ActuallyLoading="No"
                 return
             voices.append(1)
             file = os.path.join(dirname, "%d.wav" % midinote)
@@ -917,11 +1059,13 @@ def ActuallyLoad():
 
         #print 'Preset loaded: ' + str(preset)
         display("")
+        ActuallyLoading="No"
 
     else:
         #print 'Preset empty: ' + str(preset)
         basename = "%d Empty preset" %preset
         display("")
+        ActuallyLoading="No"
 
 
 #########################################
@@ -1051,6 +1195,24 @@ if USE_BUTTONS:
     ButtonsThread.daemon = True
     ButtonsThread.start()    
 
+#########################################
+##  WebGUI thread
+#########################################
+
+if HTTP_GUI:
+   
+    def HTTP_Server(server_class=HTTPServer, handler_class=HTTPRequestHandler, port=HTTP_PORT):
+        server_address = ('', port)
+        httpd = server_class(server_address, handler_class)
+        print 'Starting httpd on port %d' % (port)
+        try:
+            httpd.serve_forever()
+        except:
+            print 'Starting httpd failed'
+
+    HTTPThread = threading.Thread(target = HTTP_Server)
+    HTTPThread.daemon = True
+    HTTPThread.start()
 
 #########################################
 ##  MIDI IN via SERIAL PORT

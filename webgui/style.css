@@ -1,0 +1,146 @@
+BODY {
+	background-color:#C0C0C0;
+	color:#000000;}
+INPUT, TEXTAREA, SELECT {
+	font-family:"Lucida Console", Monaco, monospace;
+	font-size:medium;
+	background-color:#80FFFF;}
+BUTTON, .value {
+	font-family:"Lucida Console", Monaco, monospace;
+	background-color:#80FFFF;}
+BODY, TABLE {
+	font-size:small;
+	font-family:"Lucida Sans Unicode"; "Lucida Grande"; sans-serif;}
+
+TD.value {text-align:center;}
+
+BUTTON {
+	padding: 2px 8px;
+	text-align: center;
+	cursor: pointer;
+	border: none;
+	border-radius: 10px;
+	box-shadow: 0 3px #999;}
+BUTTON:hover {background-color:#00FFFF;}
+BUTTON:active {
+	background-color:#00FFFF;
+	box-shadow: 0 5px #666;
+	transform: translateY(2px);}
+
+.onsameline {display: inline-block;}
+
+/* ----- SLIDER ----- (input type=range) ----- */
+/* SLIDER: hide defaults */
+input[type=range] {
+  -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
+  width: 100%; /* Specific width is required for Firefox. */
+  background: transparent; /* Otherwise white in Chrome */
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+}
+input[type=range]:focus {
+  outline: none; /* Removes the blue border. You should probably do some kind of focus styling for accessibility reasons though. */
+}
+input[type=range]::-ms-track {
+  width: 100%;
+  cursor: pointer;
+  /* Hides the slider so custom styles can be added */
+  background: transparent; 
+  border-color: transparent;
+  color: transparent;
+}
+/* SLIDER: new values */
+input[type=range] {
+  height: 20px;
+  -webkit-appearance: none;
+  margin: 5 5px;
+  width: 150px;
+  vertical-align: text-bottom;
+  padding: 0;
+}
+input[type=range]:focus {
+  outline: none;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 5px;
+  cursor: pointer;
+  animate: 0.2s;
+  box-shadow: 1px 1px 1px #000000;
+  background: #80ffff;
+  border-radius: 5px;
+  border: 1px solid #000000;
+}
+input[type=range]::-webkit-slider-thumb {
+  box-shadow: 1px 1px 1px #000000;
+  border: 1px solid #000000;
+  height: 18px;
+  width: 10px;
+  border-radius: 10px;
+  background: #FFFFFF;
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -5px;
+  /* margin-top: -8px; */
+}
+input[type=range]:focus::-webkit-slider-runnable-track {
+  background: #80ffff;
+}
+input[type=range]::-moz-range-track {
+  width: 100%;
+  height: 5px;
+  cursor: pointer;
+  animate: 0.2s;
+  box-shadow: 1px 1px 1px #000000;
+  background: #80ffff;
+  border-radius: 5px;
+  border: 1px solid #000000;
+}
+input[type=range]::-moz-range-thumb {
+  box-shadow: 1px 1px 1px #000000;
+  border: 1px solid #000000;
+  height: 18px;
+  width: 10px;
+  border-radius: 10px;
+  margin-top: 0;
+  background: #FFFFFF;
+  cursor: pointer;
+}
+input[type=range]::-ms-track {
+  width: 100%;
+  height: 5px;
+  cursor: pointer;
+  animate: 0.2s;
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+}
+input[type=range]::-ms-fill-lower {
+  background: #80ffff;
+  border: 1px solid #000000;
+  border-radius: 5px;
+  box-shadow: 1px 1px 1px #000000;
+}
+input[type=range]::-ms-fill-upper {
+  background: #80ffff;
+  border: 1px solid #000000;
+  border-radius: 5px;
+  box-shadow: 1px 1px 1px #000000;
+}
+input[type=range]::-ms-thumb {
+  margin-top: 1px;
+  box-shadow: 1px 1px 1px #000000;
+  border: 1px solid #000000;
+  height: 18px;
+  width: 10px;
+  border-radius: 5px;
+  background: #FFFFFF;
+  cursor: pointer;
+}
+input[type=range]:focus::-ms-fill-lower {
+  background: #80ffff;
+}
+input[type=range]:focus::-ms-fill-upper {
+  background: #80ffff;
+}

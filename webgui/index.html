@@ -1,0 +1,57 @@
+<!DOCTYPE html><HTML><HEAD>
+<!-- Minus AutoDato -->
+	<TITLE>SamplerBox</TITLE>
+<META NAME="Generator" CONTENT="Stone's WebWriter 3.5">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<LINK REL="stylesheet" TYPE="text/css" HREF="style.css">
+<script SRC="SamplerBox.API" TYPE="text/javascript"></script>
+<script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+</HEAD>
+<BODY>
+<H1>SamplerBox Examples</H1>
+<A HREF="testform.html">testform.html</A>
+<P>
+
+<TABLE BORDER="1"><TR><TH>Variable</TH><TH>With ID</TH><TH>With script<script>
+SB_Update();</script></TH></TR>
+<TR><TD>MIDI Channel</TD><TD ID="ID_SB_MidiChannel">?</TD><TD CLASS="value"><script>document.write(SB_MidiChannel);</script></TD></TR>
+<TR><TD>DAC volume</TD><TD ID="ID_SB_SoundVolume">?</TD><TD CLASS="value"><script>document.write(SB_SoundVolume);</script></TD></TR>
+<TR><TD>MIDI volume</TD><TD ID="ID_SB_MidiVolume">?</TD><TD CLASS="value"><script>document.write(SB_MidiVolume);</script></TD></TR>
+<TR><TD>Preset</TD><TD ID="ID_SB_Preset">?</TD><TD CLASS="value"><script>document.write(SB_Preset);</script></TD></TR>
+<TR><TD>Gain</TD><TD ID="ID_SB_Gain">?</TD><TD CLASS="value"><script>document.write(SB_Gain);</script></TD></TR>
+<TR><TD>Transpose</TD><TD ID="ID_SB_Transpose">?</TD><TD CLASS="value"><script>document.write(SB_Transpose);</script></TD></TR>
+<TR><TD>Voice</TD><TD ID="ID_SB_Voice">?</TD><TD CLASS="value"><script>document.write(SB_Voice);</script></TD></TR>
+<TR><TD>Chord</TD><TD ID="ID_SB_Chord">?</TD><TD CLASS="value"><script>document.write(SB_Chord);</script></TD></TR>
+<TR><TD>Scale</TD><TD ID="ID_SB_Scale">?</TD><TD CLASS="value"><script>document.write(SB_Scale);</script></TD></TR>
+<P>
+</TABLE>
+<FORM ID="elem_SB_Form">
+<P STYLE="line-height:300%;">
+<span CLASS="onsameline">Midi channel: <span ID="input_SB_MidiChannel">?</span></span>
+<span CLASS="onsameline">Preset: <span ID="input_SB_Preset">?</span></span>
+<span CLASS="onsameline">Transpose: <span ID="input_SB_Transpose">?</span></span>
+<span CLASS="onsameline">Chord: <span ID="input_SB_Chord">?</span></span>
+<span CLASS="onsameline">Scale: <span ID="input_SB_Scale">?</span></span>
+<BR>
+<span CLASS="onsameline">DAC volume: <span ID="input_SB_SoundVolume">?</span></span>
+<span CLASS="onsameline">Midi volume: <span ID="input_SB_MidiVolume">?</span></span>
+<span CLASS="onsameline">Gain: <span ID="input_SB_Gain">?</span></span>
+<P>
+<BUTTON TYPE="reset">Reset</BUTTON> &nbsp; 
+<BUTTON TYPE="submit">OK, set on SamplerBox</BUTTON> &nbsp; 
+<BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON> &nbsp;
+<LABEL><INPUT type="checkbox" name="SB_RenewUSB" value="Yes" onclick="SB_Reload();">Renew USB</LABEL>
+</FORM>
+
+<TABLE BORDER="1"><TR><TH>Chords</TH><TH>Scales</TH></TR>
+<TR VALIGN="top"><TD><script>
+for (i=0;i<SB_numchords;i++){document.write(i + ': ' + SB_Chordname[i]+'<BR>');}
+</script></TD><TD><script>
+for (i=0;i<SB_numscales;i++){document.write(i + ': ' + SB_Scalename[i]+'<BR>');}
+</script></TD></TR>
+</TABLE>
+
+<script>SB_Update();</script>
+</BODY>
+</HTML>
