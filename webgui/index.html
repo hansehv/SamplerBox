@@ -4,31 +4,40 @@
 <META NAME="Generator" CONTENT="Stone's WebWriter 3.5">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Script-Type" content="text/javascript">
-<LINK REL="stylesheet" TYPE="text/css" HREF="style.css">
+<LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
 <script SRC="SamplerBox.API" TYPE="text/javascript"></script>
 <script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
 </HEAD>
 <BODY>
-<H1>SamplerBox Dashboard</H1>
+
+<TABLE WIDTH="100%"><TR>
+<TD WIDTH="112"><IMG SRC="samplerbox-logo.gif" BORDER="0" WIDTH="112" HEIGHT="38" ALIGN="middle" ALT=""></TD>
+<TD ALIGN="center"><B>Dashboard</B></TD>
+<TD ALIGN="center"><BUTTON TYPE="button" onclick='window.location.assign("chords_scales.html");'>Chords&amp;Scales</BUTTON></TD>
+</TR></TABLE>
 
 <FORM ID="elem_SB_Form" STYLE="line-height:300%;">
-<span ID="input_SB_MidiChannel">Midi channel: </span>
-<span ID="input_SB_Transpose">Transpose: </span>
 <span ID="input_SB_Preset">Preset: </span>
 <BR>
 <span ID="input_SB_Voice">Voice: </span>
-<span ID="elem_SB_xvoice">FX:</span>
+<span ID="elem_SB_xvoice"> FX-track:</span>
 <BR>
-<span ID="input_SB_Chord">Chord: </span>
-<span ID="input_SB_Scale">Scale: </span>
+<span ID="input_SB_Scale">Scale/Chord: </span>
+<span ID="input_SB_Chord">/ </span>
+<span ID="elem_SB_LastMidiNote">Last key: </span>
+<span ID="elem_SB_LastMusicNote">= </span>
 <BR>
 <span ID="input_SB_SoundVolume">DAC volume: </span>
-<span ID="input_SB_MidiVolume">Midi volume: </span>
-<span ID="input_SB_Gain">Gain: </span>
+<span ID="input_SB_Gain">Gain value &nbsp; :</span>
 <BR>
 <BUTTON TYPE="button" onclick="SB_Refresh();">Refresh status</BUTTON> &nbsp;
-<span ID="input_SB_RenewMedia">Renew media</span> &nbsp;
-<BUTTON TYPE="button" onclick='window.location.assign("chords_scales.html");'>Chords&amp;Scales</BUTTON> &nbsp;
+<span ID="input_SB_RenewMedia">Read USB again</span> &nbsp;
+
+<BR>
+<span ID="input_SB_DefinitionTxt">Definition file:</span>
+<BUTTON TYPE="submit">Set</BUTTON>
+<div ID="elem_SB_DefErr">Skipped because of errors: line#  </div>
+<HR>
 <BUTTON TYPE="button" onclick='window.location.assign("examples.html");'>Examples</BUTTON>
 </FORM>
 

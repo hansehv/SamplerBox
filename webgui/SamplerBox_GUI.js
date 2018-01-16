@@ -1,19 +1,9 @@
-
-//function SB_GetVars() {	// this is experimental
-//	let stateCheck = setInterval(() => {
-//		if (document.readyState === 'complete') {
-//			clearInterval(stateCheck);
-//			SB_GetAPI();
-//		}
-//	}, 100);
-//}
-
 function SB_Update(){
 	SB_GetAPI();
-	if (SB_RenewMedia=='Yes'||SB_numvoices==0) {
+	if (SB_VarVal[0]=='Yes') {		// this is in fact SB_RenewMedia
 		setTimeout(SB_Refresh, 1000);
 		return;
-}
+	}
 	for (var i=0;i<SB_numvars;i++){
 		name=SB_varName[i];val=SB_VarVal[i];
 		v_name="v_"+name;
@@ -47,7 +37,8 @@ var SB_variables={
 	v_SB_Voice: function(val){SB_Voice=val;},
 	v_SB_Scale: function(val){SB_Scale=val;},
 	v_SB_Chord: function(val){SB_Chord=val;},
-	v_SB_RenewMedia: function(val){SB_RenewMedia=val;}
+	v_SB_RenewMedia: function(val){SB_RenewMedia=val;},
+	v_SB_DefinitionTxt: function(val){SB_DefinitionTxt=val;}
 }
 var SB_input={
 	input_SB_MidiChannel: function(input_name,name,val,text){
@@ -63,7 +54,8 @@ var SB_input={
 		return(text+SB_listselect(input_name,name,val,SB_Scalename,1,SB_numscales));
 	},
 	input_SB_Preset: function(input_name,name,val,text){
-		return(text+SB_listselect(input_name,name,val,SB_Presetlist,2,SB_numpresets));
+		if (SB_numvoices==0&&SB_xvoice=='No') m=" Empty!" ;else m="";
+		return(text+SB_listselect(input_name,name,val,SB_Presetlist,2,SB_numpresets)+m);
 	},
 	input_SB_Voice: function(input_name,name,val,text){
 		return(text+SB_listselect(input_name,name,val,SB_Voicelist,2,SB_numvoices));
@@ -79,19 +71,31 @@ var SB_input={
 	},
 	input_SB_RenewMedia: function(input_name,name,val,text){
 		return('<LABEL><INPUT type="checkbox" name="'+name+'" class="hidden" value="Yes" onclick="SB_Submit();"><span class="button">'+text+'</span></LABEL>');
+	},
+	input_SB_DefinitionTxt: function(input_name,name,val,text){
+		if (SB_Samplesdir.charAt(0)=='/') m='';else m=' readonly';
+		return('<DIV STYLE="line-height:100%;text-align:center">'+text+m+'</DIV><TEXTAREA name="'+name+'"'+m+'>'+val+'</TEXTAREA>');
 	}
 }
-SB_ElemID=["elem_SB_Form","elem_SB_xvoice","elem_SB_LastMidiNote","elem_SB_LastMusicNote","elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales"];
+SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_xvoice","elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote","elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales"];
 SB_numelems=SB_ElemID.length;
 var SB_element={
 	elem_SB_Form: function(elem_name){
 		document.getElementById(elem_name).action = window.location.pathname;
 		document.getElementById(elem_name).method = 'POST';
+		document.getElementById(name).onsubmit = "return SB_Validate();";
 		document.getElementById(elem_name).type = 'SUBMIT';
+	},
+	elem_SB_Samplesdir: function(elem_name){
+		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+SB_Samplesdir+'</SPAN>';
 	},
 	elem_SB_xvoice: function(elem_name,text) {
 		if (SB_xvoice=="No") j="";else j=' checked="checked"';
 		document.getElementById(elem_name).innerHTML=text+'<label class="inline alignx"><INPUT type="checkbox" onclick="return false;"'+j+';"></label>';
+	},
+	elem_SB_DefErr: function(elem_name,text) {
+		if (SB_DefErr=="") document.getElementById(elem_name).innerHTML=''
+		else document.getElementById(elem_name).innerHTML='<DIV STYLE="line-height:100%;">'+text+SB_DefErr+'</DIV>';
 	},
 	elem_SB_LastMidiNote: function(elem_name){
 		if (SB_LastMidiNote<0) {m="None";} else {m=SB_LastMidiNote;}
@@ -174,4 +178,7 @@ function SB_Refresh(){	// gets the page again without resending any form values
 }
 function SB_Submit(){	// Reload the Media directory and current preset samples
 	document.getElementById("elem_SB_Form").submit();
+}
+function SB_Validate(){
+	SB_numscales==0
 }
