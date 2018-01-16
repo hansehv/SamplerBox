@@ -20,6 +20,7 @@ PLAYLOOP = "Loop"                       # recognize loop markers, note-off by 12
 PLAYLOOP2X = "Loo2"                     # recognize loop markers, note-off by same note ("just play the loop with option to stop")
 VELSAMPLE = "Sample"                    # velocity equals sampled value, requires multiple samples to get differentation
 VELACCURATE = "Accurate"                # velocity as played, allows for multiple (normalized!) samples for timbre
+SAMPLESDEF = "definition.txt"
 #########################################
 ##  LOCAL CONFIG  
 ##  Adapt to your setup !
@@ -103,6 +104,8 @@ notenames=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]  # 0 in scalech
 ########## Initialize other globals, don't change
 
 ActuallyLoading="No"
+DefinitionTxt=""
+DefinitionErr=""
 samples = {}
 playingnotes = {}
 sustainplayingnotes = []
@@ -277,6 +280,7 @@ if HTTP_GUI:
     from urlparse import urlparse,parse_qs
     import shutil
     import mimetypes
+    import subprocess
 class HTTPRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
@@ -316,74 +320,91 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         global MIDI_CHANNEL,volume,volumeCC
         global preset,globalgain,globaltranspose
         global currvoice,currscale,currchord
-        global basename,presetlist,voicelist,ActuallyLoading
+        global basename,presetlist,voicelist
+        global ActuallyLoading,DefinitionTxt,samplesdir
         global last_musicnote, scalechord
         inval=0
+        SB_DefinitionTxt=""
         
         length = int(self.headers.getheader('content-length'))
         field_data = self.rfile.read(length)
         fields=parse_qs(field_data)
-        if "SB_RenewMedia"        in fields:
+        if "SB_RenewMedia" in fields:
             if fields["SB_RenewMedia"][0] == "Yes":
                 basename="None"
                 ActuallyLoading="Yes"   # safety first, as these processes run in parallel
                 LoadSamples()
-        elif "SB_Preset"        in fields:
+        elif "SB_Preset" in fields:
             inval=presetlist[int(fields["SB_Preset"][0])][0]
             if preset!=inval:
                 preset=inval;
                 ActuallyLoading="Yes"   # safety first, as these processes run in parallel
                 LoadSamples()
-            else:
-                if "SB_MidiChannel" in fields: MIDI_CHANNEL     =int(fields["SB_MidiChannel"][0])
-                if "SB_SoundVolume" in fields: volume           =int(fields["SB_SoundVolume"][0])
-                if "SB_MidiVolume"  in fields: volumeCC         =float(fields["SB_MidiVolume"][0])/100
-                if "SB_Gain"        in fields: globalgain       =float(fields["SB_Gain"][0])/100
-                if "SB_Transpose"   in fields: globaltranspose  =int(fields["SB_Transpose"][0])
-                if "SB_Voice"       in fields:
-                    inval=voicelist[int(fields["SB_Voice"][0])][0]
-                    if findvoice(0,voicelist)>-1:inval=inval+1
-                    currvoice=inval
-                if "SB_Scale"       in fields:
-                    inval=int(fields["SB_Scale"][0])
-                    if currscale==inval: scalechange=False
-                    else:
-                        scalechange=True
-                        currscale=inval
-                        if last_musicnote<0: currchord=0
-                        else: currchord=scalechord[currscale][last_musicnote]
-                if "SB_Chord"       in fields and not scalechange:
-                    inval=int(fields["SB_Chord"][0])
-                    if not currchord==inval:
-                        currchord=inval
-                        currscale=0
-                display("") # show it on the box
+            elif "SB_DefinitionTxt" in fields:
+                if DefinitionTxt != fields["SB_DefinitionTxt"][0]:
+                    DefinitionTxt = fields["SB_DefinitionTxt"][0]
+                    #print DefinitionTxt
+                    if '/media' in samplesdir:  # System-fs MUST stay r/o, so only update the mounts
+                        subprocess.call(['mount', '-vo', 'remount,rw', '/media'])
+                        fname=samplesdir+presetlist[preset][1]+"/"+SAMPLESDEF
+                        with open(fname, 'w') as definitionfile:
+                                definitionfile.write(DefinitionTxt)
+                        subprocess.call(['mount', '-vo', 'remount,ro', '/media'])
+                    basename="None"         # do a renew to sync the update
+                    ActuallyLoading="Yes"   # safety first, as these processes run in parallel
+                    LoadSamples()
+                else:
+                    if "SB_MidiChannel" in fields: MIDI_CHANNEL     =int(fields["SB_MidiChannel"][0])
+                    if "SB_SoundVolume" in fields: volume           =int(fields["SB_SoundVolume"][0])
+                    if "SB_MidiVolume"  in fields: volumeCC         =float(fields["SB_MidiVolume"][0])/100
+                    if "SB_Gain"        in fields: globalgain       =float(fields["SB_Gain"][0])/100
+                    if "SB_Transpose"   in fields: globaltranspose  =int(fields["SB_Transpose"][0])
+                    if "SB_Voice"       in fields:
+                        inval=voicelist[int(fields["SB_Voice"][0])][0]
+                        if findvoice(0,voicelist)>-1:inval=inval+1
+                        currvoice=inval
+                    if "SB_Scale"       in fields:
+                        inval=int(fields["SB_Scale"][0])
+                        if currscale==inval: scalechange=False
+                        else:
+                            scalechange=True
+                            currscale=inval
+                            if last_musicnote<0: currchord=0
+                            else: currchord=scalechord[currscale][last_musicnote]
+                    if "SB_Chord"       in fields and not scalechange:
+                        inval=int(fields["SB_Chord"][0])
+                        if not currchord==inval:
+                            currchord=inval
+                            currscale=0
+                    display("") # show it on the box
         self.do_GET()       # as well as on the gui
 
     def send_API(self):
         global MIDI_CHANNEL,volume,volumeCC
         global preset,globalgain,globaltranspose
         global currvoice,currscale,currchord
-        varName=["SB_MidiChannel","SB_SoundVolume","SB_MidiVolume",
+        global ActuallyLoading,DefinitionTxt,DefinitionErr
+        varName=["SB_RenewMedia","SB_SoundVolume","SB_MidiVolume",
                  "SB_Preset","SB_Gain","SB_Transpose",
                  "SB_Voice","SB_Scale","SB_Chord",
-                 "SB_RenewMedia"]
+                 "SB_MidiChannel","SB_DefinitionTxt"]
         global last_midinote, last_musicnote            # status
         global notesymbol,chordname,scalename,voicelist # descriptors, no need for ID_translations
-        global samplesdir,presetlist,ActuallyLoading    # internal use, no need for ID_translations
+        global samplesdir,presetlist                    # internal use, no need for ID_translations
         
         self.send_response(200)
         self.send_header("Content-type", 'application/javascript')
         self.send_header("Cache-Control", 'no-cache, must-revalidate')
         self.end_headers()
         self.wfile.write("// SamplerBox API, interface for interacting via standard HTTP\n\n")
-        self.wfile.write("// Variables that can be updated and submitted to samplerbox:\n")
+        self.wfile.write("// Variables that can be updated and submitted to samplerbox:")
         for i in range(len(varName)):
+            if (i%3)==0: self.wfile.write("\n")
             self.wfile.write("var %s;" % (varName[i]) )
 
         self.wfile.write("\n\n// Informational (read-only) variables:")
         self.wfile.write("\nvar SB_numvars=0;var SB_VarName;var SB_VarVal;")
-        self.wfile.write("\nvar SB_Samplesdir;var SB_LastMidiNote;var SB_LastMusicNote;")
+        self.wfile.write("\nvar SB_Samplesdir;var SB_LastMidiNote;var SB_LastMusicNote;var SB_DefErr;")
         self.wfile.write("\nvar SB_numpresets;var SB_Presetlist;")
         self.wfile.write("\nvar SB_xvoice;var SB_numvoices;var SB_Voicelist;")
         self.wfile.write("\nvar SB_numnotes;var SB_Notename;")
@@ -395,11 +416,11 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         for i in range(1,len(varName)):
             self.wfile.write(",'%s'" % (varName[i]) )
         self.wfile.write("];\n\tSB_VarVal=[")
-        self.wfile.write("%d,%d,%d," % (MIDI_CHANNEL,volume,volumeCC*100) )
+        self.wfile.write("'%s',%d,%d," % (ActuallyLoading,volume,volumeCC*100) )
         self.wfile.write("%d,%d,%d," % (preset,globalgain*100,globaltranspose) )
         self.wfile.write("%d,%d,%d," % (currvoice,currscale,currchord) )
-        self.wfile.write("'%s'" % (ActuallyLoading) )
-        self.wfile.write("];SB_Samplesdir='%s';SB_LastMidiNote=%d;SB_LastMusicNote=%s;\n" % (samplesdir,last_midinote,last_musicnote) )
+        self.wfile.write("%d,'%s'" % (MIDI_CHANNEL,DefinitionTxt.replace('\n','&#10;').replace('\r','&#13;')) )   # make it a unix formatted JS acceptable string
+        self.wfile.write("];\n\tSB_Samplesdir='%s';SB_LastMidiNote=%d;SB_LastMusicNote=%s;SB_DefErr='%s';\n" % (samplesdir,last_midinote,last_musicnote,DefinitionErr) )
         self.wfile.write("\tSB_numpresets=%d;SB_Presetlist=%s;\n" % (len(presetlist),presetlist) )
         vlist=[]
         xvoice="No"
@@ -741,7 +762,7 @@ def MidiCallback(message, time_stamp):
                     last_midinote=midinote-globaltranspose      # save original midinote for the webgui
                     last_musicnote=midinote-12*int(midinote/12) # do a "remainder midinote/12" without having to import the full math module
                     if currscale>0:               # scales require a chords mix
-                        currchord = scalechord[currscale][last_musicnote]  # ...having to import the full math module
+                        currchord = scalechord[currscale][last_musicnote]
                     for n in range (len(chordnote[currchord])):
                         playnote=midinote+chordnote[currchord][n]
                         for m in sustainplayingnotes:   # safeguard polyphony; don't sustain double notes
@@ -864,7 +885,7 @@ basename = "None"
 def ActuallyLoad():    
     global preset, presetlist, samples, SAMPLES_DIR, samplesdir, BOXRELEASE, PRERELEASE, BOXXFADEIN, PREXFADEIN, BOXSTOP17, stop127
     global globaltranspose, BOXSAMPLE_MODE, basename, BOXVELOCITY_MODE, velocity_mode, globalgain, voicelist, currvoice, PITCHRANGE, pitchnotes, RELSAMPLE
-    global ActuallyLoading
+    global ActuallyLoading, DefinitionTxt, DefinitionErr
     ActuallyLoading="Yes"
     #print 'Entered ActuallyLoad'
     AllNotesOff()
@@ -910,6 +931,8 @@ def ActuallyLoad():
     voicelist = []
     voicenames = []
     voice0 = False
+    DefinitionTxt = ''
+    DefinitionErr = ''
 
     if not basename: 
         #print 'Preset empty: %s' % preset
@@ -920,8 +943,11 @@ def ActuallyLoad():
 
     #print 'Preset loading: %s ' % basename
     display("Loading %s" % basename)
-    definitionfname = os.path.join(dirname, "definition.txt")
+    definitionfname = os.path.join(dirname, SAMPLESDEF)
     if os.path.isfile(definitionfname):
+        if HTTP_GUI:
+            with open(definitionfname, 'r') as definitionfile:  # keep full text for the gui
+                DefinitionTxt=definitionfile.read()
         with open(definitionfname, 'r') as definitionfile:
             for i, pattern in enumerate(definitionfile):
                 try:
@@ -972,7 +998,7 @@ def ActuallyLoad():
                         continue
                     if r'%%mode' in pattern:
                         m = pattern.split('=')[1].strip().title()
-                        if m==PLAYLIVE or m==PLAYBACK or m==PLAYBACK2X or m==PLAYBACK64 or m==PLAYLOOP or mode==PLAYLOOP2X or mode==PLAYLOOP64: sample_mode = m
+                        if m==PLAYLIVE or m==PLAYBACK or m==PLAYBACK2X or m==PLAYLOOP or mode==PLAYLOOP2X or mode==PLAYLOOP64: sample_mode = m
                         continue
                     if r'%%velmode' in pattern:
                         m = pattern.split('=')[1].strip().title()
@@ -1032,20 +1058,24 @@ def ActuallyLoad():
                             fillnotes[midinote, voice] = voicefillnote
                             #print "sample: %s, note: %d, voice: %d, mode: %s, fillnote: %s, release: %s, xfadein: %s" %(fname, midinote, voice, mode, voicefillnote, release, xfadein)
                 except:
-                    print "Error in definition file, skipping line %s." % (i+1)
+                    m=i+1
+                    v=""
+                    print "Error in definition file, skipping line %d." % (m)
+                    if DefinitionErr != "" : v=", "
+                    DefinitionErr="%s%s%d" %(DefinitionErr,v,m)
 
     else:
         for midinote in range(128):
             if LoadingInterrupt:
                 ActuallyLoading="No"
                 return
-            voicelist.append([1, "Default"])
             file = os.path.join(dirname, "%d.wav" % midinote)
             #print "Trying " + file
             if os.path.isfile(file):
                 #print "Processing " + file
                 samples[midinote, 127, 1] = Sound(file, midinote, 127, PLAYLIVE, PRERELEASE, globalgain, PREXFADEOUT, PREXFADEIN, PREXFADEVOL)
                 fillnotes[midinote, 1] = fillnote
+        voicelist.append([1, "Default"])
 
     initial_keys = set(samples.keys())
     if len(initial_keys) > 0:
@@ -1102,13 +1132,12 @@ def ActuallyLoad():
 
         #print 'Preset loaded: ' + str(preset)
         display("")
-        ActuallyLoading="No"
 
     else:
         #print 'Preset empty: ' + str(preset)
         basename = "%d Empty preset" %preset
         display("")
-        ActuallyLoading="No"
+    ActuallyLoading="No"
 
 
 #########################################

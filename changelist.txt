@@ -83,3 +83,5 @@ October 2017
     - Fixed bugs when no definition.txt is present
 November 2017
     - Fixed errors in F and Fm scale
+Januari 2018
+    - Added webgui, examples.html contains some explanation
