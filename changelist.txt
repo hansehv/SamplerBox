@@ -86,3 +86,5 @@ November 2017
 Januari 2018
     - Added webgui, examples.html contains some explanation
     - bugfixes and minor+cosmetic changes
+Februari 2018
+    - Added freeverb, polished the GUI, fixed bug in GUI-API
