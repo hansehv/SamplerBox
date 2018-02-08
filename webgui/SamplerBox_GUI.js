@@ -37,6 +37,12 @@ var SB_variables={
 	v_SB_Voice: function(val){SB_Voice=val;},
 	v_SB_Scale: function(val){SB_Scale=val;},
 	v_SB_Chord: function(val){SB_Chord=val;},
+	v_SB_Filter: function(val){SB_Filter=val;},
+	v_SB_FVroomsize: function(val){SB_FVroomsize=val;},
+	v_SB_FVdamp: function(val){SB_FVdamp=val;},
+	v_SB_FVwet: function(val){SB_FVwet=val;},
+	v_SB_FVdry: function(val){SB_FVdry=val;},
+	v_SB_FVwidth: function(val){SB_FVwidth=val;},
 	v_SB_RenewMedia: function(val){SB_RenewMedia=val;},
 	v_SB_DefinitionTxt: function(val){SB_DefinitionTxt=val;}
 }
@@ -68,6 +74,24 @@ var SB_input={
 	},
 	input_SB_Gain: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,300,5)+SB_numselect(input_name,name,val,0,300,5));
+	},
+	input_SB_Filter: function(input_name,name,val,text){
+		return(text+SB_listselect(input_name,name,val,SB_filters,1,SB_numfilters));
+	},
+	input_SB_FVroomsize: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+	},
+	input_SB_FVdamp: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+	},
+	input_SB_FVwet: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+	},
+	input_SB_FVdry: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+	},
+	input_SB_FVwidth: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
 	},
 	input_SB_RenewMedia: function(input_name,name,val,text){
 		return('<LABEL><INPUT type="checkbox" name="'+name+'" class="hidden" value="Yes" onclick="SB_Submit();"><span class="button">'+text+'</span></LABEL>');
@@ -180,5 +204,4 @@ function SB_Submit(){	// Reload the Media directory and current preset samples
 	document.getElementById("elem_SB_Form").submit();
 }
 function SB_Validate(){
-	SB_numscales==0
 }

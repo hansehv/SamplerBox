@@ -1,0 +1,69 @@
+<!DOCTYPE html><HTML><HEAD>
+<!-- Minus AutoDato -->
+	<TITLE>SamplerBox Readme</TITLE>
+<META NAME="Generator" CONTENT="Stone's WebWriter 3.5">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
+<script SRC="SamplerBox.API" TYPE="text/javascript"></script>
+<script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+</HEAD>
+<BODY>
+<TABLE WIDTH="100%"><TR>
+<TD WIDTH="112"><IMG SRC="SamplerBox.gif" BORDER="0" WIDTH="80" HEIGHT="27" ALIGN="middle" ALT=""></TD>
+<TD ALIGN="center"><B>Readme</B></TD>
+<TD ALIGN="center"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Home</BUTTON> <BUTTON TYPE="button" onclick='window.location.assign("effects.html");'>Effects</BUTTON>  <BUTTON TYPE="button" onclick='window.location.assign("autochord.html");'>Chords&amp;Scales</BUTTON></TD>
+</TR></TABLE>
+
+<HR><H3>Introduction:</H3><HR>
+The SamplerBox script sends several internal values as JavaScript variables in a generated script: SamplerBox_API. It can viewed at by simply displaying source in your webbrowser.
+<BR>The SamplerBox-GUI.js javascript and SamplerBox.css style sheet combine these variables into building blocks / elements for use in the HTML pages.
+<BR>Updatable variables, can be viewed by using the IDs named as ID_SB_&lt;name&gt; and viewed/updated in forms using IDs named input_SB_&lt;name&gt;.
+<BR>The other variables and tables, as well as the necessary form statement etc, can be included by using ID's named elem_SB_&lt;name&gt;.
+<BR>Just look at the existing pages and examples below for the usage of these buiding blocks.
+<BR><B>Note: </B>Sofar it works as it should in Firefox, Chrome, Edge and Silk.
+<BR>For Safari (I tested Windows and some older iPads), the slider implementation did not work well. You may get around this with Chrome or Firefox.
+
+<HR><H3>Two ways of displaying the items: via ID and via direct scripting:</H3><HR>
+<script>SB_Update();</script><!-- when using explicit scripts to show SB-variables, we need to update=fill them before their usage -->
+<TABLE BORDER="1"><TR><TH>Variable</TH><TH>With ID</TH><TH>With script</TH></TR>
+<TR><TD COLSPAN="3" ALIGN="center">I/O variables</TD></TR>
+<TR><TD>MIDI Channel</TD><TD ID="ID_SB_MidiChannel"> </TD><TD CLASS="value"><script>document.write(SB_MidiChannel);</script></TD></TR>
+<TR><TD>DAC volume</TD><TD ID="ID_SB_SoundVolume">?</TD><TD CLASS="value"><script>document.write(SB_SoundVolume);</script></TD></TR>
+<TR><TD>MIDI volume</TD><TD ID="ID_SB_MidiVolume">?</TD><TD CLASS="value"><script>document.write(SB_MidiVolume);</script></TD></TR>
+<TR><TD>Preset</TD><TD ID="ID_SB_Preset">?</TD><TD CLASS="value"><script>document.write(SB_Preset);</script></TD></TR>
+<TR><TD>Gain</TD><TD ID="ID_SB_Gain">?</TD><TD CLASS="value"><script>document.write(SB_Gain);</script></TD></TR>
+<TR><TD>Transpose</TD><TD ID="ID_SB_Transpose">?</TD><TD CLASS="value"><script>document.write(SB_Transpose);</script></TD></TR>
+<TR><TD>Voice</TD><TD ID="ID_SB_Voice">?</TD><TD CLASS="value"><script>document.write(SB_Voice);</script></TD></TR>
+<TR><TD>Chord</TD><TD ID="ID_SB_Chord">?</TD><TD CLASS="value"><script>document.write(SB_Chord);</script></TD></TR>
+<TR><TD>Scale</TD><TD ID="ID_SB_Scale">?</TD><TD CLASS="value"><script>document.write(SB_Scale);</script></TD></TR>
+<TR><TD COLSPAN="3" ALIGN="center">Some readonly variables</TD></TR>
+<TR><TD>Effects track</TD><TD ID="elem_SB_xvoice">FX:</TD><TD CLASS="value"><script>document.write(SB_xvoice);</script></TD></TR>
+<TR><TD>Definition errors</TD><TD ID="elem_SB_DefErr">Wrong:</TD><TD CLASS="value"><script>document.write(SB_DefErr);</script></TD></TR>
+<TR><TD>Samples folder</TD><TD ID="elem_SB_Samplesdir">Mounted:</TD><TD CLASS="value"><script>document.write(SB_Samplesdir);</script></TD></TR>
+</TABLE>
+
+<HR><H3>Some form elements:</H3><HR>
+<FORM ID="elem_SB_Form">
+<span ID="input_SB_MidiChannel">Midi channel: </span>
+<span ID="input_SB_Preset">Preset: </span>
+<span ID="input_SB_Voice">Voice: </span>
+<span ID="input_SB_Transpose">Transpose: </span>
+<span ID="input_SB_Chord">Chord: </span>
+<span ID="input_SB_Scale">Scale: </span>
+<BR>
+<span ID="input_SB_SoundVolume">DAC volume: </span>
+<span ID="input_SB_MidiVolume">Midi volume: </span>
+<span ID="input_SB_Gain">Gain: </span>
+<BR><span ID="input_SB_DefinitionTxt">Definition file:</span><BR>
+<BUTTON TYPE="reset">Reset</BUTTON> &nbsp; 
+<BUTTON TYPE="submit">Submit</BUTTON> &nbsp; 
+<BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON> &nbsp;
+<span ID="input_SB_RenewMedia">RenewMedia</span>
+</FORM>
+When autoupdate / onchange event is properly working on your browser buttons "Reset" and "Submit" are only required for the definition.txt.<BR>
+Definition txt cannot be updated for samples on the system partition ("./").
+
+<script>SB_Update();</script><!-- when dealing with the SB-variables & elements via ID's, we must call the update script after using the ID's -->
+</BODY>
+</HTML>

@@ -1,0 +1,29 @@
+<!DOCTYPE html><HTML><HEAD>
+<!-- Minus AutoDato -->
+	<TITLE>SamplerBox AutoChord</TITLE>
+<META NAME="Generator" CONTENT="Stone's WebWriter 3.5">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
+<script SRC="SamplerBox.API" TYPE="text/javascript"></script>
+<script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+</HEAD>
+<BODY>
+
+<TABLE WIDTH="100%"><TR>
+<TD WIDTH="112"><A HREF="index.html"><IMG SRC="SamplerBox.gif" BORDER="0" WIDTH="80" HEIGHT="27" ALIGN="middle" ALT=""></A></TD>
+<TD ALIGN="center"><B>AutoChord</B></TD>
+<TD ALIGN="center"><BUTTON TYPE="button" onclick='window.location.assign("autochord.html");'>Refresh status</BUTTON> <BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Home</BUTTON></TD>
+</TR></TABLE>
+
+<span ID="elem_SB_LastMidiNote">Last played (midi#/note): </span>/<span ID="elem_SB_LastMusicNote"></span>&nbsp; &nbsp;
+<span ID="elem_SB_Scale">Scale: </span>&nbsp; &nbsp;
+<span ID="elem_SB_Chord">Chord: </span>
+<P>
+<span ID="elem_SB_Scales" CLASS="inline valign_top">?</span>
+&nbsp; &nbsp;
+<span ID="elem_SB_Chords" CLASS="inline valign_top">?</span>
+
+<script>SB_Update();</script>
+</BODY>
+</HTML>
