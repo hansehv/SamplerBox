@@ -4,6 +4,9 @@
 // http://www.dreampoint.co.uk
 // This code is public domain
 
+// Samplerbox addons:
+// - processreplacestereo()inspired by Erik Nieuwlands (www.nickyspride.nl/sb2/)
+
 #include "revmodel.hpp"
 
 revmodel::revmodel()
@@ -103,6 +106,46 @@ void revmodel::processreplace(float *inputL, float *inputR, float *outputL, floa
 		inputR += skip;
 		outputL += skip;
 		outputR += skip;
+	}
+}
+
+void revmodel::processreplacestereo(float *inputstream, float *outputstream,long numsamples)
+{
+	float outL,outR,input, *iL, *iR, *oL, *oR;
+
+	iL = inputstream;
+	iR = inputstream+1;
+	oL = outputstream;
+	oR = outputstream+1;
+
+	for (long l=0;l<numsamples;l++)
+	{
+		outL = outR = 0;
+		input = (*iL + *iR) * gain;
+
+		// Accumulate comb filters in parallel
+		for(int i=0; i<numcombs; i++)
+		{
+			outL += combL[i].process(input);
+			outR += combR[i].process(input);
+		}
+
+		// Feed through allpasses in series
+		for(i=0; i<numallpasses; i++)
+		{
+			outL = allpassL[i].process(outL);
+			outR = allpassR[i].process(outR);
+		}
+
+		// Calculate output REPLACING anything already there
+		*oL = outL*wet1 + outR*wet2 + (*iL)*dry;
+		*oR = outR*wet1 + outL*wet2 + (*iR)*dry;
+
+		// Increment sample pointers, allowing for interleave (if any)
+		iL += 2;
+		iR += 2;
+		oL += 2;
+		oR += 2;
 	}
 }
 

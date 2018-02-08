@@ -3,6 +3,9 @@
 // Written by Jezar at Dreampoint, June 2000
 // http://www.dreampoint.co.uk
 // This code is public domain
+//
+// Samplerbox addons:
+// - processreplacestereo()inspired by Erik Nieuwlands (www.nickyspride.nl/sb2/)
 
 #ifndef _revmodel_
 #define _revmodel_
@@ -16,6 +19,7 @@ class revmodel
 public:
 					revmodel();
 			void	mute();
+			void	processreplacestereo(float *input, float *output,long numsamples);
 			void	processmix(float *inputL, float *inputR, float *outputL, float *outputR, long numsamples, int skip);
 			void	processreplace(float *inputL, float *inputR, float *outputL, float *outputR, long numsamples, int skip);
 			void	setroomsize(float value);
