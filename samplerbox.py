@@ -49,10 +49,10 @@ preset = 0 + PRESETBASE                 # the default patch to load
 PITCHRANGE = 12                         # default range of the pitchwheel in semitones (max=12 is een octave)
 PITCHBITS = 7                           # pitchwheel resolution, 0=disable, max=14 (=16384 steps)
                                         # values below 7 will produce bad results
-BOXFVroomsize=0.5                       # Freeverb values, package default 0.5
-BOXFVdamp=0.4                           # Freeverb values, package default 0.4
-BOXFVwet=0.5                            # Freeverb values, package default 1/3
-BOXFVdry=127                            # Freeverb values, package default 0
+BOXFVroomsize=0.5*127                   # Freeverb values, package default 0.5
+BOXFVdamp=0.4*127                       # Freeverb values, package default 0.4
+BOXFVwet=0.4*127                        # Freeverb values, package default 1/3
+BOXFVdry=0.6*127                        # Freeverb values, package default 0
 BOXFVwidth=127                          # Freeverb values, package default 1
 HTTP_GUI = True                         # values for the webgui
 HTTP_PORT = 80
@@ -137,6 +137,12 @@ if AUDIO_DEVICE_ID > 0:
     MIXER_CARD_ID = AUDIO_DEVICE_ID-1  # This may vary with your HW. The jack/HDMI of PI use 1 alsa card index
 else:
     MIXER_CARD_ID = 0
+
+FVroomsize=BOXFVroomsize
+FVdamp=BOXFVdamp
+FVwet=BOXFVwet
+FVdry=BOXFVdry
+FVwidth=BOXFVwidth
 
 #########################################
 ##  IMPORT MODULES
@@ -777,13 +783,15 @@ if not USE_ALSA_MIXER:
 
 def AllNotesOff():
     global playingnotes, playingsounds, sustainplayingnotes, triggernotes, currchord, currscale
-    global FVroomsize, FVdamp, FVwet, FVdry, FVwidth
+    global currfilter, BOXFVroomsize, BOXFVdamp, BOXFVwet, BOXFVdry, BOXFVwidth
     playingsounds = []
     playingnotes = {}
     sustainplayingnotes = []
     triggernotes = [128]*128     # fill with unplayable note
     currchord = 0
     currscale = 0
+    currfilter=0
+    setFilter(currfilter)
     FVsetroomsize(BOXFVroomsize)
     FVsetdamp(BOXFVdamp)
     FVsetwet(BOXFVwet)
