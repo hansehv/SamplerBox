@@ -49,6 +49,11 @@ preset = 0 + PRESETBASE                 # the default patch to load
 PITCHRANGE = 12                         # default range of the pitchwheel in semitones (max=12 is een octave)
 PITCHBITS = 7                           # pitchwheel resolution, 0=disable, max=14 (=16384 steps)
                                         # values below 7 will produce bad results
+BOXFVroomsize=0.5*127                   # Freeverb values, package default 0.5
+BOXFVdamp=0.4*127                       # Freeverb values, package default 0.4
+BOXFVwet=0.4*127                        # Freeverb values, package default 1/3
+BOXFVdry=0.6*127                        # Freeverb values, package default 0
+BOXFVwidth=127                          # Freeverb values, package default 1
 HTTP_GUI = True                         # values for the webgui
 HTTP_PORT = 80
 HTTP_ROOT = "webgui"
@@ -132,6 +137,12 @@ if AUDIO_DEVICE_ID > 0:
     MIXER_CARD_ID = AUDIO_DEVICE_ID-1  # This may vary with your HW. The jack/HDMI of PI use 1 alsa card index
 else:
     MIXER_CARD_ID = 0
+
+FVroomsize=BOXFVroomsize
+FVdamp=BOXFVdamp
+FVwet=BOXFVwet
+FVdry=BOXFVdry
+FVwidth=BOXFVwidth
 
 #########################################
 ##  IMPORT MODULES
@@ -322,9 +333,8 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         global currvoice,currscale,currchord
         global basename,presetlist,voicelist
         global ActuallyLoading,DefinitionTxt,samplesdir
-        global last_musicnote, scalechord
+        global last_musicnote, scalechord, Filterkeys
         inval=0
-        SB_DefinitionTxt=""
         
         length = int(self.headers.getheader('content-length'))
         field_data = self.rfile.read(length)
@@ -332,61 +342,75 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         if "SB_RenewMedia" in fields:
             if fields["SB_RenewMedia"][0] == "Yes":
                 basename="None"
-                ActuallyLoading="Yes"   # safety first, as these processes run in parallel
-                LoadSamples()
-        elif "SB_Preset" in fields:
+                self.LoadSamples()
+                return
+        if "SB_Preset" in fields:
             inval=presetlist[int(fields["SB_Preset"][0])][0]
             if preset!=inval:
                 preset=inval;
-                ActuallyLoading="Yes"   # safety first, as these processes run in parallel
-                LoadSamples()
-            elif "SB_DefinitionTxt" in fields:
-                if DefinitionTxt != fields["SB_DefinitionTxt"][0]:
-                    DefinitionTxt = fields["SB_DefinitionTxt"][0]
-                    #print DefinitionTxt
-                    if '/media' in samplesdir:  # System-fs MUST stay r/o, so only update the mounts
-                        subprocess.call(['mount', '-vo', 'remount,rw', '/media'])
-                        fname=samplesdir+presetlist[preset][1]+"/"+SAMPLESDEF
-                        with open(fname, 'w') as definitionfile:
-                                definitionfile.write(DefinitionTxt)
-                        subprocess.call(['mount', '-vo', 'remount,ro', '/media'])
-                    basename="None"         # do a renew to sync the update
-                    ActuallyLoading="Yes"   # safety first, as these processes run in parallel
-                    LoadSamples()
-                else:
-                    if "SB_MidiChannel" in fields: MIDI_CHANNEL     =int(fields["SB_MidiChannel"][0])
-                    if "SB_SoundVolume" in fields: volume           =int(fields["SB_SoundVolume"][0])
-                    if "SB_MidiVolume"  in fields: volumeCC         =float(fields["SB_MidiVolume"][0])/100
-                    if "SB_Gain"        in fields: globalgain       =float(fields["SB_Gain"][0])/100
-                    if "SB_Transpose"   in fields: globaltranspose  =int(fields["SB_Transpose"][0])
-                    if "SB_Voice"       in fields:
-                        inval=voicelist[int(fields["SB_Voice"][0])][0]
-                        if findvoice(0,voicelist)>-1:inval=inval+1
-                        currvoice=inval
-                    if "SB_Scale"       in fields:
-                        inval=int(fields["SB_Scale"][0])
-                        if currscale==inval: scalechange=False
-                        else:
-                            scalechange=True
-                            currscale=inval
-                            if last_musicnote<0: currchord=0
-                            else: currchord=scalechord[currscale][last_musicnote]
-                    if "SB_Chord"       in fields and not scalechange:
-                        inval=int(fields["SB_Chord"][0])
-                        if not currchord==inval:
-                            currchord=inval
-                            currscale=0
-                    display("") # show it on the box
+                self.LoadSamples()
+                return
+        if "SB_DefinitionTxt" in fields:
+            if DefinitionTxt != fields["SB_DefinitionTxt"][0]:
+                DefinitionTxt = fields["SB_DefinitionTxt"][0]
+                #print DefinitionTxt
+                if '/media' in samplesdir:  # System-fs MUST stay r/o, so only update the mounts
+                    subprocess.call(['mount', '-vo', 'remount,rw', '/media'])
+                    fname=samplesdir+presetlist[preset][1]+"/"+SAMPLESDEF
+                    with open(fname, 'w') as definitionfile:
+                            definitionfile.write(DefinitionTxt)
+                    subprocess.call(['mount', '-vo', 'remount,ro', '/media'])
+                basename="None"         # do a renew to sync the update
+                self.LoadSamples()
+                return
+        if "SB_MidiChannel" in fields: MIDI_CHANNEL     =int(fields["SB_MidiChannel"][0])
+        if "SB_SoundVolume" in fields: volume           =int(fields["SB_SoundVolume"][0])
+        if "SB_MidiVolume"  in fields: volumeCC         =float(fields["SB_MidiVolume"][0])/100
+        if "SB_Gain"        in fields: globalgain       =float(fields["SB_Gain"][0])/100
+        if "SB_Transpose"   in fields: globaltranspose  =int(fields["SB_Transpose"][0])
+        if "SB_Voice"       in fields:
+            inval=voicelist[int(fields["SB_Voice"][0])][0]
+            if findvoice(0,voicelist)>-1:inval=inval+1
+            currvoice=inval
+        if "SB_Scale"       in fields:
+            inval=int(fields["SB_Scale"][0])
+            if currscale==inval: scalechange=False
+            else:
+                scalechange=True
+                currscale=inval
+                if last_musicnote<0: currchord=0
+                else: currchord=scalechord[currscale][last_musicnote]
+        if "SB_Chord"       in fields and not scalechange:
+            inval=int(fields["SB_Chord"][0])
+            if not currchord==inval:
+                currchord=inval
+                currscale=0
+        if "SB_Filter"      in fields: setFilter(int(fields["SB_Filter"][0]))
+        if "SB_FVroomsize"  in fields: FVsetroomsize(int(fields["SB_FVroomsize"][0])*1.27)
+        if "SB_FVdamp"      in fields: FVsetdamp(int(fields["SB_FVdamp"][0])*1.27)
+        if "SB_FVwet"       in fields: FVsetwet(int(fields["SB_FVwet"][0])*1.27)
+        if "SB_FVdry"       in fields: FVsetdry(int(fields["SB_FVdry"][0])*1.27)
+        if "SB_FVwidth"     in fields: FVsetwidth(int(fields["SB_FVwidth"][0])*1.27)
+        display("") # show it on the box
         self.do_GET()       # as well as on the gui
+
+    def LoadSamples(self):
+        global ActuallyLoading
+        ActuallyLoading="Yes"   # safety first, as these processes run in parallel
+        LoadSamples()           # perform the loading
+        self.do_GET()           # answer the browser
 
     def send_API(self):
         global MIDI_CHANNEL,volume,volumeCC
         global preset,globalgain,globaltranspose
-        global currvoice,currscale,currchord
+        global currvoice,currscale,currchord, currfilter
+        global FVroomsize,FVdamp,FVwet,FVdry,FVwidth
         global ActuallyLoading,DefinitionTxt,DefinitionErr
+        global Filterkeys
         varName=["SB_RenewMedia","SB_SoundVolume","SB_MidiVolume",
                  "SB_Preset","SB_Gain","SB_Transpose",
-                 "SB_Voice","SB_Scale","SB_Chord",
+                 "SB_Voice","SB_Scale","SB_Chord","SB_Filter",
+                 "SB_FVroomsize","SB_FVdamp","SB_FVwet","SB_FVdry","SB_FVwidth",
                  "SB_MidiChannel","SB_DefinitionTxt"]
         global last_midinote, last_musicnote            # status
         global notesymbol,chordname,scalename,voicelist # descriptors, no need for ID_translations
@@ -403,22 +427,26 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write("var %s;" % (varName[i]) )
 
         self.wfile.write("\n\n// Informational (read-only) variables:")
-        self.wfile.write("\nvar SB_numvars=0;var SB_VarName;var SB_VarVal;")
+        self.wfile.write("\nvar SB_numvars=%d;var SB_VarName;var SB_VarVal;" % (len(varName)) )
         self.wfile.write("\nvar SB_Samplesdir;var SB_LastMidiNote;var SB_LastMusicNote;var SB_DefErr;")
         self.wfile.write("\nvar SB_numpresets;var SB_Presetlist;")
         self.wfile.write("\nvar SB_xvoice;var SB_numvoices;var SB_Voicelist;")
-        self.wfile.write("\nvar SB_numnotes;var SB_Notename;")
-        self.wfile.write("\nvar SB_numchords;var SB_Chordoffset;var SB_Chordname;var SB_Chordnote;")
-        self.wfile.write("\nvar SB_numscales;var SB_Scaleoffset;var SB_Scalename;var SB_Scalechord;")
+
+        self.wfile.write("\n\n// Static tables:")
+        self.wfile.write("\nSB_numnotes=%d;SB_Notename=%s;" % (len(notenames),notesymbol) )
+        self.wfile.write("\nSB_numchords=%d;SB_Chordoffset=%d;SB_Chordname=%s;\nSB_Chordnote=%s;" % (len(chordname),0,chordname,chordnote) )
+        self.wfile.write("\nSB_numscales=%d;SB_Scaleoffset=%d;SB_Scalename=%s;\nSB_Scalechord=%s;" % (len(scalename),100,scalename,scalechord) )
+        self.wfile.write("\nSB_numfilters=%d;SB_filters=%s" % (len(Filters),Filterkeys) )
 
         self.wfile.write("\n\n// Function for (re)filling all above variables with actual values from SamplerBox:\nfunction SB_GetAPI() {")
-        self.wfile.write("\n\tSB_numvars=%d;\n\tSB_varName=['%s'" % (len(varName),varName[0]) )
+        self.wfile.write("\n\tSB_varName=['%s'" % (varName[0]) )
         for i in range(1,len(varName)):
             self.wfile.write(",'%s'" % (varName[i]) )
         self.wfile.write("];\n\tSB_VarVal=[")
         self.wfile.write("'%s',%d,%d," % (ActuallyLoading,volume,volumeCC*100) )
         self.wfile.write("%d,%d,%d," % (preset,globalgain*100,globaltranspose) )
-        self.wfile.write("%d,%d,%d," % (currvoice,currscale,currchord) )
+        self.wfile.write("%d,%d,%d,%d," % (currvoice,currscale,currchord,currfilter) )
+        self.wfile.write("%d,%d,%d,%d,%d," % (FVroomsize*100,FVdamp*100,FVwet*100,FVdry*100,FVwidth*100) )
         self.wfile.write("%d,'%s'" % (MIDI_CHANNEL,DefinitionTxt.replace('\n','&#10;').replace('\r','&#13;')) )   # make it a unix formatted JS acceptable string
         self.wfile.write("];\n\tSB_Samplesdir='%s';SB_LastMidiNote=%d;SB_LastMusicNote=%s;SB_DefErr='%s';\n" % (samplesdir,last_midinote,last_musicnote,DefinitionErr) )
         self.wfile.write("\tSB_numpresets=%d;SB_Presetlist=%s;\n" % (len(presetlist),presetlist) )
@@ -428,11 +456,58 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
             if voicelist[i][0]==0:  xvoice="Yes"
             else:   vlist.append([voicelist[i][0],voicelist[i][1]])
         self.wfile.write("\tSB_numvoices=%d;SB_xvoice='%s';SB_Voicelist=%s;\n" % (len(vlist),xvoice,vlist) )
-        self.wfile.write("\tSB_numnotes=%d;SB_Notename=%s;\n" % (len(notenames),notesymbol) )
-        self.wfile.write("\tSB_numchords=%d;SB_Chordoffset=%d;SB_Chordname=%s;\n\tSB_Chordnote=%s;\n" % (len(chordname),0,chordname,chordnote) )
-        self.wfile.write("\tSB_numscales=%d;SB_Scaleoffset=%d;SB_Scalename=%s;\n\tSB_Scalechord=%s;\n" % (len(scalename),100,scalename,scalechord) )
         self.wfile.write("};")
 
+##################################################################################
+# Filters, based on Freeverb by Jezar at Dreampoint with engine
+# adapted for samplerbox by Erik, http://www.nickyspride.nl/sb2/
+##################################################################################
+
+import ctypes
+from ctypes import *
+c_float_p = ctypes.POINTER(ctypes.c_float)
+c_short_p = ctypes.POINTER(ctypes.c_short)
+
+filters = cdll.LoadLibrary('./filters/interface.so')
+filters.setroomsize.argtypes = [c_float]
+filters.setdamp.argtypes = [c_float]
+filters.setwet.argtypes = [c_float]
+filters.setdry.argtypes = [c_float]
+filters.setwidth.argtypes = [c_float]
+def NoFilter(x,y,z):
+    pass
+
+Filters={"None":NoFilter,"Reverb":filters.reverb}
+Filterkeys=Filters.keys()
+currfilter=0
+filterproc=Filters[Filterkeys[currfilter]]
+def setFilter(newfilter):
+    global Filters,Filterkeys,currfilter,filterproc
+    if newfilter < len(Filters):
+        currfilter=newfilter
+        filterproc=Filters[Filterkeys[newfilter]]
+
+def FVsetroomsize(x):
+    global FVroomsize
+    FVroomsize=x/127.0
+    filters.setroomsize(FVroomsize)
+def FVsetdamp(x):
+    global FVdamp
+    FVdamp=x/127.0
+    filters.setdamp(FVdamp)
+def FVsetwet(x):
+    global FVwet
+    FVwet=x/127.0
+    filters.setwet(FVwet)
+def FVsetdry(x):
+    global FVdry
+    FVdry=x/127.0
+    filters.setdry(FVdry)
+def FVsetwidth(x):
+    global FVwidth
+    FVwidth=x/127.0
+    filters.setwidth(FVwidth)
+ 
 #########################################
 ##  SLIGHT MODIFICATION OF PYTHON'S WAVE MODULE
 ##  TO READ CUE MARKERS & LOOP MARKERS if applicable in mode
@@ -636,7 +711,7 @@ FADEOUTLENGTH = 640*1000  # a large table gives reasonable results (640 up to 2 
 FADEOUT = numpy.linspace(1., 0., FADEOUTLENGTH)     # by default, float64
 FADEOUT = numpy.power(FADEOUT, 6)
 FADEOUT = numpy.append(FADEOUT, numpy.zeros(FADEOUTLENGTH, numpy.float32)).astype(numpy.float32)
-SPEEDRANGE = 48
+SPEEDRANGE = 48     # 2*48=96 is larger than 88, so a (middle) C4-A4 can facilitate largest keyboard
 SPEED = numpy.power(2, numpy.arange(-1.0*SPEEDRANGE*PITCHSTEPS, 1.0*SPEEDRANGE*PITCHSTEPS)/(12*PITCHSTEPS)).astype(numpy.float32)
 
 def AudioCallback(outdata, frame_count, time_info, status):
@@ -650,6 +725,8 @@ def AudioCallback(outdata, frame_count, time_info, status):
         #print "remove " +str(e) + ", note: " + str(e.playingnote())
         try: playingsounds.remove(e)
         except: pass
+    #b_temp = b
+    filterproc(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
     b *= volumeCC
     outdata[:] = b.reshape(outdata.shape)
 
@@ -706,12 +783,20 @@ if not USE_ALSA_MIXER:
 
 def AllNotesOff():
     global playingnotes, playingsounds, sustainplayingnotes, triggernotes, currchord, currscale
+    global currfilter, BOXFVroomsize, BOXFVdamp, BOXFVwet, BOXFVdry, BOXFVwidth
     playingsounds = []
     playingnotes = {}
     sustainplayingnotes = []
     triggernotes = [128]*128     # fill with unplayable note
     currchord = 0
     currscale = 0
+    currfilter=0
+    setFilter(currfilter)
+    FVsetroomsize(BOXFVroomsize)
+    FVsetdamp(BOXFVdamp)
+    FVsetwet(BOXFVwet)
+    FVsetdry(BOXFVdry)
+    FVsetwidth(BOXFVwidth)
 
 def MidiCallback(message, time_stamp):
     global playingnotes, sustain, sustainplayingnotes, triggernotes, stop127, RELSAMPLE
@@ -720,7 +805,6 @@ def MidiCallback(message, time_stamp):
     global chordnote, currchord, chordname, scalechord, currscale, last_midinote, last_musicnote
     messagetype = message[0] >> 4
     messagechannel = (message[0] & 15) + 1
-    #print 'Channel %d, message %d' % (messagechannel , messagetype)
     #print 'Channel %d, message %d' % (messagechannel , messagetype)
     # -------------------------------------------------------
     # Process system commands
@@ -739,6 +823,8 @@ def MidiCallback(message, time_stamp):
         if messagetype==8 or messagetype==9:        # We may have a note on/off
             midinote += globaltranspose
             if velocity==0: messagetype=8           # prevent complexity in the rest of the checking
+            #if triggernotes[midinote]==midinote and velocity==64:   # Older MIDI implementations
+            #    messagetype=8                                       # like Roland PT-3100
             if messagetype==8:                      # first process standard midi note-off, but take care
                 if midinote in playingnotes and triggernotes[midinote]<128: # .. to not accidently turn off release samples in non-keyboard mode
                        for m in playingnotes[midinote]:
@@ -817,7 +903,7 @@ def MidiCallback(message, time_stamp):
             #print "Program change to %d=%d" % (note, preset)
             LoadSamples()
 
-        elif messagetype == 14: # Pitch Bend
+        elif messagetype == 14: # Pitch Bend (velocity contains MSB, note contains 0 or LSB if supported by controller)
             PITCHBEND=(((128*velocity+note)/pitchdiv)-pitchneutral)*pitchnotes
 
         elif messagetype == 11: # control change (CC, sometimes called Continuous Controllers)
@@ -864,6 +950,17 @@ def MidiCallback(message, time_stamp):
 
             elif CCnum == 82:           # Pitch bend sensitivity (my controller cannot send RPN)
                 pitchnotes = (24*CCval+100)/127
+
+            elif CCnum == 83:           # Freeverb roomsize
+                FVsetroomsize(CCval)
+            elif CCnum == 84:           # Freeverb damp
+                FVsetdamp(CCval)
+            elif CCnum == 85:           # Freeverb wet
+                FVsetwet(CCval)
+            elif CCnum == 86:           # Freeverb dry
+                FVsetdry(CCval)
+            elif CCnum == 87:           # Freeverb width
+                FVsetwidth(CCval)
 
             elif CCnum==120 or CCnum==123:    # "All sounds off" or "all notes off"
                 AllNotesOff()
