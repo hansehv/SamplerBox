@@ -18,6 +18,7 @@ PLAYBACK = "Once"                       # ignores loop markers ("just play the s
 PLAYBACK2X = "Onc2"                     # ignores loop markers with note-off by same note ("just play the sample with option to stop")
 PLAYLOOP = "Loop"                       # recognize loop markers, note-off by 127-note ("just play the loop with option to stop")
 PLAYLOOP2X = "Loo2"                     # recognize loop markers, note-off by same note ("just play the loop with option to stop")
+PLAYMONO = "Mono"                       # monophonic (with chords), loop like Loo2, but note/chord stops when next note is played.
 VELSAMPLE = "Sample"                    # velocity equals sampled value, requires multiple samples to get differentation
 VELACCURATE = "Accurate"                # velocity as played, allows for multiple (normalized!) samples for timbre
 SAMPLESDEF = "definition.txt"
@@ -587,7 +588,7 @@ def GetStopmode(mode):
         stopmode = -1                           # don't stop, play sample at full lenght (unless restarted)
     elif mode==PLAYLOOP:
         stopmode = 127                          # stop on 127-key
-    elif mode==PLAYBACK2X or mode==PLAYLOOP2X:
+    elif mode==PLAYBACK2X or mode==PLAYLOOP2X or mode==PLAYMONO:
         stopmode = 2                            # stop on 2nd keypress
     return stopmode
 def GetLoopmode(mode):
@@ -668,7 +669,8 @@ class Sound:
 
         wf.close()            
 
-    def play(self, note, vel, startparm):
+    def play(self, midinote, note, vel, startparm):
+        global sample_mode
         #print "play note %d, vel %d, startparm %d" % (note, vel, startparm)
         if startparm < 0:     # playing of release part of sample is requested
             pos = self.relmark  # so where does it start
@@ -682,7 +684,7 @@ class Sound:
             loop = self.loop    # we loop if possible by the sample
             stopnote=self.stopmode  # use stopmode to determine possible stopnote
             if stopnote==2:
-                stopnote = note
+                stopnote = midinote     # let autochordnotes be turned off by their trigger only
             elif stopnote==127:
                 stopnote = 127-note
         #print "play: note=%d vel=%d pos=%d loop=%d stopnote=%d" % (note, vel*self.gain, pos, loop, stopnote)
@@ -839,6 +841,8 @@ def MidiCallback(message, time_stamp):
                         xnote=m.playingstopnote()   # yes, so check it's stopnote
                         if xnote>-1 and xnote<128:  # not in once or keyboard mode
                             if midinote==xnote:     # could it be a push-twice stop?
+                                #if sample_mode==PLAYMONO and midinote!=m.playingnote():
+                                #    pass    # ignore the chord generated notes when playing monophonic
                                 messagetype = 8
                                 velmixer = m.playingvelocity()  # save org value for release sample
                             elif midinote >= stop127:   # could it be mirrored stop?
@@ -849,7 +853,18 @@ def MidiCallback(message, time_stamp):
                                             velmixer = m.playingvelocity()  # save org value for release sample
 
             if messagetype == 9:    # Note on 
-                #print 'Note on %d -> %d, voice=%d, chord=%s in %s/%s, velocity=%d, globalgain=%d' % (note, midinote, currvoice, chordname[currchord], sample_mode, velocity_mode, velocity, globalgain) #debug
+                print 'Note on %d->%d, voice=%d, chord=%s in %s/%s, velocity=%d, globalgain=%d' % (note, midinote, currvoice, chordname[currchord], sample_mode, velocity_mode, velocity, globalgain) #debug
+                if sample_mode == PLAYMONO:     # monophonic: new note stops all that's playing in the keyboard range
+                    for playnote in xrange(128-stop127, stop127):   # so leave the effects range out of this
+                        if playnote in playingnotes:
+                            for m in playingnotes[playnote]: 
+                                if sustain:
+                                    sustainplayingnotes.append(m)
+                                else:
+                                    m.fadeout(50)
+                                playingnotes[playnote] = []
+                                triggernotes[playnote] = 128  # housekeeping
+                                # In this mode we ignore the relsamples. I see no use and it makes previous code more complex
                 try:
                     if velocity_mode == VELSAMPLE:
                         velmixer = 127 * globalgain
@@ -875,13 +890,13 @@ def MidiCallback(message, time_stamp):
                         #print "start note " + str(playnote)
                         #FMO stops: hier moet de set van voices aangezet
                         #print "start playingnotes playnote %d, velocity %d, currvoice %d, velmixer %d" %(playnote, velocity, currvoice, velmixer)
-                        playingnotes.setdefault(playnote,[]).append(samples[playnote, velocity, currvoice].play(playnote, velmixer, 0))
+                        playingnotes.setdefault(playnote,[]).append(samples[playnote, velocity, currvoice].play(midinote, playnote, velmixer, 0))
                 except:
                     print 'Unassigned/unfilled note or other exception in note %d->%d' % (midinote-globaltranspose , midinote)
                     pass
 
             elif messagetype == 8:  # Note off
-                #print 'Note off ' + str(note) + '->' + str(midinote) + ', voice=' + str(currvoice)    #debug
+                print 'Note off ' + str(note) + '->' + str(midinote) + ', voice=' + str(currvoice)    #debug
                 for playnote in xrange(128):
                     if triggernotes[playnote] == midinote:  # did we make this one play ?
                         if playnote in playingnotes:
@@ -896,7 +911,7 @@ def MidiCallback(message, time_stamp):
                                 triggernotes[playnote] = 128  # housekeeping
                                 #FMO stops: hier moet de set van voices aangezet
                                 if  RELSAMPLE == 'E':
-                                    playingnotes.setdefault(playnote,[]).append(samples[playnote, velocity, currvoice].play(playnote, velmixer*globalgain, -1))
+                                    playingnotes.setdefault(playnote,[]).append(samples[playnote, velocity, currvoice].play(midinote, playnote, velmixer*globalgain, -1))
 
         elif messagetype == 12: # Program change
             preset = note+PRESETBASE
@@ -991,7 +1006,7 @@ basename = "None"
 
 def ActuallyLoad():    
     global preset, presetlist, samples, SAMPLES_DIR, samplesdir, BOXRELEASE, PRERELEASE, BOXXFADEIN, PREXFADEIN, BOXSTOP17, stop127
-    global globaltranspose, BOXSAMPLE_MODE, basename, BOXVELOCITY_MODE, velocity_mode, globalgain, voicelist, currvoice, PITCHRANGE, pitchnotes, RELSAMPLE
+    global globaltranspose, BOXSAMPLE_MODE, sample_mode, basename, BOXVELOCITY_MODE, velocity_mode, globalgain, voicelist, currvoice, PITCHRANGE, pitchnotes, RELSAMPLE
     global ActuallyLoading, DefinitionTxt, DefinitionErr
     ActuallyLoading="Yes"
     #print 'Entered ActuallyLoad'
@@ -1106,7 +1121,7 @@ def ActuallyLoad():
                         continue
                     if r'%%mode' in pattern:
                         m = pattern.split('=')[1].strip().title()
-                        if m==PLAYLIVE or m==PLAYBACK or m==PLAYBACK2X or m==PLAYLOOP or mode==PLAYLOOP2X: sample_mode = m
+                        if m==PLAYLIVE or m==PLAYBACK or m==PLAYBACK2X or m==PLAYLOOP or m==PLAYLOOP2X or m==PLAYMONO: sample_mode = m
                         continue
                     if r'%%velmode' in pattern:
                         m = pattern.split('=')[1].strip().title()
@@ -1166,6 +1181,7 @@ def ActuallyLoad():
                             midinote-=transpose
                             mode=mode.title()
                             if (GetStopmode(mode)<-1) or (GetStopmode(mode)==127 and midinote>(127-stop127)):
+                                print "invalid mode %d or note %d out of range, set to keyboard mode." % (GetStopmode(mode), midinote)
                                 mode=PLAYLIVE   # invalid mode or note out of range
                             samples[midinote, velocity, voice] = Sound(os.path.join(dirname, fname), midinote, velocity, mode, release, gain, xfadeout, xfadein, xfadevol)
                             fillnotes[midinote, voice] = voicefillnote
