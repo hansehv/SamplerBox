@@ -52,8 +52,7 @@ PITCHBITS = 7                           # pitchwheel resolution, 0=disable, max=
                                         # values below 7 will produce bad results
 BOXFVroomsize=0.5*127                   # Freeverb values, package default 0.5
 BOXFVdamp=0.4*127                       # Freeverb values, package default 0.4
-BOXFVwet=0.4*127                        # Freeverb values, package default 1/3
-BOXFVdry=0.6*127                        # Freeverb values, package default 0
+BOXFVlevel=0.4*127                      # Freeverb wet, implicit dry: package default 1/3 and 0
 BOXFVwidth=127                          # Freeverb values, package default 1
 HTTP_GUI = True                         # values for the webgui
 HTTP_PORT = 80
@@ -70,26 +69,39 @@ chordname=["","Maj","Min","Augm","Dim","Sus2","Sus4","Dom7","Maj7","Min7","MiMa7
 chordnote=[[0],[0,4,7],[0,3,7],[0,4,8],[0,3,6],[0,2,7],[0,5,7],[0,4,7,10],[0,4,7,11],[0,3,7,10],[0,3,7,11],[0,3,6,10],[0,3,6,9],[0,4,8,10],[0,4,8,11],[0,5,7,10]]
 currchord=0                             # single note, "normal play"
 
-scalename=["","C","D","E","F","G","A","B","Cm","Dm","Em","Fm","Gm","Am","Bm"]
+scalesymbol=["","C","D&#9837;","D","E&#9837;","E","F","F&#9839;","G","A&#9837;","A","B&#9837;","B","Cm","C&#9839;m","Dm","E&#9837;m","Em","Fm","F&#9839;m","Gm","G&#9839;m","Am","B&#9837;m","Bm"]
+scalename=["","C","C#","D","D#","E","F","F#","G","G#","A","A#","B","Cm","C#m","Dm","D#m","Em","Fm","F#m","Gm","G#m","Am","A#m","Bm"]
 scalechord=[
+    #C,#,D,#,E,F,#,G,#,A,#,B    #
     [0,0,0,0,0,0,0,0,0,0,0,0],  # 0
     [1,0,2,0,2,1,0,1,0,2,1,4],  # C
+    [4,1,0,2,0,2,1,0,1,0,2,1],  # Db,C#
     [1,3,1,0,2,0,2,1,0,1,0,2],  # D
+    [2,1,4,1,0,2,0,2,1,0,1,0],  # Eb,D#
     [0,2,1,3,1,0,2,0,2,1,0,1],  # E
     [1,0,2,1,4,1,0,2,0,2,1,0],  # F
+    [0,1,0,2,1,4,1,0,2,0,2,1],  # F#
     [1,0,1,0,2,1,3,1,0,2,0,2],  # G
+    [2,1,0,1,0,2,1,4,1,0,2,0],  # Ab,G#
     [0,2,1,0,1,0,2,1,3,1,0,2],  # A
+    [2,0,2,1,0,1,0,2,1,4,1,0],  # Bb,A#
     [0,2,0,2,1,0,1,0,2,1,0,1],  # B
     [2,0,4,1,0,2,0,2,1,0,1,0],  # Cm
+    [0,2,0,11,1,0,2,2,0,1,0,1],  # C#m
     [1,0,2,0,4,1,0,2,0,2,1,0],  # Dm
+    [0,1,0,2,0,4,1,0,2,0,2,1],  # Ebm,D#m
     [1,0,1,0,2,0,3,1,0,2,0,2],  # Em
     [2,1,0,1,0,2,2,4,1,0,2,0],  # Fm
+    [0,2,1,0,1,0,2,0,11,1,0,2],  # F#m
     [2,0,2,1,0,1,0,2,0,4,1,0],  # Gm
+    [0,2,0,2,1,0,1,0,2,0,11,1],  # G#m
     [1,0,2,0,2,1,0,1,0,2,0,4],  # Am
+    [4,1,0,2,0,2,1,0,1,0,2,0],  # Bbm,A#m
     [0,3,1,0,2,0,2,1,0,1,0,2]   # Bm
+    #C,#,D,#,E,F,#,G,#,A,#,B    #
     ]
 currscale=0
-notesymbol=["C","C&#9839;","D","E&#9837;","E","F","F&#9839;","G","G&#9839;","A","B&#9837;","B"]  # 0 in scalechord table, also used in loadsamples(!)
+notesymbol=["C","C&#9839;","D","E&#9837;","E","F","F&#9839;","G","G&#9839;","A","B&#9837;","B","FX"]  # 0 in scalechord table, also used in loadsamples(!)
 notenames=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]  # 0 in scalechord table, also used in loadsamples(!)
 #    ["Maj","C#","Min","D#","Min","Maj","F#","Maj","G#","Min","Maj","Dim"], # C
 #    ["Maj","Augm","Maj","D#","Min","F","Min","Maj","G#","Maj","A#","Min"], # D
@@ -125,7 +137,6 @@ last_musicnote = -1
 last_midinote =  -1
 midi_mute = False
 globalgain = 1                         # the input volume correction, change per set in definition.txt
-#test PRERELEASE = BOXRELEASE
 stop127 = BOXSTOP127
 sample_mode = BOXSAMPLE_MODE
 PITCHBEND = 0
@@ -141,8 +152,7 @@ else:
 
 FVroomsize=BOXFVroomsize
 FVdamp=BOXFVdamp
-FVwet=BOXFVwet
-FVdry=BOXFVdry
+FVlevel=BOXFVlevel
 FVwidth=BOXFVwidth
 
 #########################################
@@ -163,9 +173,9 @@ import struct
 import rtmidi2
 import samplerbox_audio   # audio-module
 
-def findvoice(voice, vlist):
-    for i in range(len(vlist)):
-        if voice==vlist[i][0]: return i
+def getindex(key, table):
+    for i in range(len(table)):
+        if key==table[i][0]: return i
     return -1
 
 #########################################
@@ -335,11 +345,14 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         global basename,presetlist,voicelist
         global ActuallyLoading,DefinitionTxt,samplesdir
         global last_musicnote, scalechord, Filterkeys
+        global sample_mode
         inval=0
         
         length = int(self.headers.getheader('content-length'))
         field_data = self.rfile.read(length)
         fields=parse_qs(field_data)
+        #print fields
+        
         if "SB_RenewMedia" in fields:
             if fields["SB_RenewMedia"][0] == "Yes":
                 basename="None"
@@ -357,7 +370,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                 #print DefinitionTxt
                 if '/media' in samplesdir:  # System-fs MUST stay r/o, so only update the mounts
                     subprocess.call(['mount', '-vo', 'remount,rw', '/media'])
-                    fname=samplesdir+presetlist[preset][1]+"/"+SAMPLESDEF
+                    fname=samplesdir+presetlist[getindex(preset,presetlist)][1]+"/"+SAMPLESDEF
                     with open(fname, 'w') as definitionfile:
                             definitionfile.write(DefinitionTxt)
                     subprocess.call(['mount', '-vo', 'remount,ro', '/media'])
@@ -371,8 +384,9 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         if "SB_Transpose"   in fields: globaltranspose  =int(fields["SB_Transpose"][0])
         if "SB_Voice"       in fields:
             inval=voicelist[int(fields["SB_Voice"][0])][0]
-            if findvoice(0,voicelist)>-1:inval=inval+1
+            if getindex(0,voicelist)>-1:inval=inval+1
             currvoice=inval
+            sample_mode=voicelist[getindex(currvoice,voicelist)][2]
         if "SB_Scale"       in fields:
             inval=int(fields["SB_Scale"][0])
             if currscale==inval: scalechange=False
@@ -389,8 +403,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         if "SB_Filter"      in fields: setFilter(int(fields["SB_Filter"][0]))
         if "SB_FVroomsize"  in fields: FVsetroomsize(int(fields["SB_FVroomsize"][0])*1.27)
         if "SB_FVdamp"      in fields: FVsetdamp(int(fields["SB_FVdamp"][0])*1.27)
-        if "SB_FVwet"       in fields: FVsetwet(int(fields["SB_FVwet"][0])*1.27)
-        if "SB_FVdry"       in fields: FVsetdry(int(fields["SB_FVdry"][0])*1.27)
+        if "SB_FVlevel"     in fields: FVsetlevel(int(fields["SB_FVlevel"][0])*1.27)
         if "SB_FVwidth"     in fields: FVsetwidth(int(fields["SB_FVwidth"][0])*1.27)
         display("") # show it on the box
         self.do_GET()       # as well as on the gui
@@ -405,17 +418,17 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         global MIDI_CHANNEL,volume,volumeCC
         global preset,globalgain,globaltranspose
         global currvoice,currscale,currchord, currfilter
-        global FVroomsize,FVdamp,FVwet,FVdry,FVwidth
+        global FVroomsize,FVdamp,FVlevel,FVwidth
         global ActuallyLoading,DefinitionTxt,DefinitionErr
-        global Filterkeys
+        global sample_set,Filterkeys
         varName=["SB_RenewMedia","SB_SoundVolume","SB_MidiVolume",
                  "SB_Preset","SB_Gain","SB_Transpose",
                  "SB_Voice","SB_Scale","SB_Chord","SB_Filter",
-                 "SB_FVroomsize","SB_FVdamp","SB_FVwet","SB_FVdry","SB_FVwidth",
+                 "SB_FVroomsize","SB_FVdamp","SB_FVlevel","SB_FVwidth",
                  "SB_MidiChannel","SB_DefinitionTxt"]
         global last_midinote, last_musicnote            # status
-        global notesymbol,chordname,scalename,voicelist # descriptors, no need for ID_translations
-        global samplesdir,presetlist                    # internal use, no need for ID_translations
+        global notesymbol,chordname,scalesymbol,voicelist # descriptors, no need for ID_translations
+        global sample_mode,presetlist                    # internal use, no need for ID_translations
         
         self.send_response(200)
         self.send_header("Content-type", 'application/javascript')
@@ -428,34 +441,34 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write("var %s;" % (varName[i]) )
 
         self.wfile.write("\n\n// Informational (read-only) variables:")
-        self.wfile.write("\nvar SB_numvars=%d;var SB_VarName;var SB_VarVal;" % (len(varName)) )
         self.wfile.write("\nvar SB_Samplesdir;var SB_LastMidiNote;var SB_LastMusicNote;var SB_DefErr;")
-        self.wfile.write("\nvar SB_numpresets;var SB_Presetlist;")
+        self.wfile.write("\nvar SB_Mode;var SB_numpresets;var SB_Presetlist;")
         self.wfile.write("\nvar SB_xvoice;var SB_numvoices;var SB_Voicelist;")
 
         self.wfile.write("\n\n// Static tables:")
-        self.wfile.write("\nSB_numnotes=%d;SB_Notename=%s;" % (len(notenames),notesymbol) )
+        self.wfile.write("\nSB_numvars=%d;var SB_VarName;\nvar SB_VarVal;" % (len(varName)) )
+        self.wfile.write("\nSB_numnotes=%d;SB_Notename=%s;" % (len(notesymbol),notesymbol) )
         self.wfile.write("\nSB_numchords=%d;SB_Chordoffset=%d;SB_Chordname=%s;\nSB_Chordnote=%s;" % (len(chordname),0,chordname,chordnote) )
-        self.wfile.write("\nSB_numscales=%d;SB_Scaleoffset=%d;SB_Scalename=%s;\nSB_Scalechord=%s;" % (len(scalename),100,scalename,scalechord) )
+        self.wfile.write("\nSB_numscales=%d;SB_Scaleoffset=%d;SB_Scalename=%s;\nSB_Scalechord=%s;" % (len(scalesymbol),100,scalesymbol,scalechord) )
         self.wfile.write("\nSB_numfilters=%d;SB_filters=%s" % (len(Filters),Filterkeys) )
 
         self.wfile.write("\n\n// Function for (re)filling all above variables with actual values from SamplerBox:\nfunction SB_GetAPI() {")
-        self.wfile.write("\n\tSB_varName=['%s'" % (varName[0]) )
+        self.wfile.write("\n\tSB_VarName=['%s'" % (varName[0]) )
         for i in range(1,len(varName)):
             self.wfile.write(",'%s'" % (varName[i]) )
         self.wfile.write("];\n\tSB_VarVal=[")
         self.wfile.write("'%s',%d,%d," % (ActuallyLoading,volume,volumeCC*100) )
         self.wfile.write("%d,%d,%d," % (preset,globalgain*100,globaltranspose) )
         self.wfile.write("%d,%d,%d,%d," % (currvoice,currscale,currchord,currfilter) )
-        self.wfile.write("%d,%d,%d,%d,%d," % (FVroomsize*100,FVdamp*100,FVwet*100,FVdry*100,FVwidth*100) )
+        self.wfile.write("%d,%d,%d,%d," % (FVroomsize*100,FVdamp*100,FVlevel*100,FVwidth*100) )
         self.wfile.write("%d,'%s'" % (MIDI_CHANNEL,DefinitionTxt.replace('\n','&#10;').replace('\r','&#13;')) )   # make it a unix formatted JS acceptable string
         self.wfile.write("];\n\tSB_Samplesdir='%s';SB_LastMidiNote=%d;SB_LastMusicNote=%s;SB_DefErr='%s';\n" % (samplesdir,last_midinote,last_musicnote,DefinitionErr) )
-        self.wfile.write("\tSB_numpresets=%d;SB_Presetlist=%s;\n" % (len(presetlist),presetlist) )
+        self.wfile.write("\tSB_Mode='%s';SB_numpresets=%d;SB_Presetlist=%s;\n" % (sample_mode,len(presetlist),presetlist) )
         vlist=[]
         xvoice="No"
         for i in range(len(voicelist)):      # filter out effects track
             if voicelist[i][0]==0:  xvoice="Yes"
-            else:   vlist.append([voicelist[i][0],voicelist[i][1]])
+            else:   vlist.append([voicelist[i][0],voicelist[i][1],voicelist[i][2]])
         self.wfile.write("\tSB_numvoices=%d;SB_xvoice='%s';SB_Voicelist=%s;\n" % (len(vlist),xvoice,vlist) )
         self.wfile.write("};")
 
@@ -496,14 +509,11 @@ def FVsetdamp(x):
     global FVdamp
     FVdamp=x/127.0
     filters.setdamp(FVdamp)
-def FVsetwet(x):
-    global FVwet
-    FVwet=x/127.0
-    filters.setwet(FVwet)
-def FVsetdry(x):
-    global FVdry
-    FVdry=x/127.0
-    filters.setdry(FVdry)
+def FVsetlevel(x):
+    global FVlevel
+    FVlevel=x/127
+    filters.setwet(FVlevel)
+    filters.setdry(1-FVlevel)
 def FVsetwidth(x):
     global FVwidth
     FVwidth=x/127.0
@@ -523,8 +533,10 @@ class waveread(wave.Wave_read):
         self._ieee = False
         self._file = Chunk(file, bigendian=0)
         if self._file.getname() != 'RIFF':
+            print '%s does not start with RIFF id' % (file)
             raise Error, '%s does not start with RIFF id' % (file)
         if self._file.read(4) != 'WAVE':
+            print '%s is not a WAVE file' % (file)
             raise Error, '%s is not a WAVE file' % (file)
         self._fmt_chunk_read = 0
         self._data_chunk = None
@@ -535,6 +547,13 @@ class waveread(wave.Wave_read):
                 chunk = Chunk(self._file, bigendian=0)
             except EOFError:
                 break
+            except:
+                if self._fmt_chunk_read and self._data_chunk:
+                    print "Read %s with errors" % (file)
+                    break   # we have sufficient data so leave the error as is
+                else:
+                    print "Skipped %s because of chunk.skip error" %file
+                    raise Error, "Error in chunk.skip in %s" % (file)
             chunkname = chunk.getname()
             #print "Found chunk:" + chunkname
             if chunkname == 'fmt ':
@@ -546,10 +565,11 @@ class waveread(wave.Wave_read):
                     break
             elif chunkname == 'data':
                 if not self._fmt_chunk_read:
-                    raise Error, 'data chunk before fmt chunk in %s' % (file)
-                self._data_chunk = chunk
-                self._nframes = chunk.chunksize // self._framesize
-                self._data_seek_needed = 0
+                    print 'data chunk before fmt chunk in %s' % (file)
+                else:
+                    self._data_chunk = chunk
+                    self._nframes = chunk.chunksize // self._framesize
+                    self._data_seek_needed = 0
             elif chunkname == 'cue ':
                 try:
                     numcue = struct.unpack('<i',chunk.read(4))[0]
@@ -565,8 +585,17 @@ class waveread(wave.Wave_read):
                 if numsampleloops > 0:      # we don't need the repeat loops...
                     cuepointid, type, start, end, fraction, playcount = struct.unpack('<iiiiii',chunk.read(24)) 
                     self._loops.append([start,end])
-            chunk.skip()
+            try:
+                chunk.skip()
+            except:
+                if self._fmt_chunk_read and self._data_chunk:
+                    print "Read %s with errors" % (file)
+                    break   # we have sufficient data so leave the error as is
+                else:
+                    print "Skipped %s because of chunk.skip error" %file
+                    raise Error, "Error in chunk.skip in %s" % (file)
         if not self._fmt_chunk_read or not self._data_chunk:
+            print 'fmt chunk and/or data chunk missing in %s' % (file)
             raise Error, 'fmt chunk and/or data chunk missing in %s' % (file)
 
     def getmarkers(self):
@@ -635,7 +664,6 @@ class PlayingSound:
 class Sound:
     def __init__(self, filename, midinote, velocity, mode, release, gain, xfadeout, xfadein, xfadevol):
         global RELSAMPLE
-        #print 'Reading ' + filename
         wf = waveread(filename)
         self.fname = filename
         self.midinote = midinote
@@ -670,8 +698,6 @@ class Sound:
         wf.close()            
 
     def play(self, midinote, note, vel, startparm):
-        global sample_mode
-        #print "play note %d, vel %d, startparm %d" % (note, vel, startparm)
         if startparm < 0:     # playing of release part of sample is requested
             pos = self.relmark  # so where does it start
             end = self.eof      # and when does it end
@@ -687,7 +713,6 @@ class Sound:
                 stopnote = midinote     # let autochordnotes be turned off by their trigger only
             elif stopnote==127:
                 stopnote = 127-note
-        #print "play: note=%d vel=%d pos=%d loop=%d stopnote=%d" % (note, vel*self.gain, pos, loop, stopnote)
         snd = PlayingSound(self, note, vel, pos, end, loop, stopnote)
         playingsounds.append(snd)
         return snd
@@ -722,7 +747,6 @@ def AudioCallback(outdata, frame_count, time_info, status):
     playingsounds = playingsounds[-MAX_POLYPHONY:]
     # audio-module:
     b = samplerbox_audio.mixaudiobuffers(playingsounds, rmlist, frame_count, FADEOUT, FADEOUTLENGTH, SPEED, SPEEDRANGE, PITCHBEND, PITCHSTEPS)
-    #b = samplerbox_audio.mixaudiobuffers(playingsounds, rmlist, frame_count, FADEOUT, FADEOUTLENGTH, PRERELEASE, SPEED, SPEEDRANGE, PITCHBEND, PITCHSTEPS)
     for e in rmlist:
         #print "remove " +str(e) + ", note: " + str(e.playingnote())
         try: playingsounds.remove(e)
@@ -785,7 +809,7 @@ if not USE_ALSA_MIXER:
 
 def AllNotesOff():
     global playingnotes, playingsounds, sustainplayingnotes, triggernotes, currchord, currscale
-    global currfilter, BOXFVroomsize, BOXFVdamp, BOXFVwet, BOXFVdry, BOXFVwidth
+    global currfilter, BOXFVroomsize, BOXFVdamp, BOXFVlevel, BOXFVwidth
     playingsounds = []
     playingnotes = {}
     sustainplayingnotes = []
@@ -796,14 +820,13 @@ def AllNotesOff():
     setFilter(currfilter)
     FVsetroomsize(BOXFVroomsize)
     FVsetdamp(BOXFVdamp)
-    FVsetwet(BOXFVwet)
-    FVsetdry(BOXFVdry)
+    FVsetlevel(BOXFVlevel)
     FVsetwidth(BOXFVwidth)
 
 def MidiCallback(message, time_stamp):
     global playingnotes, sustain, sustainplayingnotes, triggernotes, stop127, RELSAMPLE
     global preset, sample_mode, midi_mute, velocity_mode, globalgain, volumeCC, voicelist, currvoice
-    global PRERELEASE, PITCHBEND, PITCHRANGE, pitchneutral, pitchdiv, pitchnotes
+    global PITCHBEND, PITCHRANGE, pitchneutral, pitchdiv, pitchnotes
     global chordnote, currchord, chordname, scalechord, currscale, last_midinote, last_musicnote
     messagetype = message[0] >> 4
     messagechannel = (message[0] & 15) + 1
@@ -871,11 +894,16 @@ def MidiCallback(message, time_stamp):
                     else:
                         velmixer = velocity * globalgain
                     last_midinote=midinote-globaltranspose      # save original midinote for the webgui
-                    last_musicnote=midinote-12*int(midinote/12) # do a "remainder midinote/12" without having to import the full math module
-                    if currscale>0:               # scales require a chords mix
-                        currchord = scalechord[currscale][last_musicnote]
-                    for n in range (len(chordnote[currchord])):
-                        playnote=midinote+chordnote[currchord][n]
+                    if midinote>(127-stop127) and midinote <stop127:
+                        last_musicnote=midinote-12*int(midinote/12) # do a "remainder midinote/12" without having to import the full math module
+                        if currscale>0:               # scales require a chords mix
+                            currchord = scalechord[currscale][last_musicnote]
+                        playchord=currchord
+                    else:
+                        last_musicnote=12 # Set musicnote to "effects"
+                        playchord=0       # no chords outside keyboardrange / in effects channel.
+                    for n in range (len(chordnote[playchord])):
+                        playnote=midinote+chordnote[playchord][n]
                         for m in sustainplayingnotes:   # safeguard polyphony; don't sustain double notes
                             if m.note == playnote:
                                 m.fadeout(50)
@@ -887,7 +915,6 @@ def MidiCallback(message, time_stamp):
                                     m.fadeout(50)
                                 playingnotes[playnote] = []   # housekeeping
                         triggernotes[playnote]=midinote   # we are last playing this one
-                        #print "start note " + str(playnote)
                         #FMO stops: hier moet de set van voices aangezet
                         #print "start playingnotes playnote %d, velocity %d, currvoice %d, velmixer %d" %(playnote, velocity, currvoice, velmixer)
                         playingnotes.setdefault(playnote,[]).append(samples[playnote, velocity, currvoice].play(midinote, playnote, velmixer, 0))
@@ -915,7 +942,6 @@ def MidiCallback(message, time_stamp):
 
         elif messagetype == 12: # Program change
             preset = note+PRESETBASE
-            #print "Program change to %d=%d" % (note, preset)
             LoadSamples()
 
         elif messagetype == 14: # Pitch Bend (velocity contains MSB, note contains 0 or LSB if supported by controller)
@@ -930,7 +956,7 @@ def MidiCallback(message, time_stamp):
                 volumeCC = CCval / 127.0   # force float
 
             elif CCnum == 64:    # sustain pedal
-                if sample_mode == PLAYLIVE:
+                if sample_mode==PLAYLIVE or sample_mode==PLAYMONO:
                     if (CCval < 64):    # sustain off
                         for n in sustainplayingnotes:
                             n.fadeout(50)
@@ -942,12 +968,13 @@ def MidiCallback(message, time_stamp):
                         #print 'Sustain pedal pressed'
 
             #elif CCnum == 72:           # Sound controller 3 = release time. ...needs rethinking...
-            #    PRERELEASE = CCval
+            #    ? = CCval
                 
             elif CCnum == 80:           # general purpose 80 used for voices
                 if CCval > 0:           # I use MIDI CC Trigger/Release which ignores default release value and thus automatically skips voice0 :-)
-                    if findvoice(CCval, voicelist)>-1:
+                    if getindex(CCval, voicelist)>-1:
                         currvoice = CCval
+                        sample_mode=voicelist[getindex(currvoice,voicelist)][2]
                         display("")
 
             elif CCnum == 81:           # general purpose 81 used for chords and scales
@@ -970,11 +997,9 @@ def MidiCallback(message, time_stamp):
                 FVsetroomsize(CCval)
             elif CCnum == 84:           # Freeverb damp
                 FVsetdamp(CCval)
-            elif CCnum == 85:           # Freeverb wet
-                FVsetwet(CCval)
-            elif CCnum == 86:           # Freeverb dry
-                FVsetdry(CCval)
-            elif CCnum == 87:           # Freeverb width
+            elif CCnum == 85:           # Freeverb effects level
+                FVsetlevel(CCval)
+            elif CCnum == 86:           # Freeverb width
                 FVsetwidth(CCval)
 
             elif CCnum==120 or CCnum==123:    # "All sounds off" or "all notes off"
@@ -1005,7 +1030,7 @@ def LoadSamples():
 basename = "None"
 
 def ActuallyLoad():    
-    global preset, presetlist, samples, SAMPLES_DIR, samplesdir, BOXRELEASE, PRERELEASE, BOXXFADEIN, PREXFADEIN, BOXSTOP17, stop127
+    global preset, presetlist, samples, SAMPLES_DIR, samplesdir, BOXRELEASE, BOXXFADEIN, PREXFADEIN, BOXSTOP17, stop127
     global globaltranspose, BOXSAMPLE_MODE, sample_mode, basename, BOXVELOCITY_MODE, velocity_mode, globalgain, voicelist, currvoice, PITCHRANGE, pitchnotes, RELSAMPLE
     global ActuallyLoading, DefinitionTxt, DefinitionErr
     ActuallyLoading="Yes"
@@ -1036,7 +1061,7 @@ def ActuallyLoad():
 
     mode=[]
     globalgain = 1
-    currvoice = 1
+    currvoice = 0
     sample_mode=BOXSAMPLE_MODE      # fallback to the samplerbox default
     velocity_mode=BOXVELOCITY_MODE  # fallback to the samplerbox default
     stop127=BOXSTOP127              # fallback to the samplerbox default
@@ -1050,10 +1075,11 @@ def ActuallyLoad():
     samples = {}
     fillnotes = {}
     fillnote = 'Y'          # by default we will fill/generate missing notes
-    voices =[]
     voicelist = []
     voicenames = []
-    voice0 = False
+    for voice in range(128):
+        voicenames.append([voice, str(voice)])
+    voicemodes = [""]*128
     DefinitionTxt = ''
     DefinitionErr = ''
 
@@ -1135,9 +1161,11 @@ def ActuallyLoad():
                     if r'%%voice' in pattern:
                         m = pattern.split(':')[1].strip()
                         v,m=m.split("=")
-                        voicenames.append([int(v),v+" "+m])
+                        if int(v)>127:
+                            print "Voicename %m ignored" %m
+                            raise exception ("Voicename %m ignored" %m)
+                        voicenames[int(v)]=[int(v),v+" "+m]
                         continue
-                    #defaultparams = { 'midinote': '0', 'velocity': '127', 'notename': '', 'voice': '1' }
                     defaultparams = { 'midinote': '0', 'velocity': '127', 'gain': '1', 'notename': '', 'voice': '1', 'mode': sample_mode, 'transpose': '0', 'release': PRERELEASE, 'xfadeout': PREXFADEOUT, 'xfadein': PREXFADEIN, 'xfadevol': PREXFADEVOL, 'fillnote': fillnote }
                     if len(pattern.split(',')) > 1:
                         defaultparams.update(dict([item.split('=') for item in pattern.split(',', 1)[1].replace(' ','').replace('%', '').split(',')]))
@@ -1148,20 +1176,22 @@ def ActuallyLoad():
                                      .replace(r"\%release", r"(?P<release>\d+)").replace(r"\%xfadeout", r"(?P<xfadeout>\d+)").replace(r"\%xfadein", r"(?P<xfadein>\d+)")\
                                      .replace(r"\%notename", r"(?P<notename>[A-Ga-g]#?[0-9])").replace(r"\*", r".*?").strip()    # .*? => non greedy
                     for fname in os.listdir(dirname):
-                        #print 'Processing ' + fname
                         if LoadingInterrupt:
                             #print 'Loading % s interrupted...' % dirname
                             ActuallyLoading="No"
                             return
                         m = re.match(pattern, fname)
                         if m:
+                            #print 'Processing ' + fname
                             info = m.groupdict()
                             midinote = int(info.get('midinote', defaultparams['midinote']))
                             velocity = int(info.get('velocity', defaultparams['velocity']))
                             gain = abs(float((info.get('gain', defaultparams['gain']))))
                             transpose = int(info.get('transpose', defaultparams['transpose']))
                             voice = int(info.get('voice', defaultparams['voice']))
-                            voices.append(voice)
+                            if voice>127:
+                                print "Voice %d ignored" %voice
+                                raise exception ("Voice %d ignored" %voice)
                             mode = info.get('mode', defaultparams['mode'])
                             release = int(info.get('release', defaultparams['release']))
                             if (release>127): release=127
@@ -1172,20 +1202,23 @@ def ActuallyLoad():
                             xfadevol = abs(float(info.get('xfadevol', defaultparams['xfadevol'])))
                             if voice == 0:          # the override / special effects voice cannot fill
                                 voicefillnote = 'N' # so we ignore whatever the user wants (RTFM)
-                                voice0 = True       # remember we saw one...
                             else:
                                 voicefillnote = (info.get('fillnote', defaultparams['fillnote'])).title().rstrip()
                             notename = info.get('notename', defaultparams['notename'])
                             # next statement places note 60 on C3/C4/C5 with the +0/1/2. So now it is C4:
                             if notename: midinote = notenames.index(notename[:-1].upper()) + (int(notename[-1])+1) * 12
                             midinote-=transpose
-                            mode=mode.title()
+                            mode=mode.strip().title()
                             if (GetStopmode(mode)<-1) or (GetStopmode(mode)==127 and midinote>(127-stop127)):
-                                print "invalid mode %d or note %d out of range, set to keyboard mode." % (GetStopmode(mode), midinote)
+                                print "invalid mode '%s' or note %d out of range, set to keyboard mode." % (mode, midinote)
                                 mode=PLAYLIVE   # invalid mode or note out of range
-                            samples[midinote, velocity, voice] = Sound(os.path.join(dirname, fname), midinote, velocity, mode, release, gain, xfadeout, xfadein, xfadevol)
-                            fillnotes[midinote, voice] = voicefillnote
-                            #print "sample: %s, note: %d, voice: %d, mode: %s, fillnote: %s, release: %s, xfadein: %s" %(fname, midinote, voice, mode, voicefillnote, release, xfadein)
+                            try:
+                                samples[midinote, velocity, voice] = Sound(os.path.join(dirname, fname), midinote, velocity, mode, release, gain, xfadeout, xfadein, xfadevol)
+                                fillnotes[midinote, voice] = voicefillnote
+                                if voicemodes[voice]=="" or mode==PLAYMONO: voicemodes[voice]=mode
+                                elif voicemodes[voice]!=PLAYMONO and voicemodes[voice]!=mode: voicemodes[voice]="Mixed"
+                                #print "sample: %s, note: %d, voice: %d, mode: %s, fillnote: %s, release: %s, xfadein: %s" %(fname, midinote, voice, mode, voicefillnote, release, xfadein)
+                            except: pass    # Error should be handled & communicated in subprocs
                 except:
                     m=i+1
                     v=""
@@ -1204,19 +1237,16 @@ def ActuallyLoad():
                 #print "Processing " + file
                 samples[midinote, 127, 1] = Sound(file, midinote, 127, PLAYLIVE, PRERELEASE, globalgain, PREXFADEOUT, PREXFADEIN, PREXFADEVOL)
                 fillnotes[midinote, 1] = fillnote
-        voicelist.append([1, "Default"])
+        voicelist.append([1, "Default", sample_mode])
 
     initial_keys = set(samples.keys())
     if len(initial_keys) > 0:
-
-        voices = list(set(voices)) # Remove duplicates by converting to a set
-        for voice in voices:
+        for voice in xrange(128):
+            if voicemodes[voice]=="": continue
+            if currvoice==0: currvoice=voice     # make sure to start with a playable non-empty voice
             #print "Complete info for voice %d" % (voice)
-            v=findvoice(voice, voicenames)
-            if v>-1:
-                voicelist.append([voice, voicenames[v][1]])
-            else:
-                voicelist.append([voice, "%d" %(voice)])
+            v=getindex(voice, voicenames)
+            voicelist.append([voice, voicenames[v][1], voicemodes[voice]])
             for midinote in xrange(128):    # first complete velocities in found notes
                 lastvelocity = None
                 for velocity in xrange(128):
@@ -1250,16 +1280,16 @@ def ActuallyLoad():
                     for velocity in xrange(128):
                         samples[midinote, velocity, voice] = samples[m, velocity, voice]
 
-        if findvoice(0,voicelist)>-1:               # do we have the override / special effects voice ?
+        if voicemodes[0]!="":                       # do we have the override / special effects voice ?
             for midinote in xrange(128):
                 if (midinote, 0) in fillnotes:
-                   for voice in voices:
-                        if voice > 0:
-                            #print "Override note %d in voice %d" % (midinote, voice)
-                            for velocity in xrange(128):
-                                samples[midinote, velocity, voice] = samples[midinote, velocity, 0]
+                   for voice in xrange(1,128):
+                       if voicemodes[voice]!="":
+                           #print "Override note %d in voice %d" % (midinote, voice)
+                           for velocity in xrange(128):
+                               samples[midinote, velocity, voice] = samples[midinote, velocity, 0]
 
-        #print 'Preset loaded: ' + str(preset)
+        if currvoice!=0: sample_mode=voicelist[getindex(currvoice,voicelist)][2]
         display("")
 
     else:
@@ -1304,7 +1334,6 @@ if USE_BUTTONS:
             if (now - lastbuttontime) > 0.2:
                 if not GPIO.input(butt_down):
                     lastbuttontime = now
-                    #print("Button down")
                     if buttfunc==0:
                         preset -= 1
                         if preset < PRESETBASE: preset = 127+PRESETBASE
@@ -1343,7 +1372,6 @@ if USE_BUTTONS:
 
                 elif not GPIO.input(butt_up):
                     lastbuttontime = now
-                    #print("Button up")
                     midi_mute = False
                     if buttfunc==0:
                         preset += 1  
@@ -1466,7 +1494,6 @@ try:
   while True:
     curr_ports = rtmidi2.get_in_ports()
     if (len(prev_ports) != len(curr_ports)):
-        #print 'Change in midi connected devices, close all opened ports'
         midi_in.close_ports()
         prev_ports = []
         for port in curr_ports:
