@@ -88,3 +88,7 @@ Januari 2018
     - bugfixes and minor+cosmetic changes
 Februari 2018
     - Added freeverb, polished the GUI, fixed bug in GUI-API
+    - Added monophonic mode: note (incl related chordnotes) plays untill next note is pressed (or eof  is reached)
+March 2018
+    - Added remaining scales (missing semi notes)
+    - bugfixes and minor+cosmetic changes
