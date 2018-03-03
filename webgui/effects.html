@@ -13,20 +13,17 @@
 <TABLE WIDTH="100%"><TR>
 <TD WIDTH="112"><A HREF="index.html"><IMG SRC="SamplerBox.gif" BORDER="0" WIDTH="80" HEIGHT="27" ALIGN="middle" ALT=""></A></TD>
 <TD ALIGN="center"><B>Effects</B></TD>
-<TD ALIGN="center"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Home</BUTTON></TD>
+<TD ALIGN="center"><BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON></TD>
 </TR></TABLE>
 
 <FORM ID="elem_SB_Form" STYLE="line-height:300%;">
 <span ID="input_SB_Filter">Active effect/filter: </span>
 <BR>
 <B>Reverb</B><BR>
-<span ID="input_SB_FVdry">Original &nbsp:</span>
-<span ID="input_SB_FVwet">Reverb &nbsp &nbsp:</span>
+<span ID="input_SB_FVlevel">FXlevel &nbsp &nbsp:</span>
 <span ID="input_SB_FVroomsize">Roomsize:</span>
 <span ID="input_SB_FVdamp">Damping :</span>
 <span ID="input_SB_FVwidth">Width &nbsp &nbsp &nbsp:</span>
-<BR>
-<BUTTON TYPE="button" onclick="SB_Refresh();">Refresh status</BUTTON>
 </FORM>
 
 <script>SB_Update();</script>

@@ -10,35 +10,37 @@
 </HEAD>
 <BODY>
 
+<FORM ID="elem_SB_Form" STYLE="line-height:300%;">
+
 <TABLE WIDTH="100%"><TR>
 <TD WIDTH="112"><IMG SRC="SamplerBox.gif" BORDER="0" WIDTH="80" HEIGHT="27" ALIGN="middle" ALT=""></TD>
 <TD ALIGN="center"><B>Dashboard</B></TD>
-<TD ALIGN="center"><BUTTON TYPE="button" onclick='window.location.assign("effects.html");'>Effects</BUTTON> <BUTTON TYPE="button" onclick='window.location.assign("autochord.html");'>AutoChord</BUTTON></TD>
+<TD ALIGN="center"><BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON> &nbsp; <span ID="input_SB_RenewMedia">New USB</span></TD>
 </TR></TABLE>
 
-<FORM ID="elem_SB_Form" STYLE="line-height:300%;">
 <span ID="input_SB_Preset">Preset: </span>
 <BR>
 <span ID="input_SB_Voice">Voice: </span>
-<span ID="elem_SB_xvoice"> FX-track:</span>
+<span ID="elem_SB_xvoice"> FX-track:</span><span ID="elem_SB_Mode"> Mode: </span>
 <BR>
 <span ID="input_SB_Scale">Scale/Chord: </span>
 <span ID="input_SB_Chord">/ </span>
 <span ID="elem_SB_LastMidiNote">Last key: </span>
 <span ID="elem_SB_LastMusicNote">= </span>
 <BR>
-<span ID="input_SB_SoundVolume">DAC volume: </span>
-<span ID="input_SB_Gain">Gain value &nbsp; :</span>
+<BUTTON TYPE="button" onclick='window.location.assign("effects.html");'>Effects</BUTTON>
+ &nbsp; <span ID="input_SB_Filter">Active effect/filter: </span>
 <BR>
-<BUTTON TYPE="button" onclick="SB_Refresh();">Refresh status</BUTTON> &nbsp;
-<span ID="input_SB_RenewMedia">Read USB again</span> &nbsp;
-
+<span ID="input_SB_FVlevel">Reverb &nbsp; &nbsp; &nbsp; &nbsp; :</span>
+<span ID="input_SB_SoundVolume">DAC volume:</span>
+<span ID="input_SB_Gain">Gain value &nbsp; :</span>
 <BR>
 <span ID="input_SB_DefinitionTxt">Definition file:</span>
 <BUTTON TYPE="submit">Set</BUTTON>
 <div ID="elem_SB_DefErr">Skipped because of errors: line#  </div>
 <HR>
 <BUTTON TYPE="button" onclick='window.location.assign("readme.html");'>Read Me</BUTTON>
+ &nbsp; <BUTTON TYPE="button" onclick='window.location.assign("autochord.html");'>Chords&amp;Scales</BUTTON>
 </FORM>
 
 <script>SB_Update();</script>
