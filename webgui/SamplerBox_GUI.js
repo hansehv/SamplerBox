@@ -5,7 +5,7 @@ function SB_Update(){
 		return;
 	}
 	for (var i=0;i<SB_numvars;i++){
-		name=SB_varName[i];val=SB_VarVal[i];
+		name=SB_VarName[i];val=SB_VarVal[i];
 		v_name="v_"+name;
 		SB_variables[v_name](val);
 		ID_name="ID_"+name;
@@ -40,8 +40,7 @@ var SB_variables={
 	v_SB_Filter: function(val){SB_Filter=val;},
 	v_SB_FVroomsize: function(val){SB_FVroomsize=val;},
 	v_SB_FVdamp: function(val){SB_FVdamp=val;},
-	v_SB_FVwet: function(val){SB_FVwet=val;},
-	v_SB_FVdry: function(val){SB_FVdry=val;},
+	v_SB_FVlevel: function(val){SB_FVlevel=val;},
 	v_SB_FVwidth: function(val){SB_FVwidth=val;},
 	v_SB_RenewMedia: function(val){SB_RenewMedia=val;},
 	v_SB_DefinitionTxt: function(val){SB_DefinitionTxt=val;}
@@ -84,10 +83,7 @@ var SB_input={
 	input_SB_FVdamp: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
 	},
-	input_SB_FVwet: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
-	},
-	input_SB_FVdry: function(input_name,name,val,text){
+	input_SB_FVlevel: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
 	},
 	input_SB_FVwidth: function(input_name,name,val,text){
@@ -101,7 +97,7 @@ var SB_input={
 		return('<DIV STYLE="line-height:100%;text-align:center">'+text+m+'</DIV><TEXTAREA name="'+name+'"'+m+'>'+val+'</TEXTAREA>');
 	}
 }
-SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_xvoice","elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote","elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales"];
+SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_xvoice","elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote","elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales"];
 SB_numelems=SB_ElemID.length;
 var SB_element={
 	elem_SB_Form: function(elem_name){
@@ -112,6 +108,9 @@ var SB_element={
 	},
 	elem_SB_Samplesdir: function(elem_name){
 		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+SB_Samplesdir+'</SPAN>';
+	},
+	elem_SB_Mode: function(elem_name){
+		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+SB_Mode+'</SPAN>';
 	},
 	elem_SB_xvoice: function(elem_name,text) {
 		if (SB_xvoice=="No") j="";else j=' checked="checked"';
@@ -168,7 +167,7 @@ var SB_element={
 }
 function SB_notechord(note,chord){
 	if (SB_Chordname[chord]=="Maj") c="";
-	else c="_"+SB_Chordname[chord].toLowerCase();
+	else c=SB_Chordname[chord].toLowerCase();
 	return(SB_Notename[note]+c);
 }
 function SB_slider(input_name,name,val,min,max,step){

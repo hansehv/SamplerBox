@@ -10,9 +10,9 @@
 </HEAD>
 <BODY>
 <TABLE WIDTH="100%"><TR>
-<TD WIDTH="112"><IMG SRC="SamplerBox.gif" BORDER="0" WIDTH="80" HEIGHT="27" ALIGN="middle" ALT=""></TD>
+<TD WIDTH="112"><A HREF="index.html"><IMG SRC="SamplerBox.gif" BORDER="0" WIDTH="80" HEIGHT="27" ALIGN="middle" ALT=""></A></TD>
 <TD ALIGN="center"><B>Readme</B></TD>
-<TD ALIGN="center"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Home</BUTTON> <BUTTON TYPE="button" onclick='window.location.assign("effects.html");'>Effects</BUTTON>  <BUTTON TYPE="button" onclick='window.location.assign("autochord.html");'>Chords&amp;Scales</BUTTON></TD>
+<TD ALIGN="center"><BUTTON TYPE="button" onclick='window.location.assign("effects.html");'>Effects</BUTTON> &nbsp;  <BUTTON TYPE="button" onclick='window.location.assign("autochord.html");'>Chords&amp;Scales</BUTTON></TD>
 </TR></TABLE>
 
 <HR><H3>Introduction:</H3><HR>
@@ -27,7 +27,7 @@ The SamplerBox script sends several internal values as JavaScript variables in a
 <HR><H3>Two ways of displaying the items: via ID and via direct scripting:</H3><HR>
 <script>SB_Update();</script><!-- when using explicit scripts to show SB-variables, we need to update=fill them before their usage -->
 <TABLE BORDER="1"><TR><TH>Variable</TH><TH>With ID</TH><TH>With script</TH></TR>
-<TR><TD COLSPAN="3" ALIGN="center">I/O variables</TD></TR>
+<TR><TD COLSPAN="3" ALIGN="center">Some I/O variables</TD></TR>
 <TR><TD>MIDI Channel</TD><TD ID="ID_SB_MidiChannel"> </TD><TD CLASS="value"><script>document.write(SB_MidiChannel);</script></TD></TR>
 <TR><TD>DAC volume</TD><TD ID="ID_SB_SoundVolume">?</TD><TD CLASS="value"><script>document.write(SB_SoundVolume);</script></TD></TR>
 <TR><TD>MIDI volume</TD><TD ID="ID_SB_MidiVolume">?</TD><TD CLASS="value"><script>document.write(SB_MidiVolume);</script></TD></TR>
@@ -52,9 +52,9 @@ The SamplerBox script sends several internal values as JavaScript variables in a
 <span ID="input_SB_Chord">Chord: </span>
 <span ID="input_SB_Scale">Scale: </span>
 <BR>
-<span ID="input_SB_SoundVolume">DAC volume: </span>
-<span ID="input_SB_MidiVolume">Midi volume: </span>
-<span ID="input_SB_Gain">Gain: </span>
+<span ID="input_SB_SoundVolume">DAC volume:</span>
+<span ID="input_SB_MidiVolume">Midi volume:</span>
+<span ID="input_SB_Gain">Gain:</span>
 <BR><span ID="input_SB_DefinitionTxt">Definition file:</span><BR>
 <BUTTON TYPE="reset">Reset</BUTTON> &nbsp; 
 <BUTTON TYPE="submit">Submit</BUTTON> &nbsp; 
