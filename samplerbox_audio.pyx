@@ -20,6 +20,8 @@
 #      - implemented variable release
 #  July 2017
 #      - implemented release sample via marker in wav ("GrandOrgue method")
+#  March 2018
+#      - implemented gain /sample
 #
 #  Rebuild with "python setup.py build_ext --inplace"
 
@@ -44,8 +46,8 @@ def mixaudiobuffers(list playingsounds, list rmlist, int frame_count, numpy.ndar
         pos = snd.pos               # some translations to direct variables for speed
         fadeoutpos = snd.fadeoutpos
         looppos = snd.loop          # can be changed to -1 for release marker processing
-        length = snd.end            # can be end-loop or eof, depending normal or relase marker process
-        vel = snd.vel / 127.0
+        length = snd.end            # can be end-loop or eof, depending normal or release marker process
+        vel = snd.sound.gain * snd.vel / 127.0
 
         # Below overflow protection values correspond with tables in samplerbox.py
         i = (SPEEDRANGE+snd.note-snd.sound.midinote) * PITCHSTEPS + PITCHBEND

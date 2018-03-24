@@ -92,3 +92,4 @@ Februari 2018
 March 2018
     - Added remaining scales (missing semi notes)
     - bugfixes and minor+cosmetic changes
+    - enabled gain on sample level (requires rebuild of samplerbox_audio module) 
