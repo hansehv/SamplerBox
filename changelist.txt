@@ -93,3 +93,6 @@ March 2018
     - Added remaining scales (missing semi notes)
     - bugfixes and minor+cosmetic changes
     - enabled gain on sample level (requires rebuild of samplerbox_audio module) 
+July 2018
+  - changed midi default channel from 11 to 1
+  - fixed error webgui, setting of the "midivolume" (cc=7) was broken
