@@ -34,7 +34,7 @@ USE_HD44780_16x2_LCD = True             # Set to True to use a HD44780 based 16x
 USE_ALSA_MIXER = True                   # Set to True to use to use the alsa mixer (via pyalsaaudio)
 USE_BUTTONS = True                      # Set to True to use momentary buttons connected to RaspberryPi's GPIO pins
 MAX_POLYPHONY = 80                      # This can be set higher, but 80 is a safe value
-MIDI_CHANNEL = 11                       # midi channel
+MIDI_CHANNEL = 1                        # midi channel
 BOXSAMPLE_MODE = PLAYLIVE               # we need a default: original samplerbox
 BOXVELOCITY_MODE = VELSAMPLE            # we need a default: original samplerbox
 BOXSTOP127 = 109   # 88-key:108=C8 77-key:103=G7 61-key:96=C7. "Left side" has some notes slack
@@ -103,20 +103,6 @@ scalechord=[
 currscale=0
 notesymbol=["C","C&#9839;","D","E&#9837;","E","F","F&#9839;","G","G&#9839;","A","B&#9837;","B","FX"]  # 0 in scalechord table, also used in loadsamples(!)
 notenames=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]  # 0 in scalechord table, also used in loadsamples(!)
-#    ["Maj","C#","Min","D#","Min","Maj","F#","Maj","G#","Min","Maj","Dim"], # C
-#    ["Maj","Augm","Maj","D#","Min","F","Min","Maj","G#","Maj","A#","Min"], # D
-#    ["C","Min","Maj","Augm","Maj","F","Min","G","Min","Maj","A#","Maj"],   # E
-#    ["Maj","C#","Min","Maj","Dim","Maj","F#","Min","G#","Min","Maj","B"],  # F
-#    ["Maj","C#","Maj","D#","Min","Maj","Augm","Maj","G#","Min","A#","Min"],# G
-#    ["C","Min","Maj","D#","Maj","F","Min","Maj","Augm","Maj","A#","Min"],  # A
-#    ["C","Min","D","Min","Maj","F","Maj","G","Min","Maj","A#","Maj"],      # B
-#    ["Min","C#","Dim","Maj","E","Min","F#","Min","Maj","A","Maj","B"],     # Cm
-#    ["Maj","C#","Min","D#","Dim","Maj","F#","Min","G#","Min","Maj","B"],   # Dm
-#    ["Maj","C#","Maj","D#","Min","F","Augm","Maj","G#","Min","A#","Min"],  # Em
-#    ["Min","Maj","D","Maj","E","Min","Min","Dim","Maj","A","Min","B"],     # Fm
-#    ["Min","C#","Min","Maj","E","Maj","F#","Min","G#","Dim","Maj","B"],    # Gm
-#    ["Maj","C#","Min","D#","Min","Maj","F#","Maj","G#","Min","A#","Dim"],  # Am
-#    ["C","Augm","Maj","D#","Min","F","Min","Maj","G#","Maj","A#","Min"]    # Bm
 
 ########## Initialize other globals, don't change
 
@@ -378,7 +364,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                 self.LoadSamples()
                 return
         if "SB_MidiChannel" in fields: MIDI_CHANNEL     =int(fields["SB_MidiChannel"][0])
-        if "SB_SoundVolume" in fields: volume           =int(fields["SB_SoundVolume"][0])
+        if "SB_SoundVolume" in fields: setvolume(int(fields["SB_SoundVolume"][0]))
         if "SB_MidiVolume"  in fields: volumeCC         =float(fields["SB_MidiVolume"][0])/100
         if "SB_Gain"        in fields: globalgain       =float(fields["SB_Gain"][0])/100
         if "SB_Transpose"   in fields: globaltranspose  =int(fields["SB_Transpose"][0])
@@ -473,8 +459,8 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write("};")
 
 ##################################################################################
-# Filters, based on Freeverb by Jezar at Dreampoint with engine
-# adapted for samplerbox by Erik, http://www.nickyspride.nl/sb2/
+# Filters, based on Freeverb by Jezar at Dreampoint with
+# interface method inspired by Erik Nieuwlands (www.nickyspride.nl/sb2/)
 ##################################################################################
 
 import ctypes
@@ -753,7 +739,7 @@ def AudioCallback(outdata, frame_count, time_info, status):
         except: pass
     #b_temp = b
     filterproc(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
-    b *= volumeCC
+    b *= (10**volumeCC-1)/9     # linear doesn't sound natural, this may be to complicated though...
     outdata[:] = b.reshape(outdata.shape)
 
 print 'Available audio devices'
@@ -788,8 +774,8 @@ if USE_ALSA_MIXER:
             volume = int(vol[0])
         def setvolume(volume):
             amix.setvolume(volume)
+            getvolume()
         setvolume(volume)
-        getvolume()
     else:
         USE_ALSA_MIXER=False
         display("Invalid mixerdev")
@@ -951,6 +937,9 @@ def MidiCallback(message, time_stamp):
             CCnum = note
             CCval = velocity
             #print "CCnum = %d, CCval = %d" % (CCnum, CCval)
+
+            #if CCnum == 1:       # mod wheel action (0-127)
+            #    ?? = CCval
 
             if CCnum == 7:       # volume knob action (0-127)
                 volumeCC = CCval / 127.0   # force float

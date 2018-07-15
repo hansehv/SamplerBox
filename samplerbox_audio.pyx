@@ -7,8 +7,8 @@
 #
 #  samplerbox_audio.pyx: Audio engine (Cython) 
 #
-#  Original version adapted extended by https://www.facebook.com/hanshom
-#                          see docs at  http://homspace.xs4all.nl/homspace/samplerbox
+#  Original version adapted extended by HansEhv (https://github.com/hansehv)
+#
 #  June 18 2016:
 #      - implemented velocity fix by Erik Nieuwlands (http://www.nickyspride.nl/sb2/) of april 30.
 #  October 28 2016:
