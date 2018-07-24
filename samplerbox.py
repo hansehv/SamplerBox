@@ -1226,7 +1226,8 @@ def ActuallyLoad():
                 #print "Processing " + file
                 samples[midinote, 127, 1] = Sound(file, midinote, 127, PLAYLIVE, PRERELEASE, globalgain, PREXFADEOUT, PREXFADEIN, PREXFADEVOL)
                 fillnotes[midinote, 1] = fillnote
-        voicelist.append([1, "Default", sample_mode])
+        voicenames[1]=[1,"Default"]
+        voicemodes[1]=sample_mode
 
     initial_keys = set(samples.keys())
     if len(initial_keys) > 0:
