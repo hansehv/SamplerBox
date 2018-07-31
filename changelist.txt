@@ -99,3 +99,4 @@ July 2018
   - released Sbox20180716
   - fixed bug preventing samplesets without definition.txt to make any sound
   - added LFO with extra effects: Tremolo, Vibration and Rotate
+  - fixed revmodel to compile warningfree, so -fpermissive compiler option no longer needed.
