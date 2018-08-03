@@ -100,3 +100,5 @@ July 2018
   - fixed bug preventing samplesets without definition.txt to make any sound
   - added LFO with extra effects: Tremolo, Vibration and Rotate
   - fixed revmodel to compile warningfree, so -fpermissive compiler option no longer needed.
+August 2018
+  - reintegrated the I2C 7-segment display of the original samplerbox.
