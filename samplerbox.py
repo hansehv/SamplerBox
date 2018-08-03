@@ -31,7 +31,8 @@ ROTATE = "Rotate"                       # This needed to sync dropdown with cons
 AUDIO_DEVICE_ID = 2                     # change this number to use another soundcard, default=0
 SAMPLES_DIR = "/media/"                 # The root directory containing the sample-sets. Example: "/media/" to look for samples on a USB stick / SD card
 USE_SERIALPORT_MIDI = False             # Set to True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
-USE_HD44780_16x2_LCD = True             # Set to True to use a HD44780 based 16x2 LCD
+USE_HD44780_16x2_LCD = False             # Set to True to use a HD44780 based 16x2 LCD
+USE_I2C_7SEGMENTDISPLAY = True         # Set to True to use a 7-segment display via I2C
 USE_ALSA_MIXER = True                   # Set to True to use to use the alsa mixer (via pyalsaaudio)
 USE_BUTTONS = True                      # Set to True to use momentary buttons connected to RaspberryPi's GPIO pins
 MAX_POLYPHONY = 80                      # This can be set higher, but 80 is a safe value
@@ -181,10 +182,11 @@ def getindex(key, table):
     return -1
 
 #########################################
-##  LCD DISPLAY 
+##  LCD DISPLAYS, 16x2 and 7segment I2C
 ##   - HD44780 class, based on 16x2 LCD interface code by Rahul Kar, see:
 ##     http://www.rpiblog.com/2012/11/interfacing-16x2-lcd-with-raspberry-pi.html
 ##   - Actual display routine
+##   - Original Samplerbox I2C subroutine
 #########################################
 
 class HD44780:
@@ -261,13 +263,15 @@ class HD44780:
             else:
                 x += 1
                 if x < 17: self.cmd(ord(char),1)
-
+#
+# Display routine
+#
 if USE_HD44780_16x2_LCD:
     import RPi.GPIO as GPIO
     from time import sleep
     lcd = HD44780()
 
-    def display(s2):
+    def display(s2,s7=""):
         global basename, sample_mode, volume, globaltranspose, currvoice, currchord, chordname, scalename, currscale, button_disp, buttfunc
         if globaltranspose == 0:
             transpose = ""
@@ -288,9 +292,30 @@ if USE_HD44780_16x2_LCD:
     time.sleep(0.5)
     display('Start Samplerbox')
     time.sleep(0.5)
-
+#
+# 7-SEGMENT DISPLAY
+#
+elif USE_I2C_7SEGMENTDISPLAY:
+    import smbus
+    bus = smbus.SMBus(1)     # using I2C => GPIO2+3+PWR&GND = pins 3,5,?,?
+    def display(s2,s7=""):
+        if s7!="":
+            for k in '\x76\x79\x00' + s7:     # position cursor at 0
+                try:
+                    bus.write_byte(0x71, ord(k))
+                except:
+                    try:
+                        bus.write_byte(0x71, ord(k))
+                    except:
+                        pass
+                time.sleep(0.002)
+    display('','----')
+    time.sleep(0.5)
+#
+# NO DISPLAY
+#
 else:
-    def display(s):
+    def display(s,s7=""):
         pass    
 
 #########################################
@@ -627,6 +652,7 @@ def TremoloTidy(TurnOn):
         TremLFO.setstep(TREMspeed)  # and with correct speed
     else:
         TREMvalue=1                 # restore volume
+        vibrvalue=0                 # tune the note
 def Rotate(x,y,z):
     Vibrato(x,y,z)
     Tremolo(x,y,z)
@@ -961,7 +987,9 @@ def AllNotesOff():
     currscale = 0
     currfilter=0
     setFilter(currfilter)
-    FVinit()
+    #FVinit()                   # no cleanup necessary
+    RotateTidy(False)           # cleans up vibrato+tremolo+rotate
+
 
 def MidiCallback(message, time_stamp):
     global playingnotes, sustain, sustainplayingnotes, triggernotes, stop127, RELSAMPLE
@@ -1229,12 +1257,12 @@ def ActuallyLoad():
     if not basename: 
         #print 'Preset empty: %s' % preset
         basename = "%d Empty preset" %preset
-        display("")
+        display("","E%03d" % preset)
         ActuallyLoading="No"
         return
 
     #print 'Preset loading: %s ' % basename
-    display("Loading %s" % basename)
+    display("Loading %s" % basename,"L%03d" % preset)
     definitionfname = os.path.join(dirname, SAMPLESDEF)
     if os.path.isfile(definitionfname):
         if HTTP_GUI:
@@ -1433,12 +1461,12 @@ def ActuallyLoad():
                                samples[midinote, velocity, voice] = samples[midinote, velocity, 0]
 
         if currvoice!=0: sample_mode=voicelist[getindex(currvoice,voicelist)][2]
-        display("")
+        display("","%04d" % preset)
 
     else:
         #print 'Preset empty: ' + str(preset)
         basename = "%d Empty preset" %preset
-        display("")
+        display("","E%03d" % preset)
     ActuallyLoading="No"
 
 
