@@ -22,7 +22,7 @@ PLAYMONO = "Mono"                       # monophonic (with chords), loop like Lo
 VELSAMPLE = "Sample"                    # velocity equals sampled value, requires multiple samples to get differentation
 VELACCURATE = "Accurate"                # velocity as played, allows for multiple (normalized!) samples for timbre
 SAMPLESDEF = "definition.txt"
-ROTATE = "Rotate"                       # This needed to sync dropdown with consistency insurabce
+ROTATE = "Rotate"                       # This needed to sync dropdown with actual filter name
 #########################################
 ##  LOCAL CONFIG  
 ##  Adapt to your setup !
@@ -31,8 +31,8 @@ ROTATE = "Rotate"                       # This needed to sync dropdown with cons
 AUDIO_DEVICE_ID = 2                     # change this number to use another soundcard, default=0
 SAMPLES_DIR = "/media/"                 # The root directory containing the sample-sets. Example: "/media/" to look for samples on a USB stick / SD card
 USE_SERIALPORT_MIDI = False             # Set to True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
-USE_HD44780_16x2_LCD = False             # Set to True to use a HD44780 based 16x2 LCD
-USE_I2C_7SEGMENTDISPLAY = True         # Set to True to use a 7-segment display via I2C
+USE_HD44780_16x2_LCD = True             # Set to True to use a HD44780 based 16x2 LCD
+USE_I2C_7SEGMENTDISPLAY = False         # Set to True to use a 7-segment display via I2C
 USE_ALSA_MIXER = True                   # Set to True to use to use the alsa mixer (via pyalsaaudio)
 USE_BUTTONS = True                      # Set to True to use momentary buttons connected to RaspberryPi's GPIO pins
 MAX_POLYPHONY = 80                      # This can be set higher, but 80 is a safe value
@@ -55,7 +55,7 @@ PITCHBITS = 7                           # pitchwheel resolution, 0=disable, max=
 BOXFVroomsize=0.5*127                   # Freeverb roomsize in MIDI units, package default 0.5
 BOXFVdamp=0.4*127                       # Freeverb damp in MIDI units, package default 0.4
 BOXFVlevel=0.4*127                      # Freeverb wet in MIDI units, implicit dry: package default 1/3 and 0
-BOXFVwidth=127                          # Freeverb width in MIDI units, package default 1
+BOXFVwidth=1.0*127                      # Freeverb width in MIDI units, package default 1
 BOXVIBRpitch=0.5                        # Vibrato note variation
 BOXVIBRspeed=15                         # 14 ==> 10Hz on saw & block, 5Hz on triangle
 BOXVIBRtrill=False                      # a vibratotrill is a kind of yodeling
@@ -575,28 +575,29 @@ class LFO:
         return self.values[LFOtriangle]
 
 ##################################################################################
-# Filters
+# Effects/Filters
 ##################################################################################
 
+def NoProc(x=0,y=0,z=0):
+    pass
+#
 # C++ DLL interface method inspired by Erik Nieuwlands (www.nickyspride.nl/sb2/)
-
-# Reverb based on Freeverb by Jezar at Dreampoint
-# Reverb is costly: about 10% on PI3
 #
 import ctypes
 from ctypes import *
 c_float_p = ctypes.POINTER(ctypes.c_float)
 c_short_p = ctypes.POINTER(ctypes.c_short)
 
-filters = cdll.LoadLibrary('./filters/interface.so')
+filters = cdll.LoadLibrary('./filters/test.so')
+#
+# Reverb based on Freeverb by Jezar at Dreampoint
+# Reverb is costly: about 10% on PI3
+#
 filters.setroomsize.argtypes = [c_float]
 filters.setdamp.argtypes = [c_float]
 filters.setwet.argtypes = [c_float]
 filters.setdry.argtypes = [c_float]
 filters.setwidth.argtypes = [c_float]
-def NoProc(x=0,y=0,z=0):
-    pass
-
 def FVsetroomsize(x):
     global FVroomsize
     FVroomsize=x/127.0
@@ -607,7 +608,7 @@ def FVsetdamp(x):
     filters.setdamp(FVdamp)
 def FVsetlevel(x):
     global FVlevel
-    FVlevel=x/127
+    FVlevel=x/127.0
     filters.setwet(FVlevel)
     filters.setdry(1-FVlevel)
 def FVsetwidth(x):
@@ -619,10 +620,10 @@ def FVinit():
     FVsetdamp(BOXFVdamp)
     FVsetlevel(BOXFVlevel)
     FVsetwidth(BOXFVwidth)
+FVinit()
 #
-# Based on the poor man's LFO combined with the samplebox sound generation:
-# Vibrato, tremolo and rotate (poor man's single leslie)
-# These filters are cheap: about 1% CPU on PI3
+# Vibrato, tremolo and rotate (poor man's single speaker leslie)
+# Being input based, these effects are cheap: less than 1% CPU on PI3
 #
 VibrLFO=LFO()
 def Vibrato(x,y,z):     # Soundstream parms are dummy; proc affects sound generation
@@ -673,7 +674,7 @@ def RotateTidy(TurnOn):
 #
 # Filter (de)activation
 #
-Filters={"None":NoProc,"Reverb":filters.reverb,"Vibrato":Vibrato,"Tremolo":Tremolo,ROTATE:Rotate}
+Filters={"None":NoProc,"Reverb":filters.reverb,"Vibrato":Vibrato,"Tremolo":Tremolo,ROTATE:Rotate,}
 FilterTidy={"None":NoProc,"Reverb":NoProc,"Vibrato":VibratoTidy,"Tremolo":TremoloTidy,ROTATE:RotateTidy}
 Filterkeys=Filters.keys()
 currfilter=0
@@ -842,7 +843,8 @@ class Sound:
         self.xfadein = xfadein
         self.xfadevol = xfadevol
         self.eof = wf.getnframes()
-        self.loop = GetLoopmode(mode)       # if no loop requested it's useless to check the wav's capability
+        self.loop = GetLoopmode(mode
+)       # if no loop requested it's useless to check the wav's capability
         if self.loop > 0 and wf.getloops():
             self.loop = wf.getloops()[0][0] # Yes! the wav can loop
             self.nframes = wf.getloops()[0][1] + 2
@@ -920,7 +922,6 @@ def AudioCallback(outdata, frame_count, time_info, status):
         try: playingsounds.remove(e)
         except: pass
     #b_temp = b
-
     filterproc(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
     b *= (10**(TREMvalue*volumeCC)-1)/9     # linear doesn't sound natural, this may be to complicated though...
     outdata[:] = b.reshape(outdata.shape)
@@ -993,7 +994,7 @@ def AllNotesOff():
 
 def MidiCallback(message, time_stamp):
     global playingnotes, sustain, sustainplayingnotes, triggernotes, stop127, RELSAMPLE
-    global preset, sample_mode, midi_mute, velocity_mode, globalgain, volumeCC, voicelist, currvoice
+    global preset, sample_mode,midi_mute, velocity_mode, globalgain, volumeCC, voicelist, currvoice
     global PITCHBEND, PITCHRANGE, pitchneutral, pitchdiv, pitchnotes
     global chordnote, currchord, chordname, scalechord, currscale, last_midinote, last_musicnote
     messagetype = message[0] >> 4

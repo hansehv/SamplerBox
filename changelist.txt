@@ -102,3 +102,4 @@ July 2018
   - fixed revmodel to compile warningfree, so -fpermissive compiler option no longer needed.
 August 2018
   - reintegrated the I2C 7-segment display of the original samplerbox.
+  - Fixed bug in setting freeverb parameters via MIDI controller
