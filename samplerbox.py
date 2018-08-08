@@ -497,7 +497,7 @@ def FVsetdamp(x):
     filters.setdamp(FVdamp)
 def FVsetlevel(x):
     global FVlevel
-    FVlevel=x/127
+    FVlevel=x/127.0
     filters.setwet(FVlevel)
     filters.setdry(1-FVlevel)
 def FVsetwidth(x):
