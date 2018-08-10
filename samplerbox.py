@@ -819,11 +819,7 @@ class PlayingSound:
         return self.stopnote
     
     def fadeout(self, i):
-        if self.isfadeout:
-            try: playingsounds.remove(self)
-            except: pass
-        else:
-            self.isfadeout = True
+        self.isfadeout = True
         
     def stop(self):
         try: playingsounds.remove(self) 
