@@ -588,7 +588,7 @@ from ctypes import *
 c_float_p = ctypes.POINTER(ctypes.c_float)
 c_short_p = ctypes.POINTER(ctypes.c_short)
 
-filters = cdll.LoadLibrary('./filters/test.so')
+filters = cdll.LoadLibrary('./filters/filters.so')
 #
 # Reverb based on Freeverb by Jezar at Dreampoint
 # Reverb is costly: about 10% on PI3
