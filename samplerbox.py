@@ -1198,10 +1198,6 @@ def MidiCallback(message, time_stamp):
 
             elif CCnum==120 or CCnum==123:      # "All sounds off" or "all notes off"
                 AllNotesOff()
-        if Filterkeys[currfilter]==ROTATE:
-            VIBRtrill=False
-            TREMtrill=False
-            TREMspeed=VIBRspeed
 
 #########################################
 ##  LOAD SAMPLES
