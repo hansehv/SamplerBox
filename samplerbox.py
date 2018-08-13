@@ -23,7 +23,7 @@ VELSAMPLE = "Sample"                    # velocity equals sampled value, require
 VELACCURATE = "Accurate"                # velocity as played, allows for multiple (normalized!) samples for timbre
 SAMPLESDEF = "definition.txt"
 ROTATE = "Rotate"                       # This needed to sync dropdown with actual filter name
-######  Mapping of midicontrollers ###### Adapt / sync with your midi device
+######  Mapping of midicontrollers: adapt / sync with your midi device  #####
 # for non-standard values: 70-90, 102-120 can be used, being a mix of undefined & general purpose
 # use 128 when control channel messages are to be ignored for a parameter
 MC_Modwheel=1       # standard value
@@ -1014,6 +1014,7 @@ def MidiCallback(message, time_stamp):
     global preset, sample_mode,midi_mute, velocity_mode, globalgain, volumeCC, voicelist, currvoice
     global PITCHBEND, PITCHRANGE, pitchneutral, pitchdiv, pitchnotes
     global chordnote, currchord, chordname, scalechord, currscale, last_midinote, last_musicnote
+    global VIBRpitch,VIBRspeed,TREMampl,TREMspeed
     messagetype = message[0] >> 4
     messagechannel = (message[0] & 15) + 1
     #print 'Channel %d, message %d' % (messagechannel , messagetype)
@@ -1188,13 +1189,17 @@ def MidiCallback(message, time_stamp):
             elif CCnum == MC_VibrDepth:
                 VIBRpitch=1.0*CCval/32      # steps of 1/32th, range like GUI
             elif CCnum == MC_VibrSpeed:
-                VibrLFO.setstep(CCval/4)    # align with GUI
-                if Filterkeys[currfilter]==ROTATE: TremLFO.setstep(CCval/4)
+                VIBRspeed=CCval/4           # align with GUI
+                VibrLFO.setstep(VIBRspeed)
+                if Filterkeys[currfilter]==ROTATE:
+                    TREMspeed=VIBRspeed
+                    TremLFO.setstep(TREMspeed)
             elif CCnum == MC_TremDepth:
                 TREMampl=1.0*CCval/127      # values 0-1, range like GUI
             elif CCnum == MC_TremSpeed:
                 if Filterkeys[currfilter]!=ROTATE:
-                    TremLFO.setstep(CCval/4)    # align with GUI
+                    TREMspeed==CCval/4      # align with GUI
+                    TremLFO.setstep(TREMspeed)
 
             elif CCnum==120 or CCnum==123:      # "All sounds off" or "all notes off"
                 AllNotesOff()
