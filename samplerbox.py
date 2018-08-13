@@ -23,6 +23,23 @@ VELSAMPLE = "Sample"                    # velocity equals sampled value, require
 VELACCURATE = "Accurate"                # velocity as played, allows for multiple (normalized!) samples for timbre
 SAMPLESDEF = "definition.txt"
 ROTATE = "Rotate"                       # This needed to sync dropdown with actual filter name
+######  Mapping of midicontrollers ###### Adapt / sync with your midi device
+# for non-standard values: 70-90, 102-120 can be used, being a mix of undefined & general purpose
+# use 128 when control channel messages are to be ignored for a parameter
+MC_Modwheel=1       # standard value
+MC_Volume=7         # standard value
+MC_Sustain=64       # standard value
+MC_Voice=80
+MC_Autochord=81
+MC_PitchSens=82     # Pitch bend sensitivity (my controller cannot send RPN)
+MC_ReverbRoom=83
+MC_ReverbDamp=84
+MC_ReverbLvl=85
+MC_ReverbWidth=86
+MC_VibrDepth=87
+MC_VibrSpeed=88
+MC_TremDepth=92     # standard value
+MC_TremSpeed=89
 #########################################
 ##  LOCAL CONFIG  
 ##  Adapt to your setup !
@@ -588,7 +605,7 @@ from ctypes import *
 c_float_p = ctypes.POINTER(ctypes.c_float)
 c_short_p = ctypes.POINTER(ctypes.c_short)
 
-filters = cdll.LoadLibrary('./filters/filters.so')
+filters = cdll.LoadLibrary('./filters/interface.so')
 #
 # Reverb based on Freeverb by Jezar at Dreampoint
 # Reverb is costly: about 10% on PI3
@@ -621,6 +638,10 @@ def FVinit():
     FVsetlevel(BOXFVlevel)
     FVsetwidth(BOXFVwidth)
 FVinit()
+#
+# AutoWah
+#
+
 #
 # Vibrato, tremolo and rotate (poor man's single speaker leslie)
 # Being input based, these effects are cheap: less than 1% CPU on PI3
@@ -1115,15 +1136,15 @@ def MidiCallback(message, time_stamp):
         elif messagetype == 11: # control change (CC, sometimes called Continuous Controllers)
             CCnum = note
             CCval = velocity
-            #print "CCnum = %d, CCval = %d" % (CCnum, CCval)
+            print "CCnum = %d, CCval = %d" % (CCnum, CCval)
 
-            #if CCnum == 1:       # mod wheel action (0-127)
+            #if CCnum == MC_ModWheel:
             #    ?? = CCval
 
-            if CCnum == 7:       # volume knob action (0-127)
+            if CCnum == MC_Volume:
                 volumeCC = CCval / 127.0   # force float
 
-            elif CCnum == 64:    # sustain pedal
+            elif CCnum == MC_Sustain:
                 if sample_mode==PLAYLIVE or sample_mode==PLAYMONO:
                     if (CCval < 64):    # sustain off
                         for n in sustainplayingnotes:
@@ -1135,17 +1156,14 @@ def MidiCallback(message, time_stamp):
                         sustain = True
                         #print 'Sustain pedal pressed'
 
-            #elif CCnum == 72:           # Sound controller 3 = release time. ...needs rethinking...
-            #    ? = CCval
-                
-            elif CCnum == 80:           # general purpose 80 used for voices
+            elif CCnum == MC_Voice:
                 if CCval > 0:           # I use MIDI CC Trigger/Release which ignores default release value and thus automatically skips voice0 :-)
                     if getindex(CCval, voicelist)>-1:
                         currvoice = CCval
                         sample_mode=voicelist[getindex(currvoice,voicelist)][2]
                         display("")
 
-            elif CCnum == 81:           # general purpose 81 used for chords and scales
+            elif CCnum == MC_Autochord:
                 if CCval > 0:           # I use MIDI CC Trigger/Release; this ignores default release value
                     CCval -= 1          # align with table, makes it human human too :-)
                     if CCval < len(chordnote):
@@ -1158,20 +1176,32 @@ def MidiCallback(message, time_stamp):
                         currchord = 0
                         display("")
 
-            elif CCnum == 82:           # Pitch bend sensitivity (my controller cannot send RPN)
+            elif CCnum == MC_PitchSens: # Pitch bend sensitivity (my controller cannot send RPN)
                 pitchnotes = (24*CCval+100)/127
 
-            elif CCnum == 83:           # Freeverb roomsize
+            elif CCnum == MC_ReverbRoom:
                 FVsetroomsize(CCval)
-            elif CCnum == 84:           # Freeverb damp
+            elif CCnum == MC_ReverbDamp:
                 FVsetdamp(CCval)
-            elif CCnum == 85:           # Freeverb effects level
+            elif CCnum == MC_ReverbLvl:
                 FVsetlevel(CCval)
-            elif CCnum == 86:           # Freeverb width
-                FVsetwidth(CCval)
+            elif CCnum == MC_VibrDepth:
+                VIBRpitch=1.0*CCval/32      # steps of 1/32th, range like GUI
+            elif CCnum == MC_VibrSpeed:
+                VibrLFO.setstep(CCval/4)    # align with GUI
+                if Filterkeys[currfilter]==ROTATE: TremLFO.setstep(CCval/4)
+            elif CCnum == MC_TremDepth:
+                TREMampl=1.0*CCval/127      # values 0-1, range like GUI
+            elif CCnum == MC_TremSpeed:
+                if Filterkeys[currfilter]!=ROTATE:
+                    TremLFO.setstep(CCval/4)    # align with GUI
 
-            elif CCnum==120 or CCnum==123:    # "All sounds off" or "all notes off"
+            elif CCnum==120 or CCnum==123:      # "All sounds off" or "all notes off"
                 AllNotesOff()
+        if Filterkeys[currfilter]==ROTATE:
+            VIBRtrill=False
+            TREMtrill=False
+            TREMspeed=VIBRspeed
 
 #########################################
 ##  LOAD SAMPLES

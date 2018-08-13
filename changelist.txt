@@ -104,3 +104,4 @@ August 2018
   - reintegrated the I2C 7-segment display of the original samplerbox.
   - Fixed bug in setting freeverb parameters via MIDI controller
   - Fixed release processing during polyphonic safeguard being too fast giving choppy results
+  - Made Control Change number configurable and included new effects in that
