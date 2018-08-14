@@ -51,6 +51,7 @@ USE_SERIALPORT_MIDI = False             # Set to True to enable MIDI IN via Seri
 USE_HD44780_16x2_LCD = True             # Set to True to use a HD44780 based 16x2 LCD
 USE_I2C_7SEGMENTDISPLAY = False         # Set to True to use a 7-segment display via I2C
 USE_ALSA_MIXER = True                   # Set to True to use to use the alsa mixer (via pyalsaaudio)
+USE_48kHz = False                       # Output 48kHz iso 44100Hz. Try to avoid this...
 USE_BUTTONS = True                      # Set to True to use momentary buttons connected to RaspberryPi's GPIO pins
 MAX_POLYPHONY = 80                      # This can be set higher, but 80 is a safe value
 MIDI_CHANNEL = 1                        # midi channel
@@ -151,6 +152,7 @@ midi_mute = False
 globalgain = 1                         # the input volume correction, change per set in definition.txt
 stop127 = BOXSTOP127
 sample_mode = BOXSAMPLE_MODE
+PITCHCORR = 0
 PITCHBEND = 0
 PITCHRANGE *= 2     # actually it is 12 up and 12 down
 pitchnotes = PITCHRANGE
@@ -933,7 +935,7 @@ def AudioCallback(outdata, frame_count, time_info, status):
     rmlist = []
     playingsounds = playingsounds[-MAX_POLYPHONY:]
     # audio-module:
-    b = samplerbox_audio.mixaudiobuffers(playingsounds, rmlist, frame_count, FADEOUT, FADEOUTLENGTH, SPEED, SPEEDRANGE, PITCHBEND+VIBRvalue, PITCHSTEPS)
+    b = samplerbox_audio.mixaudiobuffers(playingsounds, rmlist, frame_count, FADEOUT, FADEOUTLENGTH, SPEED, SPEEDRANGE, PITCHBEND+VIBRvalue+PITCHCORR, PITCHSTEPS)
     for e in rmlist:
         #print "remove " +str(e) + ", note: " + str(e.playingnote())
         try: playingsounds.remove(e)
@@ -946,9 +948,16 @@ def AudioCallback(outdata, frame_count, time_info, status):
 print 'Available audio devices'
 print(sounddevice.query_devices())
 try:
-    sd = sounddevice.OutputStream(device=AUDIO_DEVICE_ID, blocksize=512, samplerate=44100, channels=2, dtype='int16', callback=AudioCallback)
+    i=44100
+    if USE_48kHz:
+        if PITCHBITS < 7:
+            print "==> Can't tune to 48kHz, please set PITCHBITS to 7 or higher <=="
+        else:
+            PITCHCORR = -147*(2**(PITCHBITS-7))
+        i=48000
+    sd = sounddevice.OutputStream(device=AUDIO_DEVICE_ID, blocksize=512, samplerate=i, channels=2, dtype='int16', callback=AudioCallback)
     sd.start()
-    print 'Opened audio device #%i' % AUDIO_DEVICE_ID
+    print 'Opened audio device #%i on %iHz' % (AUDIO_DEVICE_ID, i)
 except:
     display("Invalid audiodev")
     print 'Invalid audio device #%i' % AUDIO_DEVICE_ID

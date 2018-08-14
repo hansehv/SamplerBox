@@ -105,3 +105,4 @@ August 2018
   - Fixed bug in setting freeverb parameters via MIDI controller
   - Fixed release processing during polyphonic safeguard being too fast giving choppy results
   - Made Control Change number configurable and included new effects in that
+  - Introduced USE_48kHz parameter for 48K output devices (via permanent pitchbend = slight quality loss))
