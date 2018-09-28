@@ -7,7 +7,7 @@
 #
 #  samplerbox.py: Main file
 #
-#   SamplerBox extended by HansEhv
+#   SamplerBox extended by HansEhv (https://github.com/hansehv)
 #   see docs at  http://homspace.xs4all.nl/homspace/samplerbox
 #   changelog in changelog.txt
 #
@@ -22,6 +22,24 @@ PLAYMONO = "Mono"                       # monophonic (with chords), loop like Lo
 VELSAMPLE = "Sample"                    # velocity equals sampled value, requires multiple samples to get differentation
 VELACCURATE = "Accurate"                # velocity as played, allows for multiple (normalized!) samples for timbre
 SAMPLESDEF = "definition.txt"
+ROTATE = "Rotate"                       # This needed to sync dropdown with actual filter name
+######  Mapping of midicontrollers: adapt / sync with your midi device  #####
+# for non-standard values: 70-90, 102-120 can be used, being a mix of undefined & general purpose
+# use 128 when control channel messages are to be ignored for a parameter
+MC_Modwheel=1       # standard value
+MC_Volume=7         # standard value
+MC_Sustain=64       # standard value
+MC_Voice=80
+MC_Autochord=81
+MC_PitchSens=82     # Pitch bend sensitivity (my controller cannot send RPN)
+MC_ReverbRoom=83
+MC_ReverbDamp=84
+MC_ReverbLvl=85
+MC_ReverbWidth=86
+MC_VibrDepth=87
+MC_VibrSpeed=88
+MC_TremDepth=92     # standard value
+MC_TremSpeed=89
 #########################################
 ##  LOCAL CONFIG  
 ##  Adapt to your setup !
@@ -31,7 +49,9 @@ AUDIO_DEVICE_ID = 2                     # change this number to use another soun
 SAMPLES_DIR = "/media/"                 # The root directory containing the sample-sets. Example: "/media/" to look for samples on a USB stick / SD card
 USE_SERIALPORT_MIDI = False             # Set to True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
 USE_HD44780_16x2_LCD = True             # Set to True to use a HD44780 based 16x2 LCD
+USE_I2C_7SEGMENTDISPLAY = False         # Set to True to use a 7-segment display via I2C
 USE_ALSA_MIXER = True                   # Set to True to use to use the alsa mixer (via pyalsaaudio)
+USE_48kHz = False                       # Output 48kHz iso 44100Hz. Try to avoid this...
 USE_BUTTONS = True                      # Set to True to use momentary buttons connected to RaspberryPi's GPIO pins
 MAX_POLYPHONY = 80                      # This can be set higher, but 80 is a safe value
 MIDI_CHANNEL = 1                        # midi channel
@@ -50,10 +70,17 @@ preset = 0 + PRESETBASE                 # the default patch to load
 PITCHRANGE = 12                         # default range of the pitchwheel in semitones (max=12 is een octave)
 PITCHBITS = 7                           # pitchwheel resolution, 0=disable, max=14 (=16384 steps)
                                         # values below 7 will produce bad results
-BOXFVroomsize=0.5*127                   # Freeverb values, package default 0.5
-BOXFVdamp=0.4*127                       # Freeverb values, package default 0.4
-BOXFVlevel=0.4*127                      # Freeverb wet, implicit dry: package default 1/3 and 0
-BOXFVwidth=127                          # Freeverb values, package default 1
+BOXFVroomsize=0.5*127                   # Freeverb roomsize in MIDI units, package default 0.5
+BOXFVdamp=0.4*127                       # Freeverb damp in MIDI units, package default 0.4
+BOXFVlevel=0.4*127                      # Freeverb wet in MIDI units, implicit dry: package default 1/3 and 0
+BOXFVwidth=1.0*127                      # Freeverb width in MIDI units, package default 1
+BOXVIBRpitch=0.5                        # Vibrato note variation
+BOXVIBRspeed=15                         # 14 ==> 10Hz on saw & block, 5Hz on triangle
+BOXVIBRtrill=False                      # a vibratotrill is a kind of yodeling
+BOXTREMampl=.18                         # amplitude variation 0-1, resulting volume is between full=1 and full-TREMampl
+BOXTREMspeed=3                          # See VIBRspeed
+BOXTREMtrill=False                      # a tremolotrill is a goatlike sound, like some country singers :-)
+
 HTTP_GUI = True                         # values for the webgui
 HTTP_PORT = 80
 HTTP_ROOT = "webgui"
@@ -125,6 +152,7 @@ midi_mute = False
 globalgain = 1                         # the input volume correction, change per set in definition.txt
 stop127 = BOXSTOP127
 sample_mode = BOXSAMPLE_MODE
+PITCHCORR = 0
 PITCHBEND = 0
 PITCHRANGE *= 2     # actually it is 12 up and 12 down
 pitchnotes = PITCHRANGE
@@ -140,6 +168,14 @@ FVroomsize=BOXFVroomsize
 FVdamp=BOXFVdamp
 FVlevel=BOXFVlevel
 FVwidth=BOXFVwidth
+VIBRpitch=1.0*BOXVIBRpitch
+VIBRspeed=BOXVIBRspeed
+VIBRvalue=0             # Value 0 gives original note
+VIBRtrill=BOXVIBRtrill
+TREMampl=BOXTREMampl
+TREMspeed=BOXTREMspeed
+TREMvalue=1.0           # Full volume
+TREMtrill=BOXTREMtrill
 
 #########################################
 ##  IMPORT MODULES
@@ -165,10 +201,11 @@ def getindex(key, table):
     return -1
 
 #########################################
-##  LCD DISPLAY 
+##  LCD DISPLAYS, 16x2 and 7segment I2C
 ##   - HD44780 class, based on 16x2 LCD interface code by Rahul Kar, see:
 ##     http://www.rpiblog.com/2012/11/interfacing-16x2-lcd-with-raspberry-pi.html
 ##   - Actual display routine
+##   - Original Samplerbox I2C subroutine
 #########################################
 
 class HD44780:
@@ -245,13 +282,15 @@ class HD44780:
             else:
                 x += 1
                 if x < 17: self.cmd(ord(char),1)
-
+#
+# Display routine
+#
 if USE_HD44780_16x2_LCD:
     import RPi.GPIO as GPIO
     from time import sleep
     lcd = HD44780()
 
-    def display(s2):
+    def display(s2,s7=""):
         global basename, sample_mode, volume, globaltranspose, currvoice, currchord, chordname, scalename, currscale, button_disp, buttfunc
         if globaltranspose == 0:
             transpose = ""
@@ -272,9 +311,30 @@ if USE_HD44780_16x2_LCD:
     time.sleep(0.5)
     display('Start Samplerbox')
     time.sleep(0.5)
-
+#
+# 7-SEGMENT DISPLAY
+#
+elif USE_I2C_7SEGMENTDISPLAY:
+    import smbus
+    bus = smbus.SMBus(1)     # using I2C => GPIO2+3+PWR&GND = pins 3,5,?,?
+    def display(s2,s7=""):
+        if s7!="":
+            for k in '\x76\x79\x00' + s7:     # position cursor at 0
+                try:
+                    bus.write_byte(0x71, ord(k))
+                except:
+                    try:
+                        bus.write_byte(0x71, ord(k))
+                    except:
+                        pass
+                time.sleep(0.002)
+    display('','----')
+    time.sleep(0.5)
+#
+# NO DISPLAY
+#
 else:
-    def display(s):
+    def display(s,s7=""):
         pass    
 
 #########################################
@@ -332,6 +392,8 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         global ActuallyLoading,DefinitionTxt,samplesdir
         global last_musicnote, scalechord, Filterkeys
         global sample_mode
+        global VIBRpitch,VIBRspeed,VIBRtrill
+        global TREMampl,TREMspeed,TREMtrill
         inval=0
         
         length = int(self.headers.getheader('content-length'))
@@ -386,11 +448,30 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
             if not currchord==inval:
                 currchord=inval
                 currscale=0
-        if "SB_Filter"      in fields: setFilter(int(fields["SB_Filter"][0]))
         if "SB_FVroomsize"  in fields: FVsetroomsize(int(fields["SB_FVroomsize"][0])*1.27)
         if "SB_FVdamp"      in fields: FVsetdamp(int(fields["SB_FVdamp"][0])*1.27)
         if "SB_FVlevel"     in fields: FVsetlevel(int(fields["SB_FVlevel"][0])*1.27)
         if "SB_FVwidth"     in fields: FVsetwidth(int(fields["SB_FVwidth"][0])*1.27)
+        if "SB_VIBRpitch"   in fields: VIBRpitch=float(fields["SB_VIBRpitch"][0])/16
+        if "SB_VIBRspeed"   in fields:
+            VIBRspeed=int(fields["SB_VIBRspeed"][0])
+            VibrLFO.setstep(VIBRspeed)
+        if "SB_VIBRtrill"   in fields:
+            if fields["SB_VIBRtrill"][0].title()=="Yes":VIBRtrill=True
+            else: VIBRtrill=False
+        if "SB_TREMampl"    in fields: TREMampl=float(fields["SB_TREMampl"][0])/100
+        if "SB_TREMspeed"   in fields:
+            TREMspeed=int(fields["SB_TREMspeed"][0])
+            TremLFO.setstep(TREMspeed)
+        if "SB_TREMtrill"   in fields:
+            if fields["SB_TREMtrill"][0].title()=="Yes":TREMtrill=True
+            else: TREMtrill=False
+        # Some corrections are necessary :-(
+        if "SB_Filter"      in fields: setFilter(int(fields["SB_Filter"][0]))
+        if Filterkeys[currfilter]==ROTATE:
+            VIBRtrill=False
+            TREMtrill=False
+            TREMspeed=VIBRspeed
         display("") # show it on the box
         self.do_GET()       # as well as on the gui
 
@@ -401,20 +482,13 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         self.do_GET()           # answer the browser
 
     def send_API(self):
-        global MIDI_CHANNEL,volume,volumeCC
-        global preset,globalgain,globaltranspose
-        global currvoice,currscale,currchord, currfilter
-        global FVroomsize,FVdamp,FVlevel,FVwidth
-        global ActuallyLoading,DefinitionTxt,DefinitionErr
-        global sample_set,Filterkeys
         varName=["SB_RenewMedia","SB_SoundVolume","SB_MidiVolume",
                  "SB_Preset","SB_Gain","SB_Transpose",
                  "SB_Voice","SB_Scale","SB_Chord","SB_Filter",
                  "SB_FVroomsize","SB_FVdamp","SB_FVlevel","SB_FVwidth",
+                 "SB_VIBRpitch","SB_VIBRspeed","SB_VIBRtrill",
+                 "SB_TREMampl","SB_TREMspeed","SB_TREMtrill",
                  "SB_MidiChannel","SB_DefinitionTxt"]
-        global last_midinote, last_musicnote            # status
-        global notesymbol,chordname,scalesymbol,voicelist # descriptors, no need for ID_translations
-        global sample_mode,presetlist                    # internal use, no need for ID_translations
         
         self.send_response(200)
         self.send_header("Content-type", 'application/javascript')
@@ -447,6 +521,12 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write("%d,%d,%d," % (preset,globalgain*100,globaltranspose) )
         self.wfile.write("%d,%d,%d,%d," % (currvoice,currscale,currchord,currfilter) )
         self.wfile.write("%d,%d,%d,%d," % (FVroomsize*100,FVdamp*100,FVlevel*100,FVwidth*100) )
+        if VIBRtrill:   s="Yes"
+        else:           s="No"
+        self.wfile.write("%d,%d,'%s'," % (VIBRpitch*16,VIBRspeed,s) )
+        if TREMtrill:   s="Yes"
+        else:           s="No"
+        self.wfile.write("%d,%d,'%s'," % (TREMampl*100,TREMspeed,s) )
         self.wfile.write("%d,'%s'" % (MIDI_CHANNEL,DefinitionTxt.replace('\n','&#10;').replace('\r','&#13;')) )   # make it a unix formatted JS acceptable string
         self.wfile.write("];\n\tSB_Samplesdir='%s';SB_LastMidiNote=%d;SB_LastMusicNote=%s;SB_DefErr='%s';\n" % (samplesdir,last_midinote,last_musicnote,DefinitionErr) )
         self.wfile.write("\tSB_Mode='%s';SB_numpresets=%d;SB_Presetlist=%s;\n" % (sample_mode,len(presetlist),presetlist) )
@@ -459,34 +539,84 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write("};")
 
 ##################################################################################
-# Filters, based on Freeverb by Jezar at Dreampoint with
-# interface method inspired by Erik Nieuwlands (www.nickyspride.nl/sb2/)
+# Poor man's Low Frequency Oscillator (LFO), for vibrato, tremolo etc
+# Clock can be via (filter)call in AudioCallback, on PI3 approx once per 11msec's
+# for a saw=(128 up) or triangle=(128 up+down) a stepsize of 14 gives ~10Hz/5Hz respectively
+##################################################################################
+LFOblock=0      # index values for readability, don't change
+LFOsaw=1
+LFOinvsaw=2
+LFOtriangle=3
+class LFO:
+    def __init__(self, step=14, block=127, saw=127):
+        self.step=step; 
+        self.values=[0.0,0.0,0.0,0.0]
+        if block<64:self.values[LFOblock]=-1
+        else: self.values[LFOblock]=1
+        self.values[LFOsaw]=saw
+        self.values[LFOinvsaw]=127-self.values[LFOsaw]
+        if self.values[LFOblock]>1: LFOself.values[LFOtriangle]=self.values[LFOsaw]
+        else: self.values[LFOtriangle]=127-self.values[LFOsaw]
+    def process(self):
+        self.values[LFOsaw]+=self.step
+        if self.values[LFOsaw]<-1: self.values[LFOsaw]=128 # stop infinite loop due to impossible values
+        if self.values[LFOsaw]>127:
+            self.values[LFOblock]*=-1
+            self.values[LFOsaw]=0
+        self.values[LFOinvsaw]=127-self.values[LFOsaw]
+        if self.values[LFOblock]>0:
+            self.values[LFOtriangle]=self.values[LFOsaw]
+        else:
+            self.values[LFOtriangle]=self.values[LFOinvsaw]
+    def setstep(self,x):
+        if x>0: self.step=x
+    def setblock(self,x):
+        if x<64: self.values[LFOblock]=-1
+        else: self.values[LFOblock]=1
+    def setsaw(self,x):
+        self.values[LFOsaw]=x
+    def setinvsaw(self,x):
+        self.values[LFOsaw]=(127-x)
+    def settriangle(self,x):     # -127 to 127, values below 0 mean the second=decreasing stage
+        if x<0:
+            self.values[LFOblock]=-1
+            self.values[LFOsaw]=(127+x)
+        else:
+            self.values[LFOblock]=1
+            self.values[LFOsaw]=x
+    def getblock(self):
+        return (self.values[LFOblock]+1)*64     # so return 0 or 127
+    def getsaw(self):
+        return self.values[LFOsaw]
+    def getinvsaw(self):
+        return self.values[LFOinvsaw]
+    def gettriangle(self):
+        return self.values[LFOtriangle]
+
+##################################################################################
+# Effects/Filters
 ##################################################################################
 
+def NoProc(x=0,y=0,z=0):
+    pass
+#
+# C++ DLL interface method inspired by Erik Nieuwlands (www.nickyspride.nl/sb2/)
+#
 import ctypes
 from ctypes import *
 c_float_p = ctypes.POINTER(ctypes.c_float)
 c_short_p = ctypes.POINTER(ctypes.c_short)
 
 filters = cdll.LoadLibrary('./filters/interface.so')
+#
+# Reverb based on Freeverb by Jezar at Dreampoint
+# Reverb is costly: about 10% on PI3
+#
 filters.setroomsize.argtypes = [c_float]
 filters.setdamp.argtypes = [c_float]
 filters.setwet.argtypes = [c_float]
 filters.setdry.argtypes = [c_float]
 filters.setwidth.argtypes = [c_float]
-def NoFilter(x,y,z):
-    pass
-
-Filters={"None":NoFilter,"Reverb":filters.reverb}
-Filterkeys=Filters.keys()
-currfilter=0
-filterproc=Filters[Filterkeys[currfilter]]
-def setFilter(newfilter):
-    global Filters,Filterkeys,currfilter,filterproc
-    if newfilter < len(Filters):
-        currfilter=newfilter
-        filterproc=Filters[Filterkeys[newfilter]]
-
 def FVsetroomsize(x):
     global FVroomsize
     FVroomsize=x/127.0
@@ -504,7 +634,82 @@ def FVsetwidth(x):
     global FVwidth
     FVwidth=x/127.0
     filters.setwidth(FVwidth)
- 
+def FVinit():
+    FVsetroomsize(BOXFVroomsize)
+    FVsetdamp(BOXFVdamp)
+    FVsetlevel(BOXFVlevel)
+    FVsetwidth(BOXFVwidth)
+FVinit()
+#
+# AutoWah
+#
+
+#
+# Vibrato, tremolo and rotate (poor man's single speaker leslie)
+# Being input based, these effects are cheap: less than 1% CPU on PI3
+#
+VibrLFO=LFO()
+def Vibrato(x,y,z):     # Soundstream parms are dummy; proc affects sound generation
+    global VIBRvalue
+    VibrLFO.process()
+    if VIBRtrill:
+        VIBRvalue=(( (128*(VibrLFO.getblock())) /pitchdiv)-pitchneutral)*VIBRpitch
+    else:
+        VIBRvalue=(( (128*(VibrLFO.gettriangle())) /pitchdiv)-pitchneutral)*VIBRpitch
+def VibratoTidy(TurnOn):
+    if TurnOn:
+        VibrLFO.settriangle(63)     # start about neutral, going up
+        VibrLFO.setstep(VIBRspeed)  # and with correct speed
+    else:
+        VIBRvalue=0                 # tune the note
+TremLFO=LFO()
+def Tremolo(x,y,z):     # Soundstream parms are dummy; proc affects sound generation
+    global TREMvalue
+    TremLFO.process()
+    if TREMtrill:
+        TREMvalue=1-(TREMampl*TremLFO.getinvsaw()/127)
+    else:
+        TREMvalue=1-(TREMampl*TremLFO.gettriangle()/127)
+def TremoloTidy(TurnOn):
+    if TurnOn:
+        TremLFO.settriangle(0)      # start at max
+        TremLFO.setstep(TREMspeed)  # and with correct speed
+    else:
+        TREMvalue=1                 # restore volume
+        vibrvalue=0                 # tune the note
+def Rotate(x,y,z):
+    Vibrato(x,y,z)
+    Tremolo(x,y,z)
+def RotateTidy(TurnOn):
+    global TREMspeed, VIBRtrill, TREMtrill
+    if TurnOn:
+        VibrLFO.settriangle(-63)    # start about neutral, going down (=going away)
+        VibrLFO.setstep(VIBRspeed)  # and with correct speed
+        VIBRtrill=False
+        TREMspeed=VIBRspeed         # Take care: GUI or knobs must keep this relation !!
+        TremLFO.settriangle(0)      # start at max (so it will go away too)
+        TremLFO.setstep(TREMspeed)  # and with correct speed
+        TREMtrill=False
+    else:
+        VIBRvalue=0                 # tune the note
+        TREMvalue=1                 # restore volume
+        TREMspeed=BOXTREMspeed      # set a default speed for normal tremolo
+#
+# Filter (de)activation
+#
+Filters={"None":NoProc,"Reverb":filters.reverb,"Vibrato":Vibrato,"Tremolo":Tremolo,ROTATE:Rotate,}
+FilterTidy={"None":NoProc,"Reverb":NoProc,"Vibrato":VibratoTidy,"Tremolo":TremoloTidy,ROTATE:RotateTidy}
+Filterkeys=Filters.keys()
+currfilter=0
+filterproc=Filters[Filterkeys[currfilter]]
+def setFilter(newfilter):
+    global Filters,Filterkeys,currfilter,filterproc
+    if newfilter < len(Filters):
+        FilterTidy[Filterkeys[currfilter]](False)
+        currfilter=newfilter
+        FilterTidy[Filterkeys[currfilter]](True)
+        filterproc=Filters[Filterkeys[newfilter]]
+
 #########################################
 ##  SLIGHT MODIFICATION OF PYTHON'S WAVE MODULE
 ##  TO READ CUE MARKERS & LOOP MARKERS if applicable in mode
@@ -637,11 +842,7 @@ class PlayingSound:
         return self.stopnote
     
     def fadeout(self, i):
-        if self.isfadeout:
-            try: playingsounds.remove(self)
-            except: pass
-        else:
-            self.isfadeout = True
+        self.isfadeout = True
         
     def stop(self):
         try: playingsounds.remove(self) 
@@ -661,7 +862,8 @@ class Sound:
         self.xfadein = xfadein
         self.xfadevol = xfadevol
         self.eof = wf.getnframes()
-        self.loop = GetLoopmode(mode)       # if no loop requested it's useless to check the wav's capability
+        self.loop = GetLoopmode(mode
+)       # if no loop requested it's useless to check the wav's capability
         if self.loop > 0 and wf.getloops():
             self.loop = wf.getloops()[0][0] # Yes! the wav can loop
             self.nframes = wf.getloops()[0][1] + 2
@@ -729,25 +931,33 @@ SPEED = numpy.power(2, numpy.arange(-1.0*SPEEDRANGE*PITCHSTEPS, 1.0*SPEEDRANGE*P
 
 def AudioCallback(outdata, frame_count, time_info, status):
     global playingsounds, volumeCC
+    global VIBRvalue,TREMvalue
     rmlist = []
     playingsounds = playingsounds[-MAX_POLYPHONY:]
     # audio-module:
-    b = samplerbox_audio.mixaudiobuffers(playingsounds, rmlist, frame_count, FADEOUT, FADEOUTLENGTH, SPEED, SPEEDRANGE, PITCHBEND, PITCHSTEPS)
+    b = samplerbox_audio.mixaudiobuffers(playingsounds, rmlist, frame_count, FADEOUT, FADEOUTLENGTH, SPEED, SPEEDRANGE, PITCHBEND+VIBRvalue+PITCHCORR, PITCHSTEPS)
     for e in rmlist:
         #print "remove " +str(e) + ", note: " + str(e.playingnote())
         try: playingsounds.remove(e)
         except: pass
     #b_temp = b
     filterproc(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
-    b *= (10**volumeCC-1)/9     # linear doesn't sound natural, this may be to complicated though...
+    b *= (10**(TREMvalue*volumeCC)-1)/9     # linear doesn't sound natural, this may be to complicated though...
     outdata[:] = b.reshape(outdata.shape)
 
 print 'Available audio devices'
 print(sounddevice.query_devices())
 try:
-    sd = sounddevice.OutputStream(device=AUDIO_DEVICE_ID, blocksize=512, samplerate=44100, channels=2, dtype='int16', callback=AudioCallback)
+    i=44100
+    if USE_48kHz:
+        if PITCHBITS < 7:
+            print "==> Can't tune to 48kHz, please set PITCHBITS to 7 or higher <=="
+        else:
+            PITCHCORR = -147*(2**(PITCHBITS-7))
+        i=48000
+    sd = sounddevice.OutputStream(device=AUDIO_DEVICE_ID, blocksize=512, samplerate=i, channels=2, dtype='int16', callback=AudioCallback)
     sd.start()
-    print 'Opened audio device #%i' % AUDIO_DEVICE_ID
+    print 'Opened audio device #%i on %iHz' % (AUDIO_DEVICE_ID, i)
 except:
     display("Invalid audiodev")
     print 'Invalid audio device #%i' % AUDIO_DEVICE_ID
@@ -794,8 +1004,8 @@ if not USE_ALSA_MIXER:
 #########################################
 
 def AllNotesOff():
-    global playingnotes, playingsounds, sustainplayingnotes, triggernotes, currchord, currscale
-    global currfilter, BOXFVroomsize, BOXFVdamp, BOXFVlevel, BOXFVwidth
+    global playingnotes, playingsounds, sustainplayingnotes, triggernotes
+    global currfilter, currchord, currscale
     playingsounds = []
     playingnotes = {}
     sustainplayingnotes = []
@@ -804,16 +1014,16 @@ def AllNotesOff():
     currscale = 0
     currfilter=0
     setFilter(currfilter)
-    FVsetroomsize(BOXFVroomsize)
-    FVsetdamp(BOXFVdamp)
-    FVsetlevel(BOXFVlevel)
-    FVsetwidth(BOXFVwidth)
+    #FVinit()                   # no cleanup necessary
+    RotateTidy(False)           # cleans up vibrato+tremolo+rotate
+
 
 def MidiCallback(message, time_stamp):
     global playingnotes, sustain, sustainplayingnotes, triggernotes, stop127, RELSAMPLE
-    global preset, sample_mode, midi_mute, velocity_mode, globalgain, volumeCC, voicelist, currvoice
+    global preset, sample_mode,midi_mute, velocity_mode, globalgain, volumeCC, voicelist, currvoice
     global PITCHBEND, PITCHRANGE, pitchneutral, pitchdiv, pitchnotes
     global chordnote, currchord, chordname, scalechord, currscale, last_midinote, last_musicnote
+    global VIBRpitch,VIBRspeed,TREMampl,TREMspeed
     messagetype = message[0] >> 4
     messagechannel = (message[0] & 15) + 1
     #print 'Channel %d, message %d' % (messagechannel , messagetype)
@@ -936,15 +1146,15 @@ def MidiCallback(message, time_stamp):
         elif messagetype == 11: # control change (CC, sometimes called Continuous Controllers)
             CCnum = note
             CCval = velocity
-            #print "CCnum = %d, CCval = %d" % (CCnum, CCval)
+            print "CCnum = %d, CCval = %d" % (CCnum, CCval)
 
-            #if CCnum == 1:       # mod wheel action (0-127)
+            #if CCnum == MC_ModWheel:
             #    ?? = CCval
 
-            if CCnum == 7:       # volume knob action (0-127)
+            if CCnum == MC_Volume:
                 volumeCC = CCval / 127.0   # force float
 
-            elif CCnum == 64:    # sustain pedal
+            elif CCnum == MC_Sustain:
                 if sample_mode==PLAYLIVE or sample_mode==PLAYMONO:
                     if (CCval < 64):    # sustain off
                         for n in sustainplayingnotes:
@@ -956,17 +1166,14 @@ def MidiCallback(message, time_stamp):
                         sustain = True
                         #print 'Sustain pedal pressed'
 
-            #elif CCnum == 72:           # Sound controller 3 = release time. ...needs rethinking...
-            #    ? = CCval
-                
-            elif CCnum == 80:           # general purpose 80 used for voices
+            elif CCnum == MC_Voice:
                 if CCval > 0:           # I use MIDI CC Trigger/Release which ignores default release value and thus automatically skips voice0 :-)
                     if getindex(CCval, voicelist)>-1:
                         currvoice = CCval
                         sample_mode=voicelist[getindex(currvoice,voicelist)][2]
                         display("")
 
-            elif CCnum == 81:           # general purpose 81 used for chords and scales
+            elif CCnum == MC_Autochord:
                 if CCval > 0:           # I use MIDI CC Trigger/Release; this ignores default release value
                     CCval -= 1          # align with table, makes it human human too :-)
                     if CCval < len(chordnote):
@@ -979,19 +1186,31 @@ def MidiCallback(message, time_stamp):
                         currchord = 0
                         display("")
 
-            elif CCnum == 82:           # Pitch bend sensitivity (my controller cannot send RPN)
+            elif CCnum == MC_PitchSens: # Pitch bend sensitivity (my controller cannot send RPN)
                 pitchnotes = (24*CCval+100)/127
 
-            elif CCnum == 83:           # Freeverb roomsize
+            elif CCnum == MC_ReverbRoom:
                 FVsetroomsize(CCval)
-            elif CCnum == 84:           # Freeverb damp
+            elif CCnum == MC_ReverbDamp:
                 FVsetdamp(CCval)
-            elif CCnum == 85:           # Freeverb effects level
+            elif CCnum == MC_ReverbLvl:
                 FVsetlevel(CCval)
-            elif CCnum == 86:           # Freeverb width
-                FVsetwidth(CCval)
+            elif CCnum == MC_VibrDepth:
+                VIBRpitch=1.0*CCval/32      # steps of 1/32th, range like GUI
+            elif CCnum == MC_VibrSpeed:
+                VIBRspeed=CCval/4           # align with GUI
+                VibrLFO.setstep(VIBRspeed)
+                if Filterkeys[currfilter]==ROTATE:
+                    TREMspeed=VIBRspeed
+                    TremLFO.setstep(TREMspeed)
+            elif CCnum == MC_TremDepth:
+                TREMampl=1.0*CCval/127      # values 0-1, range like GUI
+            elif CCnum == MC_TremSpeed:
+                if Filterkeys[currfilter]!=ROTATE:
+                    TREMspeed==CCval/4      # align with GUI
+                    TremLFO.setstep(TREMspeed)
 
-            elif CCnum==120 or CCnum==123:    # "All sounds off" or "all notes off"
+            elif CCnum==120 or CCnum==123:      # "All sounds off" or "all notes off"
                 AllNotesOff()
 
 #########################################
@@ -1075,12 +1294,12 @@ def ActuallyLoad():
     if not basename: 
         #print 'Preset empty: %s' % preset
         basename = "%d Empty preset" %preset
-        display("")
+        display("","E%03d" % preset)
         ActuallyLoading="No"
         return
 
     #print 'Preset loading: %s ' % basename
-    display("Loading %s" % basename)
+    display("Loading %s" % basename,"L%03d" % preset)
     definitionfname = os.path.join(dirname, SAMPLESDEF)
     if os.path.isfile(definitionfname):
         if HTTP_GUI:
@@ -1214,7 +1433,6 @@ def ActuallyLoad():
                     print "Error in definition file, skipping line %d." % (m)
                     if DefinitionErr != "" : v=", "
                     DefinitionErr="%s%s%d" %(DefinitionErr,v,m)
-
     else:
         for midinote in range(128):
             if LoadingInterrupt:
@@ -1280,12 +1498,12 @@ def ActuallyLoad():
                                samples[midinote, velocity, voice] = samples[midinote, velocity, 0]
 
         if currvoice!=0: sample_mode=voicelist[getindex(currvoice,voicelist)][2]
-        display("")
+        display("","%04d" % preset)
 
     else:
         #print 'Preset empty: ' + str(preset)
         basename = "%d Empty preset" %preset
-        display("")
+        display("","E%03d" % preset)
     ActuallyLoading="No"
 
 
@@ -1462,7 +1680,6 @@ if USE_SERIALPORT_MIDI:
     MidiThread = threading.Thread(target = MidiSerialCallback)
     MidiThread.daemon = True
     MidiThread.start()
-
 
 #########################################
 ##  LOAD FIRST SOUNDBANK

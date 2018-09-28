@@ -1,6 +1,6 @@
 function SB_Update(){
 	SB_GetAPI();
-	if (SB_VarVal[0]=='Yes') {		// this is in fact SB_RenewMedia
+	if (SB_VarVal[0]=='Yes') {		// this is in fact SB_RenewMedia, meaning SB is busy interpreting a sample set
 		setTimeout(SB_Refresh, 1000);
 		return;
 	}
@@ -27,7 +27,7 @@ function SB_Update(){
 		}
 	}
 }
-var SB_variables={
+var SB_variables={	// make sure all passed parameters are covered here
 	v_SB_MidiChannel: function(val){SB_MidiChannel=val;},
 	v_SB_SoundVolume: function(val){SB_SoundVolume=val;},
 	v_SB_MidiVolume: function(val){SB_MidiVolume=val;},
@@ -42,10 +42,16 @@ var SB_variables={
 	v_SB_FVdamp: function(val){SB_FVdamp=val;},
 	v_SB_FVlevel: function(val){SB_FVlevel=val;},
 	v_SB_FVwidth: function(val){SB_FVwidth=val;},
+	v_SB_VIBRpitch: function(val){SB_VIBRpitch=val;},
+	v_SB_VIBRspeed: function(val){SB_VIBRspeed=val;},
+	v_SB_VIBRtrill: function(val){SB_VIBRtrill=val;},
+	v_SB_TREMampl: function(val){SB_TREMampl=val;},
+	v_SB_TREMspeed: function(val){SB_TREMspeed=val;},
+	v_SB_TREMtrill: function(val){SB_TREMtrill=val;},
 	v_SB_RenewMedia: function(val){SB_RenewMedia=val;},
 	v_SB_DefinitionTxt: function(val){SB_DefinitionTxt=val;}
 }
-var SB_input={
+var SB_input={	// make sure all passed parameters are covered here, be it with a dummy
 	input_SB_MidiChannel: function(input_name,name,val,text){
 		return(text+SB_numselect(input_name,name,val,1,16,1));
 	},
@@ -89,6 +95,28 @@ var SB_input={
 	input_SB_FVwidth: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
 	},
+	input_SB_VIBRpitch: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,1,64,1)+SB_numselect(input_name,name,val,1,64,1));
+	},
+	input_SB_VIBRspeed: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1));
+	},
+	input_SB_VIBRtrill: function(input_name,name,val,text){
+		j="";k="";
+		if (val=="No") k="CHECKED";else j="CHECKED"
+		return(text+' on<INPUT type="radio" name="'+name+'"  value="Yes"'+j+' onclick="SB_Submit();">off<INPUT type="radio" name="'+name+'"  value="No"'+k+' onclick="SB_Submit();">');
+	},
+	input_SB_TREMampl: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,1,100,1)+SB_numselect(input_name,name,val,1,100,1));
+	},
+	input_SB_TREMspeed: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1));
+	},
+	input_SB_TREMtrill: function(input_name,name,val,text){
+		j="";k="";
+		if (val=="No") k="CHECKED";else j="CHECKED"
+		return(text+' on<INPUT type="radio" name="'+name+'"  value="Yes"'+j+' onclick="SB_Submit();">off<INPUT type="radio" name="'+name+'"  value="No"'+k+' onclick="SB_Submit();">');
+	},
 	input_SB_RenewMedia: function(input_name,name,val,text){
 		return('<LABEL><INPUT type="checkbox" name="'+name+'" class="hidden" value="Yes" onclick="SB_Submit();"><span class="button">'+text+'</span></LABEL>');
 	},
@@ -103,7 +131,6 @@ var SB_element={
 	elem_SB_Form: function(elem_name){
 		document.getElementById(elem_name).action = window.location.pathname;
 		document.getElementById(elem_name).method = 'POST';
-		document.getElementById(name).onsubmit = "return SB_Validate();";
 		document.getElementById(elem_name).type = 'SUBMIT';
 	},
 	elem_SB_Samplesdir: function(elem_name){
@@ -113,7 +140,7 @@ var SB_element={
 		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+SB_Mode+'</SPAN>';
 	},
 	elem_SB_xvoice: function(elem_name,text) {
-		if (SB_xvoice=="No") j="";else j=' checked="checked"';
+		if (SB_xvoice=="No") j="";else j="CHECKED";
 		document.getElementById(elem_name).innerHTML=text+'<label class="inline alignx"><INPUT type="checkbox" onclick="return false;"'+j+';"></label>';
 	},
 	elem_SB_DefErr: function(elem_name,text) {
@@ -201,6 +228,4 @@ function SB_Refresh(){	// gets the page again without resending any form values
 }
 function SB_Submit(){	// Reload the Media directory and current preset samples
 	document.getElementById("elem_SB_Form").submit();
-}
-function SB_Validate(){
 }

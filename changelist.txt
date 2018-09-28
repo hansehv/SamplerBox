@@ -96,3 +96,13 @@ March 2018
 July 2018
   - changed midi default channel from 11 to 1
   - fixed error webgui, setting of the "midivolume" (cc=7) was broken
+  - released Sbox20180716
+  - fixed bug preventing samplesets without definition.txt to make any sound
+  - added LFO with extra effects: Tremolo, Vibration and Rotate
+  - fixed revmodel to compile warningfree, so -fpermissive compiler option no longer needed.
+August 2018
+  - reintegrated the I2C 7-segment display of the original samplerbox.
+  - Fixed bug in setting freeverb parameters via MIDI controller
+  - Fixed release processing during polyphonic safeguard being too fast giving choppy results
+  - Made Control Change number configurable and included new effects in that
+  - Introduced USE_48kHz parameter for 48K output devices (via permanent pitchbend = slight quality loss))

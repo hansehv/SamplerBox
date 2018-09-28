@@ -4,7 +4,7 @@
 // http://www.dreampoint.co.uk
 // This code is public domain
 
-// Samplerbox addons:
+// Samplerbox addons by https://github.com/hansehv/SamplerBox:
 // - processreplacestereo()inspired by Erik Nieuwlands (www.nickyspride.nl/sb2/)
 
 #include "revmodel.hpp"
@@ -67,7 +67,7 @@ void revmodel::mute()
 		combL[i].mute();
 		combR[i].mute();
 	}
-	for (i=0;i<numallpasses;i++)
+	for (int i=0;i<numallpasses;i++)
 	{
 		allpassL[i].mute();
 		allpassR[i].mute();
@@ -91,7 +91,7 @@ void revmodel::processreplace(float *inputL, float *inputR, float *outputL, floa
 		}
 
 		// Feed through allpasses in series
-		for(i=0; i<numallpasses; i++)
+		for(int i=0; i<numallpasses; i++)
 		{
 			outL = allpassL[i].process(outL);
 			outR = allpassR[i].process(outR);
@@ -131,7 +131,7 @@ void revmodel::processreplacestereo(float *inputstream, float *outputstream,long
 		}
 
 		// Feed through allpasses in series
-		for(i=0; i<numallpasses; i++)
+		for(int i=0; i<numallpasses; i++)
 		{
 			outL = allpassL[i].process(outL);
 			outR = allpassR[i].process(outR);
@@ -141,7 +141,7 @@ void revmodel::processreplacestereo(float *inputstream, float *outputstream,long
 		*oL = outL*wet1 + outR*wet2 + (*iL)*dry;
 		*oR = outR*wet1 + outL*wet2 + (*iR)*dry;
 
-		// Increment sample pointers, allowing for interleave (if any)
+		// Increment sample pointers
 		iL += 2;
 		iR += 2;
 		oL += 2;
@@ -166,7 +166,7 @@ void revmodel::processmix(float *inputL, float *inputR, float *outputL, float *o
 		}
 
 		// Feed through allpasses in series
-		for(i=0; i<numallpasses; i++)
+		for(int i=0; i<numallpasses; i++)
 		{
 			outL = allpassL[i].process(outL);
 			outR = allpassR[i].process(outR);
