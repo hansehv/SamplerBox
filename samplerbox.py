@@ -9,8 +9,36 @@
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 #   see docs at  http://homspace.xs4all.nl/homspace/samplerbox
-#   changelog in changelog.txt
+#   changelog in changelist.txt
 #
+
+##########################################################################
+##  IMPORT MODULES (generic, more can be loaded depending on local config)
+##  Define local general functions
+##########################################################################
+
+import wave
+import time
+from time import sleep
+import numpy
+import sys, os, re
+import sounddevice
+import threading   
+from chunk import Chunk
+import struct
+import rtmidi2
+import ConfigParser
+import samplerbox_audio   # audio-module (cython)
+sys.path.append('/root/SamplerBox/modules')
+import getcsv
+import LFO
+
+usleep = lambda x: time.sleep(x/1000000.0)
+msleep = lambda x: time.sleep(x/1000.0)
+def getindex(key, table):
+    for i in range(len(table)):
+        if key==table[i][0]: return i
+    return -1
 
 ########  LITERALS, don't change ########
 PLAYLIVE = "Keyb"                       # reacts on "keyboard" interaction
@@ -22,120 +50,89 @@ PLAYMONO = "Mono"                       # monophonic (with chords), loop like Lo
 VELSAMPLE = "Sample"                    # velocity equals sampled value, requires multiple samples to get differentation
 VELACCURATE = "Accurate"                # velocity as played, allows for multiple (normalized!) samples for timbre
 SAMPLESDEF = "definition.txt"
+SAMPLES_INBOX = "/samples/"             # Builtin directory containing the sample-sets.
+SAMPLES_ONUSB = "/media/"               # USB-Mount directory containing the sample-sets.
+MIXER_CONTROLS_DEF = "/boot/samplerbox/mixer_controls.csv"
+CHORDS_DEF = "/boot/samplerbox/chords.csv"
+SCALES_DEF = "/boot/samplerbox/scales.csv"
 ROTATE = "Rotate"                       # This needed to sync dropdown with actual filter name
-######  Mapping of midicontrollers: adapt / sync with your midi device  #####
-# for non-standard values: 70-90, 102-120 can be used, being a mix of undefined & general purpose
-# use 128 when control channel messages are to be ignored for a parameter
-MC_Modwheel=1       # standard value
-MC_Volume=7         # standard value
-MC_Sustain=64       # standard value
-MC_Voice=80
-MC_Autochord=81
-MC_PitchSens=82     # Pitch bend sensitivity (my controller cannot send RPN)
-MC_ReverbRoom=83
-MC_ReverbDamp=84
-MC_ReverbLvl=85
-MC_ReverbWidth=86
-MC_VibrDepth=87
-MC_VibrSpeed=88
-MC_TremDepth=92     # standard value
-MC_TremSpeed=89
-#########################################
-##  LOCAL CONFIG  
-##  Adapt to your setup !
-#########################################
-
-AUDIO_DEVICE_ID = 2                     # change this number to use another soundcard, default=0
-SAMPLES_DIR = "/media/"                 # The root directory containing the sample-sets. Example: "/media/" to look for samples on a USB stick / SD card
-USE_SERIALPORT_MIDI = False             # Set to True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
-USE_HD44780_16x2_LCD = True             # Set to True to use a HD44780 based 16x2 LCD
-USE_I2C_7SEGMENTDISPLAY = False         # Set to True to use a 7-segment display via I2C
-USE_ALSA_MIXER = True                   # Set to True to use to use the alsa mixer (via pyalsaaudio)
-USE_48kHz = False                       # Output 48kHz iso 44100Hz. Try to avoid this...
-USE_BUTTONS = True                      # Set to True to use momentary buttons connected to RaspberryPi's GPIO pins
-MAX_POLYPHONY = 80                      # This can be set higher, but 80 is a safe value
-MIDI_CHANNEL = 1                        # midi channel
-BOXSAMPLE_MODE = PLAYLIVE               # we need a default: original samplerbox
-BOXVELOCITY_MODE = VELSAMPLE            # we need a default: original samplerbox
-BOXSTOP127 = 109   # 88-key:108=C8 77-key:103=G7 61-key:96=C7. "Left side" has some notes slack
-volume = 87                             # the startup (alsa=output) volume (0-100), change with function buttons
-volumeCC = 1.0                          # assumed value of the volumeknob controller before first use, max=1.0 (the knob can only decrease).
-BOXRELEASE = 30                         # 30 results in the samplerbox default (FADEOUTLENGTH=30000)
-RELSAMPLE= "N"                          # release samples: N=none, E=Embedded, S=Separate(not implemented)
-BOXXFADEOUT = 10                        # crossfade glues the sample to the release sample
-BOXXFADEIN = 1                          # crossfade glues the sample to the release sample
-BOXXFADEVOL = 1.0                       # crossfade glues the sample to the release sample
-PRESETBASE = 0                          # Does the programchange / sample set start at 0 (MIDI style) or 1 (human style)
-preset = 0 + PRESETBASE                 # the default patch to load
-PITCHRANGE = 12                         # default range of the pitchwheel in semitones (max=12 is een octave)
-PITCHBITS = 7                           # pitchwheel resolution, 0=disable, max=14 (=16384 steps)
-                                        # values below 7 will produce bad results
-BOXFVroomsize=0.5*127                   # Freeverb roomsize in MIDI units, package default 0.5
-BOXFVdamp=0.4*127                       # Freeverb damp in MIDI units, package default 0.4
-BOXFVlevel=0.4*127                      # Freeverb wet in MIDI units, implicit dry: package default 1/3 and 0
-BOXFVwidth=1.0*127                      # Freeverb width in MIDI units, package default 1
-BOXVIBRpitch=0.5                        # Vibrato note variation
-BOXVIBRspeed=15                         # 14 ==> 10Hz on saw & block, 5Hz on triangle
-BOXVIBRtrill=False                      # a vibratotrill is a kind of yodeling
-BOXTREMampl=.18                         # amplitude variation 0-1, resulting volume is between full=1 and full-TREMampl
-BOXTREMspeed=3                          # See VIBRspeed
-BOXTREMtrill=False                      # a tremolotrill is a goatlike sound, like some country singers :-)
-
-HTTP_GUI = True                         # values for the webgui
 HTTP_PORT = 80
 HTTP_ROOT = "webgui"
-samplesdir = "."
 
+##  read LOCAL CONFIG ==> /boot/samplerbox/configuration.txt
+cp=ConfigParser.ConfigParser()
+cp.read("/boot/samplerbox/configuration.txt")
+s="config"
+AUDIO_DEVICE_ID = cp.getint(s,"AUDIO_DEVICE_ID".lower())
+USE_SERIALPORT_MIDI = cp.getboolean(s,"USE_SERIALPORT_MIDI".lower())
+USE_HD44780_16x2_LCD = cp.getboolean(s,"USE_HD44780_16x2_LCD".lower())
+USE_I2C_7SEGMENTDISPLAY = cp.getboolean(s,"USE_I2C_7SEGMENTDISPLAY".lower())
+USE_ALSA_MIXER = cp.getboolean(s,"USE_ALSA_MIXER".lower())
+MC_Modwheel = cp.getint(s,"MC_Modwheel".lower())
+MC_Volume = cp.getint(s,"MC_Volume".lower())
+MC_Sustain = cp.getint(s,"MC_Sustain".lower())
+MC_Voice = cp.getint(s,"MC_Voice".lower())
+MC_Autochord = cp.getint(s,"MC_Autochord".lower())
+MC_PitchSens = cp.getint(s,"MC_PitchSens".lower())
+MC_ReverbRoom = cp.getint(s,"MC_ReverbRoom".lower())
+MC_ReverbDamp = cp.getint(s,"MC_ReverbDamp".lower())
+MC_ReverbLvl = cp.getint(s,"MC_ReverbLvl".lower())
+MC_ReverbWidth = cp.getint(s,"MC_ReverbWidth".lower())
+MC_VibrDepth = cp.getint(s,"MC_VibrDepth".lower())
+MC_VibrSpeed = cp.getint(s,"MC_VibrSpeed".lower())
+MC_TremDepth = cp.getint(s,"MC_TremDepth".lower())
+MC_TremSpeed = cp.getint(s,"MC_TremSpeed".lower())
+USE_ALSA_MIXER = cp.getboolean(s,"USE_ALSA_MIXER".lower())
+USE_48kHz = cp.getboolean(s,"USE_48kHz".lower())
+USE_BUTTONS = cp.getboolean(s,"USE_BUTTONS".lower())
+MAX_POLYPHONY = cp.getint(s,"MAX_POLYPHONY".lower())
+MIDI_CHANNEL = cp.getint(s,"MIDI_CHANNEL".lower())
+BOXSAMPLE_MODE = cp.get(s,"BOXSAMPLE_MODE".lower())
+BOXVELOCITY_MODE = cp.get(s,"BOXVELOCITY_MODE".lower())
+BOXSTOP127 = cp.getint(s,"BOXSTOP127".lower())
+volume = cp.getint(s,"volume".lower())
+volumeCC = cp.getfloat(s,"volumeCC".lower())
+BOXRELEASE = cp.getint(s,"BOXRELEASE".lower())
+RELSAMPLE= cp.get(s,"RELSAMPLE".lower())
+BOXXFADEOUT = cp.getint(s,"BOXXFADEOUT".lower())
+BOXXFADEIN = cp.getint(s,"BOXXFADEIN".lower())
+BOXXFADEVOL = cp.getfloat(s,"BOXXFADEVOL".lower())
+PRESETBASE = cp.getint(s,"PRESETBASE".lower())
+PRESET = cp.getint(s,"PRESET".lower())
+PITCHRANGE = cp.getint(s,"PITCHRANGE".lower())
+PITCHBITS = cp.getint(s,"PITCHBITS".lower())
+BOXFVroomsize = cp.getfloat(s,"BOXFVroomsize".lower())*127
+BOXFVdamp = cp.getfloat(s,"BOXFVdamp".lower())*127
+BOXFVlevel = cp.getfloat(s,"BOXFVlevel".lower())*127
+BOXFVwidth = cp.getfloat(s,"BOXFVwidth".lower())*127
+BOXVIBRpitch = cp.getfloat(s,"BOXVIBRpitch".lower())
+BOXVIBRspeed = cp.getint(s,"BOXVIBRspeed".lower())
+BOXVIBRtrill = cp.getboolean(s,"BOXVIBRtrill".lower())
+BOXTREMampl = cp.getfloat(s,"BOXTREMampl".lower())
+BOXTREMspeed = cp.getint(s,"BOXTREMspeed".lower())
+BOXTREMtrill = cp.getboolean(s,"BOXTREMtrill".lower())
+USE_HTTP_GUI = cp.getboolean(s,"USE_HTTP_GUI".lower())
+
+########## read CONFIGURABLE TABLES ==> /boot/samplerbox/*.csv
+
+# Mixercontrols I experienced, add your soundcard's specific....
 if USE_ALSA_MIXER:
-    ########## Mixercontrols I experienced, add your soundcard's specific....
-    MIXER_CONTROL = ["PCM","Speaker","Headphone"]
+    MIXER_CONTROL=getcsv.readcsv(MIXER_CONTROLS_DEF)[0]
 
-########## Chords & Scales definitions  # You always need index=0 (is single note, "normal play")
-
-chordname=["","Maj","Min","Augm","Dim","Sus2","Sus4","Dom7","Maj7","Min7","MiMa7","hDim7","Dim7","Aug7","AuMa7","D7S4"]
-chordnote=[[0],[0,4,7],[0,3,7],[0,4,8],[0,3,6],[0,2,7],[0,5,7],[0,4,7,10],[0,4,7,11],[0,3,7,10],[0,3,7,11],[0,3,6,10],[0,3,6,9],[0,4,8,10],[0,4,8,11],[0,5,7,10]]
-currchord=0                             # single note, "normal play"
-
-scalesymbol=["","C","D&#9837;","D","E&#9837;","E","F","F&#9839;","G","A&#9837;","A","B&#9837;","B","Cm","C&#9839;m","Dm","E&#9837;m","Em","Fm","F&#9839;m","Gm","G&#9839;m","Am","B&#9837;m","Bm"]
-scalename=["","C","C#","D","D#","E","F","F#","G","G#","A","A#","B","Cm","C#m","Dm","D#m","Em","Fm","F#m","Gm","G#m","Am","A#m","Bm"]
-scalechord=[
-    #C,#,D,#,E,F,#,G,#,A,#,B    #
-    [0,0,0,0,0,0,0,0,0,0,0,0],  # 0
-    [1,0,2,0,2,1,0,1,0,2,1,4],  # C
-    [4,1,0,2,0,2,1,0,1,0,2,1],  # Db,C#
-    [1,3,1,0,2,0,2,1,0,1,0,2],  # D
-    [2,1,4,1,0,2,0,2,1,0,1,0],  # Eb,D#
-    [0,2,1,3,1,0,2,0,2,1,0,1],  # E
-    [1,0,2,1,4,1,0,2,0,2,1,0],  # F
-    [0,1,0,2,1,4,1,0,2,0,2,1],  # F#
-    [1,0,1,0,2,1,3,1,0,2,0,2],  # G
-    [2,1,0,1,0,2,1,4,1,0,2,0],  # Ab,G#
-    [0,2,1,0,1,0,2,1,3,1,0,2],  # A
-    [2,0,2,1,0,1,0,2,1,4,1,0],  # Bb,A#
-    [0,2,0,2,1,0,1,0,2,1,0,1],  # B
-    [2,0,4,1,0,2,0,2,1,0,1,0],  # Cm
-    [0,2,0,11,1,0,2,2,0,1,0,1],  # C#m
-    [1,0,2,0,4,1,0,2,0,2,1,0],  # Dm
-    [0,1,0,2,0,4,1,0,2,0,2,1],  # Ebm,D#m
-    [1,0,1,0,2,0,3,1,0,2,0,2],  # Em
-    [2,1,0,1,0,2,2,4,1,0,2,0],  # Fm
-    [0,2,1,0,1,0,2,0,11,1,0,2],  # F#m
-    [2,0,2,1,0,1,0,2,0,4,1,0],  # Gm
-    [0,2,0,2,1,0,1,0,2,0,11,1],  # G#m
-    [1,0,2,0,2,1,0,1,0,2,0,4],  # Am
-    [4,1,0,2,0,2,1,0,1,0,2,0],  # Bbm,A#m
-    [0,3,1,0,2,0,2,1,0,1,0,2]   # Bm
-    #C,#,D,#,E,F,#,G,#,A,#,B    #
-    ]
-currscale=0
+# Definition of notes, chords and scales
 notesymbol=["C","C&#9839;","D","E&#9837;","E","F","F&#9839;","G","G&#9839;","A","B&#9837;","B","FX"]  # 0 in scalechord table, also used in loadsamples(!)
 notenames=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]  # 0 in scalechord table, also used in loadsamples(!)
+chordname,chordnote=getcsv.readchords(CHORDS_DEF)
+scalename,scalesymbol,scalechord=getcsv.readscales(SCALES_DEF,chordname)
 
 ########## Initialize other globals, don't change
 
+USE_GPIO=False
 ActuallyLoading="No"
+basename = "None"
 DefinitionTxt=""
 DefinitionErr=""
+samplesdir = SAMPLES_INBOX
 samples = {}
 playingnotes = {}
 sustainplayingnotes = []
@@ -146,6 +143,8 @@ globaltranspose = 0
 presetlist = []
 voicelist=[]
 currvoice = 1
+currchord=0                             # single note, "normal play"
+currscale=0                             # single note sequences, "normal play"
 last_musicnote = -1
 last_midinote =  -1
 midi_mute = False
@@ -178,161 +177,32 @@ TREMvalue=1.0           # Full volume
 TREMtrill=BOXTREMtrill
 
 #########################################
-##  IMPORT MODULES
-##  Define local general functions
-#########################################
-
-import wave
-import time
-usleep = lambda x: time.sleep(x/1000000.0)
-msleep = lambda x: time.sleep(x/1000.0)
-import numpy
-import os, re
-import sounddevice
-import threading   
-from chunk import Chunk
-import struct
-import rtmidi2
-import samplerbox_audio   # audio-module
-
-def getindex(key, table):
-    for i in range(len(table)):
-        if key==table[i][0]: return i
-    return -1
-
-#########################################
-##  LCD DISPLAYS, 16x2 and 7segment I2C
-##   - HD44780 class, based on 16x2 LCD interface code by Rahul Kar, see:
-##     http://www.rpiblog.com/2012/11/interfacing-16x2-lcd-with-raspberry-pi.html
-##   - Actual display routine
-##   - Original Samplerbox I2C subroutine
-#########################################
-
-class HD44780:
-
-    #def __init__(self, pin_rs=7, pin_e=8, pins_db=[25,24,22,23,27,17,18,4]):
-    def __init__(self, pin_rs=7, pin_e=8, pins_db=[27,17,18,4]):
-                                                #remove first 4 elements for 4-bit operation
-                                                #and mind the physical wiring !
-        self.pin_rs=pin_rs
-        self.pin_e=pin_e
-        self.pins_db=pins_db
-        self.bits=len(pins_db)
-        if  not (self.bits==4 or self.bits==8):
-            print "HD44780: use/define exactly 4 or 8 datapins"
-            exit(1)
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.pin_e, GPIO.OUT)
-        GPIO.setup(self.pin_rs, GPIO.OUT)
-        for pin in self.pins_db:
-            GPIO.setup(pin, GPIO.OUT)
-        self.clear()
-
-    def clear(self):
-        """ Blank / Reset LCD """
-        self.cmd(0x33) # Initialization by instruction
-        msleep(5)
-        self.cmd(0x33)
-        usleep(100)
-        if self.bits==4:
-            self.cmd(0x32) # set to 4-bit mode
-            self.cmd(0x28) # Function set: 4-bit mode, 2 lines
-        else:
-            self.cmd(0x38) # Function set: 8-bit mode, 2 lines
-        self.cmd(0x0C) # Display control: Display on, cursor off, cursor blink off
-        self.cmd(0x06) # Entry mode set: Cursor moves to the right
-        self.cmd(0x01) # Clear Display: Clears the display & set cursor position to line 1 column 0
-        
-    def cmd(self, bits, char_mode=0):
-        """ Send command to LCD """
-        sleep(0.001)
-        bits=bin(bits)[2:].zfill(8)
-        GPIO.output(self.pin_rs, char_mode)
-        for pin in self.pins_db:
-            GPIO.output(pin, 0)
-        for i in range(self.bits):
-            if bits[i] == "1":
-                GPIO.output(self.pins_db[::-1][i], 1)
-        self.toggle_enable()
-        if self.bits==4:
-            for pin in self.pins_db:
-                GPIO.output(pin, 0)
-            for i in range(4,8):
-                if bits[i] == "1":
-                    GPIO.output(self.pins_db[::-1][i-4], 1)
-            self.toggle_enable()
-
-    def toggle_enable(self):
-        """ Pulse the enable flag to process data """
-        GPIO.output(self.pin_e, 0)
-        usleep(1)      # command needs to be > 450 nsecs to settle
-        GPIO.output(self.pin_e, 1)
-        usleep(1)      # command needs to be > 450 nsecs to settle
-        GPIO.output(self.pin_e, 0)
-        usleep(100)    # command needs to be > 37 usecs to settle
-
-    def message(self, text):
-        """ Send string to LCD. Newline wraps to second line"""
-        self.cmd(0x02)  # go home first
-        x = 0
-        for char in text:
-            if char == '\n':
-                self.cmd(0xC0) # next line
-                x = 0
-            else:
-                x += 1
-                if x < 17: self.cmd(ord(char),1)
-#
 # Display routine
-#
-if USE_HD44780_16x2_LCD:
-    import RPi.GPIO as GPIO
-    from time import sleep
-    lcd = HD44780()
+#########################################
 
+if USE_HD44780_16x2_LCD:
+    USE_GPIO=True
+    import lcd_16x2
+    LCD_RS = cp.getint(s,"LCD_RS".lower())
+    LCD_E = cp.getint(s,"LCD_E".lower())
+    # get&insert LCD_D0 to LCD_D3 as first elements in pins_db for 8-bit operation
+    LCD_D4 = cp.getint(s,"LCD_D4".lower())
+    LCD_D5 = cp.getint(s,"LCD_D5".lower())
+    LCD_D6 = cp.getint(s,"LCD_D6".lower())
+    LCD_D7 = cp.getint(s,"LCD_D7".lower())
+    lcd = lcd_16x2.HD44780(LCD_RS, LCD_E, pins_db=[LCD_D4,LCD_D5,LCD_D6,LCD_D7])
     def display(s2,s7=""):
-        global basename, sample_mode, volume, globaltranspose, currvoice, currchord, chordname, scalename, currscale, button_disp, buttfunc
-        if globaltranspose == 0:
-            transpose = ""
-        else:
-            transpose = "%+d" % globaltranspose
-        if USE_ALSA_MIXER:
-            s1 = "%s%s %s %d%% %s" % (scalename[currscale], chordname[currchord], sample_mode, volume, transpose)
-        else:
-            s1 = "%s%s %s %s" % (scalename[currscale], chordname[currchord], sample_mode, transpose)
-        if s2 == "":
-            if currvoice>1: s2=str(currvoice)+":"
-            s2 += basename
-            if buttfunc>0:
-                s1 += " "*15
-                s1 = s1[:13] + "> "+button_disp[buttfunc]
-        lcd.message(s1 + " "*15 + "\n" + s2 + " "*15)
-        
-    time.sleep(0.5)
+        lcd.display(s2,basename,sample_mode,USE_ALSA_MIXER,volume,globaltranspose,currvoice,currchord,chordname,scalename,currscale,button_disp,buttfunc)
+    buttfunc=0          # these variables don't have to be present,
+    button_disp=[""]    # so initialize to values that won't be displayed
     display('Start Samplerbox')
-    time.sleep(0.5)
-#
-# 7-SEGMENT DISPLAY
-#
+
 elif USE_I2C_7SEGMENTDISPLAY:
-    import smbus
-    bus = smbus.SMBus(1)     # using I2C => GPIO2+3+PWR&GND = pins 3,5,?,?
+    import I2C_7segment
     def display(s2,s7=""):
-        if s7!="":
-            for k in '\x76\x79\x00' + s7:     # position cursor at 0
-                try:
-                    bus.write_byte(0x71, ord(k))
-                except:
-                    try:
-                        bus.write_byte(0x71, ord(k))
-                    except:
-                        pass
-                time.sleep(0.002)
+        I2C_7segment.display(s7)
     display('','----')
-    time.sleep(0.5)
-#
-# NO DISPLAY
-#
+
 else:
     def display(s,s7=""):
         pass    
@@ -342,7 +212,7 @@ else:
 ##  javascripts+css giving buildingblocks for GUI
 #########################################
 
-if HTTP_GUI:
+if USE_HTTP_GUI:
     from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
     import urllib
     from urlparse import urlparse,parse_qs
@@ -353,14 +223,17 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         global HTTP_ROOT, samplesdir
+
         path = urlparse(urllib.unquote(self.path)).path
         if path=="/SamplerBox.API":
             self.send_API()
         else:
-            if len(path)<2: path=HTTP_ROOT + "/index.html"
+            if len(path)<2:
+                path=HTTP_ROOT + "/index.html"
             elif path[len(samplesdir):] != samplesdir:
                 path=HTTP_ROOT + path
-            elif samplesdir[1:] != '/': path=HTTP_ROOT + path
+            elif samplesdir[1:] != '/':
+                path=HTTP_ROOT + path
             # and otherwise it's an absolute path (so it's ok as is)
             try:
                 #print "open %s binary" % (path)
@@ -386,7 +259,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         
     def do_POST(self):
         global MIDI_CHANNEL,volume,volumeCC
-        global preset,globalgain,globaltranspose
+        global PRESET,globalgain,globaltranspose
         global currvoice,currscale,currchord
         global basename,presetlist,voicelist
         global ActuallyLoading,DefinitionTxt,samplesdir
@@ -408,20 +281,19 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                 return
         if "SB_Preset" in fields:
             inval=presetlist[int(fields["SB_Preset"][0])][0]
-            if preset!=inval:
-                preset=inval;
+            if PRESET!=inval:
+                PRESET=inval;
                 self.LoadSamples()
                 return
         if "SB_DefinitionTxt" in fields:
             if DefinitionTxt != fields["SB_DefinitionTxt"][0]:
                 DefinitionTxt = fields["SB_DefinitionTxt"][0]
                 #print DefinitionTxt
-                if '/media' in samplesdir:  # System-fs MUST stay r/o, so only update the mounts
-                    subprocess.call(['mount', '-vo', 'remount,rw', '/media'])
-                    fname=samplesdir+presetlist[getindex(preset,presetlist)][1]+"/"+SAMPLESDEF
-                    with open(fname, 'w') as definitionfile:
-                            definitionfile.write(DefinitionTxt)
-                    subprocess.call(['mount', '-vo', 'remount,ro', '/media'])
+                subprocess.call(['mount', '-vo', 'remount,rw', samplesdir])
+                fname=samplesdir+presetlist[getindex(PRESET,presetlist)][1]+"/"+SAMPLESDEF
+                with open(fname, 'w') as definitionfile:
+                        definitionfile.write(DefinitionTxt)
+                subprocess.call(['mount', '-vo', 'remount,ro', samplesdir])
                 basename="None"         # do a renew to sync the update
                 self.LoadSamples()
                 return
@@ -518,7 +390,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(",'%s'" % (varName[i]) )
         self.wfile.write("];\n\tSB_VarVal=[")
         self.wfile.write("'%s',%d,%d," % (ActuallyLoading,volume,volumeCC*100) )
-        self.wfile.write("%d,%d,%d," % (preset,globalgain*100,globaltranspose) )
+        self.wfile.write("%d,%d,%d," % (PRESET,globalgain*100,globaltranspose) )
         self.wfile.write("%d,%d,%d,%d," % (currvoice,currscale,currchord,currfilter) )
         self.wfile.write("%d,%d,%d,%d," % (FVroomsize*100,FVdamp*100,FVlevel*100,FVwidth*100) )
         if VIBRtrill:   s="Yes"
@@ -537,61 +409,6 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
             else:   vlist.append([voicelist[i][0],voicelist[i][1],voicelist[i][2]])
         self.wfile.write("\tSB_numvoices=%d;SB_xvoice='%s';SB_Voicelist=%s;\n" % (len(vlist),xvoice,vlist) )
         self.wfile.write("};")
-
-##################################################################################
-# Poor man's Low Frequency Oscillator (LFO), for vibrato, tremolo etc
-# Clock can be via (filter)call in AudioCallback, on PI3 approx once per 11msec's
-# for a saw=(128 up) or triangle=(128 up+down) a stepsize of 14 gives ~10Hz/5Hz respectively
-##################################################################################
-LFOblock=0      # index values for readability, don't change
-LFOsaw=1
-LFOinvsaw=2
-LFOtriangle=3
-class LFO:
-    def __init__(self, step=14, block=127, saw=127):
-        self.step=step; 
-        self.values=[0.0,0.0,0.0,0.0]
-        if block<64:self.values[LFOblock]=-1
-        else: self.values[LFOblock]=1
-        self.values[LFOsaw]=saw
-        self.values[LFOinvsaw]=127-self.values[LFOsaw]
-        if self.values[LFOblock]>1: LFOself.values[LFOtriangle]=self.values[LFOsaw]
-        else: self.values[LFOtriangle]=127-self.values[LFOsaw]
-    def process(self):
-        self.values[LFOsaw]+=self.step
-        if self.values[LFOsaw]<-1: self.values[LFOsaw]=128 # stop infinite loop due to impossible values
-        if self.values[LFOsaw]>127:
-            self.values[LFOblock]*=-1
-            self.values[LFOsaw]=0
-        self.values[LFOinvsaw]=127-self.values[LFOsaw]
-        if self.values[LFOblock]>0:
-            self.values[LFOtriangle]=self.values[LFOsaw]
-        else:
-            self.values[LFOtriangle]=self.values[LFOinvsaw]
-    def setstep(self,x):
-        if x>0: self.step=x
-    def setblock(self,x):
-        if x<64: self.values[LFOblock]=-1
-        else: self.values[LFOblock]=1
-    def setsaw(self,x):
-        self.values[LFOsaw]=x
-    def setinvsaw(self,x):
-        self.values[LFOsaw]=(127-x)
-    def settriangle(self,x):     # -127 to 127, values below 0 mean the second=decreasing stage
-        if x<0:
-            self.values[LFOblock]=-1
-            self.values[LFOsaw]=(127+x)
-        else:
-            self.values[LFOblock]=1
-            self.values[LFOsaw]=x
-    def getblock(self):
-        return (self.values[LFOblock]+1)*64     # so return 0 or 127
-    def getsaw(self):
-        return self.values[LFOsaw]
-    def getinvsaw(self):
-        return self.values[LFOinvsaw]
-    def gettriangle(self):
-        return self.values[LFOtriangle]
 
 ##################################################################################
 # Effects/Filters
@@ -648,7 +465,7 @@ FVinit()
 # Vibrato, tremolo and rotate (poor man's single speaker leslie)
 # Being input based, these effects are cheap: less than 1% CPU on PI3
 #
-VibrLFO=LFO()
+VibrLFO=LFO.plfo()
 def Vibrato(x,y,z):     # Soundstream parms are dummy; proc affects sound generation
     global VIBRvalue
     VibrLFO.process()
@@ -662,7 +479,7 @@ def VibratoTidy(TurnOn):
         VibrLFO.setstep(VIBRspeed)  # and with correct speed
     else:
         VIBRvalue=0                 # tune the note
-TremLFO=LFO()
+TremLFO=LFO.plfo()
 def Tremolo(x,y,z):     # Soundstream parms are dummy; proc affects sound generation
     global TREMvalue
     TremLFO.process()
@@ -716,6 +533,7 @@ def setFilter(newfilter):
 #########################################
 
 class waveread(wave.Wave_read):
+#class waveread():
     def initfp(self, file):
         self._convert = None
         self._soundpos = 0
@@ -795,7 +613,6 @@ class waveread(wave.Wave_read):
     def getloops(self):
         return self._loops
 
-
 #########################################
 ##  MIXER CLASSES and general procs
 #########################################
@@ -862,8 +679,7 @@ class Sound:
         self.xfadein = xfadein
         self.xfadevol = xfadevol
         self.eof = wf.getnframes()
-        self.loop = GetLoopmode(mode
-)       # if no loop requested it's useless to check the wav's capability
+        self.loop = GetLoopmode(mode)       # if no loop requested it's useless to check the wav's capability
         if self.loop > 0 and wf.getloops():
             self.loop = wf.getloops()[0][0] # Yes! the wav can loop
             self.nframes = wf.getloops()[0][1] + 2
@@ -1018,15 +834,15 @@ def AllNotesOff():
     RotateTidy(False)           # cleans up vibrato+tremolo+rotate
 
 
-def MidiCallback(message, time_stamp):
+def MidiCallback(src, message, time_stamp):
     global playingnotes, sustain, sustainplayingnotes, triggernotes, stop127, RELSAMPLE
-    global preset, sample_mode,midi_mute, velocity_mode, globalgain, volumeCC, voicelist, currvoice
+    global PRESET, sample_mode,midi_mute, velocity_mode, globalgain, volumeCC, voicelist, currvoice
     global PITCHBEND, PITCHRANGE, pitchneutral, pitchdiv, pitchnotes
     global chordnote, currchord, chordname, scalechord, currscale, last_midinote, last_musicnote
     global VIBRpitch,VIBRspeed,TREMampl,TREMspeed
     messagetype = message[0] >> 4
-    messagechannel = (message[0] & 15) + 1
-    #print 'Channel %d, message %d' % (messagechannel , messagetype)
+    messagechannel = (message[0]&0xF) + 1
+    print '%s -> Channel %d, message %d' % (src, messagechannel , messagetype)
     # -------------------------------------------------------
     # Process system commands
     # -------------------------------------------------------
@@ -1072,7 +888,7 @@ def MidiCallback(message, time_stamp):
                                             velmixer = m.playingvelocity()  # save org value for release sample
 
             if messagetype == 9:    # Note on 
-                print 'Note on %d->%d, voice=%d, chord=%s in %s/%s, velocity=%d, globalgain=%d' % (note, midinote, currvoice, chordname[currchord], sample_mode, velocity_mode, velocity, globalgain) #debug
+                #print 'Note on %d->%d, voice=%d, chord=%s in %s/%s, velocity=%d, globalgain=%d' % (note, midinote, currvoice, chordname[currchord], sample_mode, velocity_mode, velocity, globalgain) #debug
                 if sample_mode == PLAYMONO:     # monophonic: new note stops all that's playing in the keyboard range
                     for playnote in xrange(128-stop127, stop127):   # so leave the effects range out of this
                         if playnote in playingnotes:
@@ -1119,7 +935,7 @@ def MidiCallback(message, time_stamp):
                     pass
 
             elif messagetype == 8:  # Note off
-                print 'Note off ' + str(note) + '->' + str(midinote) + ', voice=' + str(currvoice)    #debug
+                #print 'Note off ' + str(note) + '->' + str(midinote) + ', voice=' + str(currvoice)    #debug
                 for playnote in xrange(128):
                     if triggernotes[playnote] == midinote:  # did we make this one play ?
                         if playnote in playingnotes:
@@ -1137,7 +953,7 @@ def MidiCallback(message, time_stamp):
                                     playingnotes.setdefault(playnote,[]).append(samples[playnote, velocity, currvoice].play(midinote, playnote, velmixer*globalgain, -1))
 
         elif messagetype == 12: # Program change
-            preset = note+PRESETBASE
+            PRESET = note+PRESETBASE
             LoadSamples()
 
         elif messagetype == 14: # Pitch Bend (velocity contains MSB, note contains 0 or LSB if supported by controller)
@@ -1146,14 +962,13 @@ def MidiCallback(message, time_stamp):
         elif messagetype == 11: # control change (CC, sometimes called Continuous Controllers)
             CCnum = note
             CCval = velocity
-            print "CCnum = %d, CCval = %d" % (CCnum, CCval)
+            #print "CCnum = %d, CCval = %d" % (CCnum, CCval)
 
             #if CCnum == MC_ModWheel:
             #    ?? = CCval
 
             if CCnum == MC_Volume:
                 volumeCC = CCval / 127.0   # force float
-
             elif CCnum == MC_Sustain:
                 if sample_mode==PLAYLIVE or sample_mode==PLAYMONO:
                     if (CCval < 64):    # sustain off
@@ -1212,6 +1027,12 @@ def MidiCallback(message, time_stamp):
 
             elif CCnum==120 or CCnum==123:      # "All sounds off" or "all notes off"
                 AllNotesOff()
+#    if USE_MIDI_THRU and throughport >=0:
+#        if len(message)>2:
+#            print "about to send note_on"
+#            midi_out.send_noteon(message[0]&0xF,message[1],message[2])
+#        else:
+#            print "too short"
 
 #########################################
 ##  LOAD SAMPLES
@@ -1234,11 +1055,8 @@ def LoadSamples():
     LoadingThread.daemon = True
     LoadingThread.start()
 
-
-basename = "None"
-
 def ActuallyLoad():    
-    global preset, presetlist, samples, SAMPLES_DIR, samplesdir, BOXRELEASE, BOXXFADEIN, PREXFADEIN, BOXSTOP17, stop127
+    global PRESET, presetlist, samples, samplesdir, BOXRELEASE, BOXXFADEIN, PREXFADEIN, BOXSTOP17, stop127
     global globaltranspose, BOXSAMPLE_MODE, sample_mode, basename, BOXVELOCITY_MODE, velocity_mode, globalgain, voicelist, currvoice, PITCHRANGE, pitchnotes, RELSAMPLE
     global ActuallyLoading, DefinitionTxt, DefinitionErr
     ActuallyLoading="Yes"
@@ -1246,8 +1064,8 @@ def ActuallyLoad():
     AllNotesOff()
     currbase = basename    
 
-    samplesdir = SAMPLES_DIR if os.listdir(SAMPLES_DIR) else '.'      # use current folder (containing 0 Saw) if no user media containing samples has been found
-    #basename = next((f for f in os.listdir(samplesdir) if f.startswith("%d " % preset)), None)      # or next(glob.iglob("blah*"), None)
+    samplesdir = SAMPLES_ONUSB if os.listdir(SAMPLES_ONUSB) else SAMPLES_INBOX      # use builtin folder (containing 0 Saw) if no user media containing samples has been found
+    #basename = next((f for f in os.listdir(samplesdir) if f.startswith("%d " % PRESET)), None)      # or next(glob.iglob("blah*"), None)
     presetlist=[]
     for f in os.listdir(samplesdir):
         #print f
@@ -1255,13 +1073,13 @@ def ActuallyLoad():
             if os.path.isdir(os.path.join(samplesdir,f)):
                 p=int(re.search('\d* ', f).group(0).strip())
                 presetlist.append([p,f])
-                if p==preset: basename=f
+                if p==PRESET: basename=f
     presetlist=sorted(presetlist,key=lambda presetlist: presetlist[0])  # sort without having to import operator modules
 
     print "We have %s, we want %s" %(currbase, basename)
     if basename:
         if basename == currbase:      # don't waste time reloading a patch
-            #print 'Kept preset %s' % basename
+            #print 'Kept PRESET %s' % basename
             display("")
             ActuallyLoading="No"
             return
@@ -1292,17 +1110,17 @@ def ActuallyLoad():
     DefinitionErr = ''
 
     if not basename: 
-        #print 'Preset empty: %s' % preset
-        basename = "%d Empty preset" %preset
-        display("","E%03d" % preset)
+        #print 'Preset empty: %s' % PRESET
+        basename = "%d Empty preset" %PRESET
+        display("","E%03d" % PRESET)
         ActuallyLoading="No"
         return
 
     #print 'Preset loading: %s ' % basename
-    display("Loading %s" % basename,"L%03d" % preset)
+    display("Loading %s" % basename,"L%03d" % PRESET)
     definitionfname = os.path.join(dirname, SAMPLESDEF)
     if os.path.isfile(definitionfname):
-        if HTTP_GUI:
+        if USE_HTTP_GUI:
             with open(definitionfname, 'r') as definitionfile:  # keep full text for the gui
                 DefinitionTxt=definitionfile.read()
         with open(definitionfname, 'r') as definitionfile:
@@ -1498,12 +1316,12 @@ def ActuallyLoad():
                                samples[midinote, velocity, voice] = samples[midinote, velocity, 0]
 
         if currvoice!=0: sample_mode=voicelist[getindex(currvoice,voicelist)][2]
-        display("","%04d" % preset)
+        display("","%04d" % PRESET)
 
     else:
-        #print 'Preset empty: ' + str(preset)
-        basename = "%d Empty preset" %preset
-        display("","E%03d" % preset)
+        #print 'Preset empty: ' + str(PRESET)
+        basename = "%d Empty preset" %PRESET
+        display("","E%03d" % PRESET)
     ActuallyLoading="No"
 
 
@@ -1512,12 +1330,13 @@ def ActuallyLoad():
 #########################################
 
 if USE_BUTTONS:
+    USE_GPIO=True
     import RPi.GPIO as GPIO
+    BUT_incr = cp.getint(s,"BUT_incr".lower())
+    BUT_decr = cp.getint(s,"BUT_decr".lower())
+    BUT_sel  = cp.getint(s,"BUT_sel".lower())
 
     lastbuttontime = 0
-    butt_up = 5     # values of butt_up/down/sel depend on physical wiring
-    butt_down = 13  # values of butt_up/down/sel depend on physical wiring
-    butt_sel = 26   # values of butt_up/down/sel depend on physical wiring
     buttfunc = 0
     button_functions=["","Volume","Midichannel","Transpose","RenewUSB/MidMute","Play Chord:","Use Scale:"]
     button_disp=["","V","M","T","X","C","S"]  # take care, these values can used elsewhere for testing
@@ -1528,23 +1347,23 @@ if USE_BUTTONS:
         display(button_functions[buttfunc]+function_value[buttfunc])
         
     def Buttons():
-        global preset, basename, lastbuttontime, volume, MIDI_CHANNEL, globaltranspose, midi_mute, chordname, currchord, scalename, currscale
-        global buttfunc, button_functions, butt_up, butt_down, butt_sel, button_disp
+        global PRESET, basename, lastbuttontime, volume, MIDI_CHANNEL, globaltranspose, midi_mute, chordname, currchord, scalename, currscale
+        global buttfunc, button_functions, BUT_incr, BUT_decr, BUT_sel, button_disp
 
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(butt_up, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        GPIO.setup(butt_down, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        GPIO.setup(butt_sel, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(BUT_incr, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(BUT_decr, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(BUT_sel, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         lastbuttontime = time.time()
 
         while True:
             now = time.time()
             if (now - lastbuttontime) > 0.2:
-                if not GPIO.input(butt_down):
+                if not GPIO.input(BUT_decr):
                     lastbuttontime = now
                     if buttfunc==0:
-                        preset -= 1
-                        if preset < PRESETBASE: preset = 127+PRESETBASE
+                        PRESET -= 1
+                        if PRESET < PRESETBASE: PRESET = 127+PRESETBASE
                         LoadSamples()
                     elif buttfunc==1:
                         volume-=5
@@ -1578,12 +1397,12 @@ if USE_BUTTONS:
                         if currscale<0: currscale=len(scalename)-1
                         Button_display()
 
-                elif not GPIO.input(butt_up):
+                elif not GPIO.input(BUT_incr):
                     lastbuttontime = now
                     midi_mute = False
                     if buttfunc==0:
-                        preset += 1  
-                        if preset > 127+PRESETBASE: preset = PRESETBASE
+                        PRESET += 1  
+                        if PRESET > 127+PRESETBASE: PRESET = PRESETBASE
                         LoadSamples()      
                     elif buttfunc==1:
                         volume+=5
@@ -1614,7 +1433,7 @@ if USE_BUTTONS:
                         if currscale>=len(scalename): currscale=0
                         Button_display()
 
-                elif not GPIO.input(butt_sel):
+                elif not GPIO.input(BUT_sel):
                     lastbuttontime = now
                     #print("Function Button")
                     buttfuncmax=len(button_functions)
@@ -1630,13 +1449,17 @@ if USE_BUTTONS:
 
     ButtonsThread = threading.Thread(target = Buttons)
     ButtonsThread.daemon = True
-    ButtonsThread.start()    
+    ButtonsThread.start()
+
+else:
+    buttfunc=0
+    button_disp=[""]
 
 #########################################
 ##  WebGUI thread
 #########################################
 
-if HTTP_GUI:
+if USE_HTTP_GUI:
    
     def HTTP_Server(server_class=HTTPServer, handler_class=HTTPRequestHandler, port=HTTP_PORT):
         server_address = ('', port)
@@ -1695,20 +1518,35 @@ LoadSamples()
 #########################################
 
 midi_in = rtmidi2.MidiInMulti()
-curr_ports = []
-prev_ports = []
+midi_in.callback = MidiCallback
+#if USE_MIDI_THRU:
+#    midi_out = rtmidi2.MidiOut()
+#THRU_PORT = "MIDI4x4 20:2"
+#throughport=-1      # impossible value
+curr_inports = []
+prev_inports = []
 try:
   while True:
-    curr_ports = rtmidi2.get_in_ports()
-    if (len(prev_ports) != len(curr_ports)):
+    curr_inports = rtmidi2.get_in_ports()
+    if (len(prev_inports) != len(curr_inports)):
         midi_in.close_ports()
+#        if throughport>=0:
+#            midi_out.close_port()
+#        throughport=-1
         prev_ports = []
-        for port in curr_ports:
-            if port not in prev_ports and 'Midi Through' not in port and (len(prev_ports) != len(curr_ports)):
+        i=0
+        for port in curr_inports:
+            if 'Midi Through' not in port:
+#                if THRU_PORT==midi_in.get_port_name(i):
+#                    if USE_MIDI_THRU:
+#                        throughport=i
+#                        print 'Open %s as MIDI OUT %d ' % (THRU_PORT,throughport)
+#                        midi_out.open_port(throughport)
+                print 'Open %s as MIDI IN %d ' % (port,i)
                 midi_in.open_ports(port)
-                midi_in.callback = MidiCallback
-                print 'Open MIDI port: ' + port
-        prev_ports = curr_ports
+            i+=1
+        curr_inports = rtmidi2.get_in_ports()   # we do this indirect to catch
+        prev_inports = curr_inports             # auto opened virtual ports
     time.sleep(2)
 except KeyboardInterrupt:
     print "\nstopped by ctrl-c\n"
@@ -1717,4 +1555,4 @@ except:
 finally:
     display('Stopped')
     sleep(0.5)
-    GPIO.cleanup()
+    if USE_GPIO: GPIO.cleanup()
