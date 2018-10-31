@@ -5,12 +5,21 @@
 #########################################
 import RPi.GPIO as GPIO
 import time
+import gv
+s="config"
 usleep = lambda x: time.sleep(x/1000000.0)
 msleep = lambda x: time.sleep(x/1000.0)
+LCD_RS = gv.cp.getint(s,"LCD_RS".lower())
+LCD_E = gv.cp.getint(s,"LCD_E".lower())
+# get&insert LCD_D0 to LCD_D3 as first elements in pins_db for 8-bit operation
+LCD_D4 = gv.cp.getint(s,"LCD_D4".lower())
+LCD_D5 = gv.cp.getint(s,"LCD_D5".lower())
+LCD_D6 = gv.cp.getint(s,"LCD_D6".lower())
+LCD_D7 = gv.cp.getint(s,"LCD_D7".lower())
 
 class HD44780:
 
-    def __init__(self, pin_rs, pin_e, pins_db):
+    def __init__(self, pin_rs=LCD_RS, pin_e=LCD_E, pins_db=[LCD_D4,LCD_D5,LCD_D6,LCD_D7]):
         self.pin_rs=pin_rs
         self.pin_e=pin_e
         self.pins_db=pins_db
@@ -24,6 +33,7 @@ class HD44780:
         for pin in self.pins_db:
             GPIO.setup(pin, GPIO.OUT)
         self.clear()
+        print 'Started 16x2 LCD via GPIO: RegisterSelect=%d, Enable=%d and Datalines=%s' %(pin_rs, pin_e, str(pins_db).replace(" ", ""))
 
     def clear(self):
         """ Blank / Reset LCD """
@@ -80,15 +90,11 @@ class HD44780:
                 x += 1
                 if x < 17: self.cmd(ord(char),1)
 
-    def display(self,s2,basename='',sample_mode='',USE_ALSA_MIXER=False,volume=0,globaltranspose=0,currvoice=0,currchord=0,chordname=[''],scalename=[''],currscale=0,button_disp=[''],buttfunc=0):
-        if globaltranspose == 0:
-            transpose = ""
-        else:
-            transpose = "%+d" % globaltranspose
+    def display(self,s2,basename='',sample_mode='',USE_ALSA_MIXER=False,volume=0,currvoice=0,currchord=0,chordname=[''],scalename=[''],currscale=0,button_disp=[''],buttfunc=0):
         if USE_ALSA_MIXER:
-            s1 = "%s%s %s %d%% %s" % (scalename[currscale], chordname[currchord], sample_mode, volume, transpose)
+            s1 = "%s%s %s %d%%" % (scalename[currscale], chordname[currchord], sample_mode, volume)
         else:
-            s1 = "%s%s %s %s" % (scalename[currscale], chordname[currchord], sample_mode, transpose)
+            s1 = "%s%s %s" % (scalename[currscale], chordname[currchord], sample_mode)
         if s2 == "":
             if currvoice>1: s2=str(currvoice)+":"
             s2 += basename
