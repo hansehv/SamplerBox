@@ -57,7 +57,7 @@ November 18-20 2016 (no impact on samplerbox_audio.pyx)
 December 2016 (needs recompile of samplerbox_audio.pyx)
     - Pitchbend depth can be adjusted via midi controller
     - Release/fadeout can be adapted per note in config.txt and via midi controller
-January 2017
+January 2017fadeout()
     - Control generation of missing notes (%%/%fillnote)
 June 2017
     - Enable "sensing" of (currently a limited set of) controls for the alsamixer
@@ -106,11 +106,15 @@ August 2018
   - Fixed release processing during polyphonic safeguard being too fast giving choppy results
   - Made Control Change number configurable and included new effects in that
   - Introduced USE_48kHz parameter for 48K output devices (via permanent pitchbend = slight quality loss))
-September 2018
+September/October 2018
   - Upgraded necessary Debian components to support PI-3B+
+  - Migrated parts of the code as modules into modules directory
   - Changed default internal sample dir from ./ to /samples/ to enable samples partition
   - Made local config available in /boot/samplerbox/ (so it can edited on the image from windows)
+  - Moved midiCC mapping and chords&scales to csv files (editable as spreadsheets) in same dir
   - Added guidelines for using HiFiBerry devices /boot/config.txt and /boot/samplerbox/configuration.txt
   - Made GPIO pins allocation configurable as local config variables
-  - Moved mixer controls and chords&scales to csv files in same dir, editable as spreadsheets
-  - Migrated parts of the code as modules into modules directory
+  - Introduced backtracks with variable loop part between intro and outtro
+  - Preset browsing with buttons now ignores undefined presets
+  - Removed %%globaltranspose. Transpose is set on voice level and applies to keyboard range
+  - Cleaned up fadeout(5) to fadeout(). Purpose of the variable was implemented July 31 2016 via %release
