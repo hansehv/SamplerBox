@@ -125,7 +125,7 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return('<DIV STYLE="line-height:100%;text-align:center">'+text+m+'</DIV><TEXTAREA name="'+name+'"'+m+'>'+val+'</TEXTAREA>');
 	}
 }
-SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_xvoice","elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote","elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales"];
+SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_xvoice","elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote","elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales","elem_SB_bTracks"];
 SB_numelems=SB_ElemID.length;
 var SB_element={
 	elem_SB_Form: function(elem_name){
@@ -190,6 +190,16 @@ var SB_element={
 			html=html+'</TD></TR>';
 		}
 		document.getElementById(elem_name).innerHTML=html+'</TABLE>';
+	},
+	elem_SB_bTracks: function(elem_name){
+		if (SB_numbtracks==0) {document.getElementById(elem_name).innerHTML='';}
+		else {
+			html='<TABLE BORDER="1" CELLPADDING="3"><TR><TD>Knob</TD><TH>Backtrack</TH><TD>Note</TH></TD>';
+			for (i=0;i<SB_numbtracks;i++){
+				html=html+'<TR VALIGN="top"><TD ALIGN="center">'+SB_bTracks[i][0]+'</TD><TD ALIGN="center">'+SB_bTracks[i][1]+'</TD><TD ALIGN="center">'+SB_bTracks[i][2]+'</TD></TR>';
+			}
+			document.getElementById(elem_name).innerHTML=html+'</TABLE><P>';
+		}
 	}
 }
 function SB_notechord(note,chord){
