@@ -57,7 +57,7 @@ November 18-20 2016 (no impact on samplerbox_audio.pyx)
 December 2016 (needs recompile of samplerbox_audio.pyx)
     - Pitchbend depth can be adjusted via midi controller
     - Release/fadeout can be adapted per note in config.txt and via midi controller
-January 2017fadeout()
+January 2017
     - Control generation of missing notes (%%/%fillnote)
 June 2017
     - Enable "sensing" of (currently a limited set of) controls for the alsamixer
@@ -118,3 +118,7 @@ September/October 2018
   - Preset browsing with buttons now ignores undefined presets
   - Removed %%globaltranspose. Transpose is set on voice level and applies to keyboard range
   - Cleaned up fadeout(5) to fadeout(). Purpose of the variable was implemented July 31 2016 via %release
+November 2018
+  - Migrated alsamixer and serial midi coding to modules
+  - Added midi running status to serialmidi module. This is untested as I don't have the HW for this.
+  - Bugfixes and cleanups
