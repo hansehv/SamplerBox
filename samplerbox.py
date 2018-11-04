@@ -70,7 +70,7 @@ def setVoice(x,*z):
         display("")
 def playBackTrack(x,*z):
     playnote=int(x)+130
-    if playnote in gv.playingnotes:    # is the track playing?
+    if playnote in gv.playingnotes: # is the track playing?
         for m in gv.playingnotes[playnote]:
             m.playing2end()         # let it finish
     else:
@@ -79,7 +79,7 @@ def playBackTrack(x,*z):
         except:
             print 'Unassigned/unfilled track or other exception for backtrack %s->%d' % (x,playnote)
 
-gv.getindex=getindex                            # and announce the procs to modules
+gv.getindex=getindex                    # and announce the procs to modules
 gv.MC[getindex(gv.CHORDS,gv.MC)][2]=setChord
 gv.MC[getindex(gv.SCALES,gv.MC)][2]=setScale
 gv.MC[getindex(gv.VOICES,gv.MC)][2]=setVoice
@@ -102,7 +102,6 @@ CHORDS_DEF = "chords.csv"
 SCALES_DEF = "scales.csv"
 MIDICCS_DEF = "midi_controllers.csv"
 MIDIMAP_DEF = "midi_mapping.csv"
-HTTP_PORT = 80
 
 ##########  read LOCAL CONFIG ==> /boot/samplerbox/configuration.txt
 gv.cp=ConfigParser.ConfigParser()
@@ -113,8 +112,6 @@ USE_SERIALPORT_MIDI = gv.cp.getboolean(s,"USE_SERIALPORT_MIDI".lower())
 USE_HD44780_16x2_LCD = gv.cp.getboolean(s,"USE_HD44780_16x2_LCD".lower())
 USE_I2C_7SEGMENTDISPLAY = gv.cp.getboolean(s,"USE_I2C_7SEGMENTDISPLAY".lower())
 gv.USE_ALSA_MIXER = gv.cp.getboolean(s,"USE_ALSA_MIXER".lower())
-if gv.USE_ALSA_MIXER:
-    MIXER_CONTROL=gv.cp.get(s,"MIXER_CONTROL".lower()).replace(" ", "").split(',')
 USE_48kHz = gv.cp.getboolean(s,"USE_48kHz".lower())
 USE_BUTTONS = gv.cp.getboolean(s,"USE_BUTTONS".lower())
 USE_LEDS = gv.cp.getboolean(s,"USE_LEDS".lower())
@@ -178,9 +175,12 @@ gv.TREMspeed=gv.BOXTREMspeed
 gv.TREMtrill=BOXTREMtrill
 
 if AUDIO_DEVICE_ID > 0:
-    MIXER_CARD_ID = AUDIO_DEVICE_ID-1  # This may vary with your HW. The jack/HDMI of PI use 1 alsa card index
+    if testprefix=="":
+        gv.MIXER_CARD_ID = AUDIO_DEVICE_ID-1   # The jack/HDMI of PI use 1 alsa card index
+    else:
+        gv.MIXER_CARD_ID = 0                   # This may vary with your HW.....
 else:
-    MIXER_CARD_ID = 0
+    gv.MIXER_CARD_ID = 0
 
 #########################################
 # Display routine
@@ -210,7 +210,7 @@ elif USE_LEDS:
 else:
     def display(s2,s7=""):
         pass    
-gv.display=display
+gv.display=display                          # and announce the procs to modules
 
 ##################################################################################
 # Effects/Filters
@@ -294,6 +294,7 @@ def setEffect(effect):
             else:
                 setFilter(i)
             continue
+# Relate the effects, the midimapping and control change handling handling to each other
 def Reverb(CCval,*z):  setEffect(gv.REVERB)
 def Tremolo(CCval,*z): setEffect(gv.TREMOLO)
 def Vibrato(CCval,*z): setEffect(gv.VIBRATO)
@@ -303,7 +304,7 @@ def EffectsOff(*z):
     setFilter(gv.currfilter)
     #FVinit()                   # no cleanup necessary
     LFO.RotateTidy(False)       # cleans up vibrato+tremolo+rotate
-gv.setFilter=setFilter
+gv.setFilter=setFilter          # and announce the procs to modules
 gv.MC[getindex(gv.REVERB,gv.MC)][2]=Reverb
 gv.MC[getindex(gv.TREMOLO,gv.MC)][2]=Tremolo
 gv.MC[getindex(gv.VIBRATO,gv.MC)][2]=Vibrato
@@ -575,40 +576,6 @@ except:
         GPIO.cleanup()
     exit(1)
 
-if gv.USE_ALSA_MIXER:
-    import alsaaudio
-    ok=False
-    for i in range(0, 4):
-        for j in range(0, len(MIXER_CONTROL)):
-            try:
-                amix = alsaaudio.Mixer(cardindex=MIXER_CARD_ID+i,control=MIXER_CONTROL[j])
-                MIXER_CARD_ID+=i    # save the found value
-                ok=True             # indicate OK
-                print 'Opened Alsamixer: card (hw:%i,x), control %s' % (MIXER_CARD_ID, MIXER_CONTROL[j])
-                break
-            except:
-                pass
-        if ok: break
-    if ok:
-        def getvolume():
-            vol = amix.getvolume()
-            gv.volume = int(vol[0])
-        def setvolume(volume):
-            amix.setvolume(volume)
-            getvolume()
-        setvolume(gv.volume)
-    else:
-        gv.USE_ALSA_MIXER=False
-        display("Invalid mixerdev")
-        print 'Invalid mixer card id "%i" or control "%s" --' % (MIXER_CARD_ID, MIXER_CONTROL)
-        print '-- Mixer card id is "x" in "(hw:x,y)" (if present) in opened audio device.'
-if not gv.USE_ALSA_MIXER:
-    def getvolume():
-        pass
-    def setvolume(volume):
-        pass
-gv.setvolume=setvolume
-
 #########################################
 ##  MIDI
 ##   - general routines
@@ -640,12 +607,11 @@ def Sustain(CCval,*z):
                 n.fadeout()
             gv.sustainplayingnotes = []       
             gv.sustain = False
-            #print 'Sustain pedal released'
         else:               # sustain on
             gv.sustain = True
-            #print 'Sustain pedal pressed'
 def PitchSens(CCval,*z):
     gv.pitchnotes = (24*CCval+100)/127
+                            # and announce the procs to modules
 gv.MC[getindex(gv.PANIC,gv.MC)][2]=AllNotesOff
 gv.MC[getindex(gv.VOLUME,gv.MC)][2]=MidiVolume
 gv.MC[getindex(gv.AUTOCHORDOFF,gv.MC)][2]=AutoChordOff
@@ -765,7 +731,7 @@ def MidiCallback(src, message, time_stamp):
                                     m.playing2end()
                                 elif gv.sustain:    # test keyboardarea to prevent useless checking in most cases
                                     if midinote>(127-gv.stop127) and midinote <gv.stop127:
-                                        #print 'Sustain note ' + str(playnote)   # debug
+                                        print 'Sustain note ' + str(playnote)   # debug
                                         gv.sustainplayingnotes.append(m)
                                 else:
                                     #print "Stop note " + str(playnote)
@@ -790,13 +756,14 @@ def MidiCallback(src, message, time_stamp):
             mc=False
             for m in gv.midimap:    # look for mapped controllers
                 j=m[0]
-                if gv.midiCCs[j][1]==CCnum and (gv.midiCCs[j][2]==-1 or gv.midiCCs[j][2]==CCval):
+                if gv.midiCCs[j][1]==CCnum and (gv.midiCCs[j][2]==-1 or gv.midiCCs[j][2]==CCval or gv.MC[m[1]][1]==3):
                     #print "Recognized %s" %gv.MC[m[1]][0]
                     if m[2]!=None: CCval=m[2]
                     gv.MC[m[1]][2](CCval,gv.MC[m[1]][0])
                     mc=True
             if not mc and (CCnum==120 or CCnum==123):   # "All sounds off" or "all notes off"
                 AllNotesOff()
+gv.MidiCallback=MidiCallback
 
 #########################################
 ##  LOAD SAMPLES
@@ -818,7 +785,7 @@ def LoadSamples():
     LoadingThread = threading.Thread(target = ActuallyLoad)
     LoadingThread.daemon = True
     LoadingThread.start()
-gv.LoadSamples=LoadSamples
+gv.LoadSamples=LoadSamples              # and announce the procs to modules
 
 def ActuallyLoad():    
     global velocity_mode, RELSAMPLE
@@ -1125,74 +1092,32 @@ def ActuallyLoad():
         gv.ActuallyLoading=False
         display("","E%03d" % gv.PRESET)
 
-
-#########################################
-##  BUTTONS via RASPBERRY PI GPIO
-#########################################
-
-if USE_BUTTONS:
-    USE_GPIO=True
-    import buttons
-    ButtonsThread = threading.Thread(target = buttons.Buttons)
-    ButtonsThread.daemon = True
-    ButtonsThread.start()
-
-#########################################
-##  WebGUI thread
-#########################################
-
-if USE_HTTP_GUI:
-    from BaseHTTPServer import HTTPServer
-    from http_gui import HTTPRequestHandler
-
-    def HTTP_Server(server_class=HTTPServer, handler_class=HTTPRequestHandler, port=HTTP_PORT):
-        server_address = ('', port)
-        httpd = server_class(server_address, handler_class)
-        print 'Starting httpd on port %d' % (port)
-        try:
-            httpd.serve_forever()
-        except:
-            print 'Starting httpd failed'
-
-    HTTPThread = threading.Thread(target = HTTP_Server)
-    HTTPThread.daemon = True
-    HTTPThread.start()
-
-#########################################
-##  MIDI IN via SERIAL PORT
-##  this should be extended with logic for "midi running status"
-##  possible solution at http://www.samplerbox.org/forum/146
-#########################################
-
-if USE_SERIALPORT_MIDI:
-    import serial
-
-    ser = serial.Serial('/dev/ttyAMA0', baudrate=38400)       # see hack in /boot/cmline.txt : 38400 is 31250 baud for MIDI!
-
-    def MidiSerialCallback():
-        message = [0, 0, 0]
-        while True:
-          i = 0
-          while i < 3:
-            data = ord(ser.read(1)) # read a byte
-            if data >> 7 != 0:  
-              i = 0      # status byte!   this is the beginning of a midi message: http://www.midi.org/techspecs/midimessages.php
-            message[i] = data
-            i += 1
-            if i == 2 and message[0] >> 4 == 12:  # program change: don't wait for a third byte: it has only 2 bytes
-              message[2] = 0
-              i = 3
-          MidiCallback(message, None)
-
-    MidiThread = threading.Thread(target = MidiSerialCallback)
-    MidiThread.daemon = True
-    MidiThread.start()
-
 #########################################
 ##  LOAD FIRST SOUNDBANK
 #########################################     
 
 LoadSamples()
+
+#########################################
+##      O P T I O N A L S        
+##  - DAC volume control via alsamixer
+##  - BUTTONS via GPIO
+##  - WebGUI thread
+##  - MIDI IN via SERIAL PORT
+#########################################
+
+if gv.USE_ALSA_MIXER:
+    import DACvolume
+
+if USE_BUTTONS:
+    USE_GPIO=True
+    import buttons
+
+if USE_HTTP_GUI:
+    import http_gui
+
+if USE_SERIALPORT_MIDI:
+    import serialMIDI
 
 #########################################
 ##  MIDI DEVICES DETECTION
