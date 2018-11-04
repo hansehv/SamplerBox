@@ -7,6 +7,7 @@
 #
 
 # Loaded from configuration.txt
+AUDIO_DEVICE_ID=0
 USE_ALSA_MIXER=False
 MIDI_CHANNEL=1
 PRESET=0
@@ -116,6 +117,8 @@ FilterTidy=None
 Filterkeys=None
 filterproc=None
 setFilter=None
+MidiCallback=None
+setvolume=None
 LoadSamples=None
 
 def safeguard (*vals):  # dedicated proc for MC-table
@@ -123,11 +126,11 @@ def safeguard (*vals):  # dedicated proc for MC-table
     for val in vals :
         arr.append(val)
     print "gv.Safeguard: call to unset procedure for %s:%s" %(arr[1],arr[0])
-MC=[              # name, type(0=continuous,1=switch,2=switchtable),procedure)
+MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch),procedure)
 [PITCHWHEEL,0,safeguard],
 [MODWHEEL,0,safeguard],
 [VOLUME,0,safeguard],
-[SUSTAIN,1,safeguard],
+[SUSTAIN,3,safeguard],
 [REVERBLVL,0,safeguard], 
 [REVERBROOM,0,safeguard],
 [REVERBDAMP,0,safeguard],

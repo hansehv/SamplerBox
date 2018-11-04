@@ -4,17 +4,15 @@
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 ###############################################################
-from BaseHTTPServer import BaseHTTPRequestHandler
-import urllib
+import threading
+import BaseHTTPServer,urllib, mimetypes
 from urlparse import urlparse,parse_qs
-import shutil
-import mimetypes
-import subprocess
-import os
+import os,shutil,subprocess
 import gv,LFO
 notesymbol=["C","C&#9839;","D","E&#9837;","E","F","F&#9839;","G","G&#9839;","A","B&#9837;","B","FX"]  # 0 in scalechord table, also used in loadsamples(!)
+HTTP_PORT = 80
 
-class HTTPRequestHandler(BaseHTTPRequestHandler):
+class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urlparse(urllib.unquote(self.path)).path
@@ -196,3 +194,16 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write("\tSB_numvoices=%d;SB_xvoice='%s';SB_Voicelist=%s;\n" % (len(vlist),xvoice,vlist) )
         self.wfile.write("\tSB_numbtracks=%d;SB_bTracks=%s;\n" % (len(gv.btracklist),gv.btracklist) )
         self.wfile.write("};")
+
+def HTTP_Server(server_class=BaseHTTPServer.HTTPServer, handler_class=HTTPRequestHandler, port=HTTP_PORT):
+    server_address = ('', port)
+    httpd = server_class(server_address, handler_class)
+    print 'Starting httpd on port %d' % (port)
+    try:
+        httpd.serve_forever()
+    except:
+        print 'Starting httpd failed'
+
+HTTPThread = threading.Thread(target = HTTP_Server)
+HTTPThread.daemon = True
+HTTPThread.start()

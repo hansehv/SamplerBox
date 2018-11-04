@@ -4,7 +4,7 @@
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 ###############################################################
 import RPi.GPIO as GPIO
-import time
+import time,threading
 import gv
 
 s="config"
@@ -52,22 +52,18 @@ def Buttons():
                     if gv.MIDI_CHANNEL < 1: gv.MIDI_CHANNEL = 16
                     Button_display()
                 elif buttfunc==3:
-                    gv.globaltranspose -= 1
-                    if gv.globaltranspose < -99: gv.globaltranspose = -99
-                    Button_display()
-                elif buttfunc==4:
                     if not gv.midi_mute:
                         gv.midi_mute = True
                         gv.display("** MIDI muted **")
                     else:
                         gv.midi_mute = False
                         Button_display()
-                elif buttfunc==5:
+                elif buttfunc==4:
                     gv.currscale=0     # scale and chord mode are mutually exclusive
                     gv.currchord -= 1
                     if gv.currchord<0: gv.currchord=len(gv.chordname)-1
                     Button_display()
-                elif buttfunc==6:
+                elif buttfunc==5:
                     gv.currchord=0     # scale and chord mode are mutually exclusive
                     gv.currscale-=1
                     if gv.currscale<0: gv.currscale=len(gv.scalename)-1
@@ -91,19 +87,15 @@ def Buttons():
                     if gv.MIDI_CHANNEL > 16: gv.MIDI_CHANNEL = 1
                     Button_display()
                 elif buttfunc==3:
-                    gv.globaltranspose += 1
-                    if gv.globaltranspose > 99: gv.globaltranspose = 99
-                    Button_display()
-                elif buttfunc==4:
                     gv.basename = "None"
                     gv.LoadSamples()
-                    #Button_display()
-                elif buttfunc==5:
-                    gv.currscale=0     # scale and chord mode areLoadSamples mutually exclusive
+                    #Button_display()   # loadsamples also displays
+                elif buttfunc==4:
+                    gv.currscale=0      # scale and chord mode areLoadSamples mutually exclusive
                     gv.currchord += 1
                     if gv.currchord>=len(gv.chordname): gv.currchord=0
                     Button_display()
-                elif buttfunc==6:
+                elif buttfunc==5:
                     gv.churrchord=0     # scale and chord mode are mutually exclusive
                     gv.currscale += 1
                     if gv.currscale>=len(gv.scalename): gv.currscale=0
@@ -111,7 +103,6 @@ def Buttons():
 
             elif not GPIO.input(BUT_sel):
                 lastbuttontime = now
-                print("Function Button")
                 buttfuncmax=len(button_functions)
                 buttfunc +=1
                 if buttfunc >= len(button_functions): buttfunc=0
@@ -122,3 +113,8 @@ def Buttons():
                 Button_display()
 
             time.sleep(0.02)
+
+ButtonsThread = threading.Thread(target = Buttons)
+ButtonsThread.daemon = True
+ButtonsThread.start()
+

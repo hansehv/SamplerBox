@@ -31,7 +31,9 @@ def readcsv(ifile, numtxt=100, header=True):
                             i=-1            # then indicate empty row
                         break;
                     if inrow[i][0]=="#":    # allow=ignore for comments
-                        continue
+                        if i==0:            # is this the first cell?
+                            i=-1            # then indicate empty row
+                        break
                     if i < numtxt:          # Take the textfields as is
                         row.append(inrow[i])
                     else:                   # Convert the rest to integer
@@ -103,36 +105,33 @@ def readmidimap(ifile):
             print("%s: Controller %s not defined, ignoring %s" %(ifile, sheet[i][0], str(sheet[i])))
             gv.ConfigErr=True
             continue
-        else:
-            if len(sheet[i])>1:
-                if sheet[i][1]==gv.UA:
-                    continue
-                elif len(sheet[i])<4:
+        elif len(sheet[i])>1:       # skip empty lines
+            if sheet[i][1]!=gv.UA:  # skip unassigned controlles
+                if len(sheet[i])<4:
                     print("%s: ignored %s" %(ifile, str(sheet[i])))
                     gv.ConfigErr=True
-                    continue
                 elif sheet[i][0]!=gv.UA and gv.getindex(x,gv.midimap)>0:
-                    print ("%s: Controller %s already mapped, ignored %s" %(ifile,gv.midiCCs[x][0],sheet[i]))
-                if (sheet[i][3].lower!="continuous" and gv.midiCCs==-1) or (sheet[i][3].lower=="continuous" and gv.midiCCs!=-1):
-                    print("%s: Continuous/switch controller mapped to switch/controller function, ignored %s" %(ifile, str(sheet[i])))
+                    print ("%s: Controller '%s' already mapped, ignored %s" %(ifile,gv.midiCCs[x][0],sheet[i]))
                     gv.ConfigErr=True
-                    continue
+                elif gv.getindex(sheet[i][3].lower(),["continuous","toggle","switch","switchon","switchoff"],True)==-1:
+                    print("%s: Mode '%s' unrecognized, ignored: %s" %(ifile, sheet[i][3], str(sheet[i])))
+                    gv.ConfigErr=True
+                elif sheet[i][0]!=gv.UA and (sheet[i][3].lower()!="continuous" and gv.midiCCs[x][2]==-1 or sheet[i][3].lower()=="continuous" and gv.midiCCs[x][2]!=-1):
+                    print("%s: Continuous/switch controller mapped to incompatible function, ignored: %s" %(ifile, str(sheet[i])))
+                    gv.ConfigErr=True
                 else:
                     values[0]=x     # identify controller
                     # Normalize/correct the input
                     if sheet[i][1].upper()==gv.FIXED.upper():
                         mc=sheet[i][2]
-                    elif sheet[i][1]==gv.UA:
-                        pass
                     else:
                         mc=sheet[i][1]
                         values[2]=sheet[i][2]
                     y=gv.getindex(mc,gv.MC)
                     if y>-1:
                         values[1]=y
+                        gv.midimap.append(values)
                     else:
-                        print("%s: Type %s unrecognized, ignored %s" %(ifile, sheet[i][1], str(sheet[i])))
+                        print("%s: Type '%s' unrecognized, ignored %s" %(ifile, sheet[i][1], str(sheet[i])))
                         gv.ConfigErr=True
-                        continue
-            gv.midimap.append(values)
     return
