@@ -406,7 +406,7 @@ def GetStopmode(mode):
     if mode==PLAYLIVE:
         stopmode = 128                          # stop on note-off = release key
     elif mode==PLAYBACK:
-        stopmode = -1                           # don't stop, play sample at full lenght (unless restarted)
+        stopmode = -1                           # don't stop, play sample at full length (unless restarted)
     elif mode==PLAYLOOP:
         stopmode = 127                          # stop on 127-key
     elif mode==PLAYBACK2X or mode==PLAYLOOP2X or mode==PLAYMONO:
@@ -648,8 +648,6 @@ def MidiCallback(src, message, time_stamp):
                        for m in gv.playingnotes[midinote]:
                            if m.playingstopnote() < 128:    # are we in a special mode
                                messagetype = 128            # if so, then ignore this note-off
-                           #else:                            # since we have the info at hand now:
-                           #    velmixer = m.playingvelocity()  # save org value for release sample
                 else: messagetype = 128             # nothing's playing, so there is nothing to stop
             if messagetype == 9:    # is a note-off hidden in this note-on ?
                 if midinote in gv.playingnotes:    # this can only be if the note is already playing
@@ -670,7 +668,6 @@ def MidiCallback(src, message, time_stamp):
                                     for m in gv.playingnotes[midinote-127]:
                                         if midinote==m.playingstopnote():   # and has it mirrored stop?
                                             messagetype = 8
-                                            #velmixer = m.playingvelocity()  # save org value for release sample
 
             if messagetype == 9:    # Note on 
                 #print 'Note on %d, voice=%d, chord=%s in %s/%s, velocity=%d, gv.globalgain=%d' % (midinote, gv.currvoice, gv.chordname[gv.currchord], gv.sample_mode, velocity_mode, velocity, gv.globalgain) #debug
@@ -704,11 +701,9 @@ def MidiCallback(src, message, time_stamp):
                         for m in gv.sustainplayingnotes:   # safeguard polyphony; don't sustain double notes
                             if m.note == playnote:
                                 m.fadeout()
-                                #print 'clean sustain ' + str(playnote)
                         if gv.triggernotes[playnote] < 128:  # cleanup in case of retrigger
                             if playnote in gv.playingnotes:    # occurs in once/loops modes and chords
                                 for m in gv.playingnotes[playnote]: 
-                                    #print "clean note " + str(playnote)
                                     m.fadeout()
                                 gv.playingnotes[playnote] = []   # housekeeping
                         gv.triggernotes[playnote]=midinote   # we are last playing this one
@@ -731,7 +726,7 @@ def MidiCallback(src, message, time_stamp):
                                     m.playing2end()
                                 elif gv.sustain:    # test keyboardarea to prevent useless checking in most cases
                                     if midinote>(127-gv.stop127) and midinote <gv.stop127:
-                                        print 'Sustain note ' + str(playnote)   # debug
+                                        #print 'Sustain note ' + str(playnote)   # debug
                                         gv.sustainplayingnotes.append(m)
                                 else:
                                     #print "Stop note " + str(playnote)
@@ -907,7 +902,7 @@ def ActuallyLoad():
                         continue
                     if r'%%mode' in pattern:
                         m = pattern.split('=')[1].strip().title()
-                        if m==PLAYLIVE or m==PLAYBACK or m==PLAYBACK2X or m==PLAYLOOP or m==PLAYLOOP2X or m==PLAYMONO or m==BACKTRACK: gv.sample_mode = m
+                        if (GetStopmode(mode)>-2): gv.sample_mode = m
                         continue
                     if r'%%velmode' in pattern:
                         m = pattern.split('=')[1].strip().title()
@@ -963,6 +958,7 @@ def ActuallyLoad():
                             mode = info.get('mode', defaultparams['mode'])
                             mode=mode.strip().title()
                             backtrack = int(info.get('backtrack', defaultparams['backtrack']))
+                            if mode==BACKTRACK and backtrack<0: backtrack=0
                             if backtrack>-1:
                                 if backtrack<128 and not tracknames[backtrack][1]:
                                     mode=BACKTRACK
