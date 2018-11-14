@@ -33,7 +33,7 @@ var SB_variables={	// make sure all passed parameters are covered here
 	v_SB_MidiVolume: function(val){SB_MidiVolume=val;},
 	v_SB_Preset: function(val){SB_Preset=val;},
 	v_SB_Gain: function(val){SB_Gain=val;},
-	v_SB_Transpose: function(val){SB_Transpose=val;},
+	v_SB_Pitchrange: function(val){SB_Pitchrange=val;},
 	v_SB_Voice: function(val){SB_Voice=val;},
 	v_SB_Scale: function(val){SB_Scale=val;},
 	v_SB_Chord: function(val){SB_Chord=val;},
@@ -55,8 +55,8 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 	input_SB_MidiChannel: function(input_name,name,val,text){
 		return(text+SB_numselect(input_name,name,val,1,16,1));
 	},
-	input_SB_Transpose: function(input_name,name,val,text){
-		return(text+SB_numselect(input_name,name,val,-12,12,1));
+	input_SB_Pitchrange: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,0,12,1)+SB_numselect(input_name,name,val,0,12,1));
 	},
 	input_SB_Chord: function(input_name,name,val,text){
 		return(text+SB_listselect(input_name,name,val,SB_Chordname,1,SB_numchords));
