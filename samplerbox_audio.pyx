@@ -22,6 +22,10 @@
 #      - implemented release sample via marker in wav ("GrandOrgue method")
 #  March 2018
 #      - implemented gain /sample
+#  July 2018
+#      - implemented vibrato (varying pitch)
+#  October 2018
+#      - Excluded effects track (voice 0) from pitchbend/vibrato
 #
 #  Rebuild with "python setup.py build_ext --inplace"
 
@@ -50,14 +54,17 @@ def mixaudiobuffers(list playingsounds, list rmlist, int frame_count, numpy.ndar
         vel = snd.sound.gain * snd.vel / 127.0
 
         # Below overflow protection values correspond with tables in samplerbox.py
-        i = (SPEEDRANGE+snd.note-snd.sound.midinote) * PITCHSTEPS + PITCHBEND
-        if i < 0:                                # below zero is out of limits
-            i = 0                                # save the program by ruining the pitch :-(
+        if snd.sound.voice==0:      # Exclude FXtrack from notefill and pitchbend
+            speed = SPEED[SPEEDRANGE*PITCHSTEPS]
         else:
-            speedrange=2*SPEEDRANGE              # save a multiply and indirect addressing
-            if i >= speedrange*PITCHSTEPS:       # 2*48=96 and higher is out of limits
-                i = (speedrange-1) * PITCHSTEPS  # save the program by ruining the pitch :-(
-        speed = SPEED[i]
+            i = (SPEEDRANGE+snd.note-snd.sound.midinote) * PITCHSTEPS + PITCHBEND
+            if i < 0:                                # below zero is out of limits
+                i = 0                                # save the program by ruining the pitch :-(
+            else:
+                speedrange=2*SPEEDRANGE              # save a multiply and indirect addressing
+                if i >= speedrange*PITCHSTEPS:       # 2*48=96 and higher is out of limits
+                    i = (speedrange-1) * PITCHSTEPS  # save the program by ruining the pitch :-(
+            speed = SPEED[i]
         newsz = frame_count * speed
         z = snd.sound.data
         zz = <short *> (z.data)
