@@ -15,7 +15,7 @@ PRESETBASE=0
 BOXTREMspeed=0
 volume=0
 volumeCC=0
-globaltranspose=0   # to be deleted, obsoleted by transpose on sample level
+#globaltranspose=0   # to be deleted, obsoleted by transpose on sample level
 
 # Literals
 SAMPLESDEF="definition.txt"

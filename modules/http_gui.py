@@ -79,11 +79,11 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 gv.basename="None"         # do a renew to sync the update
                 self.LoadSamples()
                 return
-        if "SB_MidiChannel" in fields: gv.MIDI_CHANNEL     =int(fields["SB_MidiChannel"][0])
+        if "SB_MidiChannel" in fields: gv.MIDI_CHANNEL      =int(fields["SB_MidiChannel"][0])
         if "SB_SoundVolume" in fields: gv.setvolume(int(fields["SB_SoundVolume"][0]))
-        if "SB_MidiVolume"  in fields: gv.volumeCC         =float(fields["SB_MidiVolume"][0])/100
-        if "SB_Gain"        in fields: gv.globalgain       =float(fields["SB_Gain"][0])/100
-        if "SB_Transpose"   in fields: gv.globaltranspose  =int(fields["SB_Transpose"][0])
+        if "SB_MidiVolume"  in fields: gv.volumeCC          =float(fields["SB_MidiVolume"][0])/100
+        if "SB_Gain"        in fields: gv.globalgain        =float(fields["SB_Gain"][0])/100
+        if "SB_Pitchrange"  in fields: gv.pitchnotes        =int(fields["SB_Pitchrange"][0])*2
         if "SB_Voice"       in fields:
             inval=gv.voicelist[int(fields["SB_Voice"][0])][0]
             if gv.getindex(0,gv.voicelist)>-1:inval=inval+1
@@ -136,7 +136,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def send_API(self):
         varName=["SB_RenewMedia","SB_SoundVolume","SB_MidiVolume",
-                 "SB_Preset","SB_Gain","SB_Transpose",
+                 "SB_Preset","SB_Gain","SB_Pitchrange",
                  "SB_Voice","SB_Scale","SB_Chord","SB_Filter",
                  "SB_FVroomsize","SB_FVdamp","SB_FVlevel","SB_FVwidth",
                  "SB_VIBRpitch","SB_VIBRspeed","SB_VIBRtrill",
@@ -174,7 +174,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if gv.ActuallyLoading:  ActuallyLoading="Yes"
         else:                   ActuallyLoading="No"
         self.wfile.write("'%s',%d,%d," % (ActuallyLoading,gv.volume,gv.volumeCC*100) )
-        self.wfile.write("%d,%d,%d," % (gv.PRESET,gv.globalgain*100,gv.globaltranspose) )
+        self.wfile.write("%d,%d,%d," % (gv.PRESET,gv.globalgain*100,gv.pitchnotes/2) )
         self.wfile.write("%d,%d,%d,%d," % (gv.currvoice,gv.currscale,gv.currchord,gv.currfilter) )
         self.wfile.write("%d,%d,%d,%d," % (gv.FVroomsize*100,gv.FVdamp*100,gv.FVlevel*100,gv.FVwidth*100) )
         if gv.VIBRtrill:   s="Yes"
