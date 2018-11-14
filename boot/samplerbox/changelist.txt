@@ -115,6 +115,7 @@ September/October 2018
   - Added guidelines for using HiFiBerry devices /boot/config.txt and /boot/samplerbox/configuration.txt
   - Made GPIO pins allocation configurable as local config variables
   - Introduced backtracks with variable loop part between intro and outtro
+    (requires rebuild of samplerbox_audio module)
   - Preset browsing with buttons now ignores undefined presets
   - Removed %%globaltranspose. Transpose is set on voice level and applies to keyboard range
   - Cleaned up fadeout(5) to fadeout(). Purpose of the variable was implemented July 31 2016 via %release
