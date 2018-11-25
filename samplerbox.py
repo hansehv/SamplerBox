@@ -1020,7 +1020,7 @@ def ActuallyLoad():
             #print "Trying " + file
             if os.path.isfile(file):
                 #print "Processing " + file
-                gv.samples[midinote, 127, 1] = Sound(file, midinote, 127, gv.sample_mode, PRERELEASE, gv.globalgain, PREXFADEOUT, PREXFADEIN, PREXFADEVOL)
+                gv.samples[midinote, 127, 1] = Sound(file, 1, midinote, 127, gv.sample_mode, PRERELEASE, gv.globalgain, PREXFADEOUT, PREXFADEIN, PREXFADEVOL)
                 fillnotes[midinote, 1] = fillnote
         voicenames[1]=[1,"Default"]
         voicemodes[1]=gv.sample_mode
