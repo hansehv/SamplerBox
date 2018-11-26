@@ -70,7 +70,8 @@ def readscales(ifile):
                 try:
                     x=gv.chordname.index(sheet[i][j])
                 except:
-                    print ("%s: Chord %s not defined, fallback to single note" %(ifile,str(scales[i][j])))
+                    print ("%s: Chord '%s' not defined in scale '%s', fallback to single note" %(ifile,sheet[i][j],sheet[i][0]))
+                    gv.ConfigErr=True
                     x=0
             values.append(x)
         gv.scalechord.append(values)
