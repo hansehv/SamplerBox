@@ -37,14 +37,21 @@ def blink():
     if blinkstage>blinkstages:
         blinkstage=0
 
+def setblink(short):
+    global blinkstage,blinkstages,blinkstage1
+    if short:
+        blinkstages=130
+        blinkstage1=125
+    else:
+        blinkstages=30
+        blinkstage1=15
+
 def red(on=True,blink=False,short=False):
-    global blinkstage,blinkstage1
     global redblink,greenblink
     if on:
         if blink:
             redblink=True
-            if short: blinkstage1=blinkstages*4/5
-            else: blinkstage1=blinkstages/2
+            setblink(short)
         else:
             redblink=False
             red_on()
@@ -54,13 +61,11 @@ def red(on=True,blink=False,short=False):
     gv.LEDblink=(redblink or greenblink)
 
 def green(on=True,blink=False,short=False):
-    global blinkstage,blinkstage1
     global redblink,greenblink
     if on:
         if blink:
             greenblink=True
-            if short: blinkstage1=blinkstages*4/5
-            else: blinkstage1=blinkstages/2
+            setblink(short)
         else:
             greenblink=False
             green_on()
