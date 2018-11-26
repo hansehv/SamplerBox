@@ -205,7 +205,8 @@ elif USE_LEDS:
     import LEDs
     def display(s2,s7=""):
         LEDs.signal()
-    LEDs.red()
+    LEDs.green(False)
+    LEDs.red(True,True)
 
 else:
     def display(s2,s7=""):
