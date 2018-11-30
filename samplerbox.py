@@ -163,6 +163,7 @@ PITCHRANGE *= 2     # actually it is 12 up and 12 down
 gv.samplesdir = SAMPLES_INBOX
 gv.stop127 = BOXSTOP127
 gv.sample_mode = BOXSAMPLE_MODE
+velocity_mode = BOXVELOCITY_MODE
 gv.pitchnotes = PITCHRANGE
 PITCHSTEPS = 2**PITCHBITS
 gv.pitchneutral = PITCHSTEPS/2
