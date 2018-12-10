@@ -7,4 +7,5 @@ It needs compilation to an .so module before usage, so make sure before first us
  - the compilation finished without errors.
 
 To compile perform next command from command line:
+
 gcc -Wall -Wextra -O -ansi -pedantic -fpermissive -shared interface.cpp -o interface.so
