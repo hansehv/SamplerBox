@@ -794,15 +794,23 @@ def ActuallyLoad():
     gv.samplesdir = SAMPLES_ONUSB if os.listdir(SAMPLES_ONUSB) else SAMPLES_INBOX      # use builtin folder (containing 0 Saw) if no user media containing samples has been found
     #gv.basename = next((f for f in os.listdir(gv.samplesdir) if f.startswith("%d " % gv.PRESET)), None)      # or next(glob.iglob("blah*"), None)
     presetlist=[]
-    for f in os.listdir(gv.samplesdir):
-        #print f
-        if re.match(r'[0-9]* .*', f):
-            if os.path.isdir(os.path.join(gv.samplesdir,f)):
-                p=int(re.search('\d* ', f).group(0).strip())
-                presetlist.append([p,f])
-                if p==gv.PRESET: gv.basename=f
-    presetlist=sorted(presetlist,key=lambda presetlist: presetlist[0])  # sort without having to import operator modules
+    try:
+        for f in os.listdir(gv.samplesdir):
+            if re.match(r'[0-9]* .*', f):
+                if os.path.isdir(os.path.join(gv.samplesdir,f)):
+                    p=int(re.search('\d* ', f).group(0).strip())
+                    presetlist.append([p,f])
+                    if p==gv.PRESET: gv.basename=f
+        presetlist=sorted(presetlist,key=lambda presetlist: presetlist[0])  # sort without having to import operator modules
+    except:
+        print "Error reading %s" %gv.samplesdir
     gv.presetlist=presetlist
+    if gv.basename=="None":
+        if len(gv.presetlist)>0:
+            gv.PRESET=gv.presetlist[0][0]
+            gv.basename=gv.presetlist[0][1]
+            print "Missing default preset=0, first available is %d" %gv.PRESET
+        else: print "No sample sets found"
 
     print "We have %s, we want %s" %(gv.currbase, gv.basename)
     if gv.basename:
