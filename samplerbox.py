@@ -459,7 +459,7 @@ class PlayingSound:
         except: pass
 
 class Sound:
-    def __init__(self, filename, voice, midinote, velocity, mode, release, gain, xfadeout, xfadein, xfadevol):
+    def __init__(self, filename, voice, midinote, velocity, mode, release, gain, xfadeout, xfadein, xfadevol, fractions):
         global RELSAMPLE
         wf = waveread(filename)
         self.fname = filename
@@ -472,6 +472,8 @@ class Sound:
         self.gain = gain
         self.xfadein = xfadein
         self.xfadevol = xfadevol
+        self.retune = 0
+        self.fractions = fractions
         self.eof = wf.getnframes()
         self.loop = GetLoopmode(mode)       # if no loop requested it's useless to check the wav's capability
         if self.loop > 0 and wf.getloops():
@@ -832,6 +834,9 @@ def ActuallyLoad():
     PREXFADEOUT=BOXXFADEOUT         # fallback to the samplerbox default
     PREXFADEIN=BOXXFADEIN           # fallback to the samplerbox default
     PREXFADEVOL=BOXXFADEVOL         # fallback to the samplerbox default
+    PREFRACTIONS=1                  # 1 midinote for 1 semitone for note filling; fractions=2 fills Q-notes = the octave having 24 notes in equal intervals
+    PREQNOTE="N"                    # The midinotes mapping the quarternotes (No/Yes/Even/Odd)
+    PREQCENT=50                     # The cents of qsharp (sori), the flat (koron) is qcent-100
     RELSAMPLE='N'
     PRETRANSPOSE=0
     gv.samples = {}
@@ -846,6 +851,8 @@ def ActuallyLoad():
     for voice in range(128):
         voicenames.append([voice, str(voice)])
     voicemodes = [""]*128
+    voiceqnote = ["N"]*128
+    voiceqcent = [50]*128
     gv.DefinitionTxt = ''
     gv.DefinitionErr = ''
 
@@ -903,6 +910,27 @@ def ActuallyLoad():
                         if m == 'Y' or m == 'N':
                             fillnote = m
                         continue
+                    if r'%%qnote' in pattern:
+                        m = pattern.split('=')[1].strip().title()
+                        if m == 'Y' or m == 'O' or m == 'E':
+                            PREQNOTE = m
+                        continue
+                    if r'%%qcent' in pattern:
+                        v = int(pattern.split('=')[1].strip())
+                        if v<0: v=v+100
+                        if v>99 or v==0:
+                            print "Qcent= %d ignored, should between 0 and +/- 100" % v
+                        else:
+                            PREQCENT = v
+                            if PREQNOTE == 'N':
+                                PREQNOTE = 'Y'
+                        continue
+                    #if r'%%fractions' in pattern:
+                    #    PREFRACTIONS = abs(int(pattern.split('=')[1].strip()))
+                    #    if PREFRACTIONS<1:
+                    #        print "Fractions %d set to 1" % PREFRACTIONS
+                    #        PREFRACTIONS = 1
+                    #    continue
                     if r'%%pitchbend' in pattern:
                         gv.pitchnotes = abs(int(pattern.split('=')[1].strip()))
                         if gv.pitchnotes > 12:
@@ -939,14 +967,16 @@ def ActuallyLoad():
                             raise exception ("Voicename %d=%m ignored" %(v,m))
                         voicenames[int(v)]=[int(v),v+" "+m]
                         continue
-                    defaultparams = { 'midinote': '-1', 'velocity': '127', 'gain': '1', 'notename': '', 'voice': '1', 'mode': gv.sample_mode, 'transpose': PRETRANSPOSE, 'release': PRERELEASE, 'xfadeout': PREXFADEOUT, 'xfadein': PREXFADEIN, 'xfadevol': PREXFADEVOL, 'fillnote': fillnote, 'backtrack': '-1' }
+                    defaultparams = { 'midinote': '-1', 'velocity': '127', 'gain': '1', 'notename': '', 'voice': '1', 'mode': gv.sample_mode, 'transpose': PRETRANSPOSE, 'release': PRERELEASE,\
+                                      'xfadeout': PREXFADEOUT, 'xfadein': PREXFADEIN, 'xfadevol': PREXFADEVOL, 'qnote': PREQNOTE, 'qcent': PREQCENT, 'fillnote': fillnote, 'backtrack': '-1' }
                     if len(pattern.split(',')) > 1:
                         defaultparams.update(dict([item.split('=') for item in pattern.split(',', 1)[1].replace(' ','').replace('%', '').split(',')]))
                     pattern = pattern.split(',')[0]
                     pattern = re.escape(pattern.strip())
                     pattern = pattern.replace(r"\%midinote", r"(?P<midinote>\d+)").replace(r"\%velocity", r"(?P<velocity>\d+)").replace(r"\%gain", r"(?P<gain>[-+]?\d*\.?\d+)").replace(r"\%voice", r"(?P<voice>\d+)")\
-                                     .replace(r"\%fillnote", r"(?P<fillnote>[YNyn]").replace(r"\%mode", r"(?P<mode>[A-Za-z0-9])").replace(r"\%transpose", r"(?P<transpose>\d+)")\
+                                     .replace(r"\%fillnote", r"(?P<fillnote>[YNyn])").replace(r"\%mode", r"(?P<mode>[A-Za-z0-9])").replace(r"\%transpose", r"(?P<transpose>\d+)")\
                                      .replace(r"\%release", r"(?P<release>\d+)").replace(r"\%xfadeout", r"(?P<xfadeout>\d+)").replace(r"\%xfadein", r"(?P<xfadein>\d+)")\
+                                     .replace(r"\%qnote", r"(?P<qnote>[YyNnOoEe])").replace(r"\%qcent", r"(?P<qcent>\d+)")\
                                      .replace(r"\%backtrack", r"(?P<backtrack>\d+)").replace(r"\%notename", r"(?P<notename>[A-Ga-g]#?[0-9])").replace(r"\*", r".*?").strip()    # .*? => non greedy
                     for fname in os.listdir(dirname):
                         if LoadingInterrupt:
@@ -1001,15 +1031,31 @@ def ActuallyLoad():
                             xfadein = int(info.get('xfadein', defaultparams['xfadein']))
                             if (xfadein>127): xfadein=127
                             xfadevol = abs(float(info.get('xfadevol', defaultparams['xfadevol'])))
+                            qnote = info.get('qnote', defaultparams['qnote']).title()[0][:1] 
+                            qcent = int(info.get('qcent', defaultparams['qcent']))
+                            if qcent < 0: qcent = qcent+100
+                            if qcent > 99 or qcent == 0:
+                                print "%qcent=%d ignored, should between 0 and +/- 100" % qcent
+                                qcent = PREQCENT
+                            else:
+                                if qnote == 'N' and qcent != PREQCENT:
+                                    qnote = 'Y'
+                            if qnote == 'Y': qnote = 'O'    # the default for qnotes is on odd midi notes (60=C).
+                            fractions = PREFRACTIONS    # not yet implemented for user change (future??)
+                            if qnote != 'N':
+                                voiceqnote[voice] = qnote   # pick the latest; we can't check everything, RTFM :-)
+                                voiceqcent[voice] = qcent   # pick the latest; we can't check everything, RTFM :-)
+                                if fractions == 1:          # condition needed in future
+                                    fractions=2             # for now always true
                             if (GetStopmode(mode)<-1) or (GetStopmode(mode)==127 and midinote>(127-gv.stop127)):
                                 print "invalid mode '%s' or note %d out of range, set to keyboard mode." % (mode, midinote)
                                 mode=PLAYLIVE   # invalid mode or note out of range
                             try:
                                 if backtrack>-1:    # Backtracks are intended for start/stop via controller, so we can use unplayable notes
-                                    gv.samples[130+backtrack, velocity, voice] = Sound(os.path.join(dirname, fname), voice, 130+backtrack, velocity, mode, release, gain, xfadeout, xfadein, xfadevol)
+                                    gv.samples[130+backtrack, velocity, voice] = Sound(os.path.join(dirname, fname), voice, 130+backtrack, velocity, mode, release, gain, xfadeout, xfadein, xfadevol, fractions)
                                     #print "Added %s as backtrack" %fname
                                 if midinote>-1:
-                                    gv.samples[midinote, velocity, voice] = Sound(os.path.join(dirname, fname), voice, midinote, velocity, mode, release, gain, xfadeout, xfadein, xfadevol)
+                                    gv.samples[midinote, velocity, voice] = Sound(os.path.join(dirname, fname), voice, midinote, velocity, mode, release, gain, xfadeout, xfadein, xfadevol, fractions)
                                     fillnotes[midinote, voice] = voicefillnote
                                     if voicemodes[voice]=="" or mode==PLAYMONO: voicemodes[voice]=mode
                                     elif voicemodes[voice]!=PLAYMONO and voicemodes[voice]!=mode: voicemodes[voice]="Mixed"
@@ -1030,7 +1076,7 @@ def ActuallyLoad():
             #print "Trying " + file
             if os.path.isfile(file):
                 #print "Processing " + file
-                gv.samples[midinote, 127, 1] = Sound(file, 1, midinote, 127, gv.sample_mode, PRERELEASE, gv.globalgain, PREXFADEOUT, PREXFADEIN, PREXFADEVOL)
+                gv.samples[midinote, 127, 1] = Sound(file, 1, midinote, 127, gv.sample_mode, PRERELEASE, gv.globalgain, PREXFADEOUT, PREXFADEIN, PREXFADEVOL, PREFRACTIONS)
                 fillnotes[midinote, 1] = fillnote
         voicenames[1]=[1,"Default"]
         voicemodes[1]=gv.sample_mode
@@ -1073,8 +1119,16 @@ def ActuallyLoad():
                     if midinote <= 0.5+(nexthigh+lastlow)/2: m=lastlow
                     else: m=nexthigh
                     #print "Note %d will be generated from %d" % (midinote, m)
+                    retune = 0
+                    if voiceqnote[voice] != 'N':
+                        if (midinote%2 ==0 and voiceqnote[voice]=='E') or (midinote%2 !=0 and voiceqnote[voice]=='O'):
+                            retune = voiceqcent[voice]-50      # value for filling above sample (=sharp)
+                            if midinote < m:        # but we're filling below sample (=flat)
+                                retune = -retune
+                        #print 'qnote=%s - note %d generated from %d has retune=%d' %(voiceqnote[voice], midinote, m, retune)
                     for velocity in xrange(128):
                         gv.samples[midinote, velocity, voice] = gv.samples[m, velocity, voice]
+                        gv.samples[midinote, velocity, voice].retune = retune*PITCHSTEPS/100
 
         if voicemodes[0]!="":                       # do we have the override / special effects voice ?
             for midinote in xrange(128):
@@ -1092,8 +1146,18 @@ def ActuallyLoad():
         gv.ActuallyLoading=False
         display("","%04d" % gv.PRESET)
 
+        ###################
+        #  Test it
+        #testnote=59
+        #testvalue=-100
+        #for velocity in xrange(128):
+        #    gv.samples[testnote,velocity,1].retune=testvalue*PITCHSTEPS/100
+        #print "file %s, midinote %d, correction %d" %(gv.samples[testnote,127,1].fname, gv.samples[testnote,127,1].midinote, gv.samples[testnote,velocity,1].retune)
+        #
+        ###################
+
     else:
-        #print 'Preset empty: ' + str(gv.PRESET)
+        print 'Preset empty: ' + str(gv.PRESET)
         gv.basename = "%d Empty preset" %gv.PRESET
         gv.ActuallyLoading=False
         display("","E%03d" % gv.PRESET)

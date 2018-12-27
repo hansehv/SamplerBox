@@ -26,6 +26,9 @@
 #      - implemented vibrato (varying pitch)
 #  October 2018
 #      - Excluded effects track (voice 0) from pitchbend/vibrato
+#  December 2018
+#      - Included possibility to "retune" per note
+#      - Included not filling in fractions: 1=semitones, 2=half-of-that= q-notes in equal intervals
 #
 #  Rebuild with "python setup.py build_ext --inplace"
 
@@ -57,7 +60,7 @@ def mixaudiobuffers(list playingsounds, list rmlist, int frame_count, numpy.ndar
         if snd.sound.voice==0:      # Exclude FXtrack from notefill and pitchbend
             speed = SPEED[SPEEDRANGE*PITCHSTEPS]
         else:
-            i = (SPEEDRANGE+snd.note-snd.sound.midinote) * PITCHSTEPS + PITCHBEND
+            i = (SPEEDRANGE+snd.note-snd.sound.midinote) * PITCHSTEPS / snd.sound.fractions + snd.sound.retune + PITCHBEND
             if i < 0:                                # below zero is out of limits
                 i = 0                                # save the program by ruining the pitch :-(
             else:
