@@ -28,7 +28,7 @@
 #      - Excluded effects track (voice 0) from pitchbend/vibrato
 #  December 2018
 #      - Included possibility to "retune" per note
-#      - Included not filling in fractions: 1=semitones, 2=half-of-that= q-notes in equal intervals
+#      - Included note filling in fractions: 1=semitones, 2=half-of-that= q-notes in equal intervals
 #
 #  Rebuild with "python setup.py build_ext --inplace"
 
@@ -55,12 +55,17 @@ def mixaudiobuffers(list playingsounds, list rmlist, int frame_count, numpy.ndar
         looppos = snd.loop          # can be changed to -1 for release marker processing
         length = snd.end            # can be end-loop or eof, depending normal or release marker process
         vel = snd.sound.gain * snd.vel / 127.0
+        fractions=snd.sound.fractions
 
         # Below overflow protection values correspond with tables in samplerbox.py
         if snd.sound.voice==0:      # Exclude FXtrack from notefill and pitchbend
             speed = SPEED[SPEEDRANGE*PITCHSTEPS]
         else:
-            i = (SPEEDRANGE+snd.note-snd.sound.midinote) * PITCHSTEPS / snd.sound.fractions + snd.sound.retune + PITCHBEND
+            if fractions==1:
+                j=0
+            else:
+                j=1/fractions-0.01  # enable rounding without math
+            i = (SPEEDRANGE+(snd.note-snd.sound.midinote+j)/fractions) * PITCHSTEPS + snd.sound.retune + PITCHBEND
             if i < 0:                                # below zero is out of limits
                 i = 0                                # save the program by ruining the pitch :-(
             else:
