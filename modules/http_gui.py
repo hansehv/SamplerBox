@@ -85,10 +85,9 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if "SB_Gain"        in fields: gv.globalgain        =float(fields["SB_Gain"][0])/100
         if "SB_Pitchrange"  in fields: gv.pitchnotes        =int(fields["SB_Pitchrange"][0])*2
         if "SB_Voice"       in fields:
-            inval=gv.voicelist[int(fields["SB_Voice"][0])][0]
-            if gv.getindex(0,gv.voicelist)>-1:inval=inval+1
-            gv.currvoice=inval
-            gv.sample_mode=gv.voicelist[gv.getindex(gv.currvoice,gv.voicelist)][2]
+            if gv.voicelist[0][0]==0:   i=1
+            else:   i=0
+            gv.MC[gv.getindex(gv.VOICES,gv.MC)][2](int(fields["SB_Voice"][0])+i,0)
         if "SB_Scale"       in fields:
             inval=int(fields["SB_Scale"][0])
             if gv.currscale==inval: scalechange=False
@@ -136,7 +135,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def send_API(self):
         varName=["SB_RenewMedia","SB_SoundVolume","SB_MidiVolume",
-                 "SB_Preset","SB_Gain","SB_Pitchrange",
+                 "SB_Preset","SB_Gain","SB_Pitchrange","SB_Notemap",
                  "SB_Voice","SB_Scale","SB_Chord","SB_Filter",
                  "SB_FVroomsize","SB_FVdamp","SB_FVlevel","SB_FVwidth",
                  "SB_VIBRpitch","SB_VIBRspeed","SB_VIBRtrill",
@@ -162,8 +161,8 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write("\n\n// Static tables:")
         self.wfile.write("\nSB_numvars=%d;var SB_VarName;\nvar SB_VarVal;" % (len(varName)) )
         self.wfile.write("\nSB_numnotes=%d;SB_Notename=%s;" % (len(notesymbol),notesymbol) )
-        self.wfile.write("\nSB_numchords=%d;SB_Chordoffset=%d;SB_Chordname=%s;\nSB_Chordnote=%s;" % (len(gv.chordname),0,gv.chordname,gv.chordnote) )
-        self.wfile.write("\nSB_numscales=%d;SB_Scaleoffset=%d;SB_Scalename=%s;\nSB_Scalechord=%s;" % (len(gv.scalesymbol),100,gv.scalesymbol,gv.scalechord) )
+        self.wfile.write("\nSB_numchords=%d;SB_Chordname=%s;\nSB_Chordnote=%s;" % (len(gv.chordname),gv.chordname,gv.chordnote) )
+        self.wfile.write("\nSB_numscales=%d;SB_Scalename=%s;\nSB_Scalechord=%s;" % (len(gv.scalesymbol),gv.scalesymbol,gv.scalechord) )
         self.wfile.write("\nSB_numfilters=%d;SB_filters=%s" % (len(gv.Filters),gv.Filterkeys) )
 
         self.wfile.write("\n\n// Function for (re)filling all above variables with actual values from SamplerBox:\nfunction SB_GetAPI() {")
@@ -174,7 +173,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if gv.ActuallyLoading:  ActuallyLoading="Yes"
         else:                   ActuallyLoading="No"
         self.wfile.write("'%s',%d,%d," % (ActuallyLoading,gv.volume,gv.volumeCC*100) )
-        self.wfile.write("%d,%d,%d," % (gv.PRESET,gv.globalgain*100,gv.pitchnotes/2) )
+        self.wfile.write("%d,%d,%d,'%s'," % (gv.PRESET,gv.globalgain*100,gv.pitchnotes/2,gv.currnotemap) )
         self.wfile.write("%d,%d,%d,%d," % (gv.currvoice,gv.currscale,gv.currchord,gv.currfilter) )
         self.wfile.write("%d,%d,%d,%d," % (gv.FVroomsize*100,gv.FVdamp*100,gv.FVlevel*100,gv.FVwidth*100) )
         if gv.VIBRtrill:   s="Yes"
@@ -190,7 +189,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         xvoice="No"
         for i in range(len(gv.voicelist)):      # filter out effects track
             if gv.voicelist[i][0]==0:  xvoice="Yes"
-            else:   vlist.append([gv.voicelist[i][0],gv.voicelist[i][1],gv.voicelist[i][2]])
+            else:   vlist.append(gv.voicelist[i])
         self.wfile.write("\tSB_numvoices=%d;SB_xvoice='%s';SB_Voicelist=%s;\n" % (len(vlist),xvoice,vlist) )
         self.wfile.write("\tSB_numbtracks=%d;SB_bTracks=%s;\n" % (len(gv.btracklist),gv.btracklist) )
         self.wfile.write("};")
