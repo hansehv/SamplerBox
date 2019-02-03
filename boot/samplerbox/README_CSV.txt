@@ -5,15 +5,15 @@ General remarks the csv files:
 - A field starting with # means this field plus following are comments
 - Rows containing syntax errors will be ignored (with error messages)
 - Error messages are printed when the script is run manually
-
-Syntax of midi_controllers.csv:
+-----------------------------------------------------------------------------------
+Syntax of controllerCCs.csv:
 - Headings!
-- Column1: Controller name
-- Column2: The control change this controller sends
-- Column3: The value sent by this controller (this is often configurable)
+- Controller: Controller name
+- CC: The control change number this controller sends
+- Val: The value for this control change sent by this controller (this is often configurable)
      Value -1 indicates a continuous controller (wheel, pot, drawbar)
-
-Syntax of midi_mapping.csv:
+-----------------------------------------------------------------------------------
+Syntax of CCmap.csv:
 - Headings!
 - Controller: name as defined in midi_controllers.csv (this is the link)
      You can, but do not have to, list all defined controllers here
@@ -36,7 +36,16 @@ Syntax of midi_mapping.csv:
     - Toggle: will set function on when receiving value and off on next receive value
     - SwitchOn: will set function on when receiving value
     - SwitchOff: will set function off when receiving value
-
+---- ==> the CCmap.csv in sampleset directory has an extra leftmost column: <== ---
+- Voice: to which voice this override (change or addition) applies:
+    - 0: applies to all voices in this set except when an explicit voice override is also specified)
+    - 1-127: override this voice only
+-----------------------------------------------------------------------------------
+Syntax of keynotes.csv (optional, if omitted, note mapping can only be done via midinotes):
+- Headings!
+- Key: Desired name of the midisensor (key, snare, pad..)
+- Midinote: note sent by this midisensor
+-----------------------------------------------------------------------------------
 Syntax of chords.csv:
 - No headings!
 - Column1: chordname
@@ -44,10 +53,10 @@ Syntax of chords.csv:
   So column2 is mostly 0 (but you may have creative ideas :-)
   Yes, also negative values are allowed...
 - only positive values are allowed
-
-Syntax of scales.csv:
+-----------------------------------------------------------------------------------
+Syntax of scales.csv (only works in 12-tone scales):
 - Headings!
-- Column1: scalename
+- Column1=Scale: scalename
 - Next 12 columns give chords to played when heading note is played
   These chords have to be defined in the chords.csv
 - Values 0 or - mean single note
