@@ -162,10 +162,9 @@ var SB_element={
 		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+SB_Chordname[SB_Chord]+'</SPAN>';
 	},
 	elem_SB_Chords: function(elem_name){
-		html='<TABLE BORDER="1"><TR><TH>Chord</TH><TH>CCval</TH><TH>Notes for C</TH></TR>';
+		html='<TABLE BORDER="1"><TR><TH>Chord</TH><TH>Notes for C</TH></TR>';
 		for (i=1;i<SB_numchords;i++){
-			ccnum=i+SB_Chordoffset;
-			html=html+'<TR VALIGN="top"><TD>'+SB_Chordname[i]+'</TD><TD>'+ccnum+'</TD><TD>';
+			html=html+'<TR VALIGN="top"><TD>'+SB_Chordname[i]+'</TD><TD>';
 			filler="";
 			for (j=0;j<SB_Chordnote[i].length;j++){
 				html=html+filler+SB_Notename[SB_Chordnote[i][j]];
@@ -176,10 +175,9 @@ var SB_element={
 		document.getElementById(elem_name).innerHTML=html+'</TABLE>';
 	},
 	elem_SB_Scales: function(elem_name){
-		html='<TABLE BORDER="1"><TR><TH>Scale</TH><TH>CCval</TH><TH>Implemented Chords</TH></TR>';
+		html='<TABLE BORDER="1"><TR><TH>Scale</TH><TH>Implemented Chords</TH></TR>';
 		for (i=1;i<SB_numscales;i++){
-			ccnum=i+SB_Scaleoffset;
-			html=html+'<TR VALIGN="top"><TD>'+SB_Scalename[i]+'</TD><TD>'+ccnum+'</TD><TD>';
+			html=html+'<TR VALIGN="top"><TD>'+SB_Scalename[i]+'</TD><TD>';
 			filler="";
 			for (j=0;j<SB_Scalechord[i].length;j++){
 				if (SB_Scalechord[i][j]>0){
