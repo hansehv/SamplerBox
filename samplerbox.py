@@ -84,35 +84,41 @@ def setScale(x,*z):
         gv.currchord=0      # playing chords excludes scales
         gv.currscale=y
         display("")
-notemap=[]
 CCmap=[]
 def setVoice(x, i=0, *z):
-    global notemap, CCmap
+    global CCmap
     if i==0:
-        voice=int(x)
+        xvoice=int(x)
     else:
-        voice=getindex(int(x),gv.voicelist)
-    if voice>-1 and voice!=gv.currvoice:        # ignore if active or undefined
-        gv.currvoice=gv.voicelist[voice][0]
-        gv.sample_mode=gv.voicelist[voice][2]
-        gv.currnotemap=gv.voicelist[voice][3]
+        xvoice=getindex(int(x),gv.voicelist)
+    if xvoice>-1:                       # ignore if undefined
+        voice=gv.voicelist[xvoice][0]
+        if voice!=gv.currvoice:         # also ignore if active
+            setNotemap(gv.voicelist[xvoice][3])
+            gv.currvoice=voice
+            gv.sample_mode=gv.voicelist[xvoice][2]
+            gv.CCmap = list(gv.CCmapBox)            # construct this voice's CC setup
+            for i in xrange(len(gv.CCmapSet)):
+                found=False
+                if gv.CCmapSet[i][3]==0 or gv.CCmapSet[i][3]==voice:# voice applies
+                    for j in xrange(len(gv.CCmap)):                 # so check if button is known
+                        if gv.CCmapSet[i][0]==gv.CCmap[j][0]:
+                            found=True
+                            if (gv.CCmapSet[i][3]>=gv.CCmap[j][3]): # voice specific takes precedence
+                                gv.CCmap[j]=gv.CCmapSet[i]          # replace entry
+                            continue
+                    if not found:
+                        gv.CCmap.append(gv.CCmapSet[i])             # else add entry
+        display("")
+notemap=[]
+def setNotemap(x, *z):
+    global notemap
+    if x!=gv.currnotemap:
+        gv.currnotemap=x
 	notemap=[]
         for i in xrange(len(gv.notemap)):       # do we have note mapping ?
             if gv.notemap[i][0]==gv.currnotemap:
                 notemap.append(gv.notemap[i])
-        gv.CCmap = list(gv.CCmapBox)            # construct this voice's CC setup
-        for i in xrange(len(gv.CCmapSet)):
-            found=False
-            if gv.CCmapSet[i][3]==0 or gv.CCmapSet[i][3]==voice:# voice applies
-                for j in xrange(len(gv.CCmap)):                 # so check if button is known
-                    if gv.CCmapSet[i][0]==gv.CCmap[j][0]:
-                        found=True
-                        if (gv.CCmapSet[i][3]>=gv.CCmap[j][3]): # voice specific takes precedence
-                            gv.CCmap[j]=gv.CCmapSet[i]          # replace entry
-                        continue
-                if not found:
-                    gv.CCmap.append(gv.CCmapSet[i])             # else add entry
-        display("")
 playingbacktracks=0
 def playBackTrack(x,*z):
     global playingbacktracks
@@ -949,6 +955,7 @@ def ActuallyLoad():
     gv.globalgain = 1
     gv.currvoice = 0
     gv.notemap=[]
+    gv.currnotemap=""
     gv.sample_mode=BOXSAMPLE_MODE   # fallback to the samplerbox default
     velocity_mode=BOXVELOCITY_MODE  # fallback to the samplerbox default
     gv.stop127=BOXSTOP127           # fallback to the samplerbox default
@@ -961,7 +968,7 @@ def ActuallyLoad():
     PREXFADEVOL=BOXXFADEVOL         # fallback to the samplerbox default
     PREFRACTIONS=1                  # 1 midinote for 1 semitone for note filling; fractions=2 fills Q-notes = the octave having 24 notes in equal intervals
     PREQNOTE="N"                    # The midinotes mapping the quarternotes (No/Yes/Even/Odd)
-    PREQCENT=50                     # The cents of qsharp (sori), the flat (koron) is qcent-100
+    PREQCENT=50                     # The cents of qsharp (sori), the qflat (koron) is qcent-100
     PRENOTEMAP=""
     RELSAMPLE='N'
     PRETRANSPOSE=0
@@ -992,7 +999,7 @@ def ActuallyLoad():
 
     #print 'Preset loading: %s ' % gv.basename
     display("Loading %s" % gv.basename,"L%03d" % gv.PRESET)
-    gv.currnotemap=getcsv.readnotemap(os.path.join(dirname, NOTEMAP_DEF))
+    getcsv.readnotemap(os.path.join(dirname, NOTEMAP_DEF))
     gv.CCmapSet=getcsv.readCCmap(os.path.join(dirname, CTRLMAP_DEF), True)
     definitionfname = os.path.join(dirname, gv.SAMPLESDEF)
     if os.path.isfile(definitionfname):
@@ -1249,7 +1256,7 @@ def ActuallyLoad():
             v=getindex(voice, voicenames)
             gv.voicelist.append([voice, voicenames[v][1], voicemodes[voice], voicenotemap[voice]])
             if gv.currvoice==0:     # make sure to start with a playable non-empty voice
-                setVoice(voice,None)
+                setVoice(voice, None)
             for midinote in xrange(128):    # first complete velocities in found normal notes
                 lastvelocity = None
                 for velocity in xrange(128):
