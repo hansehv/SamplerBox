@@ -108,6 +108,7 @@ CCmapSet=[]
 CCmapBox=[]
 keynames=[]
 notemap=[]
+notemaps=[]
 currnotemap=""
 
 # Pointers to recursive/cross-used procs and related vars
