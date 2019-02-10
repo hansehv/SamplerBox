@@ -42,7 +42,12 @@ BOXSTOP127 = 109                ; Value of "Right side", "Left side" has some no
 volume = 87                     ; the startup (alsa=output) volume (0-100), change with function buttons
 volumeCC = 1.0                  ; assumed value of the volumeknob controller before first use, max=1.0 (the knob can only decrease).
 BOXRELEASE = 30                 ; 30 results in the samplerbox default (FADEOUTLENGTH=30000)
-RELSAMPLE= N                    ; release samples: N=none, E=Embedded, S=Separate(not implemented)
+BOXDAMP = 10                    ; the "release value for damp": how quick do sounds die on damp pedal and retrigger
+BOXRETRIGGER = R                ; action on retriggered still playing notes (occurs in once/loop modes and chords):
+#               R:      - Noteoff and fadeout according release value
+#               D:      - Noteoff and fadeout according damp value
+#               Y:      - Yes, retrigger is allowed, keep the playing sound
+RELSAMPLE = N                   ; release samples: N=none, E=Embedded, S=Separate(not implemented)
 BOXXFADEOUT = 10                ; crossfade glues the sample to the release sample
 BOXXFADEIN = 1                  ; crossfade glues the sample to the release sample
 BOXXFADEVOL = 1.0               ; crossfade glues the sample to the release sample

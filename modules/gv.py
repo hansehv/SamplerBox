@@ -29,6 +29,9 @@ PITCHWHEEL="PitchWheel"
 MODWHEEL="ModWheel"
 VOLUME="Volume"
 SUSTAIN="Sustain"
+DAMP="Damp"
+DAMPNEW="DampNew"
+DAMPLAST="DampLast"
 REVERBLVL="ReverbLvl"
 REVERBROOM="ReverbRoom"
 REVERBDAMP="ReverbDamp"
@@ -63,6 +66,7 @@ playingnotes={}
 sustainplayingnotes=[]
 triggernotes=[]
 sustain=False       # only in midicallback
+damp=False          # only in midicallback
 playingsounds=[]
 presetlist=[]
 btracklist=[]
@@ -86,7 +90,6 @@ FVdamp=0
 FVlevel=0
 FVwidth=0
 VIBRpitch=0
-
 VIBRspeed=0
 VIBRvalue=0         # Value 0 gives original note
 VIBRtrill=0
@@ -99,12 +102,20 @@ chordnote=[]
 scalesymbol=[]
 scalename=[]
 scalechord=[]
-midiCCs=[]
-midimap=[]
+controllerCCs=[]
+CCmap=[]
+CCmapSet=[]
+CCmapBox=[]
+keynames=[]
+notemap=[]
+notemaps=[]
+currnotemap=""
 
 # Pointers to recursive/cross-used procs and related vars
 # All initialized in main script
 getindex=None
+notename2midinote=None
+setVoice=None
 display=None
 cp=None
 FVsetlevel=None
@@ -131,6 +142,9 @@ MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch)
 [MODWHEEL,0,safeguard],
 [VOLUME,0,safeguard],
 [SUSTAIN,3,safeguard],
+[DAMP,3,safeguard],
+[DAMPNEW,3,safeguard],
+[DAMPLAST,3,safeguard],
 [REVERBLVL,0,safeguard], 
 [REVERBROOM,0,safeguard],
 [REVERBDAMP,0,safeguard],

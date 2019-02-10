@@ -1,8 +1,11 @@
 Controller,Type,Sets,Mode,
-UA,Fixed,PitchWheel,Continuous,#Unneeded with standard pitchwheel/lever (message 14)
+UA,Fixed,PitchWheel,Continuous,#Unneeded with standard pitchwheel/lever (message 14 iso 11)
 ModWheel,Fixed,ModWheel,Continuous,
 Volume,Fixed,Volume,Continuous,
 Sustain,Fixed,Sustain,Switch,
+UA,Fixed,Damp,Switch,# Damp all (conventional damp)
+UA,Fixed,DampNew,Switch,"# Damp only new notes,  a kind of pizzicato effect"
+UA,Fixed,DampLast,Switch,# Notes played during pedal press are damped on pedal release
 Drawbar1,Fixed,ReverbLvl,Continuous,
 Drawbar2,Fixed,LFOspeed,Continuous,
 Drawbar3,Fixed,VibrDepth,Continuous,

@@ -118,8 +118,22 @@ September/October 2018
     (requires rebuild of samplerbox_audio module)
   - Preset browsing with buttons now ignores undefined presets
   - Removed %%globaltranspose. Transpose is set on voice level and applies to keyboard range
-  - Cleaned up fadeout(5) to fadeout(). Purpose of the variable was implemented July 31 2016 via %release
+  - Cleaned up fadeout(50) to fadeout(). Purpose of the variable was implemented July 31 2016 via %release
 November 2018
   - Migrated alsamixer and serial midi coding to modules
   - Added midi running status to serialmidi module. This is untested as I don't have the HW for this.
   - Bugfixes and cleanups
+December 2018
+  - Reading of samplesets more robust
+  - Support for quarter tones with possibility for q-note displacement other than 50 cents.
+January 2019:
+  - Introduced mapping of the triggered notes to played notes - THIS CHANGES THE NAMES OF CSV FILES in configdir
+    This enables retune/note, split keyboard, playing q-notes & dastgahs on western keyboards
+  - Implemented %damp (for damp pedal and other usage) - THIS CHANGES THE CONFIGURATION.TXT
+    This enables 1) damp, 2) a kind of pizzicato effect and 3) damping of last note(s)
+  - Implemented %retrigger (once/loop modes and chords) - THIS CHANGES THE CONFIGURATION.TXT
+  - Improved handling of MAX_POLYPONY and backtrack handling
+  - Introduced override on midiCC mapping per voice
+  - Cosmetic changes and bugfixes
+Februari 2019:
+  - Added changing notemaps to webgui
