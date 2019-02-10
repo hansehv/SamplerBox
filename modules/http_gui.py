@@ -8,7 +8,7 @@ import threading
 import BaseHTTPServer,urllib, mimetypes
 from urlparse import urlparse,parse_qs
 import os,shutil,subprocess
-import gv,LFO
+import gv,LFO,arp
 notesymbol=["C","C&#9839;","D","E&#9837;","E","F","F&#9839;","G","G&#9839;","A","B&#9837;","B","FX"]  # 0 in scalechord table, also used in loadsamples(!)
 HTTP_PORT = 80
 
@@ -88,6 +88,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             if gv.voicelist[0][0]==0:   i=1
             else:   i=0
             gv.MC[gv.getindex(gv.VOICES,gv.MC)][2](int(fields["SB_Voice"][0])+i,0)
+        if "SB_Notemap"     in fields:gv.MC[gv.getindex(gv.NOTEMAPS,gv.MC)][2](int(fields["SB_Notemap"][0]))
         if "SB_Scale"       in fields:
             inval=int(fields["SB_Scale"][0])
             if gv.currscale==inval: scalechange=False
@@ -156,7 +157,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write("\nvar SB_Samplesdir;var SB_LastMidiNote;var SB_LastMusicNote;var SB_DefErr;")
         self.wfile.write("\nvar SB_Mode;var SB_numpresets;var SB_Presetlist;")
         self.wfile.write("\nvar SB_xvoice;var SB_numvoices;var SB_Voicelist;")
-        self.wfile.write("\nvar SB_numbtracks;var SB_bTracks;")
+        self.wfile.write("\nvar SB_numbtracks;var SB_bTracks;var SB_numnotemaps;var SB_Notemaps;")
 
         self.wfile.write("\n\n// Static tables:")
         self.wfile.write("\nSB_numvars=%d;var SB_VarName;\nvar SB_VarVal;" % (len(varName)) )
@@ -192,6 +193,9 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             else:   vlist.append(gv.voicelist[i])
         self.wfile.write("\tSB_numvoices=%d;SB_xvoice='%s';SB_Voicelist=%s;\n" % (len(vlist),xvoice,vlist) )
         self.wfile.write("\tSB_numbtracks=%d;SB_bTracks=%s;\n" % (len(gv.btracklist),gv.btracklist) )
+        notemaps=["None"]
+        notemaps.extend(gv.notemaps)
+        self.wfile.write("\tSB_numnotemaps=%d;SB_Notemaps=%s;\n" % (len(notemaps),notemaps) )
         self.wfile.write("};")
 
 def HTTP_Server(server_class=BaseHTTPServer.HTTPServer, handler_class=HTTPRequestHandler, port=HTTP_PORT):
