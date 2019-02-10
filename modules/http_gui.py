@@ -40,8 +40,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(fs[6]))
             self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
             self.end_headers()
-            shutil.copyfileobj(f, self.wfile)  - Introduced override on midiCC mapping per voice
-  - Cosmetic changes and bugfixes
+            shutil.copyfileobj(f, self.wfile)
             f.close()
         
     def do_HEAD(self):
@@ -56,8 +55,6 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         field_data = self.rfile.read(length)
         fields=parse_qs(field_data)
         #print fields
-          - Introduced override on midiCC mapping per voice
-  - Cosmetic changes and bugfixes
         if "SB_RenewMedia" in fields:
             if fields["SB_RenewMedia"][0] == "Yes":
                 gv.basename="None"
@@ -68,8 +65,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             if gv.PRESET!=inval:
                 gv.PRESET=inval;
                 self.LoadSamples()
-                return  - Introduced override on midiCC mapping per voice
-  - Cosmetic changes and bugfixes
+                return
         if "SB_DefinitionTxt" in fields:
             if gv.DefinitionTxt != fields["SB_DefinitionTxt"][0]:
                 gv.DefinitionTxt = fields["SB_DefinitionTxt"][0]
@@ -87,8 +83,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if "SB_MidiVolume"  in fields: gv.volumeCC          =float(fields["SB_MidiVolume"][0])/100
         if "SB_Gain"        in fields: gv.globalgain        =float(fields["SB_Gain"][0])/100
         if "SB_Pitchrange"  in fields: gv.pitchnotes        =int(fields["SB_Pitchrange"][0])*2
-        if "SB_Voice"       in fields:  - Introduced override on midiCC mapping per voice
-  - Cosmetic changes and bugfixes
+        if "SB_Voice"       in fields:
             if gv.voicelist[0][0]==0:   i=1
             else:   i=0
             gv.MC[gv.getindex(gv.VOICES,gv.MC)][2](int(fields["SB_Voice"][0])+i,0)
