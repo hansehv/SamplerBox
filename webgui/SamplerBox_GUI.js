@@ -34,6 +34,7 @@ var SB_variables={	// make sure all passed parameters are covered here
 	v_SB_Preset: function(val){SB_Preset=val;},
 	v_SB_Gain: function(val){SB_Gain=val;},
 	v_SB_Pitchrange: function(val){SB_Pitchrange=val;},
+	v_SB_Notemap: function(val){SB_Notemap=val;},
 	v_SB_Voice: function(val){SB_Voice=val;},
 	v_SB_Scale: function(val){SB_Scale=val;},
 	v_SB_Chord: function(val){SB_Chord=val;},
@@ -70,6 +71,12 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 	},
 	input_SB_Voice: function(input_name,name,val,text){
 		return(text+SB_listselect(input_name,name,val,SB_Voicelist,2,SB_numvoices));
+	},
+	input_SB_Notemap: function(input_name,name,val,text){
+		for (i=1;i<SB_numnotemaps;i++){
+			if (SB_Notemaps[i]==SB_Notemap) break;
+			}
+		return(text+SB_listselect(input_name,name,i,SB_Notemaps,1,SB_numnotemaps));
 	},
 	input_SB_SoundVolume: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
