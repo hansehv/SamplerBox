@@ -22,11 +22,14 @@ SAMPLESDEF="definition.txt"
 HTTP_ROOT="webgui"
 FIXED="Fixed"
 VOICES="Voices"
+NOTEMAPS="Notemaps"
 BACKTRACKS="BackTracks"
 CHORDS="Chords"
 SCALES="Scales"
 PITCHWHEEL="PitchWheel"
 MODWHEEL="ModWheel"
+PROGUP="ProgramUp"
+PROGDN="ProgramDown"
 VOLUME="Volume"
 SUSTAIN="Sustain"
 DAMP="Damp"
@@ -49,6 +52,15 @@ LFOSPEED="LFOspeed"
 EFFECTSOFF="EffectsOff"
 AUTOCHORDOFF="AutoChordOff"
 PANIC="Panic"
+ARP="Arpeggiator"
+ARPTEMPO="ArpTime"
+ARPSUSTAIN="ArpSustain"
+ARPUP="ArpUp"
+ARPDOWN="ArpDown"
+ARPUPDOWN="ArpUpDown"
+ARPRANDOM="ArpRandom"
+ARPRNDLIN="ArpRndLin"
+ARPFADE="ArpFadeout"
 UA="UA"
 
 # Internal vars
@@ -138,6 +150,8 @@ def safeguard (*vals):  # dedicated proc for MC-table
         arr.append(val)
     print "gv.Safeguard: call to unset procedure for %s:%s" %(arr[1],arr[0])
 MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch),procedure)
+[PROGUP,1,safeguard],
+[PROGDN,1,safeguard],
 [PITCHWHEEL,0,safeguard],
 [MODWHEEL,0,safeguard],
 [VOLUME,0,safeguard],
@@ -163,7 +177,17 @@ MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch)
 [AUTOCHORDOFF,1,safeguard],
 [PANIC,1,safeguard],
 [VOICES,2,safeguard],
+[NOTEMAPS,2,safeguard],
 [BACKTRACKS,2,safeguard],
 [CHORDS,2,safeguard],
-[SCALES,2,safeguard]
+[SCALES,2,safeguard],
+[ARP,1,safeguard],
+[ARPTEMPO,0,safeguard],
+[ARPSUSTAIN,0,safeguard],
+[ARPUP,1,safeguard],
+[ARPDOWN,1,safeguard],
+[ARPUPDOWN,1,safeguard],
+[ARPRANDOM,1,safeguard],
+[ARPRNDLIN,1,safeguard],
+[ARPFADE,0,safeguard]
 ]

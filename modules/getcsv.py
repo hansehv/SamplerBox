@@ -151,7 +151,7 @@ def readCCmap(ifile, override=False):
                                 values[1]=y
                                 CCmap.append(values)
                             else:
-                                print("%s: Type '%s' unrecognized, ignored %s" %(ifile, sheet[i][1], str(sheet[i])))
+                                print("%s: Control '%s' unrecognized, ignored %s" %(ifile, mc, str(sheet[i])))
                                 gv.ConfigErr=True
     except:
         if not override:
@@ -181,7 +181,6 @@ def readkeynames(ifile):
 
 def readnotemap(ifile):
     # notemap: [set, fractions, key, note, retune, playvoice]
-    default=""
     gv.notemap=[]
     try:        # note mapping is optional
         sheet=readcsv(ifile,4)
@@ -192,8 +191,6 @@ def readnotemap(ifile):
                 if values[0]=="":
                     print ("%s: Sets must have a name, ignored %s" %(ifile, sheet[i]))
                     continue
-                if default=="":
-                    default=values[0]
                 try:
                     values[1]=int(sheet[i][1])
                     if values[1]<1 or values[1]>2:
@@ -228,9 +225,11 @@ def readnotemap(ifile):
                     except:
                         pass
                 gv.notemap.append(values)
+                if gv.getindex(values[0],gv.notemaps,True)<0:
+                    gv.notemaps.append(values[0])
             else:
                 print ("%s: ignored %s" %(ifile, sheet[i]))
                 gv.ConfigErr=True
     except:
         pass    # notemapping is optional
-    return default
+    return
