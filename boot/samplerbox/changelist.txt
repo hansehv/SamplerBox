@@ -139,4 +139,5 @@ Februari 2019:
   - Cosmetic changes and bugfixes
   - Added changing notemaps to webgui
   - Added Arpeggiator
+  - Made radiobuttons in webgui more versatile
   - Enabled program changes via midi CC's for devices without program change button - THIS CHANGES THE CCmap.csv
