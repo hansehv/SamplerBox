@@ -126,9 +126,9 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             gv.TREMtrill=False
             gv.TREMspeed=gv.VIBRspeed
         if "SB_ARPeggiator" in fields:
-            if fields["SB_ARPeggiator"][0].title()=="On":arp.active=True
-            else: arp.active=False
-            arp.power(arp.active)
+            active=False
+            if fields["SB_ARPeggiator"][0].title()=="On":active=True
+            arp.power(active)
         if "SB_ARPstep"     in fields: arp.tempo(int(fields["SB_ARPstep"][0])*1.27)
         if "SB_ARPsustain"  in fields: arp.sustain(int(fields["SB_ARPsustain"][0])*1.27)
         if "SB_ARPloop"     in fields:

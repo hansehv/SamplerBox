@@ -77,15 +77,24 @@ def process():
 
 def power(onoff):
     global active
-    if onoff!=active:
-        if onoff:
-            rewind()        # initialize before start
-            active=True
-        else:
-            active=False
-            rewind()        # initialize for safety...
+    if onoff and not active:
+        for i in gv.playingnotes:           # stop current keyboard activity
+            for m in gv.playingnotes[i]:
+                note=m.playingnote()
+                if note>(127-gv.stop127) and m.playingnote()<gv.stop127:
+                    m.fadeout()
+                    gv.playingnotes[note] = []
+                    gv.triggernotes[note] = 128
+        rewind()        # initialize before start
+        active=True     # and start...
+    if not onoff and active:
+        active=False    # stop first
+        rewind()        # initialize completely for safety...
 def togglepower(CCval, *z):
-    power(not active)
+    if currnote<0:
+        power(True)
+    else:
+        power(False)
 gv.MC[gv.getindex(gv.ARP,gv.MC)][2]=togglepower
 
 def noteoff():
