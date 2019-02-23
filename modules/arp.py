@@ -81,7 +81,7 @@ def power(onoff):
         for i in gv.playingnotes:           # stop current keyboard activity
             for m in gv.playingnotes[i]:
                 note=m.playingnote()
-                if note>(127-gv.stop127) and m.playingnote()<gv.stop127:
+                if note>(127-gv.stop127) and note<gv.stop127:
                     m.fadeout()
                     gv.playingnotes[note] = []
                     gv.triggernotes[note] = 128
@@ -129,6 +129,7 @@ def note_onoff(messagetype, midinote, played_velocity, velocity_mode, VELSAMPLE)
         else:
             return          # ignore unrelated note-off's (keys held while pressing a new one)
     if messagetype==9:      # if note on, start new arpeggio
+        rewind()            # stop anything playing and initialize
         pressed=True        # keep track of keypress
         noteon=True
         currnote=midinote
