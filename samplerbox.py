@@ -833,7 +833,7 @@ def MidiCallback(src, message, time_stamp):
             if messagetype == 9:    # Note on 
                 #print 'Note on %d, voice=%d, chord=%s in %s/%s, velocity=%d, gv.globalgain=%d' % (midinote, gv.currvoice, gv.chordname[gv.currchord], gv.sample_mode, velocity_mode, velocity, gv.globalgain) #debug
                 if gv.sample_mode == PLAYMONO:     # monophonic: new note stops all that's playing in the keyboard range
-                    for playnote in xrange(128-gv.stop127, gv.stop127):   # so leave the effects range out of this
+                    for playnote in xrange(127-gv.stop127, gv.stop127):     # so leave the effects range out of this
                         if playnote in gv.playingnotes:
                             for m in gv.playingnotes[playnote]: 
                                 if gv.sustain:
@@ -877,18 +877,18 @@ def MidiCallback(src, message, time_stamp):
                         #print "start playingnotes playnote %d, velocity %d, gv.currvoice %d, velmixer %d" %(playnote, velocity, gv.currvoice, velmixer)
                         gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(midinote, playnote, velmixer*gv.globalgain, 0, retune))
                         for m in gv.playingnotes[playnote]:
-                            if m.playingstopmode()== 3: playingbacktracks+=1
-                            if keyboardarea:
-                                if gv.damp:
-                                    if m.playingstopmode()!= 3:    # don't damp backtracks
-                                        if gv.sustain:  # damplast (=play untill pedal released
-                                            gv.sustainplayingnotes.append(m)
-                                        else:           # damp+dampnew (=damp played notes immediately)
-                                            m.fadeout(False)
-                                        gv.playingnotes[playnote]=[]
-                                #elif m.playingstopmode()!=-1 and m.playingstopmode()!=3:
-                                elif m.playingstopmode()!=3:
-                                    gv.triggernotes[playnote]=midinote   # we are last playing this one
+                            if m.playingstopmode()== 3:
+                                playingbacktracks+=1
+                            else:
+                                gv.triggernotes[playnote]=midinote   # we are last playing this one
+                            if keyboardarea and gv.damp:
+                                if m.playingstopmode()!= 3:    # don't damp backtracks
+                                    if gv.sustain:  # damplast (=play untill pedal released
+                                        gv.sustainplayingnotes.append(m)
+                                    else:           # damp+dampnew (=damp played notes immediately)
+                                        m.fadeout(False)
+                                    gv.triggernotes[playnote]=128
+                                    gv.playingnotes[playnote]=[]
                 except:
                     print 'Unassigned/unfilled note or other exception in note %d' % (midinote)
                     pass
