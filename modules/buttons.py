@@ -14,8 +14,8 @@ BUT_sel  = gv.cp.getint(s,"BUT_sel".lower())
 
 lastbuttontime = 0
 buttfunc = 0
-button_functions=["","Volume","Midichannel","Transpose","RenewUSB/MidMute","Play Chord:","Use Scale:"]
-button_disp=["","V","M","T","X","C","S"]  # take care, these values can used elsewhere for testing
+button_functions=["","Volume","Midichannel","RenewUSB/MidMute","Play Chord:","Use Scale:"]
+button_disp=["","V","M","X","C","S"]  # take care, these values can used elsewhere for testing
 
 def Button_display():
     global buttfunc, button_functions
