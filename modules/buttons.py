@@ -19,7 +19,7 @@ button_disp=["","V","M","X","C","S"]  # take care, these values can used elsewhe
 
 def Button_display():
     global buttfunc, button_functions
-    function_value=[""," %d%%"%(gv.volume)," %d"%(gv.MIDI_CHANNEL)," %+d"%(gv.globaltranspose),""," %s"%(gv.chordname[gv.currchord])," %s"%(gv.scalename[gv.currscale])]
+    function_value=[""," %d%%"%(gv.volume)," %d"%(gv.MIDI_CHANNEL),""," %s"%(gv.chordname[gv.currchord])," %s"%(gv.scalename[gv.currscale])]
     gv.display(button_functions[buttfunc]+function_value[buttfunc])
 
 def Buttons():
