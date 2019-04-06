@@ -1087,7 +1087,7 @@ def ActuallyLoad():
                         continue
                     if r'%%mode' in pattern:
                         m = pattern.split('=')[1].strip().title()
-                        if (GetStopmode(m)>-2): gv.sample_mode = m
+                        if not (m==gv.sample_mode): gv.sample_mode = m
                         continue
                     if r'%%velmode' in pattern:
                         m = pattern.split('=')[1].strip().title()

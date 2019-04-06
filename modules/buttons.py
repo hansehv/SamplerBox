@@ -14,12 +14,12 @@ BUT_sel  = gv.cp.getint(s,"BUT_sel".lower())
 
 lastbuttontime = 0
 buttfunc = 0
-button_functions=["","Volume","Midichannel","Transpose","RenewUSB/MidMute","Play Chord:","Use Scale:"]
-button_disp=["","V","M","T","X","C","S"]  # take care, these values can used elsewhere for testing
+button_functions=["","Volume","Midichannel","RenewUSB/MidMute","Play Chord:","Use Scale:"]
+button_disp=["","V","M","X","C","S"]  # take care, these values can used elsewhere for testing
 
 def Button_display():
     global buttfunc, button_functions
-    function_value=[""," %d%%"%(gv.volume)," %d"%(gv.MIDI_CHANNEL)," %+d"%(gv.globaltranspose),""," %s"%(gv.chordname[gv.currchord])," %s"%(gv.scalename[gv.currscale])]
+    function_value=[""," %d%%"%(gv.volume)," %d"%(gv.MIDI_CHANNEL),""," %s"%(gv.chordname[gv.currchord])," %s"%(gv.scalename[gv.currscale])]
     gv.display(button_functions[buttfunc]+function_value[buttfunc])
 
 def Buttons():
