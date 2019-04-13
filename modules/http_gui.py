@@ -8,7 +8,7 @@ import threading
 import BaseHTTPServer,urllib, mimetypes
 from urlparse import urlparse,parse_qs
 import os,shutil,subprocess
-import gv,LFO
+import gv,LFO,arp
 notesymbol=["C","C&#9839;","D","E&#9837;","E","F","F&#9839;","G","G&#9839;","A","B&#9837;","B","FX"]  # 0 in scalechord table, also used in loadsamples(!)
 HTTP_PORT = 80
 
@@ -110,14 +110,14 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             gv.VIBRspeed=int(fields["SB_VIBRspeed"][0])
             LFO.VibrLFO.setstep(gv.VIBRspeed)
         if "SB_VIBRtrill"   in fields:
-            if fields["SB_VIBRtrill"][0].title()=="Yes":gv.VIBRtrill=True
+            if fields["SB_VIBRtrill"][0].title()=="On":gv.VIBRtrill=True
             else: gv.VIBRtrill=False
         if "SB_TREMampl"    in fields: gv.TREMampl=float(fields["SB_TREMampl"][0])/100
         if "SB_TREMspeed"   in fields:
             gv.TREMspeed=int(fields["SB_TREMspeed"][0])
             LFO.TremLFO.setstep(gv.TREMspeed)
         if "SB_TREMtrill"   in fields:
-            if fields["SB_TREMtrill"][0].title()=="Yes":gv.TREMtrill=True
+            if fields["SB_TREMtrill"][0].title()=="On":gv.TREMtrill=True
             else: gv.TREMtrill=False
         # Some corrections are necessary :-(
         if "SB_Filter"      in fields: gv.setFilter(int(fields["SB_Filter"][0]))
@@ -125,6 +125,21 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             gv.VIBRtrill=False
             gv.TREMtrill=False
             gv.TREMspeed=gv.VIBRspeed
+        if "SB_ARPeggiator" in fields:
+            active=False
+            if fields["SB_ARPeggiator"][0].title()=="On":active=True
+            arp.power(active)
+        if "SB_ARPstep"     in fields: arp.tempo(int(fields["SB_ARPstep"][0])*1.27)
+        if "SB_ARPsustain"  in fields: arp.sustain(int(fields["SB_ARPsustain"][0])*1.27)
+        if "SB_ARPloop"     in fields:
+            if fields["SB_ARPloop"][0].title()=="On":arp.loop=True
+            else: arp.loop=False
+        if "SB_ARP2end"     in fields:
+            if fields["SB_ARP2end"][0].title()=="On":arp.play2end=True
+            else: arp.play2end=False
+        if "SB_ARPord"      in fields:
+            arp.ordnum(gv.getindex(fields["SB_ARPord"][0],arp.ordlist,True))
+        if "SB_ARPfade"     in fields: arp.fadeout(1.27*int(fields["SB_ARPfade"][0]))
         gv.display("") # show it on the box
         self.do_GET()       # as well as on the gui
 
@@ -140,6 +155,8 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                  "SB_FVroomsize","SB_FVdamp","SB_FVlevel","SB_FVwidth",
                  "SB_VIBRpitch","SB_VIBRspeed","SB_VIBRtrill",
                  "SB_TREMampl","SB_TREMspeed","SB_TREMtrill",
+                 "SB_ARPeggiator","SB_ARPstep","SB_ARPsustain",
+                 "SB_ARPloop","SB_ARP2end","SB_ARPord","SB_ARPfade",
                  "SB_MidiChannel","SB_DefinitionTxt"]
         
         self.send_response(200)
@@ -149,21 +166,22 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write("// SamplerBox API, interface for interacting via standard HTTP\n\n")
         self.wfile.write("// Variables that can be updated and submitted to samplerbox:")
         for i in range(len(varName)):
-            if (i%3)==0: self.wfile.write("\n")
+            if (i%5)==0: self.wfile.write("\n")
             self.wfile.write("var %s;" % (varName[i]) )
 
         self.wfile.write("\n\n// Informational (read-only) variables:")
+        self.wfile.write("\nSB_numvars=%d;var SB_VarName;var SB_VarVal;" % (len(varName)) )
         self.wfile.write("\nvar SB_Samplesdir;var SB_LastMidiNote;var SB_LastMusicNote;var SB_DefErr;")
         self.wfile.write("\nvar SB_Mode;var SB_numpresets;var SB_Presetlist;")
         self.wfile.write("\nvar SB_xvoice;var SB_numvoices;var SB_Voicelist;")
         self.wfile.write("\nvar SB_numbtracks;var SB_bTracks;var SB_numnotemaps;var SB_Notemaps;")
 
         self.wfile.write("\n\n// Static tables:")
-        self.wfile.write("\nSB_numvars=%d;var SB_VarName;\nvar SB_VarVal;" % (len(varName)) )
         self.wfile.write("\nSB_numnotes=%d;SB_Notename=%s;" % (len(notesymbol),notesymbol) )
         self.wfile.write("\nSB_numchords=%d;SB_Chordname=%s;\nSB_Chordnote=%s;" % (len(gv.chordname),gv.chordname,gv.chordnote) )
         self.wfile.write("\nSB_numscales=%d;SB_Scalename=%s;\nSB_Scalechord=%s;" % (len(gv.scalesymbol),gv.scalesymbol,gv.scalechord) )
         self.wfile.write("\nSB_numfilters=%d;SB_filters=%s" % (len(gv.Filters),gv.Filterkeys) )
+        self.wfile.write("\nSB_numarpordlist=%d;SB_ARPordlist=%s" % (len(arp.ordlist),arp.ordlist) )
 
         self.wfile.write("\n\n// Function for (re)filling all above variables with actual values from SamplerBox:\nfunction SB_GetAPI() {")
         self.wfile.write("\n\tSB_VarName=['%s'" % (varName[0]) )
@@ -176,12 +194,19 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write("%d,%d,%d,'%s'," % (gv.PRESET,gv.globalgain*100,gv.pitchnotes/2,gv.currnotemap) )
         self.wfile.write("%d,%d,%d,%d," % (gv.currvoice,gv.currscale,gv.currchord,gv.currfilter) )
         self.wfile.write("%d,%d,%d,%d," % (gv.FVroomsize*100,gv.FVdamp*100,gv.FVlevel*100,gv.FVwidth*100) )
-        if gv.VIBRtrill:   s="Yes"
-        else:           s="No"
+        if gv.VIBRtrill:s=0
+        else:           s=1
         self.wfile.write("%d,%d,'%s'," % (gv.VIBRpitch*16,gv.VIBRspeed,s) )
-        if gv.TREMtrill:   s="Yes"
-        else:           s="No"
+        if gv.TREMtrill:s=0
+        else:           s=1
         self.wfile.write("%d,%d,'%s'," % (gv.TREMampl*100,gv.TREMspeed,s) )
+        if arp.active:  r=0
+        else:           r=1
+        if arp.loop:    s=0
+        else:           s=1
+        if arp.play2end:t=0
+        else:           t=1
+        self.wfile.write("'%s',%d,%d,'%s','%s',%d,%d," % (r,arp.length,arp.keepon,s,t,arp.order,arp.fadecycles) )
         self.wfile.write("%d,'%s'" % (gv.MIDI_CHANNEL,gv.DefinitionTxt.replace('\n','&#10;').replace('\r','&#13;')) )   # make it a unix formatted JS acceptable string
         self.wfile.write("];\n\tSB_Samplesdir='%s';SB_LastMidiNote=%d;SB_LastMusicNote=%s;SB_DefErr='%s';\n" % (gv.samplesdir,gv.last_midinote,gv.last_musicnote,gv.DefinitionErr) )
         self.wfile.write("\tSB_Mode='%s';SB_numpresets=%d;SB_Presetlist=%s;\n" % (gv.sample_mode,len(gv.presetlist),gv.presetlist) )

@@ -1,8 +1,8 @@
-Controller,Type,Sets,Mode,
+Controller,Type,Sets,Mode,#TAKE CARE: most keywords are case sensitive
 UA,Fixed,PitchWheel,Continuous,#Unneeded with standard pitchwheel/lever (message 14 iso 11)
 ModWheel,Fixed,ModWheel,Continuous,
 Volume,Fixed,Volume,Continuous,
-Sustain,Fixed,Sustain,Switch,
+Sustain,Fixed,Sustain,Switch,"# Pedal (sustain) is complex to mix, so preferably use only one"
 UA,Fixed,Damp,Switch,# Damp all (conventional damp)
 UA,Fixed,DampNew,Switch,"# Damp only new notes,  a kind of pizzicato effect"
 UA,Fixed,DampLast,Switch,# Notes played during pedal press are damped on pedal release
@@ -14,8 +14,8 @@ Drawbar4,Fixed,TremDepth,Continuous,
 UA,Fixed,TremSpeed,Continuous,#Can be set with LFOspeed
 Drawbar5,UA,,,
 Drawbar6,UA,,,
-Drawbar7,UA,,,
-Drawbar8,UA,,,
+Drawbar7,UA,ArpSustain,Continuous,
+Drawbar8,Fixed,ArpTime,Continuous,
 Pot^1,Fixed,PitchSens,Continuous,
 Pot^2,UA,,,
 Pot^3,UA,,,
@@ -23,16 +23,22 @@ Pot^4,UA,,,
 Pot_1,Fixed,ReverbRoom,Continuous,
 Pot_2,Fixed,ReverbDamp,Continuous,
 Pot_3,Fixed,ReverbWidth,Continuous,
-Pot_4,UA,,,
+Pot_4,Fixed,ArpFadeout,Continuous,#127 means no fade out =  repeat till toggled/set off
+UA,Fixed,ProgramUp,Switch,
+UA,Fixed,ProgramDown,Switch,
 Button1,Fixed,Reverb,Toggle,
 Button2,Fixed,Rotate,Toggle,
 Button3,Fixed,Vibrato,Toggle,
 Button4,Fixed,Tremolo,Toggle,
 Button5,UA,,,
 Button6,UA,,,
-Button7,UA,,,
-Button8,UA,,,
-Button9,Fixed,EffectsOff,SwitchOff,
+UA,Fixed,ArpUp,SwitchOn,#Can be set with ArpUpDown
+UA,Fixed,ArpDown,SwitchOn,#Can be set with ArpUpDown
+UA,Fixed,ArpRandom,SwitchOn,#Can be set with ArpRndLin
+Button7,Fixed,ArpUpDown,Toggle,
+Button8,Fixed,ArpRndLin,Toggle,
+Button9,Fixed,Arpeggiator,Toggle,
+UA,Fixed,EffectsOff,SwitchOff,
 Butt_<=>,BackTracks,1,Toggle,
 Butt_<<,BackTracks,2,Toggle,
 Butt_>>,BackTracks,3,Toggle,

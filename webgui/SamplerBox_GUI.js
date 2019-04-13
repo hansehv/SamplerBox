@@ -49,6 +49,13 @@ var SB_variables={	// make sure all passed parameters are covered here
 	v_SB_TREMampl: function(val){SB_TREMampl=val;},
 	v_SB_TREMspeed: function(val){SB_TREMspeed=val;},
 	v_SB_TREMtrill: function(val){SB_TREMtrill=val;},
+	v_SB_ARPeggiator: function(val){SB_ARPeggiator=val;},
+	v_SB_ARPstep: function(val){SB_ARPstep=val;},
+	v_SB_ARPsustain: function(val){SB_ARPsustain=val;},
+	v_SB_ARPloop: function(val){SB_ARPloop=val;},
+	v_SB_ARP2end: function(val){SB_ARP2end=val;},
+	v_SB_ARPord: function(val){SB_ARPord=val;},
+	v_SB_ARPfade: function(val){SB_ARPfade=val;},
 	v_SB_RenewMedia: function(val){SB_RenewMedia=val;},
 	v_SB_DefinitionTxt: function(val){SB_DefinitionTxt=val;}
 }
@@ -109,9 +116,7 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1));
 	},
 	input_SB_VIBRtrill: function(input_name,name,val,text){
-		j="";k="";
-		if (val=="No") k="CHECKED";else j="CHECKED"
-		return(text+' on<INPUT type="radio" name="'+name+'"  value="Yes"'+j+' onclick="SB_Submit();">off<INPUT type="radio" name="'+name+'"  value="No"'+k+' onclick="SB_Submit();">');
+		return(SB_radioselect(input_name,name,val,text,["On","Off"]));
 	},
 	input_SB_TREMampl: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,1,100,1)+SB_numselect(input_name,name,val,1,100,1));
@@ -120,9 +125,30 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1));
 	},
 	input_SB_TREMtrill: function(input_name,name,val,text){
-		j="";k="";
-		if (val=="No") k="CHECKED";else j="CHECKED"
-		return(text+' on<INPUT type="radio" name="'+name+'"  value="Yes"'+j+' onclick="SB_Submit();">off<INPUT type="radio" name="'+name+'"  value="No"'+k+' onclick="SB_Submit();">');
+		return(SB_radioselect(input_name,name,val,text,["On","Off"]));
+	},
+	input_SB_ARPeggiator: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,["On","Off"]));
+	},
+	input_SB_ARPstep: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+	},
+	input_SB_ARPsustain: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+	},
+	input_SB_ARPloop: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,["On","Off"]));
+	},
+	input_SB_ARP2end: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,["On","Off"]));
+	},
+	input_SB_ARPord: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,SB_ARPordlist));
+	},
+	input_SB_ARPfade: function(input_name,name,val,text){
+		j=""
+		if (val<100) j="CHECKED"
+		return(text+'<label class="inline alignx"><INPUT type="checkbox" onclick="return false;"'+j+'></label>'+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
 	},
 	input_SB_RenewMedia: function(input_name,name,val,text){
 		return('<LABEL><INPUT type="checkbox" name="'+name+'" class="hidden" value="Yes" onclick="SB_Submit();"><span class="button">'+text+'</span></LABEL>');
@@ -236,6 +262,14 @@ function SB_slidersync(IDslider, IDvar, sliderchange){
 		if (sliderchange) document.getElementById(IDvar).value=document.getElementById(IDslider).value;
 		else document.getElementById(IDslider).value=document.getElementById(IDvar).value;}
 	SB_Submit();
+}
+function SB_radioselect(input_name,name,val,text,table){
+	html=""
+	for (i=0;i<table.length;i++){
+		if (i==val) j="CHECKED"; else j="";
+		html=html+' <INPUT type="radio" name="'+name+'"  value="'+table[i]+'"'+j+' onclick="SB_Submit();">'+table[i];
+	}
+	return(text+html);
 }
 
 function SB_Refresh(){	// gets the page again without resending any form values
