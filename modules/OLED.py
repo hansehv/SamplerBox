@@ -33,7 +33,7 @@ else:
 
 print("Started OLED display")
 
-class SH1106:
+class OLED:
         def __init__(self, width=128, height=64, padding=-2, x=0):
                 # Load default font.
                 self.font = ImageFont.load_default()

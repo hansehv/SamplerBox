@@ -16,7 +16,8 @@
 AUDIO_DEVICE_ID = 2             ; Examples: 0 for PI-builtin or HiFiBerry, 2 for USB soundcard
 USE_SERIALPORT_MIDI = False     ; Set to True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
 USE_HD44780_16x2_LCD = True     ; Set to True to use a HD44780 based 16x2 LCD
-USE_SH1106_OLED = False          ; Set to True to use a SH1106 based OLED display
+USE_OLED = False         ; Set to True to use an OLED display
+OLED_DRIVER = SH1106            ; Set to the correct OLED driver chip, one of: SH1106 (more to come)
 USE_I2C_7SEGMENTDISPLAY = False ; Set to True to use a 7-segment display via I2C
 USE_ALSA_MIXER = True           ; Set to True to use to use the alsa mixer (via pyalsaaudio)
 MIXER_CONTROL = PCM,Speaker,Headphone,Digital ; Mixercontrols I experienced, add your soundcard's specific....
