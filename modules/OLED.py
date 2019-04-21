@@ -14,30 +14,15 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
-RST = 25
-CS = 8
-DC = 24
-
-USER_I2C = 0
-
-if  USER_I2C == 1:
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(RST,GPIO.OUT)
-        GPIO.output(RST,GPIO.HIGH)
-
-        serial = i2c(port=1, address=0x3c)
-else:
-        serial = spi(device=0, port=0, bus_speed_hz = 8000000, transfer_size = 4096, gpio_DC = 24, gpio_RST = 25)
-
-#device = sh1106(serial, rotate=2) #sh1106
+import gv
 
 print("Started OLED display")
 
-class OLED:
-        def __init__(self, width=128, height=64, padding=-2, x=0):
+class oled:
+        def __init__(self, driver="SH1106", width=128, height=64, padding=-2, x=0, RST=25, CS=8, DC=24, device=0, port=0):
                 # Load default font.
                 self.font = ImageFont.load_default()
-
+                # self.largeFont = ImageFont.truetype("arial.ttf",16)
                 # Create blank image for drawing.
                 # Make sure to create image with mode '1' for 1-bit color.
                 self.width = width
@@ -50,30 +35,39 @@ class OLED:
                 self.bottom = height-padding
                 # Move left to right keeping track of the current x position for drawing shapes.
                 self.x = 0
-                serial = spi(device=0, port=0, bus_speed_hz = 8000000, transfer_size = 4096, gpio_DC = 24, gpio_RST = 25)
-                self.device = sh1106(serial, rotate=2)
+                serial = spi(device=port, port=port, bus_speed_hz = 8000000, transfer_size = 4096, gpio_DC = DC, gpio_RST = RST)
+                driver = gv.cp.get("config","OLED_DRIVER".lower())
+                if driver=="SH1106":
+                        self.device = sh1106(serial, rotate=2)
+                else:
+                        print("Wrong driver")
                 self.canvas = canvas(self.device)
 
-
-        def display(self,s2,basename='',sample_mode='',USE_ALSA_MIXER=False,volume=0,currvoice=0,currchord=0,chordname=[''],scalename=[''],currscale=0,button_disp=[''],buttfunc=0,midichannel=0):
+        def display(self,s2):
                 with self.canvas as draw:
                         draw.rectangle((0, 0, self.device.width-1, self.device.height-1), outline=0, fill=0)
-                        if USE_ALSA_MIXER:
-                                s3 = "Scale:%s" % (scalename[currscale])
-                                s4 = "Chord: %s" % (chordname[currchord])
-                                s5 = "MIDI Ch: %d" % (midichannel)
-                                s1 = "%s | Vol: %d%%" % (sample_mode, volume)
+                        cmd = "hostname -I | cut -d\' \' -f1"
+                        IP = subprocess.check_output(cmd, shell = True )
+                        if gv.USE_ALSA_MIXER:
+                                s3 = "Scale:%s" % (gv.scalename[gv.currscale])
+                                s4 = "Chord: %s" % (gv.chordname[gv.currchord])
+                                s5 = "MIDI Ch: %d" % (gv.MIDI_CHANNEL)
+                                s1 = "%s | Vol: %d%%" % (gv.sample_mode, gv.volume)
                         else:
-                                s3 = "Scale:%s | Chord:%s" % (scalename[currscale], chordname[currchord])
-                                s1 = "Mode: %s" % (sample_mode)
+                                s3 = "Scale:%s | Chord:%s" % (gv.scalename[gv.currscale], gv.chordname[gv.currchord])
+                                s4 = "Chord: %s" % (gv.chordname[gv.currchord])
+                                s5 = "MIDI Ch: %d" % (gv.MIDI_CHANNEL)
+                                s1 = "Mode: %s" % (gv.sample_mode)
                         if s2 == "":
-                                if currvoice>1: s2=str(currvoice)+":"
-                                s2 += basename
-                                if buttfunc>0:
+                                if gv.currvoice>1: s2=str(gv.currvoice)+":"
+                                s2 += gv.basename
+                                if gv.buttfunc>0:
                                         s1 += " "*15
-                                        s1 = s1[:13] + "> "+button_disp[buttfunc]
+                                        s1 = s1[:13] + "> "+gv.button_disp[gv.buttfunc]
                         draw.text((self.x, self.top), s1, font=self.font, fill=255)
-                        draw.text((self.x, self.top+8), s2, font=self.font,fill=255)
+                        draw.rectangle((self.x, self.top+11,self.device.width, 21), outline=255, fill=255)
+                        draw.text((self.x+2, self.top+12), s2, font=self.font,fill=0)
                         draw.text((self.x, self.top+24), s3, font=self.font, fill=255)
                         draw.text((self.x, self.top+32), s4, font=self.font, fill=255)
                         draw.text((self.x, self.top+40), s5, font=self.font, fill=255)
+                        draw.text((self.x, self.top+48), "IP:"+IP, fill=255)

@@ -259,10 +259,12 @@ if USE_HD44780_16x2_LCD:
     display('Start Samplerbox')
 
 elif USE_OLED:
+	USE_GPIO=True
     import OLED
-    oled = OLED.OLED()
+    #oled = OLED.oled(driver=OLED_DRIVER) #I still would prefer to have a call here that includes the driver to avoid a call to gv.cp in the module code
+    oled = OLED.oled()
     def display(s2,s7=""):
-        oled.display(s2,gv.basename,gv.sample_mode,gv.USE_ALSA_MIXER,gv.volume,gv.currvoice,gv.currchord,gv.chordname,gv.scalename,gv.currscale,gv.button_disp,gv.buttfunc,gv.MIDI_CHANNEL)
+        oled.display(s2)
     display('Start Samplerbox')
 
 elif USE_I2C_7SEGMENTDISPLAY:
