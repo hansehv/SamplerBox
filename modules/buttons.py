@@ -117,4 +117,3 @@ def Buttons():
 ButtonsThread = threading.Thread(target = Buttons)
 ButtonsThread.daemon = True
 ButtonsThread.start()
-
