@@ -1,6 +1,6 @@
 <!DOCTYPE html><HTML><HEAD>
 <!-- Minus AutoDato -->
-	<TITLE>Arpeggiator</TITLE>
+	<TITLE>Chorus</TITLE>
 <META NAME="Generator" CONTENT="Stone's WebWriter 3.5">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Script-Type" content="text/javascript">
@@ -12,22 +12,15 @@
 
 <TABLE WIDTH="100%"><TR>
 <TD WIDTH="112"><A HREF="index.html"><IMG SRC="SamplerBox.gif" BORDER="0" WIDTH="80" HEIGHT="27" ALIGN="middle" ALT=""></A></TD>
-<TD ALIGN="center"><B>Arpeggiator</B></TD>
+<TD ALIGN="center"><B>Chorus</B></TD>
 <TD ALIGN="center"><BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON></TD>
 </TR></TABLE>
 
 <FORM ID="elem_SB_Form" STYLE="line-height:300%;">
-<span ID="input_SB_ARPord">&nbsp; &nbsp; &nbsp;</span>
+<B>Chorus</B>: <span ID="input_SB_CHOrus"></span>
 <BR>
-<span ID="input_SB_Scale">Scale/Chord: </span>
-<span ID="input_SB_Chord">/ </span>
-<BR>
-<span ID="input_SB_ARPstep">Cycle time :</span>
-<span ID="input_SB_ARPsustain">Notelength:</span>
-<span ID="input_SB_ARPfade">Fadeout :</span>
-<BR>
-<span ID="input_SB_ARPloop">Loop:</span>
- &nbsp; &nbsp; &nbsp; &nbsp; <span ID="input_SB_ARP2end">Play to end:</span>
+<span ID="input_SB_CHOdepth">Depth &nbsp; &nbsp; &nbsp;:</span>
+<span ID="input_SB_CHOgain" >Gain &nbsp; &nbsp; &nbsp; &nbsp;:</span>
 </FORM>
 
 <script>SB_Update();</script>
