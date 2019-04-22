@@ -19,24 +19,31 @@ import gv
 print("Started OLED display")
 
 class oled:
-        def __init__(self, driver="SH1106", width=128, height=64, padding=-2, x=0, RST=25, CS=8, DC=24, device=0, port=0):
+        def __init__(self):
+                # Parse config for display settings
+                driver = gv.cp.get("config","OLED_DRIVER".lower())
+                RST = gv.cp.getint("config","OLED_RST".lower())
+                CS = gv.cp.getint("config","OLED_CS".lower())
+                DC = gv.cp.getint("config","OLED_DC".lower())
+                port = gv.cp.getint("config","OLED_PORT".lower())
                 # Load default font.
                 self.font = ImageFont.load_default()
+                
                 # self.largeFont = ImageFont.truetype("arial.ttf",16)
                 # Create blank image for drawing.
                 # Make sure to create image with mode '1' for 1-bit color.
-                self.width = width
-                self.height = height
-                self.image = Image.new('1', (width, height))
+                self.width = gv.cp.getint("config","OLED_WIDTH".lower())
+                self.height = gv.cp.getint("config","OLED_HEIGHT".lower())
+                self.image = Image.new('1', (self.width, self.height))
 
                 # First define some constants to allow easy resizing of shapes.
-                self.padding = padding
-                self.top = padding
-                self.bottom = height-padding
+                self.padding = gv.cp.getint("config","OLED_PADDING".lower())
+                self.top = self.padding
+                self.bottom = self.height-self.padding
                 # Move left to right keeping track of the current x position for drawing shapes.
                 self.x = 0
                 serial = spi(device=port, port=port, bus_speed_hz = 8000000, transfer_size = 4096, gpio_DC = DC, gpio_RST = RST)
-                driver = gv.cp.get("config","OLED_DRIVER".lower())
+                
                 if driver=="SH1106":
                         self.device = sh1106(serial, rotate=2)
                 else:

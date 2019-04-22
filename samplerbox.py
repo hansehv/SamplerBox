@@ -261,7 +261,6 @@ if USE_HD44780_16x2_LCD:
 elif USE_OLED:
 	USE_GPIO=True
     import OLED
-    #oled = OLED.oled(driver=OLED_DRIVER) #I still would prefer to have a call here that includes the driver to avoid a call to gv.cp in the module code
     oled = OLED.oled()
     def display(s2,s7=""):
         oled.display(s2)
