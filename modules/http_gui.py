@@ -9,7 +9,7 @@ import threading
 import BaseHTTPServer,urllib, mimetypes
 from urlparse import urlparse,parse_qs
 import os,shutil,subprocess
-import gv,arp,LFO,Cpp
+import gv,arp,LFO,Cpp,CHOrus
 notesymbol=["C","C&#9839;","D","E&#9837;","E","F","F&#9839;","G","G&#9839;","A","B&#9837;","B","FX"]  # 0 in scalechord table, also used in loadsamples(!)
 HTTP_PORT = 80
 
@@ -102,9 +102,9 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             if not gv.currchord==inval:
                 gv.currchord=inval
                 gv.currscale=0
-        if "SB_CHOrus"      in fields: gv.CHOsetType(gv.getindex(fields["SB_CHOrus"][0],["Off","On"],True))
-        if "SB_CHOdepth"    in fields: gv.CHOsetdepth((float(fields["SB_CHOdepth"][0])-2)*9.77)
-        if "SB_CHOgain"     in fields: gv.CHOsetgain((float(fields["SB_CHOgain"][0])-30)*2.54)
+        if "SB_CHOrus"      in fields: CHOrus.setType(gv.getindex(fields["SB_CHOrus"][0],["Off","On"],True))
+        if "SB_CHOdepth"    in fields: CHOrus.setdepth((float(fields["SB_CHOdepth"][0])-2)*9.77)
+        if "SB_CHOgain"     in fields: CHOrus.setgain((float(fields["SB_CHOgain"][0])-30)*2.54)
         if "SB_FVtype"      in fields: Cpp.FVsetType(gv.getindex(fields["SB_FVtype"][0],["Off","On"],True))
         if "SB_FVroomsize"  in fields: Cpp.FVsetroomsize(float(fields["SB_FVroomsize"][0])*1.27)
         if "SB_FVdamp"      in fields: Cpp.FVsetdamp(float(fields["SB_FVdamp"][0])*1.27)
