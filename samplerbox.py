@@ -278,8 +278,6 @@ gv.display=display                          # and announce the procs to modules
 # Process replaces the note-on/off logic, so rather cheap
 #
 import arp
-def ARPreset():
-    arp.power(False)
 
 #
 # Reverb, Moogladder, Wah (envelope, lfo and pedal) and Delay (echo and flanger)
@@ -299,28 +297,7 @@ import LFO      # take notice: part of process in audio callback
 # Chorus (add pitch modulated and delayed copies of notes)
 # Process incorporated in the note-on logic, so rather cheap as well
 #
-def CHOsetType(x,*z):
-    if x>0:
-        gv.CHOrus=True
-    else:
-        gv.CHOrus=False
-def CHOtoggle(*z):
-    gv.CHOrus!=gv.CHOrus
-def CHOsetdepth(x,*z):  # 2-15
-    gv.CHOdepth=2+13*x/127
-def CHOsetgain(x,*z):  # 0.3-0.8
-    gv.CHOgain=0.3+0.5*x/127.0
-def CHOreset():
-    gv.CHOrus=False
-    gv.CHOdepth=gv.cp.getfloat(gv.cfg,"CHOdepth".lower())
-    gv.CHOgain=gv.cp.getfloat(gv.cfg,"CHOgain".lower())
-CHOreset()
-gv.CHOsetType=CHOsetType
-gv.CHOsetdepth=CHOsetdepth
-gv.CHOsetgain=CHOsetgain
-gv.MC[getindex(gv.CHORUS,gv.MC)][2]=CHOtoggle
-gv.MC[getindex(gv.CHORUSDEPTH,gv.MC)][2]=CHOsetdepth
-gv.MC[getindex(gv.CHORUSGAIN,gv.MC)][2]=CHOsetgain
+import CHOrus   # take notice: part of process in midi callback and ARP
 
 #########################################
 ##  SLIGHT MODIFICATION OF PYTHON'S WAVE MODULE
@@ -630,7 +607,7 @@ def EffectsOff(*z):
     Cpp.DLYsetType(0)
     Cpp.LFsetType(0)
     LFO.setType(0)
-    CHOsetType(0)
+    CHOrus.setType(0)
     #AutoChordOff()
 def ProgramUp(CCval,*z):
     x=gv.getindex(gv.PRESET,gv.presetlist)+1
