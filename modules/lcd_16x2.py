@@ -6,16 +6,15 @@
 import RPi.GPIO as GPIO
 import time
 import gv
-s="config"
 usleep = lambda x: time.sleep(x/1000000.0)
 msleep = lambda x: time.sleep(x/1000.0)
-LCD_RS = gv.cp.getint(s,"LCD_RS".lower())
-LCD_E = gv.cp.getint(s,"LCD_E".lower())
+LCD_RS = gv.cp.getint(gv.cfg,"LCD_RS".lower())
+LCD_E = gv.cp.getint(gv.cfg,"LCD_E".lower())
 # get&insert LCD_D0 to LCD_D3 as first elements in pins_db for 8-bit operation
-LCD_D4 = gv.cp.getint(s,"LCD_D4".lower())
-LCD_D5 = gv.cp.getint(s,"LCD_D5".lower())
-LCD_D6 = gv.cp.getint(s,"LCD_D6".lower())
-LCD_D7 = gv.cp.getint(s,"LCD_D7".lower())
+LCD_D4 = gv.cp.getint(gv.cfg,"LCD_D4".lower())
+LCD_D5 = gv.cp.getint(gv.cfg,"LCD_D5".lower())
+LCD_D6 = gv.cp.getint(gv.cfg,"LCD_D6".lower())
+LCD_D7 = gv.cp.getint(gv.cfg,"LCD_D7".lower())
 
 class HD44780:
 

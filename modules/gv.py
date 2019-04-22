@@ -8,6 +8,7 @@
 #
 
 # Literals
+cfg="config"
 SAMPLESDEF="definition.txt"
 HTTP_ROOT="webgui"
 FIXED="Fixed"

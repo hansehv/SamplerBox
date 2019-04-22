@@ -4,7 +4,7 @@
 ###############################################################
 
 import alsaaudio,gv
-MIXER_CONTROL=gv.cp.get("config","MIXER_CONTROL".lower()).replace(" ", "").split(',')
+MIXER_CONTROL=gv.cp.get(gv.cfg,"MIXER_CONTROL".lower()).replace(" ", "").split(',')
 
 ok=False
 

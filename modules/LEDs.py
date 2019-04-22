@@ -6,9 +6,8 @@
 import RPi.GPIO as GPIO
 import gv
 
-s="config"
-LED_red = gv.cp.getint(s,"LED_red".lower())
-LED_green = gv.cp.getint(s,"LED_green".lower())
+LED_red = gv.cp.getint(gv.cfg"LED_red".lower())
+LED_green = gv.cp.getint(gv.cfg"LED_green".lower())
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(LED_red,GPIO.OUT)
 GPIO.setup(LED_green,GPIO.OUT)

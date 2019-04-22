@@ -67,7 +67,6 @@ class plfo:
 #  Effects based on above
 #
 import gv
-cfg="config"
 
 VibrLFO=plfo()
 gv.VIBRvalue=0         # Value 0 gives original note
@@ -190,13 +189,13 @@ gv.MC[gv.getindex(gv.ROTATE,gv.MC)][2]=Rotate
 
 def LFOreset():
     setType(0)
-    gv.VIBRpitch=gv.cp.getfloat(cfg,"VIBRpitch".lower())
-    gv.VIBRspeed=gv.cp.getint(cfg,"VIBRspeed".lower())
-    gv.VIBRtrill=gv.cp.getboolean(cfg,"VIBRtrill".lower())
-    gv.TREMampl=gv.cp.getfloat(cfg,"TREMampl".lower())
-    gv.BOXTREMspeed=gv.cp.getint(cfg,"TREMspeed".lower())
+    gv.VIBRpitch=gv.cp.getfloat(gv.cfg,"VIBRpitch".lower())
+    gv.VIBRspeed=gv.cp.getint(gv.cfg,"VIBRspeed".lower())
+    gv.VIBRtrill=gv.cp.getboolean(gv.cfg,"VIBRtrill".lower())
+    gv.TREMampl=gv.cp.getfloat(gv.cfg,"TREMampl".lower())
+    gv.BOXTREMspeed=gv.cp.getint(gv.cfg,"TREMspeed".lower())
     gv.TREMspeed=gv.BOXTREMspeed
-    gv.TREMtrill=gv.cp.getboolean(cfg,"TREMtrill".lower())
-    gv.PANwidth=gv.cp.getfloat(cfg,"PANwidth".lower())
-    gv.PANspeed=gv.cp.getint(cfg,"PANspeed".lower())
+    gv.TREMtrill=gv.cp.getboolean(gv.cfg,"TREMtrill".lower())
+    gv.PANwidth=gv.cp.getfloat(gv.cfg,"PANwidth".lower())
+    gv.PANspeed=gv.cp.getint(gv.cfg,"PANspeed".lower())
 LFOreset()

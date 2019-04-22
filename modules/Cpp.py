@@ -17,7 +17,7 @@ cfg="config"
 
 #
 # Reverb based on Freeverb by Jezar at Dreampoint
-# Reverb is about 10% on PI3
+# Reverb is about 11% on PI3
 #
 c_filters.fvsetroomsize.argtypes = [c_float]
 c_filters.fvsetdamp.argtypes = [c_float]
@@ -223,7 +223,7 @@ gv.MC[gv.getindex(gv.DELAYMAX,gv.MC)][2]=DLYsetmax
 
 #
 # Moog lowpass ladderfilter based on algorithm developed by Stefano D'Angelo and Vesa Valimaki
-# They take about xx% on PI3
+# They take about 9% on PI3
 #
 c_filters.lfsetresonance.argtypes = [c_float]
 c_filters.lfsetcutoff.argtypes = [c_float]
