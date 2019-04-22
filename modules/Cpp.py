@@ -13,7 +13,6 @@ from ctypes import *
 c_float_p = ctypes.POINTER(ctypes.c_float)
 c_short_p = ctypes.POINTER(ctypes.c_short)
 c_filters = cdll.LoadLibrary('./filters/interface.so')
-cfg="config"
 
 #
 # Reverb based on Freeverb by Jezar at Dreampoint
@@ -46,10 +45,10 @@ def FVsetwidth(x,*z):
     c_filters.fvsetwidth(gv.FVwidth)
 def FVreset():
     FVsetType(0)
-    FVsetroomsize(gv.cp.getfloat(cfg,"FVroomsize".lower())*127)
-    FVsetdamp(gv.cp.getfloat(cfg,"FVdamp".lower())*127)
-    FVsetlevel(gv.cp.getfloat(cfg,"FVlevel".lower())*127)
-    FVsetwidth(gv.cp.getfloat(cfg,"FVwidth".lower())*127)
+    FVsetroomsize(gv.cp.getfloat(gv.cfg,"FVroomsize".lower())*127)
+    FVsetdamp(gv.cp.getfloat(gv.cfg,"FVdamp".lower())*127)
+    FVsetlevel(gv.cp.getfloat(gv.cfg,"FVlevel".lower())*127)
+    FVsetwidth(gv.cp.getfloat(gv.cfg,"FVwidth".lower())*127)
 FVreset()
 gv.MC[gv.getindex(gv.REVERB,gv.MC)][2]=FVsetReverb      # announce to CCmap
 gv.MC[gv.getindex(gv.REVERBLVL,gv.MC)][2]=FVsetlevel
@@ -124,14 +123,14 @@ def AWsetLVLrange(x,*z):           # 0-100
 def AWreset():
     AWsetType(0)
     AWsetCCval(0)   # pedal back to base
-    AWsetQualityFactor(gv.cp.getfloat(cfg,"AWqfactor".lower())/25*127)
-    AWsetMixing(gv.cp.getfloat(cfg,"AWmixing".lower())*127)
-    AWsetMinFreq(gv.cp.getfloat(cfg,"AWminfreq".lower())/500*127)
-    AWsetMaxFreq(gv.cp.getfloat(cfg,"AWmaxfreq".lower())/10000*127)
-    AWsetAttack(gv.cp.getfloat(cfg,"AWattack".lower())/0.5*127)
-    AWsetRelease(gv.cp.getfloat(cfg,"AWrelease".lower())/0.05*127)
-    AWsetSpeed((gv.cp.getfloat(cfg,"AWspeed".lower())-100)/1000*127)
-    AWsetLVLrange(gv.cp.getfloat(cfg,"AWlvlrange".lower())/100*127)
+    AWsetQualityFactor(gv.cp.getfloat(gv.cfg,"AWqfactor".lower())/25*127)
+    AWsetMixing(gv.cp.getfloat(gv.cfg,"AWmixing".lower())*127)
+    AWsetMinFreq(gv.cp.getfloat(gv.cfg,"AWminfreq".lower())/500*127)
+    AWsetMaxFreq(gv.cp.getfloat(gv.cfg,"AWmaxfreq".lower())/10000*127)
+    AWsetAttack(gv.cp.getfloat(gv.cfg,"AWattack".lower())/0.5*127)
+    AWsetRelease(gv.cp.getfloat(gv.cfg,"AWrelease".lower())/0.05*127)
+    AWsetSpeed((gv.cp.getfloat(gv.cfg,"AWspeed".lower())-100)/1000*127)
+    AWsetLVLrange(gv.cp.getfloat(gv.cfg,"AWlvlrange".lower())/100*127)
 AWreset()
 gv.MC[gv.getindex(gv.AUTOWAHENV,gv.MC)][2]=AWsetENV     # announce to CCmap
 gv.MC[gv.getindex(gv.AUTOWAHLFO,gv.MC)][2]=AWsetLFO
@@ -201,14 +200,14 @@ def DLYsetmax(x,*z):   # 50-150 for flanger
     c_filters.dlysetrange(gv.DLYmin,gv.DLYmax)
 def DLYreset():
     DLYsetType(0)
-    DLYsetfb(gv.cp.getfloat(cfg,"DLYfb".lower())*127)
-    DLYsetwet(gv.cp.getfloat(cfg,"DLYwet".lower())*127)
-    DLYsetdry(gv.cp.getfloat(cfg,"DLYdry".lower())*127)
-    DLYsettime((gv.cp.getfloat(cfg,"DLYtime".lower())-1000)/60000*127)
-    DLYsetsteep((gv.cp.getfloat(cfg,"DLYsteep".lower())-1)/10*127)
-    DLYsetsteplen((gv.cp.getfloat(cfg,"DLYsteplen".lower())-300)/3000*127)
-    DLYsetmin((gv.cp.getfloat(cfg,"DLYmin".lower())-5)/20*127)
-    DLYsetmax((gv.cp.getfloat(cfg,"DLYmax".lower())-50)/100*127)
+    DLYsetfb(gv.cp.getfloat(gv.cfg,"DLYfb".lower())*127)
+    DLYsetwet(gv.cp.getfloat(gv.cfg,"DLYwet".lower())*127)
+    DLYsetdry(gv.cp.getfloat(gv.cfg,"DLYdry".lower())*127)
+    DLYsettime((gv.cp.getfloat(gv.cfg,"DLYtime".lower())-1000)/60000*127)
+    DLYsetsteep((gv.cp.getfloat(gv.cfg,"DLYsteep".lower())-1)/10*127)
+    DLYsetsteplen((gv.cp.getfloat(gv.cfg,"DLYsteplen".lower())-300)/3000*127)
+    DLYsetmin((gv.cp.getfloat(gv.cfg,"DLYmin".lower())-5)/20*127)
+    DLYsetmax((gv.cp.getfloat(gv.cfg,"DLYmax".lower())-50)/100*127)
 DLYreset()
 gv.MC[gv.getindex(gv.ECHO,gv.MC)][2]=DLYsetEcho     # announce to CCmap
 gv.MC[gv.getindex(gv.FLANGER,gv.MC)][2]=DLYsetFlanger
@@ -256,11 +255,11 @@ def LFsetGain(x,*z):            # 1 - 11
     c_filters.lfsetgain(gv.LFgain)
 def LFreset():
     LFsetType(0)
-    LFsetResonance((gv.cp.getfloat(cfg,"LFresonance".lower())/3.8)*127)
-    LFsetCutoff((gv.cp.getfloat(cfg,"LFcutoff".lower())-1000)/10000*127)
-    LFsetDrive((gv.cp.getfloat(cfg,"LFdrive".lower())-1)/20*127)
-    LFsetLvl(gv.cp.getfloat(cfg,"LFlvl".lower())*127)
-    LFsetGain((gv.cp.getfloat(cfg,"LFgain".lower())-1)/10*127)
+    LFsetResonance((gv.cp.getfloat(gv.cfg,"LFresonance".lower())/3.8)*127)
+    LFsetCutoff((gv.cp.getfloat(gv.cfg,"LFcutoff".lower())-1000)/10000*127)
+    LFsetDrive((gv.cp.getfloat(gv.cfg,"LFdrive".lower())-1)/20*127)
+    LFsetLvl(gv.cp.getfloat(gv.cfg,"LFlvl".lower())*127)
+    LFsetGain((gv.cp.getfloat(gv.cfg,"LFgain".lower())-1)/10*127)
 LFreset()
 gv.MC[gv.getindex(gv.LADDER,gv.MC)][2]=LFsetLadder      # announce to CCmap
 gv.MC[gv.getindex(gv.LADDERRES,gv.MC)][2]=LFsetResonance
