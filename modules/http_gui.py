@@ -1,6 +1,7 @@
 ###############################################################
 #   HTTP-GUI for controlling the box with phone, tablet or PC
-#   minimal webserver together with javascripts+css giving buildingblocks for GUI
+#   minimal webserver together with javascripts+css
+#   giving buildingblocks for GUI
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 ###############################################################
@@ -8,7 +9,7 @@ import threading
 import BaseHTTPServer,urllib, mimetypes
 from urlparse import urlparse,parse_qs
 import os,shutil,subprocess
-import gv,LFO,arp
+import gv,arp,LFO,Cpp,CHOrus
 notesymbol=["C","C&#9839;","D","E&#9837;","E","F","F&#9839;","G","G&#9839;","A","B&#9837;","B","FX"]  # 0 in scalechord table, also used in loadsamples(!)
 HTTP_PORT = 80
 
@@ -101,34 +102,52 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             if not gv.currchord==inval:
                 gv.currchord=inval
                 gv.currscale=0
-        if "SB_FVroomsize"  in fields: gv.FVsetroomsize(int(fields["SB_FVroomsize"][0])*1.27)
-        if "SB_FVdamp"      in fields: gv.FVsetdamp(int(fields["SB_FVdamp"][0])*1.27)
-        if "SB_FVlevel"     in fields: gv.FVsetlevel(int(fields["SB_FVlevel"][0])*1.27)
-        if "SB_FVwidth"     in fields: gv.FVsetwidth(int(fields["SB_FVwidth"][0])*1.27)
+        if "SB_CHOrus"      in fields: CHOrus.setType(gv.getindex(fields["SB_CHOrus"][0],["Off","On"],True))
+        if "SB_CHOdepth"    in fields: CHOrus.setdepth((float(fields["SB_CHOdepth"][0])-2)*9.77)
+        if "SB_CHOgain"     in fields: CHOrus.setgain((float(fields["SB_CHOgain"][0])-30)*2.54)
+        if "SB_FVtype"      in fields: Cpp.FVsetType(gv.getindex(fields["SB_FVtype"][0],["Off","On"],True))
+        if "SB_FVroomsize"  in fields: Cpp.FVsetroomsize(float(fields["SB_FVroomsize"][0])*1.27)
+        if "SB_FVdamp"      in fields: Cpp.FVsetdamp(float(fields["SB_FVdamp"][0])*1.27)
+        if "SB_FVlevel"     in fields: Cpp.FVsetlevel(float(fields["SB_FVlevel"][0])*1.27)
+        if "SB_FVwidth"     in fields: Cpp.FVsetwidth(float(fields["SB_FVwidth"][0])*1.27)
+        if "SB_AWtype"      in fields: Cpp.AWsetType(gv.getindex(fields["SB_AWtype"][0],gv.AWtypes,True))
+        if "SB_AWmixing"    in fields: Cpp.AWsetMixing(float(fields["SB_AWmixing"][0])*1.27)
+        if "SB_AWattack"    in fields: Cpp.AWsetAttack(float(fields["SB_AWattack"][0])*0.254)
+        if "SB_AWrelease"   in fields: Cpp.AWsetRelease(float(fields["SB_AWrelease"][0])*0.254)
+        if "SB_AWminfreq"   in fields: Cpp.AWsetMinFreq(float(fields["SB_AWminfreq"][0])*0.254)
+        if "SB_AWmaxfreq"   in fields: Cpp.AWsetMaxFreq(float(fields["SB_AWmaxfreq"][0])*0.0127)
+        if "SB_AWqfactor"   in fields: Cpp.AWsetQualityFactor(float(fields["SB_AWqfactor"][0])*0.0508)
+        if "SB_AWspeed"     in fields: Cpp.AWsetSpeed((float(fields["SB_AWspeed"][0])-100)*0.127)
+        if "SB_AWlvlrange"  in fields: Cpp.AWsetLVLrange(float(fields["SB_AWlvlrange"][0])*1.27)
+        if "SB_DLYtype"     in fields: Cpp.DLYsetType(gv.getindex(fields["SB_DLYtype"][0],gv.DLYtypes,True))
+        if "SB_DLYfb"       in fields: Cpp.DLYsetfb(float(fields["SB_DLYfb"][0])*1.27)
+        if "SB_DLYwet"      in fields: Cpp.DLYsetwet(float(fields["SB_DLYwet"][0])*1.27)
+        if "SB_DLYdry"      in fields: Cpp.DLYsetdry(float(fields["SB_DLYdry"][0])*1.27)
+        if "SB_DLYtime"     in fields: Cpp.DLYsettime((float(fields["SB_DLYtime"][0])-1000)/600*1.27)
+        if "SB_DLYsteep"    in fields: Cpp.DLYsetsteep((float(fields["SB_DLYsteep"][0])-1)*12.7)
+        if "SB_DLYsteplen"  in fields: Cpp.DLYsetsteplen((float(fields["SB_DLYsteplen"][0])-300)/30*1.27)
+        if "SB_DLYmin"      in fields: Cpp.DLYsetmin((float(fields["SB_DLYmin"][0])-5)*5.36)
+        if "SB_DLYmax"      in fields: Cpp.DLYsetmax((float(fields["SB_DLYmax"][0])-50)*1.27)
+        if "SB_LFtype"      in fields: Cpp.LFsetType(gv.getindex(fields["SB_LFtype"][0],["Off","On"],True))
+        if "SB_LFresonance" in fields: Cpp.LFsetResonance(float(fields["SB_LFresonance"][0])/38*127)
+        if "SB_LFcutoff"    in fields: Cpp.LFsetCutoff((float(fields["SB_LFcutoff"][0])-1000)/100*1.27)
+        if "SB_LFdrive"     in fields: Cpp.LFsetDrive((float(fields["SB_LFdrive"][0])-1)*6.35) # =/20.0*127)
+        if "SB_LFlvl"       in fields: Cpp.LFsetLvl((float(fields["SB_LFlvl"][0]))*1.27)
+        if "SB_LFgain"      in fields: Cpp.LFsetGain((float(fields["SB_LFgain"][0])-10)*1.27)
+        if "SB_LFOtype"     in fields: LFO.setType(gv.getindex(fields["SB_LFOtype"][0],gv.LFOtypes,True))
         if "SB_VIBRpitch"   in fields: gv.VIBRpitch=float(fields["SB_VIBRpitch"][0])/16
-        if "SB_VIBRspeed"   in fields:
-            gv.VIBRspeed=int(fields["SB_VIBRspeed"][0])
-            LFO.VibrLFO.setstep(gv.VIBRspeed)
+        if "SB_VIBRspeed"   in fields: LFO.VibrSetspeed(int(fields["SB_VIBRspeed"][0])*4)
         if "SB_VIBRtrill"   in fields:
             if fields["SB_VIBRtrill"][0].title()=="On":gv.VIBRtrill=True
             else: gv.VIBRtrill=False
         if "SB_TREMampl"    in fields: gv.TREMampl=float(fields["SB_TREMampl"][0])/100
-        if "SB_TREMspeed"   in fields:
-            gv.TREMspeed=int(fields["SB_TREMspeed"][0])
-            LFO.TremLFO.setstep(gv.TREMspeed)
+        if "SB_TREMspeed"   in fields: LFO.TremSetspeed(int(fields["SB_TREMspeed"][0])*4)
         if "SB_TREMtrill"   in fields:
             if fields["SB_TREMtrill"][0].title()=="On":gv.TREMtrill=True
             else: gv.TREMtrill=False
-        # Some corrections are necessary :-(
-        if "SB_Filter"      in fields: gv.setFilter(int(fields["SB_Filter"][0]))
-        if gv.Filterkeys[gv.currfilter]==gv.ROTATE:
-            gv.VIBRtrill=False
-            gv.TREMtrill=False
-            gv.TREMspeed=gv.VIBRspeed
-        if "SB_ARPeggiator" in fields:
-            active=False
-            if fields["SB_ARPeggiator"][0].title()=="On":active=True
-            arp.power(active)
+        if "SB_PANwidth"    in fields: gv.PANwidth=float(fields["SB_PANwidth"][0])/20
+        if "SB_PANspeed"    in fields: LFO.PanSetspeed(int(fields["SB_PANspeed"][0])*4)
+        if "SB_ARPord"      in fields: arp.ordnum(gv.getindex(fields["SB_ARPord"][0],gv.ARPtypes,True))
         if "SB_ARPstep"     in fields: arp.tempo(int(fields["SB_ARPstep"][0])*1.27)
         if "SB_ARPsustain"  in fields: arp.sustain(int(fields["SB_ARPsustain"][0])*1.27)
         if "SB_ARPloop"     in fields:
@@ -137,26 +156,30 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if "SB_ARP2end"     in fields:
             if fields["SB_ARP2end"][0].title()=="On":arp.play2end=True
             else: arp.play2end=False
-        if "SB_ARPord"      in fields:
-            arp.ordnum(gv.getindex(fields["SB_ARPord"][0],arp.ordlist,True))
         if "SB_ARPfade"     in fields: arp.fadeout(1.27*int(fields["SB_ARPfade"][0]))
         gv.display("") # show it on the box
         self.do_GET()       # as well as on the gui
 
     def LoadSamples(self):
-        gv.ActuallyLoading=True   # safety first, as these processes run in parallel
-        gv.LoadSamples()           # perform the loading
-        self.do_GET()           # answer the browser
+        gv.ActuallyLoading=True     # safety first, as these processes run in parallel
+        gv.LoadSamples()            # perform the loading
+        self.do_GET()               # answer the browser
 
     def send_API(self):
         varName=["SB_RenewMedia","SB_SoundVolume","SB_MidiVolume",
                  "SB_Preset","SB_Gain","SB_Pitchrange","SB_Notemap",
-                 "SB_Voice","SB_Scale","SB_Chord","SB_Filter",
-                 "SB_FVroomsize","SB_FVdamp","SB_FVlevel","SB_FVwidth",
-                 "SB_VIBRpitch","SB_VIBRspeed","SB_VIBRtrill",
-                 "SB_TREMampl","SB_TREMspeed","SB_TREMtrill",
-                 "SB_ARPeggiator","SB_ARPstep","SB_ARPsustain",
-                 "SB_ARPloop","SB_ARP2end","SB_ARPord","SB_ARPfade",
+                 "SB_Voice","SB_Scale","SB_Chord",
+                 "SB_FVtype","SB_FVroomsize","SB_FVdamp","SB_FVlevel","SB_FVwidth",
+                 "SB_AWtype","SB_AWmixing","SB_AWattack","SB_AWrelease","SB_AWminfreq",
+                 "SB_AWmaxfreq","SB_AWqfactor","SB_AWspeed","SB_AWlvlrange",
+                 "SB_DLYtype","SB_DLYfb","SB_DLYwet","SB_DLYdry","SB_DLYtime",
+                 "SB_DLYsteep","SB_DLYsteplen","SB_DLYmin","SB_DLYmax",
+                 "SB_LFtype","SB_LFresonance","SB_LFcutoff","SB_LFdrive","SB_LFlvl","SB_LFgain",
+                 "SB_LFOtype","SB_VIBRpitch","SB_VIBRspeed","SB_VIBRtrill",
+                 "SB_TREMampl","SB_TREMspeed","SB_TREMtrill","SB_PANwidth","SB_PANspeed",
+                 "SB_ARPstep","SB_ARPsustain","SB_ARPloop",
+                 "SB_ARP2end","SB_ARPord","SB_ARPfade",
+                 "SB_CHOrus","SB_CHOdepth","SB_CHOgain",
                  "SB_MidiChannel","SB_DefinitionTxt"]
         
         self.send_response(200)
@@ -180,8 +203,10 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write("\nSB_numnotes=%d;SB_Notename=%s;" % (len(notesymbol),notesymbol) )
         self.wfile.write("\nSB_numchords=%d;SB_Chordname=%s;\nSB_Chordnote=%s;" % (len(gv.chordname),gv.chordname,gv.chordnote) )
         self.wfile.write("\nSB_numscales=%d;SB_Scalename=%s;\nSB_Scalechord=%s;" % (len(gv.scalesymbol),gv.scalesymbol,gv.scalechord) )
-        self.wfile.write("\nSB_numfilters=%d;SB_filters=%s" % (len(gv.Filters),gv.Filterkeys) )
-        self.wfile.write("\nSB_numarpordlist=%d;SB_ARPordlist=%s" % (len(arp.ordlist),arp.ordlist) )
+        self.wfile.write("\nSB_ARPordlist=%s;" % (gv.ARPtypes) )
+        self.wfile.write("\nSB_DLYtypes=%s;" % (gv.DLYtypes) )
+        self.wfile.write("\nSB_AWtypes=%s;" % (gv.AWtypes) )
+        self.wfile.write("\nSB_LFOtypes=%s;" % (gv.LFOtypes) )
 
         self.wfile.write("\n\n// Function for (re)filling all above variables with actual values from SamplerBox:\nfunction SB_GetAPI() {")
         self.wfile.write("\n\tSB_VarName=['%s'" % (varName[0]) )
@@ -192,22 +217,25 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         else:                   ActuallyLoading="No"
         self.wfile.write("'%s',%d,%d," % (ActuallyLoading,gv.volume,gv.volumeCC*100) )
         self.wfile.write("%d,%d,%d,'%s'," % (gv.PRESET,gv.globalgain*100,gv.pitchnotes/2,gv.currnotemap) )
-        self.wfile.write("%d,%d,%d,%d," % (gv.currvoice,gv.currscale,gv.currchord,gv.currfilter) )
-        self.wfile.write("%d,%d,%d,%d," % (gv.FVroomsize*100,gv.FVdamp*100,gv.FVlevel*100,gv.FVwidth*100) )
-        if gv.VIBRtrill:s=0
-        else:           s=1
-        self.wfile.write("%d,%d,'%s'," % (gv.VIBRpitch*16,gv.VIBRspeed,s) )
-        if gv.TREMtrill:s=0
-        else:           s=1
-        self.wfile.write("%d,%d,'%s'," % (gv.TREMampl*100,gv.TREMspeed,s) )
-        if arp.active:  r=0
-        else:           r=1
-        if arp.loop:    s=0
-        else:           s=1
-        if arp.play2end:t=0
-        else:           t=1
-        self.wfile.write("'%s',%d,%d,'%s','%s',%d,%d," % (r,arp.length,arp.keepon,s,t,arp.order,arp.fadecycles) )
-        self.wfile.write("%d,'%s'" % (gv.MIDI_CHANNEL,gv.DefinitionTxt.replace('\n','&#10;').replace('\r','&#13;')) )   # make it a unix formatted JS acceptable string
+        self.wfile.write("%d,%d,%d," % (gv.currvoice,gv.currscale,gv.currchord) )
+        self.wfile.write("%d,%d,%d,%d,%d," % (gv.FVtype,gv.FVroomsize*100,gv.FVdamp*100,gv.FVlevel*100,gv.FVwidth*100) )
+        self.wfile.write("%d,%d,%d,%d," % (gv.AWtype,gv.AWmixing*100,gv.AWattack*1000,gv.AWrelease*10000) )
+        self.wfile.write("%d,%d,%d,%d,%d," % (gv.AWminfreq,gv.AWmaxfreq,gv.AWqfactor*100,gv.AWspeed,gv.AWlvlrange) )
+        self.wfile.write("%d,%d,%d,%d,%d," % (gv.DLYtype,gv.DLYfb*100,gv.DLYwet*100,gv.DLYdry*100,gv.DLYtime) )
+        self.wfile.write("%d,%d,%d,%d," % (gv.DLYsteep,gv.DLYsteplen,gv.DLYmin,gv.DLYmax) )
+        self.wfile.write("%d,%d,%d,%d,%d,%d," % (gv.LFtype,gv.LFresonance*10,gv.LFcutoff,gv.LFdrive,gv.LFlvl*100,gv.LFgain*10) )
+        if gv.VIBRtrill:s=1
+        else:           s=0
+        self.wfile.write("%d,%d,%d,'%s'," % (gv.LFOtype,gv.VIBRpitch*16,gv.VIBRspeed,s) )
+        if gv.TREMtrill:s=1
+        else:           s=0
+        self.wfile.write("%d,%d,'%s',%d,%d," % (gv.TREMampl*100,gv.TREMspeed,s,gv.PANwidth*20,gv.PANspeed) )
+        if arp.loop:    s=1
+        else:           s=0
+        if arp.play2end:t=1
+        else:           t=0
+        self.wfile.write("%d,%d,'%s','%s',%d,%d," % (arp.length,arp.keepon,s,t,gv.ARPtype,arp.fadecycles) )
+        self.wfile.write("%d,%d,%d,%d,'%s'" % (gv.CHOrus,gv.CHOdepth,gv.CHOgain*100,gv.MIDI_CHANNEL,gv.DefinitionTxt.replace('\n','&#10;').replace('\r','&#13;')) )   # make it a unix formatted JS acceptable string
         self.wfile.write("];\n\tSB_Samplesdir='%s';SB_LastMidiNote=%d;SB_LastMusicNote=%s;SB_DefErr='%s';\n" % (gv.samplesdir,gv.last_midinote,gv.last_musicnote,gv.DefinitionErr) )
         self.wfile.write("\tSB_Mode='%s';SB_numpresets=%d;SB_Presetlist=%s;\n" % (gv.sample_mode,len(gv.presetlist),gv.presetlist) )
         vlist=[]

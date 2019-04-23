@@ -18,8 +18,6 @@ import gv
 
 print("Started OLED display")
 
-gv.cfg = "config" # delete after branch merge
-
 class oled:
         def __init__(self):
                 # Parse config for display settings
