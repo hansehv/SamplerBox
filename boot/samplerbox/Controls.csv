@@ -1,0 +1,70 @@
+Controller,Type,Sets,Mode,#TAKE CARE: most keywords are case sensitive
+UA,Fixed,ModWheel,Continuous,
+UA,Fixed,Volume,Continuous,
+UA,Fixed,Sustain,Switch,"# Pedal (sustain) is complex to mix, so preferably use only one"
+UA,Fixed,Damp,Switch,# Damp all (conventional damp)
+UA,Fixed,DampNew,Switch,"# Damp only new notes,  a kind of pizzicato effect"
+UA,Fixed,DampLast,Switch,# Notes played during pedal press are damped on pedal release
+UA,Fixed,Rotate,Toggle,
+UA,Fixed,Vibrato,Toggle,
+UA,Fixed,Tremolo,Toggle,
+UA,Fixed,Panning,Toggle,
+UA,Fixed,LFOspeed,Continuous,
+UA,Fixed,VibrDepth,Continuous,
+UA,Fixed,VibrSpeed,Continuous,#Can be set with LFOspeed
+UA,Fixed,TremDepth,Continuous,
+UA,Fixed,TremSpeed,Continuous,#Can be set with LFOspeed
+UA,Fixed,PanSpeed,Continuous,
+UA,Fixed,PanWidth,Continuous,#Can be set with LFOspeed
+UA,Fixed,EnvelopeWah,Toggle,
+UA,Fixed,LFOwah,Toggle,
+UA,Fixed,ManualWah,Toggle,# Usually a pedal
+UA,Fixed,WahLvl,Continuous,
+UA,Fixed,WahMin,Continuous,
+UA,Fixed,WahMax,Continuous,
+UA,Fixed,WahQ,Continuous,
+UA,Fixed,WahAttack,Continuous,
+UA,Fixed,WahRelease,Continuous,
+UA,Fixed,WahSpeed,Continuous,
+UA,Fixed,WahLvlRange,Continuous,
+UA,Fixed,WahPedal,Continuous,
+UA,Fixed,Echo,Toggle,
+UA,Fixed,Flanger,Toggle,
+UA,Fixed,DelayFeedbackVol,Continuous,
+UA,Fixed,DelayWet,Continuous,
+UA,Fixed,DelayDry,Continuous,
+UA,Fixed,DelayTime,Continuous,
+UA,Fixed,DelaySteep,Continuous,
+UA,Fixed,DelaySteplen,Continuous,
+UA,Fixed,DelayMin,Continuous,
+UA,Fixed,DelayMax,Continuous,
+UA,Fixed,Moog,Toggle,
+UA,Fixed,MoogLvl,Continuous,
+UA,Fixed,MoogResonance,Continuous,
+UA,Fixed,MoogCutoff,Continuous,
+UA,Fixed,MoogDrive,Continuous,
+UA,Fixed,MoogGain,Continuous,
+UA,Fixed,PitchSens,Continuous,
+UA,Fixed,Reverb,Toggle,Pedal function
+UA,Fixed,ReverbLvl,Continuous,
+UA,Fixed,ReverbRoom,Continuous,
+UA,Fixed,ReverbDamp,Continuous,
+UA,Fixed,ReverbWidth,Continuous,
+UA,Fixed,ProgramUp,Switch,
+UA,Fixed,ProgramDown,Switch,
+UA,Fixed,ArpSustain,Continuous,
+UA,Fixed,ArpTime,Continuous,
+UA,Fixed,ArpFadeout,Continuous,#127 means no fade out =  repeat till toggled/set off
+UA,Fixed,ArpUp,SwitchOn,#Can be set with ArpUpDown
+UA,Fixed,ArpDown,SwitchOn,#Can be set with ArpUpDown
+UA,Fixed,ArpRandom,SwitchOn,#Can be set with ArpRndLin
+UA,Fixed,ArpUpDown,Toggle,
+UA,Fixed,ArpRndLin,Toggle,
+UA,Fixed,Arpeggiator,Toggle,
+UA,Fixed,EffectsOff,SwitchOff,
+UA,Fixed,Panic,SwitchOff,
+UA,Fixed,AutoChordOff,SwitchOff,
+UA,BackTracks,1,Toggle,
+UA,Scales,C,SwitchOn,
+UA,Chords,Min,SwitchOn,
+UA,Voices,1,SwitchOn,
