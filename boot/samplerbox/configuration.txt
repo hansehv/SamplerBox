@@ -9,11 +9,15 @@
 ##  Adapt to your setup !
 ##  Don't delete value definitions, program expects them all (no internal defaults)
 ##    - exception to this rule: GPIO definitions of unused devices
-##  Values are used as is with hardly any error checking, so: do it right !
+##  Values are used 'as is' with hardly any error checking, some friendly warnings:
+##    - read the comment ... and do it right, because:
+##    - out of range filter values can really hurt an audio system
 ###################################################################################
 [config]
 
-AUDIO_DEVICE_ID = 2             ; Examples: 0 for PI-builtin or HiFiBerry, 2 for USB soundcard
+######  General values ######
+#
+AUDIO_DEVICE_ID = 14            ; Examples: 0 for PI-builtin or HiFiBerry, 2 for USB soundcard
 USE_SERIALPORT_MIDI = False     ; Set to True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
 USE_HD44780_16x2_LCD = True     ; Set to True to use a HD44780 based 16x2 LCD
 USE_OLED = False                ; Set to True to use an OLED display !!! Configure below
@@ -40,7 +44,7 @@ BOXSTOP127 = 109                ; Value of "Right side", "Left side" has some no
 #		88-key:	- 108=C8
 #		77-key:	- 103=G7
 #		61-key:	- 96=C7
-volume = 87                     ; the startup (alsa=output) volume (0-100), change with function buttons
+volume = 87                     ; the startup (alsa=output) volume (0-100)
 volumeCC = 1.0                  ; assumed value of the volumeknob controller before first use, max=1.0 (the knob can only decrease).
 BOXRELEASE = 30                 ; 30 results in the samplerbox default (FADEOUTLENGTH=30000)
 BOXDAMP = 10                    ; the "release value for damp": how quick do sounds die on damp pedal and retrigger
@@ -68,13 +72,16 @@ PITCHBITS = 7                   ; pitchwheel resolution, 0=disable, max=14 (=163
 #     -- Serial Port : 14,15
 #     -- I2C         : 2,3
 #     -- HiFiBerry   : 2,3,18,19,20,21      
+#
 #     -- USE_BUTTONS --
 BUT_incr=5                      ; Increase button
 BUT_decr=13                     ; Decrease button
 BUT_sel=26                      ; Select button
+#
 #     -- USE_LEDS --
-LED_red=6                      	; Red light
-LED_green=27                    ; Green light
+LED_red=27                      ; Red light
+LED_green=22                    ; Green light
+#
 #     -- USE_HD44780_16x2_LCD -- 4 bits operation
 LCD_RS=7                        ; LCD Register select
 LCD_E=8                         ; Enable
@@ -92,14 +99,47 @@ OLED_PORT=0                     ; OLED device port, default should be fine
 OLED_WIDTH=128                  ; width of the display in pixels
 OLED_HEIGHT=64                  ; height of the display in pixels
 OLED_PADDING=-2                 ; padding around the display content, important for readability
+#
 ########  Default filter values ########
-BOXFVroomsize=0.5               ; Freeverb roomsize in MIDI units, package default 0.5
-BOXFVdamp=0.4                   ; Freeverb damp in MIDI units, package default 0.4
-BOXFVlevel=0.4                  ; Freeverb wet in MIDI units, implicit dry: package default 1/3 and 0
-BOXFVwidth=1.0                  ; Freeverb width in MIDI units, package default 1
-BOXVIBRpitch=0.5                ; Vibrato note variation
-BOXVIBRspeed=15                 ; 14 ==> 10Hz on saw & block, 5Hz on triangle
-BOXVIBRtrill=False              ; a vibratotrill is a kind of yodeling
-BOXTREMampl=.18                 ; amplitude variation 0-1, resulting volume is between full=1 and full-TREMampl
-BOXTREMspeed=3                  ; See VIBRspeed
-BOXTREMtrill=False              ; a tremolotrill is a goatlike sound, like some country singers :-)
+#         R E V E R B
+FVroomsize=0.5                  ; Roomsize (0-1), package default 0.5
+FVdamp=0.4                      ; Damp (0-1), package default 0.4
+FVlevel=0.4                     ; Wet (0-1), implicit dry: package default 1/3 and 0
+FVwidth=1.0                     ; Width (0-1), package default 1
+#         (auto) W A H
+AWqfactor=0.25                  ; Qfactor 0.25-25
+AWmixing=0.9			; Wet (0-1), implicit dry
+AWminfreq=20                    ; range bottom 20-500
+AWmaxfreq=3000                  ; range top 1000-10000
+AWattack=0.04                   ; Envelope: begin detection 0.5-0.005
+AWrelease=0.002                 ; Envelope: end detection 0.05-0.0005
+AWspeed=500                     ; LFO: speed of the the oscillator 100-1100
+AWlvlrange=90                   ; LFO+Pedal: sensitivity (0-100, 0 = filter without wah)
+#         D E L A Y  /  F L A N G E R
+DLYfb=0.7                       ; Feedback (0-1), amount passed to loop ("next bucket")
+DLYwet=0.7                      ; effectvolume (0-1)
+DLYdry=1.0                      ; source volume (0-1). Echo only; flanger sets dry via wet.
+DLYtime=10000.0                 ; delay time (1000-61000) for echo
+DLYsteep=1                      ; gradient (1-11), steepness of the flangersweep
+DLYsteplen=1000.0               ; steplen/time (300-3300) of the flanger delay
+DLYmin=10.0                     ; minimum delay (5-25) of the flanger
+DLYmax=80.0                     ; maximum delay (50-150) of the flanger
+#         M O O G L A D D E R  (=lowpass)
+#         Out-of-range values can have serious implications
+LFresonance=0.4                 ; resonance: 0-3.8. Exceeding 3.8 may cause crashes
+LFcutoff=10000.0                ; cutoff frequency, 1000-11000
+LFdrive=1.0                     ; filter inputlevel, 1-21
+LFlvl=0.5                       ; wetlevel, 0-1: dry=1-wet
+LFgain=4.0                      ; filtergain, 1-11. Depends on sound, keep default value <5!
+#         M O D U L A T E
+VIBRpitch=0.5                   ; Vibrato note variation
+VIBRspeed=15                    ; 14 ==> 10Hz on saw & block, 5Hz on triangle
+VIBRtrill=False                 ; a vibratotrill is a kind of yodeling
+TREMampl=.18                    ; amplitude variation 0-1, resulting volume is between full=1 and full-TREMampl
+TREMspeed=3                     ; See VIBRspeed
+TREMtrill=False                 ; a tremolotrill is a goatlike sound (country singers??)
+PANwidth=1                      ; maximum panning width
+PANspeed=1                      ; See VIBRspeed
+#         C H O R U S
+CHOdepth=4                      ; 2-15, level of "unsync/untune" of the voices
+CHOgain=0.4                     ; 0.3-0.8, volume of the separate voices

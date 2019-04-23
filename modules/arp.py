@@ -46,7 +46,7 @@ def process():
         if gv.ActuallyLoading:              # playing while loading new data is impossible
             return(rewind())                # so it ends here
         cyclepos+=1
-        if order==2:
+        if gv.ARPtype==3:
             if cyclepos%cyclestep==0:       # step (note+rest) end reached
                 cyclepos=cyclestep*random.randint(0,len(sequence)-1)
         else:
@@ -67,7 +67,12 @@ def process():
         if steppos==0:
             playnote=currnote+sequence[stepnr]
             if playnote>(127-gv.stop127) and playnote<gv.stop127:   # stay within keyboard range
-                gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(playnote, playnote, velmixer*gv.globalgain, 0, 0))
+                if gv.CHOrus:
+                    gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(playnote, playnote, velmixer*gv.globalgain*gv.CHOgain, 0, 0))
+                    gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(playnote, playnote, velmixer*gv.globalgain*gv.CHOgain, 2, 0-(gv.CHOdepth/2+1))) #5
+                    gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(playnote, playnote, velmixer*gv.globalgain*gv.CHOgain, 5, 0+gv.CHOdepth)) #8
+                else:
+                    gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(playnote, playnote, velmixer*gv.globalgain, 0, 0))
             else:
                 playnote=-1
             if fadecycles<100 and (not pressed or not loop):
@@ -124,7 +129,7 @@ def note_onoff(messagetype, midinote, played_velocity, velocity_mode, VELSAMPLE)
         if currnote==midinote:
             pressed=False   # keep track of keypress
             noteon=False
-            if not play2end or order==2:  # random(ord=2) will never reach an end
+            if not play2end or gv.ARPtype==3:  # random(ord=2) will never reach an end
                 rewind()
         else:
             return          # ignore unrelated note-off's (keys held while pressing a new one)
@@ -143,7 +148,7 @@ def note_onoff(messagetype, midinote, played_velocity, velocity_mode, VELSAMPLE)
             sequence = gv.chordnote[gv.scalechord[gv.currscale][gv.last_musicnote]]
         else:
             sequence=gv.chordnote[gv.currchord]
-        if order==1:
+        if gv.ARPtype==2:
             sequence=list(reversed(sequence))
         cyclelen=len(sequence)
         stepguard()
@@ -167,39 +172,41 @@ def sustain(CCval,*z):  # time between note-on and note-off,
     stepguard()
 gv.MC[gv.getindex(gv.ARPSUSTAIN,gv.MC)][2]=sustain
 
-ordlist=["Up","Down","Random"]
-order=0
+gv.ARPtypes=["Off","Up","Down","Random"]
+gv.ARPtype=0
 lastlinord=0
 def ordnum(num):
-    global order,lastlinord, sequence
-    order=num
-    if order<2:
-        if lastlinord!=order:
-            sequence=list(reversed(sequence))
-            lastlinord=order
+    global lastlinord, sequence
+    gv.ARPtype=num
+    if gv.ARPtype==0:
+        power(False)
+    else:
+        power(True)
+        if gv.ARPtype<3:
+            if lastlinord!=gv.ARPtype:
+                sequence=list(reversed(sequence))
+                lastlinord=gv.ARPtype
 def up(*z):
-    ordnum(0)
-def down(*z):
     ordnum(1)
+def down(*z):
+    ordnum(2)
 def updown(*z):
-    global order,lastlinord, sequence
-    if lastlinord==0:
+    global lastlinord, sequence
+    if lastlinord==1:
+        lastlinord=2
+        sequence=list(reversed(sequence))
+    else:
         lastlinord=1
         sequence=list(reversed(sequence))
-    else:
-        lastlinord=0
-        sequence=list(reversed(sequence))
-    if order!=2:
-        order=lastlinord
+    if gv.ARPtype!=3:
+        gv.ARPtype=lastlinord
 def rand(*z):
-    global order
-    order=2
+    gv.ARPtype=3
 def rndlin(*z):
-    global order
-    if order==2:
-        order=lastlinord
+    if gv.ARPtype==3:
+        gv.ARPtype=lastlinord
     else:
-        order=2
+        gv.ARPtype=3
 gv.MC[gv.getindex(gv.ARPUP,gv.MC)][2]=up
 gv.MC[gv.getindex(gv.ARPDOWN,gv.MC)][2]=down
 gv.MC[gv.getindex(gv.ARPUPDOWN,gv.MC)][2]=updown

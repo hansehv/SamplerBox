@@ -6,16 +6,15 @@
 import RPi.GPIO as GPIO
 import time
 import gv
-s="config"
 usleep = lambda x: time.sleep(x/1000000.0)
 msleep = lambda x: time.sleep(x/1000.0)
-LCD_RS = gv.cp.getint(s,"LCD_RS".lower())
-LCD_E = gv.cp.getint(s,"LCD_E".lower())
+LCD_RS = gv.cp.getint(gv.cfg,"LCD_RS".lower())
+LCD_E = gv.cp.getint(gv.cfg,"LCD_E".lower())
 # get&insert LCD_D0 to LCD_D3 as first elements in pins_db for 8-bit operation
-LCD_D4 = gv.cp.getint(s,"LCD_D4".lower())
-LCD_D5 = gv.cp.getint(s,"LCD_D5".lower())
-LCD_D6 = gv.cp.getint(s,"LCD_D6".lower())
-LCD_D7 = gv.cp.getint(s,"LCD_D7".lower())
+LCD_D4 = gv.cp.getint(gv.cfg,"LCD_D4".lower())
+LCD_D5 = gv.cp.getint(gv.cfg,"LCD_D5".lower())
+LCD_D6 = gv.cp.getint(gv.cfg,"LCD_D6".lower())
+LCD_D7 = gv.cp.getint(gv.cfg,"LCD_D7".lower())
 
 class HD44780:
 
@@ -90,15 +89,15 @@ class HD44780:
                 x += 1
                 if x < 17: self.cmd(ord(char),1)
 
-    def display(self,s2,basename='',sample_mode='',USE_ALSA_MIXER=False,volume=0,currvoice=0,currchord=0,chordname=[''],scalename=[''],currscale=0,button_disp=[''],buttfunc=0):
-        if USE_ALSA_MIXER:
-            s1 = "%s%s %s %d%%" % (scalename[currscale], chordname[currchord], sample_mode, volume)
+    def display(self,s2):
+        if gv.USE_ALSA_MIXER:
+            s1 = "%s%s %s %d%%" % (gv.scalename[gv.currscale], gv.chordname[gv.currchord], gv.sample_mode, gv.volume)
         else:
-            s1 = "%s%s %s" % (scalename[currscale], chordname[currchord], sample_mode)
+            s1 = "%s%s %s" % (gv.scalename[gv.currscale], gv.chordname[gv.currchord], gv.sample_mode)
         if s2 == "":
-            if currvoice>1: s2=str(currvoice)+":"
-            s2 += basename
-            if buttfunc>0:
+            if gv.currvoice>1: s2=str(gv.currvoice)+":"
+            s2 += gv.basename
+            if gv.buttfunc>0:
                 s1 += " "*15
-                s1 = s1[:13] + "> "+button_disp[buttfunc]
+                s1 = s1[:13] + "> "+gv.button_disp[gv.buttfunc]
         self.message(s1 + " "*15 + "\n" + s2 + " "*15)

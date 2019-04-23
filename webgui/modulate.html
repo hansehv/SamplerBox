@@ -1,6 +1,6 @@
 <!DOCTYPE html><HTML><HEAD>
 <!-- Minus AutoDato -->
-	<TITLE>Arpeggiator</TITLE>
+	<TITLE>Modulate</TITLE>
 <META NAME="Generator" CONTENT="Stone's WebWriter 3.5">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Script-Type" content="text/javascript">
@@ -12,22 +12,29 @@
 
 <TABLE WIDTH="100%"><TR>
 <TD WIDTH="112"><A HREF="index.html"><IMG SRC="SamplerBox.gif" BORDER="0" WIDTH="80" HEIGHT="27" ALIGN="middle" ALT=""></A></TD>
-<TD ALIGN="center"><B>Arpeggiator</B></TD>
+<TD ALIGN="center"><B>Modulate</B></TD>
 <TD ALIGN="center"><BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON></TD>
 </TR></TABLE>
 
 <FORM ID="elem_SB_Form" STYLE="line-height:300%;">
-<span ID="input_SB_ARPord">&nbsp; &nbsp; &nbsp;</span>
+<span ID="input_SB_LFOtype">&nbsp; &nbsp; &nbsp;</span>
 <BR>
-<span ID="input_SB_Scale">Scale/Chord: </span>
-<span ID="input_SB_Chord">/ </span>
+<B>Vibrato</B> &nbsp; <span ID="input_SB_VIBRtrill">Trill </span>
 <BR>
-<span ID="input_SB_ARPstep">Cycle time :</span>
-<span ID="input_SB_ARPsustain">Notelength:</span>
-<span ID="input_SB_ARPfade">Fadeout :</span>
+<span ID="input_SB_VIBRpitch">1/16 note:</span>
+<span ID="input_SB_VIBRspeed">14=~5Hz</span>
 <BR>
-<span ID="input_SB_ARPloop">Loop:</span>
- &nbsp; &nbsp; &nbsp; &nbsp; <span ID="input_SB_ARP2end">Play to end:</span>
+<B>Tremolo</B> &nbsp; <span ID="input_SB_TREMtrill">Trill </span>
+<BR>
+<span ID="input_SB_TREMampl">Volume &nbsp;:</span>
+<span ID="input_SB_TREMspeed">7=~5Hz &nbsp;</span>
+<BR>
+<B>Panning</B>
+<BR>
+<span ID="input_SB_PANwidth">Width &nbsp; &nbsp; :</span>
+<span ID="input_SB_PANspeed">7=~5Hz &nbsp;</span>
+<BR>
+<B>Rotate</B> is vibrato + tremolo + panning at vibratospeed
 </FORM>
 
 <script>SB_Update();</script>

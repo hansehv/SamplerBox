@@ -141,3 +141,8 @@ Februari 2019:
   - Added Arpeggiator
   - Made radiobuttons in webgui more versatile
   - Enabled program changes via midi CC's for devices without program change button - THIS CHANGES THE CCmap.csv
+March/April 2019:
+  - Added Wah's, Delay/flanger, Moog lowpass and Chorus
+  - Cleaned up global variable usage and calls to C++ routines
+  - TheNothingman contributed OLED support via Luma, tested using SH1106
+  - bug fixes
