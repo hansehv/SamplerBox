@@ -169,6 +169,8 @@ s="config"
 AUDIO_DEVICE_ID = gv.cp.getint(s,"AUDIO_DEVICE_ID".lower())
 USE_SERIALPORT_MIDI = gv.cp.getboolean(s,"USE_SERIALPORT_MIDI".lower())
 USE_HD44780_16x2_LCD = gv.cp.getboolean(s,"USE_HD44780_16x2_LCD".lower())
+USE_OLED = gv.cp.getboolean(s,"USE_OLED".lower())
+OLED_DRIVER = gv.cp.get(s,"OLED_DRIVER".lower())
 USE_I2C_7SEGMENTDISPLAY = gv.cp.getboolean(s,"USE_I2C_7SEGMENTDISPLAY".lower())
 gv.USE_ALSA_MIXER = gv.cp.getboolean(s,"USE_ALSA_MIXER".lower())
 USE_48kHz = gv.cp.getboolean(s,"USE_48kHz".lower())
@@ -254,6 +256,14 @@ if USE_HD44780_16x2_LCD:
     lcd = lcd_16x2.HD44780()
     def display(s2,s7=""):
         lcd.display(s2,gv.basename,gv.sample_mode,gv.USE_ALSA_MIXER,gv.volume,gv.currvoice,gv.currchord,gv.chordname,gv.scalename,gv.currscale,gv.button_disp,gv.buttfunc)
+    display('Start Samplerbox')
+
+elif USE_OLED:
+	USE_GPIO=True
+    import OLED
+    oled = OLED.oled()
+    def display(s2,s7=""):
+        oled.display(s2)
     display('Start Samplerbox')
 
 elif USE_I2C_7SEGMENTDISPLAY:
@@ -1087,7 +1097,7 @@ def ActuallyLoad():
                         continue
                     if r'%%mode' in pattern:
                         m = pattern.split('=')[1].strip().title()
-                        if not (m==gv.sample_mode): gv.sample_mode = m
+                        if (GetStopmode(m)>-2): gv.sample_mode = m
                         continue
                     if r'%%velmode' in pattern:
                         m = pattern.split('=')[1].strip().title()
