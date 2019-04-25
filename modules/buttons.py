@@ -7,12 +7,12 @@ import RPi.GPIO as GPIO
 import time,threading
 import gv
 
-s="config"
-BUT_incr = gv.cp.getint(s,"BUT_incr".lower())
-BUT_decr = gv.cp.getint(s,"BUT_decr".lower())
-BUT_sel  = gv.cp.getint(s,"BUT_sel".lower())
+BUT_incr = gv.cp.getint(gv.cfg,"BUT_incr".lower())
+BUT_decr = gv.cp.getint(gv.cfg,"BUT_decr".lower())
+BUT_sel  = gv.cp.getint(gv.cfg,"BUT_sel".lower())
 BUT_voldown = 19
 BUT_volup = 6
+
 lastbuttontime = 0
 buttfunc = 0
 button_functions=["","Volume","Midichannel","RenewUSB/MidMute","Play Chord:","Use Scale:"]
@@ -131,4 +131,3 @@ def Buttons():
 ButtonsThread = threading.Thread(target = Buttons)
 ButtonsThread.daemon = True
 ButtonsThread.start()
-

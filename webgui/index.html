@@ -21,17 +21,34 @@
 <span ID="input_SB_Preset">Preset: </span>
 <BR>
 <span ID="input_SB_Voice">Voice: </span>
-<span ID="elem_SB_xvoice"> FX-track:</span><span ID="elem_SB_Mode"> Mode: </span>
+<span ID="elem_SB_Mode"></span><span ID="elem_SB_xvoice"> FX:</span>
 <BR>
 <span ID="input_SB_Notemap">Notemap: </span>
 <BR>
-<span ID="input_SB_Scale">Scale/Chord: </span>
+<BUTTON TYPE="button" onclick='window.location.assign("autochord.html");'  >Scale/Chord</BUTTON>
+ &nbsp; <span ID="input_SB_Scale"></span>
 <span ID="input_SB_Chord">/ </span>
-<span ID="elem_SB_LastMidiNote">Last key: </span>
-<span ID="elem_SB_LastMusicNote">= </span>
 <BR>
-<BUTTON TYPE="button" onclick='window.location.assign("effects.html");'>Effects</BUTTON>
- &nbsp; <span ID="input_SB_Filter">Active effect/filter: </span>
+<BUTTON TYPE="button" onclick='window.location.assign("arpeggiator.html");'>Arpeggio</BUTTON>
+ &nbsp; <span ID="input_SB_ARPord"></span>
+<BR>
+<BUTTON TYPE="button" onclick='window.location.assign("chorus.html");'>&nbsp;Chorus&nbsp;</BUTTON>
+ &nbsp; <span ID="input_SB_CHOrus"></span>
+<BR>
+<BUTTON TYPE="button" onclick='window.location.assign("modulate.html");'>Modulate</BUTTON>
+ &nbsp; <span ID="input_SB_LFOtype"></span>
+<BR>
+<BUTTON TYPE="button" onclick='window.location.assign("moog.html");'>&nbsp; Moog &nbsp;</BUTTON>
+ &nbsp; <span ID="input_SB_LFtype"></span>
+<BR>
+<BUTTON TYPE="button" onclick='window.location.assign("wah.html");'>Wah-Wah&nbsp;</BUTTON>
+ &nbsp; <span ID="input_SB_AWtype"></span>
+<BR>
+<BUTTON TYPE="button" onclick='window.location.assign("delay.html");'>&nbsp;Delay &nbsp;</BUTTON>
+ &nbsp; <span ID="input_SB_DLYtype"></span>
+<BR>
+<BUTTON TYPE="button" onclick='window.location.assign("reverb.html");'>&nbsp;Reverb&nbsp;</BUTTON>
+ &nbsp; <span ID="input_SB_FVtype"></span>
 <BR>
 <span ID="input_SB_SoundVolume">Line volume :</span>
 <BR>
@@ -41,7 +58,6 @@
 <div ID="elem_SB_DefErr">Skipped because of errors: line#  </div>
 <HR>
 <BUTTON TYPE="button" onclick='window.location.assign("readme.html");'>Read Me</BUTTON>
- &nbsp; <BUTTON TYPE="button" onclick='window.location.assign("autochord.html");'>Chords&amp;Scales</BUTTON>
 </FORM>
 
 <script>SB_Update();</script>

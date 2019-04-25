@@ -1,54 +1,91 @@
 #
 #  Global variables for samplerbox
+#  most variables are defined by the respective procedures
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 #   see docs at  http://homspace.xs4all.nl/homspace/samplerbox
 #   changelog in changelist.txt
 #
 
-# Loaded from configuration.txt
-AUDIO_DEVICE_ID=0
-USE_ALSA_MIXER=False
-MIDI_CHANNEL=1
-PRESET=0
-PRESETBASE=0
-BOXTREMspeed=0
-volume=0
-volumeCC=0
-#globaltranspose=0   # to be deleted, obsoleted by transpose on sample level
-
 # Literals
+cfg="config"
 SAMPLESDEF="definition.txt"
 HTTP_ROOT="webgui"
 FIXED="Fixed"
 VOICES="Voices"
+NOTEMAPS="Notemaps"
 BACKTRACKS="BackTracks"
 CHORDS="Chords"
 SCALES="Scales"
 PITCHWHEEL="PitchWheel"
 MODWHEEL="ModWheel"
+PROGUP="ProgramUp"
+PROGDN="ProgramDown"
 VOLUME="Volume"
 SUSTAIN="Sustain"
 DAMP="Damp"
 DAMPNEW="DampNew"
 DAMPLAST="DampLast"
+REVERB="Reverb"
 REVERBLVL="ReverbLvl"
 REVERBROOM="ReverbRoom"
 REVERBDAMP="ReverbDamp"
 REVERBWIDTH="ReverbWidth"
-REVERB="Reverb"
+AUTOWAHENV="EnvelopeWah"
+AUTOWAHLFO="LFOwah"
+AUTOWAHMAN="ManualWah"
+AUTOWAHLVL="WahLvl"
+AUTOWAHMIN="WahMin"
+AUTOWAHMAX="WahMax"
+AUTOWAHQ="WahQ"
+AUTOWAHATTACK="WahAttack"
+AUTOWAHRELEASE="WahRelease"
+AUTOWAHSPEED="WahSpeed"
+AUTOWAHLVLRNGE="WahLvlrange"
+AUTOWAHPEDAL="WahPedal"
+ECHO="Echo"
+FLANGER="Flanger"
+DELAYFB="DelayFeedbackVol"
+DELAYFW="DelayWet"
+DELAYMIX="DelayDry"
+DELAYTIME="DelayTime"
+DELAYSTEEP="DelaySteep"
+DELAYSTEPLEN="DelaySteplen"
+DELAYMIN="DelayMin"
+DELAYMAX="DelayMax"
+LADDER="Moog"
+LADDERLVL="MoogLvl"
+LADDERRES="MoogResonance"
+LADDERCUTOFF="MoogCutoff"
+LADDERDRIVE="MoogDrive"
+LADDERGAIN="MoogGain"
 PITCHSENS="PitchSens"
 VIBRATO="Vibrato"
 TREMOLO="Tremolo"
+PANNING="Panning"
 ROTATE="Rotate"
+PANWIDTH="PanWidth"
+PANSPEED="PanSpeed"
 TREMDEPTH="TremDepth"
 TREMSPEED="TremSpeed"
 VIBRDEPTH="VibrDepth"
 VIBRSPEED="VibrSpeed"
 LFOSPEED="LFOspeed"
+CHORUS="Chorus"
+CHORUSDEPTH="ChorusDepth"
+CHORUSGAIN="ChorusGain"
 EFFECTSOFF="EffectsOff"
 AUTOCHORDOFF="AutoChordOff"
 PANIC="Panic"
+ARP="Arpeggiator"
+ARPTEMPO="ArpTime"
+ARPSUSTAIN="ArpSustain"
+ARPUP="ArpUp"
+ARPDOWN="ArpDown"
+ARPUPDOWN="ArpUpDown"
+ARPRANDOM="ArpRandom"
+ARPRNDLIN="ArpRndLin"
+ARPFADE="ArpFadeout"
 UA="UA"
 
 # Internal vars
@@ -65,8 +102,6 @@ samples={}
 playingnotes={}
 sustainplayingnotes=[]
 triggernotes=[]
-sustain=False       # only in midicallback
-damp=False          # only in midicallback
 playingsounds=[]
 presetlist=[]
 btracklist=[]
@@ -85,18 +120,6 @@ PITCHBEND=0
 pitchnotes=0
 pitchneutral=0
 pitchdiv=0
-FVroomsize=0
-FVdamp=0
-FVlevel=0
-FVwidth=0
-VIBRpitch=0
-VIBRspeed=0
-VIBRvalue=0         # Value 0 gives original note
-VIBRtrill=0
-TREMampl=0
-TREMspeed=0
-TREMvalue=1.0       # Full volume
-TREMtrill=0
 chordname=[]
 chordnote=[]
 scalesymbol=[]
@@ -111,33 +134,17 @@ notemap=[]
 notemaps=[]
 currnotemap=""
 
-# Pointers to recursive/cross-used procs and related vars
-# All initialized in main script
-getindex=None
-notename2midinote=None
-setVoice=None
-display=None
-cp=None
-FVsetlevel=None
-FVsetroomsize=None
-FVsetdamp=None
-FVsetwidth=None
-FVinit=None
-Filters=None
-FilterTidy=None
-Filterkeys=None
-filterproc=None
-setFilter=None
-MidiCallback=None
-setvolume=None
-LoadSamples=None
 
+def NoProc(*vals):      # Dummy
+    pass
 def safeguard (*vals):  # dedicated proc for MC-table
     arr=[]
     for val in vals :
         arr.append(val)
     print "gv.Safeguard: call to unset procedure for %s:%s" %(arr[1],arr[0])
 MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch),procedure)
+[PROGUP,1,safeguard],
+[PROGDN,1,safeguard],
 [PITCHWHEEL,0,safeguard],
 [MODWHEEL,0,safeguard],
 [VOLUME,0,safeguard],
@@ -145,25 +152,68 @@ MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch)
 [DAMP,3,safeguard],
 [DAMPNEW,3,safeguard],
 [DAMPLAST,3,safeguard],
+[REVERB,1,safeguard],
 [REVERBLVL,0,safeguard], 
 [REVERBROOM,0,safeguard],
 [REVERBDAMP,0,safeguard],
 [REVERBWIDTH,0,safeguard],
+[AUTOWAHENV,1,safeguard],
+[AUTOWAHLFO,1,safeguard],
+[AUTOWAHMAN,1,safeguard],
+[AUTOWAHLVL,0,safeguard],
+[AUTOWAHMIN,0,safeguard],
+[AUTOWAHMAX,0,safeguard],
+[AUTOWAHQ,0,safeguard],
+[AUTOWAHATTACK,0,safeguard],
+[AUTOWAHRELEASE,0,safeguard],
+[AUTOWAHSPEED,0,safeguard],
+[AUTOWAHLVLRNGE,0,safeguard],
+[AUTOWAHPEDAL,0,safeguard],
+[ECHO,1,safeguard],
+[FLANGER,1,safeguard],
+[DELAYFB,0,safeguard],
+[DELAYFW,0,safeguard],
+[DELAYMIX,0,safeguard],
+[DELAYTIME,0,safeguard],
+[DELAYSTEEP,0,safeguard],
+[DELAYSTEPLEN,0,safeguard],
+[DELAYMIN,0,safeguard],
+[DELAYMAX,0,safeguard],
+[LADDER,0,safeguard],
+[LADDERLVL,0,safeguard],
+[LADDERRES,0,safeguard],
+[LADDERCUTOFF,0,safeguard],
+[LADDERDRIVE,0,safeguard],
+[LADDERGAIN,0,safeguard],
+[TREMOLO,1,safeguard],
+[VIBRATO,1,safeguard],
+[ROTATE,1,safeguard],
 [TREMDEPTH,0,safeguard],
 [TREMSPEED,0,safeguard],
 [VIBRDEPTH,0,safeguard],
 [VIBRSPEED,0,safeguard],
+[PANWIDTH,0,safeguard],
+[PANSPEED,0,safeguard],
 [LFOSPEED,0,safeguard],
+[CHORUS,1,safeguard],
+[CHORUSDEPTH,0,safeguard],
+[CHORUSGAIN,0,safeguard],
 [PITCHSENS,0,safeguard],
-[REVERB,1,safeguard],
-[TREMOLO,1,safeguard],
-[VIBRATO,1,safeguard],
-[ROTATE,1,safeguard],
 [EFFECTSOFF,1,safeguard],
 [AUTOCHORDOFF,1,safeguard],
 [PANIC,1,safeguard],
 [VOICES,2,safeguard],
+[NOTEMAPS,2,safeguard],
 [BACKTRACKS,2,safeguard],
 [CHORDS,2,safeguard],
-[SCALES,2,safeguard]
+[SCALES,2,safeguard],
+[ARP,1,safeguard],
+[ARPTEMPO,0,safeguard],
+[ARPSUSTAIN,0,safeguard],
+[ARPUP,1,safeguard],
+[ARPDOWN,1,safeguard],
+[ARPUPDOWN,1,safeguard],
+[ARPRANDOM,1,safeguard],
+[ARPRNDLIN,1,safeguard],
+[ARPFADE,0,safeguard]
 ]

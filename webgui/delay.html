@@ -1,0 +1,35 @@
+<!DOCTYPE html><HTML><HEAD>
+<!-- Minus AutoDato -->
+	<TITLE>Delay</TITLE>
+<META NAME="Generator" CONTENT="Stone's WebWriter 3.5">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
+<script SRC="SamplerBox.API" TYPE="text/javascript"></script>
+<script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+</HEAD>
+<BODY>
+
+<TABLE WIDTH="100%"><TR>
+<TD WIDTH="112"><A HREF="index.html"><IMG SRC="SamplerBox.gif" BORDER="0" WIDTH="80" HEIGHT="27" ALIGN="middle" ALT=""></A></TD>
+<TD ALIGN="center"><B>Delay</B></TD>
+<TD ALIGN="center"><BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON></TD>
+</TR></TABLE>
+
+<FORM ID="elem_SB_Form" STYLE="line-height:300%;">
+<span ID="input_SB_DLYtype">&nbsp; &nbsp; &nbsp;</span>
+<span ID="input_SB_DLYfb">Feedback:</span>
+<span ID="input_SB_DLYwet">Wetlevel &nbsp;:</span>
+<BR> &nbsp; -------- Echo:<BR>
+<span ID="input_SB_DLYtime">Delay &nbsp; &nbsp; &nbsp;:</span>
+<span ID="input_SB_DLYdry">Drylevel &nbsp;:</span>
+<BR> &nbsp; -------- Flanger:<BR>
+<span ID="input_SB_DLYsteplen">Cyclelen :</span>
+<span ID="input_SB_DLYmin">Mindelay:</span>
+<span ID="input_SB_DLYmax">Maxdelay</span>
+<span ID="input_SB_DLYsteep">Gradient:</span>
+</FORM>
+
+<script>SB_Update();</script>
+</BODY>
+</HTML>

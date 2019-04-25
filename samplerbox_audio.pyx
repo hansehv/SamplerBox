@@ -30,7 +30,10 @@
 #      - Included possibility to "retune" per note
 #      - Included note filling in fractions: 1=semitones, 2=half-of-that= q-notes in equal intervals
 #  January 2019
-#      - implemented damp (short release)
+#      - implemented damp (= short release)
+#  April 2019
+#      - moved global variables from call to import gv
+#      - implemented panning
 #
 #  Rebuild with "python setup.py build_ext --inplace"
 
@@ -39,19 +42,23 @@
 import cython
 import numpy
 cimport numpy
+import sys
+sys.path.append('./modules')
+import gv
 
-def mixaudiobuffers(list playingsounds, list rmlist, int frame_count, numpy.ndarray FADEOUT, int FADEOUTLENGTH, numpy.ndarray SPEED, int SPEEDRANGE, int PITCHBEND, int PITCHSTEPS):
+#def mixaudiobuffers(list playingsounds, list rmlist, int frame_count, numpy.ndarray FADEOUT, int FADEOUTLENGTH, numpy.ndarray SPEED, int SPEEDRANGE, int PITCHBEND, int PITCHSTEPS, float PANvalue):
+def mixaudiobuffers(list rmlist, int frame_count, numpy.ndarray FADEOUT, int FADEOUTLENGTH, numpy.ndarray SPEED, int SPEEDRANGE, int PITCHBEND, int PITCHSTEPS):
 
     cdef int i, ii, k, l, N, length, looppos, fadeoutpos
     cdef float speed, newsz, pos, j
     cdef numpy.ndarray b = numpy.zeros(2 * frame_count, numpy.float32)      # output buffer
     cdef float* bb = <float *> (b.data)                                     # and its pointer
     cdef numpy.ndarray z
-    cdef float vel, pitchbend
+    cdef float vel, pitchbend, lpan, rpan
     cdef short* zz
     cdef float* fadeout = <float *> (FADEOUT.data)
 
-    for snd in playingsounds:
+    for snd in gv.playingsounds:
         pos = snd.pos               # some translations to direct variables for speed
         fadeoutpos = snd.fadeoutpos
         looppos = snd.loop          # can be changed to -1 for release marker processing
@@ -60,8 +67,10 @@ def mixaudiobuffers(list playingsounds, list rmlist, int frame_count, numpy.ndar
         fractions=snd.sound.fractions
 
         # Below overflow protection values correspond with tables in samplerbox.py
-        if snd.sound.voice==0:      # Exclude FXtrack from notefill and pitchbend
+        if snd.sound.voice==0:      # Exclude FXtrack from notefill, pitchbend and panning
             speed = SPEED[SPEEDRANGE*PITCHSTEPS]
+            lpan = 1.0
+            rpan = 1.0
         else:
             if fractions==1:
                 j=0
@@ -75,6 +84,12 @@ def mixaudiobuffers(list playingsounds, list rmlist, int frame_count, numpy.ndar
                 if i >= speedrange*PITCHSTEPS:       # 2*48=96 and higher is out of limits
                     i = (speedrange-1) * PITCHSTEPS  # save the program by ruining the pitch :-(
             speed = SPEED[i]
+            if gv.PANvalue > 0:
+                lpan = 1.0-gv.PANvalue
+                rpan = 1.0+gv.PANvalue/10
+            else:
+                lpan = 1.0-gv.PANvalue/10
+                rpan = 1.0+gv.PANvalue
         newsz = frame_count * speed
         z = snd.sound.data
         zz = <short *> (z.data)
@@ -112,8 +127,8 @@ def mixaudiobuffers(list playingsounds, list rmlist, int frame_count, numpy.ndar
                     ii = 0
                     j = pos + ii * speed   
                     k = <int> j       
-                bb[2 * i] += (zz[2 * k] + (j - k) * (zz[2 * k + 2] - zz[2 * k])) * vel * fadevol   # linear interpolation
-                bb[2 * i + 1] += (zz[2 * k + 1] + (j - k) * (zz[2 * k + 3] - zz[2 * k + 1])) * vel *fadevol
+                bb[2 * i] += (zz[2 * k] + (j - k) * (zz[2 * k + 2] - zz[2 * k])) * vel * lpan * fadevol   # linear interpolation
+                bb[2 * i + 1] += (zz[2 * k + 1] + (j - k) * (zz[2 * k + 3] - zz[2 * k + 1])) * vel * rpan *fadevol
             snd.fadeoutpos = fadeoutpos
 
         else:
@@ -140,8 +155,8 @@ def mixaudiobuffers(list playingsounds, list rmlist, int frame_count, numpy.ndar
                         ii -= 2
                         j = pos + ii * speed   
                         k = <int> j       
-                    bb[2 * i] += (zz[2 * k] + (j - k) * (zz[2 * k + 2] - zz[2 * k])) * vel * fadevol   # linear interpolation
-                    bb[2 * i + 1] += (zz[2 * k + 1] + (j - k) * (zz[2 * k + 3] - zz[2 * k + 1])) * vel *fadevol
+                    bb[2 * i] += (zz[2 * k] + (j - k) * (zz[2 * k + 2] - zz[2 * k])) * vel * lpan * fadevol   # linear interpolation
+                    bb[2 * i + 1] += (zz[2 * k + 1] + (j - k) * (zz[2 * k + 3] - zz[2 * k + 1])) * vel * rpan *fadevol
                 if fadeoutpos <= 0:
                     fadeoutpos = 0
                     snd.isfadein = False
@@ -159,8 +174,8 @@ def mixaudiobuffers(list playingsounds, list rmlist, int frame_count, numpy.ndar
                         ii = 0
                         j = pos + ii * speed   
                         k = <int> j       
-                    bb[2 * i] += (zz[2 * k] + (j - k) * (zz[2 * k + 2] - zz[2 * k])) * vel   # linear interpolation
-                    bb[2 * i + 1] += (zz[2 * k + 1] + (j - k) * (zz[2 * k + 3] - zz[2 * k + 1])) * vel
+                    bb[2 * i] += (zz[2 * k] + (j - k) * (zz[2 * k + 2] - zz[2 * k])) * vel * lpan   # linear interpolation
+                    bb[2 * i + 1] += (zz[2 * k + 1] + (j - k) * (zz[2 * k + 3] - zz[2 * k + 1])) * rpan * vel
 
         snd.pos += ii * speed
 
