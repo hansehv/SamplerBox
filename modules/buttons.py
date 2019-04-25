@@ -11,7 +11,8 @@ s="config"
 BUT_incr = gv.cp.getint(s,"BUT_incr".lower())
 BUT_decr = gv.cp.getint(s,"BUT_decr".lower())
 BUT_sel  = gv.cp.getint(s,"BUT_sel".lower())
-
+BUT_voldown = 19
+BUT_volup = 6
 lastbuttontime = 0
 buttfunc = 0
 button_functions=["","Volume","Midichannel","RenewUSB/MidMute","Play Chord:","Use Scale:"]
@@ -29,6 +30,8 @@ def Buttons():
     GPIO.setup(BUT_incr, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.setup(BUT_decr, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     GPIO.setup(BUT_sel, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(BUT_volup, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(BUT_voldown, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     lastbuttontime = time.time()
     print 'Started buttons via GPIO: Increment=%d, Decrement=%d, Select=%d' %(BUT_incr,BUT_decr,BUT_sel)
 
@@ -110,6 +113,17 @@ def Buttons():
                     if button_disp[buttfunc]=="V": buttfunc +=1
                 #use if above gets complex: if buttfunc >= len(button_functions): buttfunc=0
                 gv.midi_mute = False
+                Button_display()
+            
+            elif not GPIO.input(BUT_voldown):
+                gv.volume-=5
+                if gv.volume<0: gv.volume=0
+                gv.setvolume(gv.volume)
+                Button_display()
+            elif not GPIO.input(BUT_volup):
+                gv.volume+=5
+                if gv.volume>100: gv.volume=100
+                gv.setvolume(gv.volume)
                 Button_display()
 
             time.sleep(0.02)
