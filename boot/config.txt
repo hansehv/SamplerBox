@@ -6,9 +6,11 @@ boot_delay=0
 max_usb_current=1
 disable_splash=1
 disable_audio_dither=1
+# for enabling SPI interface (like used by OLED) uncomment next parm
+# dtparam=spi=on
 # for onboard, hdmi or usb dacs uncomment next parm:
 dtparam=audio=on
-# for hifiberry dacs uncomment appropriate parm:
+# for hifiberry (compatible) dacs uncomment appropriate parm:
 #dtoverlay=hifiberry-dac
 #dtoverlay=hifiberry-dacplus
 #dtoverlay=hifiberry-digi
