@@ -6,7 +6,7 @@
 #
 
 ssid=SamplerBox
-wpa_passphrase=go2samplerbox
+wpa_passphrase=go2sampler
 
 #------------------------------------#
 # Below values work for PI3 - PI3B+  #
