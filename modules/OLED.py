@@ -1,3 +1,9 @@
+###############################################################
+#  OLED display via SPI interface contributed by TheNothingMan,
+#  see: https://github.com/TheNothingMan/SamplerBox
+#
+#   SamplerBox extended by HansEhv (https://github.com/hansehv)
+###############################################################
 # -*- coding:utf-8 -*-
 
 from luma.core.interface.serial import i2c, spi
