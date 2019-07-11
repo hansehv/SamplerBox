@@ -1,0 +1,90 @@
+General / miscellaneous	
+	elem_SB_bTracks
+	elem_SB_DefErr
+	elem_SB_Form
+	elem_SB_LastMidiNote
+	elem_SB_LastMusicNote
+	elem_SB_Mode
+	elem_SB_Samplesdir
+	elem_SB_xvoice
+	input_SB_DefinitionTxt
+	input_SB_MidiChannel
+	input_SB_Pitchrange
+	input_SB_Preset
+	input_SB_RenewMedia
+	input_SB_Voice
+Arpeggiator	
+	input_SB_ARP2end
+	input_SB_ARPfade
+	input_SB_ARPloop
+	input_SB_ARPord
+	input_SB_ARPstep
+	input_SB_ARPsustain
+Chords and Scales	
+	elem_SB_Chord
+	elem_SB_Chords
+	elem_SB_Scale
+	elem_SB_Scales
+	input_SB_Chord
+	input_SB_Scale
+Chorus	
+	input_SB_CHOdepth
+	input_SB_CHOgain
+	input_SB_CHOrus
+Delay (echo and flanger)	
+	input_SB_DLYdry
+	input_SB_DLYfb
+	input_SB_DLYmax
+	input_SB_DLYmin
+	input_SB_DLYsteep
+	input_SB_DLYsteplen
+	input_SB_DLYtime
+	input_SB_DLYtype
+	input_SB_DLYwet
+LFO (Low Frequency Oscillator) effects	
+	input_SB_LFOtype
+	input_SB_PANspeed
+	input_SB_PANwidth
+	input_SB_TREMampl
+	input_SB_TREMspeed
+	input_SB_TREMtrill
+	input_SB_VIBRpitch
+	input_SB_VIBRspeed
+	input_SB_VIBRtrill
+Moog low-pass ladder filter	
+	input_SB_LFcutoff
+	input_SB_LFdrive
+	input_SB_LFgain
+	input_SB_LFlvl
+	input_SB_LFresonance
+	input_SB_LFtype
+Notemapping	
+	elem_SB_Notemap
+	input_SB_Notemap
+	input_SB_nm_inote
+	input_SB_nm_onote
+	input_SB_nm_Q
+	input_SB_nm_retune
+	input_SB_nm_voice
+	input_SB_nm_map
+	input_SB_nm_sav
+Reverb (freeverb implementation)	
+	input_SB_FVdamp
+	input_SB_FVlevel
+	input_SB_FVroomsize
+	input_SB_FVtype
+	input_SB_FVwidth
+Volume	
+	input_SB_Gain
+	input_SB_MidiVolume
+	input_SB_SoundVolume
+Wah (autowah, lfo wah, wah-wah pedal)	
+	input_SB_AWattack
+	input_SB_AWlvlrange
+	input_SB_AWmaxfreq
+	input_SB_AWminfreq
+	input_SB_AWmixing
+	input_SB_AWqfactor
+	input_SB_AWrelease
+	input_SB_AWspeed
+	input_SB_AWtype

@@ -1,0 +1,43 @@
+<META NAME="Generator" CONTENT="Stone's WebWriter 3.5">
+<!DOCTYPE html><HTML><HEAD><meta charset="UTF-8">
+<!-- Minus AutoDato -->
+	<TITLE>Notemap</TITLE>
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
+<script SRC="SamplerBox.API" TYPE="text/javascript"></script>
+<script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+</HEAD>
+<BODY>
+
+<TABLE WIDTH="100%"><TR>
+<TD WIDTH="112"><A HREF="index.html"><IMG SRC="SamplerBox.gif" BORDER="0" WIDTH="80" HEIGHT="27" ALIGN="middle" ALT=""></A></TD>
+<TD ALIGN="center"><B>Notemapping</B></TD>
+<TD ALIGN="center"><BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON></TD>
+</TR></TABLE>
+
+<script>SB_Update();SB_init_FullNotenames();</script>
+<TABLE border="1" cellpadding="5"><TR>
+<TD VALIGN="top">
+<FORM ID="elem_SB_Form" STYLE="line-height:300%;">
+<DIV style="line-height:100%;">notemap:<BR><span ID="input_SB_Notemap"></span></DIV>
+<HR>
+<B><span ID="input_SB_nm_inote">input key &nbsp;: </span></B>
+<HR><span ID="input_SB_nm_onote" >output note : </span>
+<BR><span ID="input_SB_nm_retune">retune cents: </span>
+<DIV style="line-height:100%;">voice to use:<BR><span ID="input_SB_nm_voice" ></span></DIV>
+<span ID="input_SB_nm_Q"     >Q-fractions : </span>
+<BR><CENTER><BUTTON TYPE="submit">Set</BUTTON></CENTER>
+<HR>
+<!-- /FORM><FORM ID="elem_SB_Form2" STYLE="line-height:300%;" -->
+<span ID="input_SB_nm_sav" >Save map ? </span>
+<DIV style="line-height:100%;">mapname to use (no name => no save !):<BR><span ID="input_SB_nm_map" ></span></DIV>
+NB: Saving a map will strip comments in it
+<HR>
+</FORM>
+</TD><TD VALIGN="top">
+<span ID="elem_SB_Notemap" CLASS="inline valign_top">?</span>
+</TD></TR></TABLE>
+
+<script>SB_Update();SB_init_FullNotenames();</script>
+</BODY>
+</HTML>
