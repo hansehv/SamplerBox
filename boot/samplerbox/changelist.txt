@@ -152,3 +152,4 @@ May-July 2019:
   - Allowed for empty/comment lines in definition.txt
   - Avoid program freezes with configuration parameter for maximizing the memory usage after sample loading
     Loading of wav-files stops after exceeding. See startup messages.
+  - bug fixes, cleanups and cosmetic changes
