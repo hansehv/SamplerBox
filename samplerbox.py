@@ -23,7 +23,8 @@ import time,psutil,numpy,struct
 import sys,os,re,threading   
 import ConfigParser
 import samplerbox_audio   # audio-module (cython)
-rootprefix='/home/pi/samplerbox'
+#rootprefix='/home/pi/samplerbox'
+rootprefix='/media/hans/rootfs/home/pi/samplerbox'
 if not os.path.isdir(rootprefix):
     rootprefix=""
 sys.path.append('./modules')
@@ -797,8 +798,8 @@ def MidiCallback(src, message, time_stamp):
                                 #    pass    # ignore the chord generated notes when playing monophonic
                                 if m.playingstopmode()==3:  # backtracks end on sample end
                                     m.playing2end()         # so just let it finish
-                                    return
 				    playingbacktracks-=1
+                                    return
                                 else:
                                     messagetype = 8                     # all the others have an instant end
                             elif midinote >= gv.stop127:   # could it be mirrored stop?
@@ -1327,6 +1328,8 @@ LoadSamples()
 ##  - MIDI IN via SERIAL PORT
 #########################################
 
+gv.getvolume=gv.NoProc
+gv.setvolume=gv.NoProc
 if gv.USE_ALSA_MIXER:
     import DACvolume
 
