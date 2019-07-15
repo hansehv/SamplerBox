@@ -3,7 +3,8 @@
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 ###############################################################
 
-import alsaaudio,gv
+import gv,alsaaudio
+
 MIXER_CONTROL=gv.cp.get(gv.cfg,"MIXER_CONTROL".lower()).replace(" ", "").split(',')
 
 ok=False
@@ -28,16 +29,10 @@ if ok:
         amix.setvolume(volume)
         getvolume()
     setvolume(gv.volume)
+    gv.getvolume=getvolume
+    gv.setvolume=setvolume
 else:
     gv.USE_ALSA_MIXER=False
     gv.display("Invalid mixerdev")
     print 'Invalid mixer card id "%i" or control "%s" --' % (gv.MIXER_CARD_ID, MIXER_CONTROL)
     print '-- Mixer card id is "x" in "(hw:x,y)" (if present) in opened audio device.'
-
-if not gv.USE_ALSA_MIXER:
-    def getvolume():
-        pass
-    def setvolume(volume):
-        pass
-
-gv.setvolume=setvolume              # and announce the procs to modules
