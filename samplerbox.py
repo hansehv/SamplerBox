@@ -23,12 +23,12 @@ import time,psutil,numpy,struct
 import sys,os,re,threading   
 import ConfigParser
 import samplerbox_audio   # audio-module (cython)
-#rootprefix='/home/pi/samplerbox'
-rootprefix='/media/hans/rootfs/home/pi/samplerbox'
-if not os.path.isdir(rootprefix):
-    rootprefix=""
-sys.path.append('./modules')
 import gv,getcsv
+#gv.rootprefix='/home/pi/samplerbox'
+gv.rootprefix='/home/hans/samplerbox'
+if not os.path.isdir(gv.rootprefix):
+    gv.rootprefix=""
+sys.path.append('./modules')
 
 ########  Define local general functions ########
 usleep = lambda x: time.sleep(x/1000000.0)
@@ -173,9 +173,9 @@ BACKTRACK = "Back"                      # recognize loop markers, loop-off by sa
 PLAYMONO = "Mono"                       # monophonic (with chords), loop like Loo2, but note/chord stops when next note is played.
 VELSAMPLE = "Sample"                    # velocity equals sampled value, requires multiple samples to get differentation
 VELACCURATE = "Accurate"                # velocity as played, allows for multiple (normalized!) samples for timbre
-SAMPLES_INBOX = rootprefix+"/samples/"  # Builtin directory containing the sample-sets.
-SAMPLES_ONUSB = rootprefix+"/media/"    # USB-Mount directory containing the sample-sets.
-CONFIG_LOC = rootprefix+"/boot/samplerbox/"
+SAMPLES_INBOX = gv.rootprefix+"/samples/"  # Builtin directory containing the sample-sets.
+SAMPLES_ONUSB = gv.rootprefix+"/media/"    # USB-Mount directory containing the sample-sets.
+CONFIG_LOC = gv.rootprefix+"/boot/samplerbox/"
 CHORDS_DEF = "chords.csv"
 SCALES_DEF = "scales.csv"
 CTRLCCS_DEF = "controllerCCs.csv"
@@ -244,7 +244,7 @@ gv.pitchneutral = PITCHSTEPS/2
 gv.pitchdiv = 2**(14-PITCHBITS)
 
 if AUDIO_DEVICE_ID > 0:
-    if rootprefix=="":
+    if gv.rootprefix=="":
         gv.MIXER_CARD_ID = AUDIO_DEVICE_ID-1   # The jack/HDMI of PI use 1 alsa card index
     else:
         gv.MIXER_CARD_ID = 0                   # This may vary with your HW.....
