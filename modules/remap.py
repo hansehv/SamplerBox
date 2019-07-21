@@ -7,7 +7,7 @@
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 ###############################################################
-import gv
+import gv,subprocess
 
 ##########  N O T E   M A P P I N G   ##########
 #
@@ -27,6 +27,7 @@ import gv
 #   - notemap.csv in the preset directory - persistent definition 
 #   In current implementation the last two are done at the same time (I see nor reason for split, please feedback f you disagree)
 #
+fractions=[[1,"Semi"],[2,"Quarter"]]
 newnotemap=[]
 def notes(fields):
 	global newnotemap
@@ -77,7 +78,8 @@ def notes(fields):
 			gv.notemaps.append(gv.SB_nm_map)
 			gv.currnotemap=gv.SB_nm_map
 		gv.notemap=newnotemap
-		#subprocess.call(['mount', '-vo', 'remount,rw', gv.samplesdir])
+		if gv.rootprefix=="":
+			subprocess.call(['mount', '-vo', 'remount,rw', gv.samplesdir])
 		fname=gv.samplesdir+gv.presetlist[gv.getindex(gv.PRESET,gv.presetlist)][1]+"/"+gv.NOTEMAP_DEF
 		with open(fname, 'w') as mapfile:
 			mapfile.write("Set,Fractions,Key,Note,Retune,Playvoice\n")
@@ -87,7 +89,8 @@ def notes(fields):
 				j=gv.getindex("%d"%key,gv.keynames)
 				if j>0: key=gv.keynames[j][1]
 				mapfile.write("%s,%s,%s,%s,%s,%s\n" %(newnotemap[i][0],newnotemap[i][1],key,note,newnotemap[i][4],newnotemap[i][5]))
-		#subprocess.call(['mount', '-vo', 'remount,ro', gv.samplesdir])
+		if gv.rootprefix=="":
+			subprocess.call(['mount', '-vo', 'remount,ro', gv.samplesdir])
 def notes_newmaplines():
 	global newnotemap
 	for j in range(len(gv.notemapping)):

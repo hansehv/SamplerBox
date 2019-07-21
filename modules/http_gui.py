@@ -71,11 +71,13 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if "SB_DefinitionTxt" in fields:
             if gv.DefinitionTxt != fields["SB_DefinitionTxt"][0]:
                 gv.DefinitionTxt = fields["SB_DefinitionTxt"][0]
-                subprocess.call(['mount', '-vo', 'remount,rw', gv.samplesdir])
+                if gv.rootprefix=="":
+                    subprocess.call(['mount', '-vo', 'remount,rw', gv.samplesdir])
                 fname=gv.samplesdir+gv.presetlist[gv.getindex(gv.PRESET,gv.presetlist)][1]+"/"+gv.SAMPLESDEF
                 with open(fname, 'w') as definitionfile:
                         definitionfile.write(gv.DefinitionTxt)
-                subprocess.call(['mount', '-vo', 'remount,ro', gv.samplesdir])
+                if gv.rootprefix=="":
+                    subprocess.call(['mount', '-vo', 'remount,ro', gv.samplesdir])
                 gv.basename="None"         # do a renew to sync the update
                 self.LoadSamples()
                 return
@@ -217,7 +219,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write("\n\n// Static variables & tables:")
         self.wfile.write("\nSB_Samplesdir='%s';SB_Stop127=%d;" % (gv.samplesdir,gv.stop127) )
         self.wfile.write("\nSB_numnotes=%d;SB_Notename=%s;" % (len(notesymbol),notesymbol) )
-        self.wfile.write("\nSB_numqnotes=%d;SB_qNotename=%s;" % (len(notesymbolQ),notesymbolQ) )
+        self.wfile.write("\nSB_numqfractions=%i;SB_qFractions=%s;SB_numqnotes=%d;SB_qNotename=%s;" % (len(remap.fractions),remap.fractions,len(notesymbolQ),notesymbolQ) )
         self.wfile.write("\nSB_numkeynames=%d;SB_KeyNames=%s;" % (len(gv.keynames),gv.keynames) )
         self.wfile.write("\nSB_numchords=%d;SB_Chordname=%s;\nSB_Chordnote=%s;" % (len(gv.chordname),gv.chordname,gv.chordnote) )
         self.wfile.write("\nSB_numscales=%d;SB_Scalename=%s;\nSB_Scalechord=%s;" % (len(gv.scalesymbol),gv.scalesymbol,gv.scalechord) )
