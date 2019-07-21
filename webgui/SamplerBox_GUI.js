@@ -133,14 +133,14 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return(text+SB_listselect(input_name,name,val,[[-1,"None"]].concat(SB_Voicelist),2,SB_numvoices+1,2,0));
 	},
 	input_SB_nm_Q: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val-1,text,[1,2],0));
+		return(SB_radioselect(input_name,name,val-1,text,SB_qFractions,SB_numqfractions,0));
 	},
 	input_SB_nm_map: function(input_name,name,val,text){
 		return(text+'<INPUT type="text" size="25" name="'+name+'" value="'+val+'"</INPUT>');
 		//return(text+'<INPUT type="text" size="25" name="'+name+'" value="'+val+'" pattern="[A-Za-z0-9],_\ -" title="Invalid character found"</INPUT>');
 	},
 	input_SB_nm_sav: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["No",'Yes (also does "Set")'],1));
+		return(SB_radioselect(input_name,name,val,text,["No",'Yes (also does "Set")'],1,1));
 	},
 	input_SB_SoundVolume: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
@@ -152,7 +152,7 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return(text+SB_slider(input_name,name,val,0,300,5)+SB_numselect(input_name,name,val,0,300,5,1));
 	},
 	input_SB_FVtype: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"],1));
+		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
 	},
 	input_SB_FVroomsize: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
@@ -167,7 +167,7 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_AWtype: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,SB_AWtypes,1));
+		return(SB_radioselect(input_name,name,val,text,SB_AWtypes,1,1));
 	},
 	input_SB_AWattack: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,5,500,5)+SB_numselect(input_name,name,val,5,500,5,1));
@@ -194,7 +194,7 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_DLYtype: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,SB_DLYtypes,1));
+		return(SB_radioselect(input_name,name,val,text,SB_DLYtypes,1,1));
 	},
 	input_SB_DLYfb: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
@@ -221,7 +221,7 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return(text+SB_slider(input_name,name,val,50,150,10)+SB_numselect(input_name,name,val,50,150,10,1));
 	},
 	input_SB_LFtype: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"],1));
+		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
 	},
 	input_SB_LFresonance: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,38,2)+SB_numselect(input_name,name,val,0,38,2,1));
@@ -239,7 +239,7 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return(text+SB_slider(input_name,name,val,10,110,5)+SB_numselect(input_name,name,val,10,110,5,1));
 	},
 	input_SB_LFOtype: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,SB_LFOtypes,1));
+		return(SB_radioselect(input_name,name,val,text,SB_LFOtypes,1,1));
 	},
 	input_SB_VIBRpitch: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,1,64,1)+SB_numselect(input_name,name,val,1,64,1,1));
@@ -248,7 +248,7 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1,1));
 	},
 	input_SB_VIBRtrill: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"],1));
+		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
 	},
 	input_SB_TREMampl: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,1,100,1)+SB_numselect(input_name,name,val,1,100,1,1));
@@ -257,7 +257,7 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1,1));
 	},
 	input_SB_TREMtrill: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"],1));
+		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
 	},
 	input_SB_PANwidth: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,2,20,2)+SB_numselect(input_name,name,val,2,20,2,1));
@@ -272,13 +272,13 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_ARPloop: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"],1));
+		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
 	},
 	input_SB_ARP2end: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"]));
+		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
 	},
 	input_SB_ARPord: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,SB_ARPordlist,1));
+		return(SB_radioselect(input_name,name,val,text,SB_ARPordlist,1,1));
 	},
 	input_SB_ARPfade: function(input_name,name,val,text){
 		j=""
@@ -286,7 +286,7 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return(text+'<label class="inline alignx"><INPUT type="checkbox" onclick="return false;"'+j+'></label>'+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
 	},
 	input_SB_CHOrus: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"],1));
+		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
 	},
 	input_SB_CHOdepth: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,2,15,1)+SB_numselect(input_name,name,val,2,15,1,1));
@@ -310,6 +310,7 @@ var SB_element={
 		document.getElementById(elem_name).action = window.location.pathname;
 		document.getElementById(elem_name).method = 'POST';
 		document.getElementById(elem_name).type = 'SUBMIT';
+
 	},
 	elem_SB_Form2: function(elem_name){
 		document.getElementById(elem_name).action = window.location.pathname;
@@ -440,13 +441,16 @@ function SB_slidersync(IDslider, IDvar, sliderchange){
 		else document.getElementById(IDslider).value=document.getElementById(IDvar).value;}
 	SB_Submit();
 }
-function SB_radioselect(input_name,name,val,text,table,update){
+function SB_radioselect(input_name,name,val,text,table,dims,update){
 	html=""
 	for (i=0;i<table.length;i++){
+		j="";
 		if (i==val) j="CHECKED"; else j="";
-		html=html+' <INPUT type="radio" name="'+name+'" value="'+table[i]+'" '+j;
+		if (dims==1){if (i==val) j=" CHECKED";k=table[i];l=table[i];}
+		else {if (table[i][0]==val) j=" CHECKED";k=table[i][1];l=table[i][0];}
+		html=html+' <INPUT type="radio" name="'+name+'" value="'+l+'" '+j;
 		if (update==1) {html=html+' onclick="SB_Submit()"'};
-		html=html+'>'+table[i];
+		html=html+'>'+k;
 	}
 	return(text+html);
 }

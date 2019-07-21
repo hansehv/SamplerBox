@@ -24,16 +24,21 @@
 <B><span ID="input_SB_nm_inote">input key &nbsp;: </span></B>
 <HR><span ID="input_SB_nm_onote" >output note : </span>
 <BR><span ID="input_SB_nm_retune">retune cents: </span>
-<DIV style="line-height:100%;">voice to use:<BR><span ID="input_SB_nm_voice" ></span></DIV>
-<span ID="input_SB_nm_Q"     >Q-fractions : </span>
+<DIV style="line-height:100%;">voice to use :<BR><span ID="input_SB_nm_voice" ></span></DIV>
+<span ID="input_SB_nm_Q"      >Tone interval: </span>
 <BR><CENTER><BUTTON TYPE="submit">Set</BUTTON></CENTER>
 <HR>
 <!-- /FORM><FORM ID="elem_SB_Form2" STYLE="line-height:300%;" -->
 <span ID="input_SB_nm_sav" >Save map ? </span>
 <DIV style="line-height:100%;">mapname to use (no name => no save !):<BR><span ID="input_SB_nm_map" ></span></DIV>
-NB: Saving a map will strip comments in it
 <HR>
 </FORM>
+<UL>
+<LI>Redundant entries (mapping to same note with default values) will be deleted.
+<LI>Saving a map will strip comments in it.
+<LI>The underlying generation does not change when changing the tone mapping interval, so don't mix quarter tone mapping on semi tone samples and vice versa.
+<BR>Changing interval will be ignored on redundant entries
+</UL>
 </TD><TD VALIGN="top">
 <span ID="elem_SB_Notemap" CLASS="inline valign_top">?</span>
 </TD></TR></TABLE>
