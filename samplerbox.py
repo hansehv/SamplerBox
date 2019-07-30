@@ -24,8 +24,8 @@ import sys,os,re,threading
 import ConfigParser
 import samplerbox_audio   # audio-module (cython)
 import gv,getcsv
-#gv.rootprefix='/home/pi/samplerbox'
-gv.rootprefix='/home/hans/samplerbox'
+gv.rootprefix='/home/pi/samplerbox'
+#gv.rootprefix='/home/hans/samplerbox'
 if not os.path.isdir(gv.rootprefix):
     gv.rootprefix=""
 sys.path.append('./modules')
@@ -80,8 +80,6 @@ def midinote2notename(midinote,fractions):
             notename="%s%d" %(notenames[note],octave)
         else: notename="%d" %(midinote)
     return notename
-def setMC(mc,proc):
-    gv.MC[getindex(mc,gv.MC)][2]=proc
 def setChord(x,*z):
     y=getindex(x,gv.chordname,True)
     if y>-1:                # ignore if undefined
@@ -157,11 +155,13 @@ def playBackTrack(x,*z):
 gv.getindex=getindex                    # and announce the procs to modules
 gv.notename2midinote=notename2midinote
 gv.midinote2notename=midinote2notename
-gv.MC[getindex(gv.CHORDS,gv.MC)][2]=setChord
-gv.MC[getindex(gv.SCALES,gv.MC)][2]=setScale
-gv.MC[getindex(gv.VOICES,gv.MC)][2]=setVoice
-gv.MC[getindex(gv.NOTEMAPS,gv.MC)][2]=setNotemap
-gv.MC[getindex(gv.BACKTRACKS,gv.MC)][2]=playBackTrack
+gv.setVoice=setVoice
+gv.setNotemap=setNotemap
+gv.setMC(gv.CHORDS,setChord)
+gv.setMC(gv.SCALES,setScale)
+gv.setMC(gv.VOICES,setVoice)
+gv.setMC(gv.NOTEMAPS,setNotemap)
+gv.setMC(gv.BACKTRACKS,playBackTrack)
 
 ########  LITERALS used in the main module only ########
 PLAYLIVE = "Keyb"                       # reacts on "keyboard" interaction
@@ -717,19 +717,19 @@ def DampLast(CCval,*z):
 def PitchSens(CCval,*z):
     gv.pitchnotes = (24*CCval+100)/127
                             # and announce the procs to modules
-gv.MC[getindex(gv.PANIC,gv.MC)][2]=AllNotesOff
-gv.MC[getindex(gv.EFFECTSOFF,gv.MC)][2]=EffectsOff
-gv.MC[getindex(gv.PROGUP,gv.MC)][2]=ProgramUp
-gv.MC[getindex(gv.PROGDN,gv.MC)][2]=ProgramDown
-gv.MC[getindex(gv.VOLUME,gv.MC)][2]=MidiVolume
-gv.MC[getindex(gv.AUTOCHORDOFF,gv.MC)][2]=AutoChordOff
-gv.MC[getindex(gv.PITCHWHEEL,gv.MC)][2]=PitchWheel
-gv.MC[getindex(gv.MODWHEEL,gv.MC)][2]=ModWheel
-gv.MC[getindex(gv.SUSTAIN,gv.MC)][2]=Sustain
-gv.MC[getindex(gv.DAMP,gv.MC)][2]=Damp
-gv.MC[getindex(gv.DAMPNEW,gv.MC)][2]=DampNew
-gv.MC[getindex(gv.DAMPLAST,gv.MC)][2]=DampLast
-gv.MC[getindex(gv.PITCHSENS,gv.MC)][2]=PitchSens
+gv.setMC(gv.PANIC,AllNotesOff)
+gv.setMC(gv.EFFECTSOFF,EffectsOff)
+gv.setMC(gv.PROGUP,ProgramUp)
+gv.setMC(gv.PROGDN,ProgramDown)
+gv.setMC(gv.VOLUME,MidiVolume)
+gv.setMC(gv.AUTOCHORDOFF,AutoChordOff)
+gv.setMC(gv.PITCHWHEEL,PitchWheel)
+gv.setMC(gv.MODWHEEL,ModWheel)
+gv.setMC(gv.SUSTAIN,Sustain)
+gv.setMC(gv.DAMP,Damp)
+gv.setMC(gv.DAMPNEW,DampNew)
+gv.setMC(gv.DAMPLAST,DampLast)
+gv.setMC(gv.PITCHSENS,PitchSens)
 
 def MidiCallback(src, message, time_stamp):
     global RELSAMPLE, velocity_mode, playingbacktracks
