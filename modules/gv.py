@@ -153,6 +153,8 @@ def safeguard (*vals):  # dedicated proc for MC-table
     for val in vals :
         arr.append(val)
     print "gv.Safeguard: call to unset procedure for %s:%s" %(arr[1],arr[0])
+def setMC(mc,proc):
+    MC[getindex(mc,MC)][2]=proc
 MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch),procedure)
 [PROGUP,1,safeguard],
 [PROGDN,1,safeguard],

@@ -100,7 +100,7 @@ def togglepower(CCval, *z):
         power(True)
     else:
         power(False)
-gv.MC[gv.getindex(gv.ARP,gv.MC)][2]=togglepower
+gv.setMC(gv.ARP,togglepower)
 
 def noteoff():
     global playnote
@@ -161,7 +161,7 @@ def tempo(CCval,*z):    # time between note-on's
     cyclestep=x+5
     length=x
     stepguard()
-gv.MC[gv.getindex(gv.ARPTEMPO,gv.MC)][2]=tempo
+gv.setMC(gv.ARPTEMPO,tempo)
 
 def sustain(CCval,*z):  # time between note-on and note-off,
                         # when tempo is faster it will override making it continuous
@@ -170,7 +170,7 @@ def sustain(CCval,*z):  # time between note-on and note-off,
     if x>100:x=100
     keepon=x
     stepguard()
-gv.MC[gv.getindex(gv.ARPSUSTAIN,gv.MC)][2]=sustain
+gv.setMC(gv.ARPSUSTAIN,sustain)
 
 gv.ARPtypes=["Off","Up","Down","Random"]
 gv.ARPtype=0
@@ -207,11 +207,11 @@ def rndlin(*z):
         gv.ARPtype=lastlinord
     else:
         gv.ARPtype=3
-gv.MC[gv.getindex(gv.ARPUP,gv.MC)][2]=up
-gv.MC[gv.getindex(gv.ARPDOWN,gv.MC)][2]=down
-gv.MC[gv.getindex(gv.ARPUPDOWN,gv.MC)][2]=updown
-gv.MC[gv.getindex(gv.ARPRANDOM,gv.MC)][2]=rand
-gv.MC[gv.getindex(gv.ARPRNDLIN,gv.MC)][2]=rndlin
+gv.setMC(gv.ARPUP,up)
+gv.setMC(gv.ARPDOWN,down)
+gv.setMC(gv.ARPUPDOWN,updown)
+gv.setMC(gv.ARPRANDOM,rand)
+gv.setMC(gv.ARPRNDLIN,rndlin)
 
 fadecycles=100
 fadestep=0.0
@@ -224,4 +224,4 @@ def fadeout(CCval,*z):  # number of cycles to fadeout (default no fadeout)
         fadestep=1.0*velmixer/fadecycles
     else:
         fadestep=0.0
-gv.MC[gv.getindex(gv.ARPFADE,gv.MC)][2]=fadeout
+gv.setMC(gv.ARPFADE,fadeout)

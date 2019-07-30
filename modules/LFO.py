@@ -87,8 +87,8 @@ def VibrSetpitch(CCval,*z):
 def VibrSetspeed(CCval,*z):
         gv.VIBRspeed=1.0*CCval/4    # range=32
         VibrLFO.setstep(gv.VIBRspeed)
-gv.MC[gv.getindex(gv.VIBRDEPTH,gv.MC)][2]=VibrSetpitch
-gv.MC[gv.getindex(gv.VIBRSPEED,gv.MC)][2]=VibrSetspeed
+gv.setMC(gv.VIBRDEPTH,VibrSetpitch)
+gv.setMC(gv.VIBRSPEED,VibrSetspeed)
 #gv.VibrSetspeed=VibrSetspeed
 
 TremLFO=plfo()
@@ -112,8 +112,8 @@ def TremSetampl(CCval,*z):
 def TremSetspeed(CCval,*z):
     gv.TREMspeed=1.0*CCval/4    # align with GUI
     TremLFO.setstep(gv.TREMspeed)
-gv.MC[gv.getindex(gv.TREMDEPTH,gv.MC)][2]=TremSetampl
-gv.MC[gv.getindex(gv.TREMSPEED,gv.MC)][2]=TremSetspeed
+gv.setMC(gv.TREMDEPTH,TremSetampl)
+gv.setMC(gv.TREMSPEED,TremSetspeed)
 #gv.TremSetspeed=TremSetspeed
 
 PanLFO=plfo()
@@ -134,8 +134,8 @@ def PanSetwidth(CCval,*z):
 def PanSetspeed(CCval,*z):
     gv.PANspeed=1.0*CCval/4    # align with GUI
     PanLFO.setstep(gv.PANspeed)
-gv.MC[gv.getindex(gv.PANWIDTH,gv.MC)][2]=PanSetwidth
-gv.MC[gv.getindex(gv.PANSPEED,gv.MC)][2]=PanSetspeed
+gv.setMC(gv.PANWIDTH,PanSetwidth)
+gv.setMC(gv.PANSPEED,PanSetspeed)
 #gv.PanSetspeed=PanSetspeed
 
 def RotaProc(*z):
@@ -162,7 +162,7 @@ def LFOspeed(CCval,*z):
         TremSetspeed(CCval)
     else:
         VibrSetspeed(CCval)
-gv.MC[gv.getindex(gv.LFOSPEED,gv.MC)][2]=LFOspeed
+gv.setMC(gv.LFOSPEED,LFOspeed)
 
 gv.LFOtypes=["Off",gv.VIBRATO,gv.TREMOLO,gv.PANNING,gv.ROTATE]
 process=[gv.NoProc,VibrProc,TremProc,PanProc,RotaProc]
@@ -182,10 +182,10 @@ def Panning(*z):
 def Rotate(*z):
     setProc(4)
 #gv.LFOsetType=setProc
-gv.MC[gv.getindex(gv.TREMOLO,gv.MC)][2]=Tremolo
-gv.MC[gv.getindex(gv.VIBRATO,gv.MC)][2]=Vibrato
-gv.MC[gv.getindex(gv.PANNING,gv.MC)][2]=Panning
-gv.MC[gv.getindex(gv.ROTATE,gv.MC)][2]=Rotate
+gv.setMC(gv.TREMOLO,Tremolo)
+gv.setMC(gv.VIBRATO,Vibrato)
+gv.setMC(gv.PANNING,Panning)
+gv.setMC(gv.ROTATE,Rotate)
 
 def LFOreset():
     setType(0)

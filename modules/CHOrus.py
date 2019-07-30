@@ -22,6 +22,6 @@ def reset():
     gv.CHOdepth=gv.cp.getfloat(gv.cfg,"CHOdepth".lower())
     gv.CHOgain=gv.cp.getfloat(gv.cfg,"CHOgain".lower())
 reset()
-gv.MC[gv.getindex(gv.CHORUS,gv.MC)][2]=toggle
-gv.MC[gv.getindex(gv.CHORUSDEPTH,gv.MC)][2]=setdepth
-gv.MC[gv.getindex(gv.CHORUSGAIN,gv.MC)][2]=setgain
+gv.setMC(gv.CHORUS,toggle)
+gv.setMC(gv.CHORUSDEPTH,setdepth)
+gv.setMC(gv.CHORUSGAIN,setgain)

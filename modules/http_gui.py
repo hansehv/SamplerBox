@@ -91,14 +91,14 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             currvoice=gv.currvoice
             if gv.voicelist[0][0]==0: i=1
             else: i=0
-            gv.MC[gv.getindex(gv.VOICES,gv.MC)][2](int(fields["SB_Voice"][0])+i,0)
+            gv.setVoice(int(fields["SB_Voice"][0])+i,0)
             if currvoice!=gv.currvoice: voicechange=True
         notemapchange=False
         if "SB_Notemap"     in fields and not voicechange:
             if int(fields["SB_Notemap"][0])==0: currnotemap=""
             else: currnotemap=gv.notemaps[int(fields["SB_Notemap"][0])-1]
             if currnotemap!=gv.currnotemap:
-                gv.MC[gv.getindex(gv.NOTEMAPS,gv.MC)][2](currnotemap)
+                gv.setNotemap(currnotemap)
                 notemapchange=True
         if notemapchange:                       # restart the mapping circus when underlying table shifted
             gv.SB_nm_inote=-1

@@ -166,12 +166,8 @@ def readkeynames(ifile):
     keynames=[]
     gv.drumpadmap=[]
     gv.drumpad=False
-    OK=True
     try:        # giving keys/strings/triggers a name is optional
         sheet=readcsv(ifile)
-    except:
-        OK=False    # giving keys/strings/triggers a name is optional
-    if OK:          # so no problem if not OK
         for i in range(len(sheet)):
             values=[]
             valucas=[]
@@ -202,6 +198,8 @@ def readkeynames(ifile):
                 print ("%s: ignored %s" %(ifile, sheet[i]))
                 gv.ConfigErr=True
         if len(gv.drumpadmap)>0: gv.drumpad=True
+    except:
+        pass    # giving keys/strings/triggers a name is optional
     return 
 
 def readnotemap(ifile):
