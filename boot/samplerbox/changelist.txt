@@ -154,5 +154,5 @@ May-July 2019:
     Loading of wav-files stops after exceeding max. Startup messages show skipped notes.
   - Removed (%)%qcent, incorrectly implemented.
     Correct implementation requires extra table & processing; notemapping gives sufficient alternative.
+  - Corrected setting/processing CC control of arpeggiator/effects/filters
   - bug fixes, cleanups and cosmetic changes
-  - Changed accesspoint setting to improve stability for devices searching for internet access.
