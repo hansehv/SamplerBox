@@ -12,7 +12,7 @@ def setType(x,*z):
     else:
         gv.CHOrus=False
 def toggle(*z):
-    gv.CHOrus!=gv.CHOrus
+    gv.CHOrus=not(gv.CHOrus)
 def setdepth(x,*z):  # 2-15
     gv.CHOdepth=2+13*x/127
 def setgain(x,*z):  # 0.3-0.8

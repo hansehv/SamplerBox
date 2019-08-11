@@ -83,12 +83,15 @@ def VibrTidy(TurnOn):
     else:
         gv.VIBRvalue=0              # tune the note
 def VibrSetpitch(CCval,*z):
-        gv.VIBRpitch=1.0*CCval/32   # steps of 1/32th, range like GUI
+    gv.VIBRpitch=1.0*CCval/32   # steps of 1/32th, range like GUI
 def VibrSetspeed(CCval,*z):
-        gv.VIBRspeed=1.0*CCval/4    # range=32
-        VibrLFO.setstep(gv.VIBRspeed)
+    gv.VIBRspeed=1.0*CCval/4    # range=32
+    VibrLFO.setstep(gv.VIBRspeed)
+def VibrToggletrill(CCval,*z):
+    gv.VIBRtrill=not(gv.VIBRtrill)
 gv.setMC(gv.VIBRDEPTH,VibrSetpitch)
 gv.setMC(gv.VIBRSPEED,VibrSetspeed)
+gv.setMC(gv.VIBRTRILL,VibrToggletrill)
 #gv.VibrSetspeed=VibrSetspeed
 
 TremLFO=plfo()
@@ -112,8 +115,11 @@ def TremSetampl(CCval,*z):
 def TremSetspeed(CCval,*z):
     gv.TREMspeed=1.0*CCval/4    # align with GUI
     TremLFO.setstep(gv.TREMspeed)
+def TremToggletrill(CCval,*z):
+    gv.TREMtrill=not(gv.TREMtrill)
 gv.setMC(gv.TREMDEPTH,TremSetampl)
 gv.setMC(gv.TREMSPEED,TremSetspeed)
+gv.setMC(gv.TREMTRILL,TremToggletrill)
 #gv.TremSetspeed=TremSetspeed
 
 PanLFO=plfo()
@@ -130,7 +136,7 @@ def PanTidy(TurnOn):
     else:
         gv.PANvalue=1              # restore center
 def PanSetwidth(CCval,*z):
-    gv.PANwidth=2.0*CCval/127.0 # values 0-1, both left & right
+    gv.PANwidth=CCval/127.0 # values 0-1, both left & right
 def PanSetspeed(CCval,*z):
     gv.PANspeed=1.0*CCval/4    # align with GUI
     PanLFO.setstep(gv.PANspeed)
@@ -173,15 +179,20 @@ def setType(x,*z):
         tidy[gv.LFOtype](False)
         tidy[x](True)
         gv.LFOtype=x
+def toggleType(x):
+    if x==gv.LFOtype:
+        setType(0)
+    else:
+        setType(x)
 def Vibrato(*z):
-    setProc(1)
+    toggleType(1)
 def Tremolo(*z):
-    setProc(2)
+    toggleType(2)
 def Panning(*z):
-    setProc(3)
+    toggleType(3)
 def Rotate(*z):
-    setProc(4)
-#gv.LFOsetType=setProc
+    toggleType(4)
+#gv.LFOsetType=setType
 gv.setMC(gv.TREMOLO,Tremolo)
 gv.setMC(gv.VIBRATO,Vibrato)
 gv.setMC(gv.PANNING,Panning)

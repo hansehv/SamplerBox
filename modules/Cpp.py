@@ -81,9 +81,9 @@ def AWsetMaxFreq(x,*z):         # 1000-10000
     gv.AWmaxfreq=10000.0*x/127.0
     if gv.AWminfreq>(gv.AWmaxfreq-100): gv.AWmaxfreq=gv.AWminfreq+100
     c_filters.awsetMinMaxFreq(gv.AWminfreq,gv.AWmaxfreq)
-def AWsetQualityFactor(x,*z):   # 0.25-25
+def AWsetQualityFactor(x,*z):   #
     if x==0: x=1
-    gv.AWqfactor=25.0*x/127.0
+    gv.AWqfactor=10.0*x/127.0
     c_filters.awsetQualityFactor(gv.AWqfactor)
 def AWsetMixing(x,*z):          # 0-1, where 0=dry and 1 is wet
     gv.AWmixing=1.0*x/127.0
@@ -169,10 +169,10 @@ def DLYsetType(x,*z):
     gv.DLYtype=x
 def DLYsetEcho(*z):      # in Hz, should be same as audiovalue
     if gv.DLYtype==1: gv.DLYtype=0
-    else: DLYsettype(1)
+    else: DLYsetType(1)
 def DLYsetFlanger(*z):
     if gv.DLYtype==2: gv.DLYtype=0
-    else: DLYsettype(2)
+    else: DLYsetType(2)
 def DLYsetfb(x,*z):     # 0-1
     gv.DLYfb=1.0*x/127.0
     c_filters.dlysetfb(gv.DLYfb)
@@ -243,8 +243,9 @@ def LFsetResonance(x,*z):       # 0 - 3.8
 def LFsetCutoff(x,*z):          # 1000 - 11000
     gv.LFcutoff=1000.0+x*10000/127
     c_filters.lfsetcutoff(gv.LFcutoff)
-def LFsetDrive(x,*z):           # 1 - 21 ?
+def LFsetDrive(x,*z):           # 1 - 20 ?
     gv.LFdrive=1.0+x*0.1575     # =20/127
+    if gv.LFdrive>20: gv.LFdrive=20
     c_filters.lfsetdrive(gv.LFdrive)
 def LFsetLvl(x,*z):             # 0 - 1
     gv.LFlvl=x*1.0/127

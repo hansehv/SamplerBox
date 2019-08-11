@@ -25,7 +25,7 @@ import gv,subprocess
 #   - gv.notemapping[] - the current active map
 #   - gv.notemap[] and gv.notemaps - the available maps while this preset is active
 #   - notemap.csv in the preset directory - persistent definition 
-#   In current implementation the last two are done at the same time (I see nor reason for split, please feedback f you disagree)
+#   In current implementation the last two are done at the same time (I see nor reason for split, please feedback if you disagree)
 #
 fractions=[[1,"Semi"],[2,"Quarter"]]
 newnotemap=[]

@@ -43,7 +43,7 @@ AUTOWAHQ="WahQ"
 AUTOWAHATTACK="WahAttack"
 AUTOWAHRELEASE="WahRelease"
 AUTOWAHSPEED="WahSpeed"
-AUTOWAHLVLRNGE="WahLvlrange"
+AUTOWAHLVLRNGE="WahLvlRange"
 AUTOWAHPEDAL="WahPedal"
 ECHO="Echo"
 FLANGER="Flanger"
@@ -70,8 +70,10 @@ PANWIDTH="PanWidth"
 PANSPEED="PanSpeed"
 TREMDEPTH="TremDepth"
 TREMSPEED="TremSpeed"
+TREMTRILL="TremTrill"
 VIBRDEPTH="VibrDepth"
 VIBRSPEED="VibrSpeed"
+VIBRTRILL="VibrTrill"
 LFOSPEED="LFOspeed"
 CHORUS="Chorus"
 CHORUSDEPTH="ChorusDepth"
@@ -88,6 +90,8 @@ ARPUPDOWN="ArpUpDown"
 ARPRANDOM="ArpRandom"
 ARPRNDLIN="ArpRndLin"
 ARPFADE="ArpFadeout"
+ARPLOOP="ArpLoop"
+ARP2END="ArpPlay2end"
 UA="UA"
 
 # Internal vars
@@ -173,8 +177,10 @@ MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch)
 [LFOSPEED,0,safeguard],
 [TREMDEPTH,0,safeguard],
 [TREMSPEED,0,safeguard],
+[TREMTRILL,0,safeguard],
 [VIBRDEPTH,0,safeguard],
 [VIBRSPEED,0,safeguard],
+[VIBRTRILL,0,safeguard],
 [PANWIDTH,0,safeguard],
 [PANSPEED,0,safeguard],
 [CHORUS,1,safeguard],
@@ -222,6 +228,8 @@ MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch)
 [ARPTEMPO,0,safeguard],
 [ARPSUSTAIN,0,safeguard],
 [ARPFADE,0,safeguard],
+[ARPLOOP,0,safeguard],
+[ARP2END,0,safeguard],
 [EFFECTSOFF,1,safeguard],
 [PANIC,1,safeguard],
 [AUTOCHORDOFF,1,safeguard],
