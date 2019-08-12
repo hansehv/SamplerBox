@@ -64,8 +64,8 @@ UA,Fixed,ArpDown,SwitchOn,#Can be set with ArpUpDown
 UA,Fixed,ArpRandom,SwitchOn,#Can be set with ArpRndLin
 UA,Fixed,ArpUpDown,Toggle,
 UA,Fixed,ArpRndLin,Toggle,
+UA,Fixed,ArpLoop,Toggle,
 UA,Fixed,ArpPlay2end,Toggle,
-UA,Fixed,ArpRandom,Toggle,
 UA,Fixed,ArpTime,Continuous,
 UA,Fixed,ArpFadeout,Continuous,#127 means no fade out =  repeat till toggled/set off
 UA,Fixed,ArpSustain,Continuous,
