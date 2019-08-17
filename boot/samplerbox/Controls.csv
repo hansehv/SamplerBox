@@ -76,4 +76,9 @@ UA,Scales,C,SwitchOn,# Scale has to defined in scales.csv
 UA,Chords,Min,SwitchOn,# Chord has to be defined in chords.csv
 UA,Voices,1,SwitchOn,"# Voice > 0, voice# should be assigned to a sample pattern"
 UA,BackTracks,1,Toggle,"# Value > 0, track# should be assigned to a sample"
-UA,Notemaps,0,SwitchOn,"# Value=0 means no mapping (1 to 1), numbers are in read sequence"
+UA,Notemaps,<notemap name>,SwitchOn,# Use “None” or any not existing notemap for no notemapping
+,,,,
+,,,,
+,,,,
+,,,,
+,2,,,

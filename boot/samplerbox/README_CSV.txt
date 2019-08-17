@@ -13,8 +13,9 @@ Syntax of controllerCCs.csv:
 - Val: The value for this control change sent by this controller (this is often configurable)
      Value -1 indicates a continuous controller (wheel, pot, drawbar)
 This list will be appended with the notenames as defined in keynotes.csv:
+  The controller name is this notename
   The CC of these notes is defined in the configuration.txt via NOTES_CC
-  The Val is the notenumber (so when used as controller, standard C4 sends CC=60)
+  The Val is the notenumber (so C4 sends CC=60, but this is transparant for you)
   All this to facilitate the "Ctrl" in the notemaps
   It requires the optional keynotes.csv
 ---- ==> the distributed file showes my setup, you should adapt that to your equipment
