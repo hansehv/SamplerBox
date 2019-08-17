@@ -175,7 +175,7 @@ def readkeynames(ifile):
             valuesCC=[]
             if len(sheet[i])>1:     # skip useless lines
                 if gv.getindex(sheet[0],gv.keynames)>-1:
-                    print ("%s: Key %s already defined, ignored %s" %(ifile,sheet[0],sheet[i]))
+                    print ("%s: Key %s already defined, ignored %s" %(ifile,sheet[i][0],sheet[i]))
                 else:
                     try:
                         values.append(sheet[i][1])
