@@ -20,7 +20,6 @@
 <FORM ID="elem_SB_Form">
 <TABLE border="1" cellpadding="5"><TR>
 <TD VALIGN="top">
-<!-- FORM ID="elem_SB_Form" STYLE="line-height:300%;" -->
 &nbsp;notemap:<BR>
 <span ID="input_SB_Notemap"></span><BR><BR>
 <DIV style="line-height:300%;"><HR>
@@ -31,12 +30,10 @@
 <span ID="input_SB_nm_Q"      >&nbsp;Tone interval: </span>
 <BR><CENTER><BUTTON TYPE="submit">Set</BUTTON></CENTER>
 <HR>
-<!-- /FORM><FORM ID="elem_SB_Form2" STYLE="line-height:300%;" -->
 <span ID="input_SB_nm_sav" >&nbsp;Save map ? </span>
 </DIV>
 <DIV style="line-height:100%;">&nbsp;mapname to use (no name => no save !):<BR><span ID="input_SB_nm_map" ></span></DIV>
 <HR>
-<!-- /FORM -->
 <UL>
 <LI>Redundant entries (mapping to same note with default values) will be deleted.
 <LI>Saving a map will strip comments in it.
@@ -49,17 +46,5 @@
 </FORM>
 
 <script>SB_Update();SB_init_FullNotenames();window.onload=SB_notemapselect();</script>
-<script TYPE="text/javascript">
-function addRowHandlers() {
-    var rows = document.getElementById("TableID_Notemap").rows;
-    for (i = 0; i < rows.length; i++) {
-        rows[i].onclick = function(){ return function(){
-			document.getElementById("select_SB_nm_inote").value = this.cells[0].innerHTML;
-            SB_Submit();
-        };}(rows[i]);
-    }
-}
-
-</script>
 </BODY>
 </HTML>
