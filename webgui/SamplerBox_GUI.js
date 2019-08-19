@@ -303,7 +303,7 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 	}
 }
 
-SB_ElemID=["elem_SB_Form","elem_SB_Form2","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_xvoice","elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote","elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales","elem_SB_Notemap","elem_SB_bTracks"];
+SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_xvoice","elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote","elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales","elem_SB_Notemap","elem_SB_bTracks"];
 SB_numelems=SB_ElemID.length;
 var SB_element={
 	elem_SB_Form: function(elem_name){
@@ -311,11 +311,6 @@ var SB_element={
 		document.getElementById(elem_name).method = 'POST';
 		document.getElementById(elem_name).type = 'SUBMIT';
 
-	},
-	elem_SB_Form2: function(elem_name){
-		document.getElementById(elem_name).action = window.location.pathname;
-		document.getElementById(elem_name).method = 'POST';
-		document.getElementById(elem_name).type = 'SUBMIT';
 	},
 	elem_SB_Samplesdir: function(elem_name){
 		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+SB_Samplesdir+'</SPAN>';
@@ -374,15 +369,17 @@ var SB_element={
 		document.getElementById(elem_name).innerHTML=html+'</TABLE>';
 	},
 	elem_SB_Notemap: function(elem_name){
-		html='<TABLE BORDER="1" CELLPADDING="3"><TR><TH>Q</TH><TH>Key</TH><TH>Plays</TH><TH>Tune</TH><TH>Voice</TH></TR>';
+		html='<TABLE BORDER="1" CELLPADDING="3" ID="TableID_Notemap"><TR><TH style="display:none;"></TH><TH>Q</TH><TH>Key</TH><TH>Plays</TH><TH>Tune</TH><TH>Voice</TH></TR>';
 		for (i=0;i<SB_numnotemapping;i++){
 			inote=SB_NoteMapping[i][0];
 			inotenam=SB_NoteMapping[i][1];
 			retune="";
 			voice="";
+			j=0;k="";
 			for (j=0;i<SB_numkeynames;j++){
 				if (SB_KeyNames[j][0]==inote){
 					inotenam=SB_KeyNames[j][1];
+					if (inote==SB_nm_inote){k=' style="background-color:Khaki;"'}
 					break;
 				}
 			}
@@ -391,7 +388,7 @@ var SB_element={
 			if (onotenam=="None"){onotenam="";}
 			if (SB_NoteMapping[i][3]!=0){retune=SB_NoteMapping[i][3]}
 			if (SB_NoteMapping[i][4]!=0){voice=SB_NoteMapping[i][4]}
-			html=html+'<TR VALIGN="top"><TD ALIGN="center">'+SB_NoteMapping[i][1]+'</TD><TD ALIGN="center">'+inotenam+'</TD><TD ALIGN="center">'+onotenam+'</TD><TD ALIGN="center">'+retune+'</TD><TD ALIGN="center">'+voice+'</TD></TR>';
+			html=html+'<TR VALIGN="top"'+k+'><TD style="display:none;">'+j+'</TD><TD ALIGN="center">'+SB_NoteMapping[i][1]+'</TD><TD ALIGN="center">'+inotenam+'</TD><TD ALIGN="center">'+onotenam+'</TD><TD ALIGN="center">'+retune+'</TD><TD ALIGN="center">'+voice+'</TD></TR>';
 		}
 		document.getElementById(elem_name).innerHTML=html+'</TABLE>';
 	},
@@ -425,7 +422,7 @@ function SB_numselect(input_name,name,val,min,max,step,update){
 	return(html+'</SELECT>');
 }
 function SB_listselect(input_name,name,val,table,dims,size,update){
-	html='<SELECT name="'+name+'" SIZE="1"';
+	html='<SELECT name="'+name+'" id="select_'+name+'" SIZE="1"';
 	if (update==1) {html=html+' onchange=SB_Submit()';}
 	html=html+'>';
 	for(var i=0;i<size;i++){
@@ -434,6 +431,15 @@ function SB_listselect(input_name,name,val,table,dims,size,update){
 		else {if (table[i][0]==val) j=" selected";k=table[i][1];}
 		html=html+'<OPTION VALUE='+i+j+'>'+k+'</OPTION>';}
 	return(html+'</SELECT>');
+}
+function SB_notemapselect() {
+    var rows = document.getElementById("TableID_Notemap").rows;
+    for (i = 0; i < rows.length; i++) {
+        rows[i].onclick = function(){ return function(){
+			document.getElementById("select_SB_nm_inote").value = this.cells[0].innerHTML;
+            SB_Submit();
+        };}(rows[i]);
+    }
 }
 function SB_slidersync(IDslider, IDvar, sliderchange){
 	if (document.getElementById(IDvar) && document.getElementById(IDslider)){
