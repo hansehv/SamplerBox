@@ -4,7 +4,7 @@
 # Clock can be via call in AudioCallback, on PI3 approx once per 11msec's
 #
 # To avoid complexity:
-#   - replace the "whole and nothing but" keyboard mode with this
+#   - replace the "whole and nothing but" keyboard area with this
 #   - start/end playing with note-on/off after notemapping and exotic note-off translations
 #   - playmode, retune and release samples are ignored (=replaced)
 #   - scales/chords are followed
@@ -96,11 +96,16 @@ def power(onoff):
         active=False    # stop first
         rewind()        # initialize completely for safety...
 def togglepower(CCval, *z):
-    if currnote<0:
+    global lastARPtype
+    #if currnote<0:
+    if not active:
+        if gv.ARPtype==0: gv.ARPtype=lastARPtype
         power(True)
     else:
+        lastARPtype=gv.ARPtype
+        gv.ARPtype=0
         power(False)
-gv.MC[gv.getindex(gv.ARP,gv.MC)][2]=togglepower
+gv.setMC(gv.ARP,togglepower)
 
 def noteoff():
     global playnote
@@ -112,10 +117,10 @@ def noteoff():
         playnote=-1
 
 def rewind():
-    global currnote, cyclepos
-    currnote=-1 # stop the loop first
-    noteoff()   # so we're sure to stop the playing note :-)
-    cyclepos=-1
+    global currnote,cyclepos
+    currnote=-1     # stop the loop first
+    noteoff()       # so we're sure to stop the playing note :-)
+    cyclepos=-1     # not cycling
 
 def note_onoff(messagetype, midinote, played_velocity, velocity_mode, VELSAMPLE):
     global pressed, noteon, sequence, currnote, velmixer, velocity, cyclelen, cycleoff
@@ -145,7 +150,7 @@ def note_onoff(messagetype, midinote, played_velocity, velocity_mode, VELSAMPLE)
             velmixer=velocity
         gv.last_musicnote=midinote-12*int(currnote/12) # do a "remainder midinote/12" without having to import the full math module
         if gv.currscale>0:               # scales require a chords mix
-            sequence = gv.chordnote[gv.scalechord[gv.currscale][gv.last_musicnote]]
+            sequence=gv.chordnote[gv.scalechord[gv.currscale][gv.last_musicnote]]
         else:
             sequence=gv.chordnote[gv.currchord]
         if gv.ARPtype==2:
@@ -161,7 +166,7 @@ def tempo(CCval,*z):    # time between note-on's
     cyclestep=x+5
     length=x
     stepguard()
-gv.MC[gv.getindex(gv.ARPTEMPO,gv.MC)][2]=tempo
+gv.setMC(gv.ARPTEMPO,tempo)
 
 def sustain(CCval,*z):  # time between note-on and note-off,
                         # when tempo is faster it will override making it continuous
@@ -170,22 +175,24 @@ def sustain(CCval,*z):  # time between note-on and note-off,
     if x>100:x=100
     keepon=x
     stepguard()
-gv.MC[gv.getindex(gv.ARPSUSTAIN,gv.MC)][2]=sustain
+gv.setMC(gv.ARPSUSTAIN,sustain)
 
 gv.ARPtypes=["Off","Up","Down","Random"]
 gv.ARPtype=0
-lastlinord=0
+lastARPtype=1
+lastlinord=1
 def ordnum(num):
-    global lastlinord, sequence
-    gv.ARPtype=num
-    if gv.ARPtype==0:
+    global lastlinord,sequence,lastARPtype
+    if num==0:
         power(False)
     else:
+        lastARPtype=gv.ARPtype
         power(True)
-        if gv.ARPtype<3:
-            if lastlinord!=gv.ARPtype:
+        if num<3:
+            if lastlinord!=num:
                 sequence=list(reversed(sequence))
-                lastlinord=gv.ARPtype
+                lastlinord=num
+    gv.ARPtype=num
 def up(*z):
     ordnum(1)
 def down(*z):
@@ -207,11 +214,11 @@ def rndlin(*z):
         gv.ARPtype=lastlinord
     else:
         gv.ARPtype=3
-gv.MC[gv.getindex(gv.ARPUP,gv.MC)][2]=up
-gv.MC[gv.getindex(gv.ARPDOWN,gv.MC)][2]=down
-gv.MC[gv.getindex(gv.ARPUPDOWN,gv.MC)][2]=updown
-gv.MC[gv.getindex(gv.ARPRANDOM,gv.MC)][2]=rand
-gv.MC[gv.getindex(gv.ARPRNDLIN,gv.MC)][2]=rndlin
+gv.setMC(gv.ARPUP,up)
+gv.setMC(gv.ARPDOWN,down)
+gv.setMC(gv.ARPUPDOWN,updown)
+gv.setMC(gv.ARPRANDOM,rand)
+gv.setMC(gv.ARPRNDLIN,rndlin)
 
 fadecycles=100
 fadestep=0.0
@@ -224,4 +231,14 @@ def fadeout(CCval,*z):  # number of cycles to fadeout (default no fadeout)
         fadestep=1.0*velmixer/fadecycles
     else:
         fadestep=0.0
-gv.MC[gv.getindex(gv.ARPFADE,gv.MC)][2]=fadeout
+gv.setMC(gv.ARPFADE,fadeout)
+
+def ArpLoop(*z):
+    global loop
+    loop=not(loop)
+def ArpPlay2end(*z):
+    global play2end
+    play2end=not(play2end)
+gv.setMC(gv.ARPLOOP,ArpLoop)
+gv.setMC(gv.ARP2END,ArpPlay2end)
+

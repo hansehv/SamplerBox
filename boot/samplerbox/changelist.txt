@@ -142,7 +142,17 @@ Februari 2019:
   - Made radiobuttons in webgui more versatile
   - Enabled program changes via midi CC's for devices without program change button - THIS CHANGES THE CCmap.csv
 March/April 2019:
-  - Added Wah's, Delay/flanger, Moog lowpass and Chorus
+  - Added effects/filters: Wah's, Delay/flanger, Moog lowpass and Chorus
   - Cleaned up global variable usage and calls to C++ routines
   - TheNothingman contributed OLED support via Luma, tested using SH1106
   - bug fixes
+May-July 2019:
+  - Possibility to map notes from channel 10 (drumpad) in the active channel
+  - Added notemap editing in GUI (editing module can be used in/for other UI's).
+  - Allowed for empty/comment lines in definition.txt
+  - Avoid program freezes with configuration parameter for maximizing the memory usage after sample loading
+    Loading of wav-files stops after exceeding max. Startup messages show skipped notes.
+  - Removed (%)%qcent, incorrectly implemented.
+    Correct implementation requires extra table & processing; notemapping gives sufficient alternative.
+  - Corrected setting/processing CC control of arpeggiator/effects/filters
+  - bug fixes, cleanups and cosmetic changes

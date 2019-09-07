@@ -9,8 +9,9 @@ import threading
 import BaseHTTPServer,urllib, mimetypes
 from urlparse import urlparse,parse_qs
 import os,shutil,subprocess
-import gv,arp,LFO,Cpp,CHOrus
-notesymbol=["C","C&#9839;","D","E&#9837;","E","F","F&#9839;","G","G&#9839;","A","B&#9837;","B","FX"]  # 0 in scalechord table, also used in loadsamples(!)
+import gv,remap,arp,LFO,Cpp,CHOrus
+notesymbol=["C","C&#9839;","D","E&#9837;","E","F","F&#9839;","G","G&#9839;","A","B&#9837;","B","FX"]
+notesymbolQ=["C","Ck","C&#9839;","Dk","D","Ds","E&#9837;","Ek","E","Es","F","Fs","F&#9839;","Gk","G","Gs","G&#9839;","Ak","A","As","B&#9837;","Bk","B","Bs","FX"]
 HTTP_PORT = 80
 
 class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
@@ -21,6 +22,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_API()
         else:
             if len(path)<2:
+
                 path=gv.HTTP_ROOT + "/index.html"
             elif path[len(gv.samplesdir):] != gv.samplesdir:
                 path=gv.HTTP_ROOT + path
@@ -51,7 +53,6 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         
     def do_POST(self):
         inval=0
-        
         length = int(self.headers.getheader('content-length'))
         field_data = self.rfile.read(length)
         fields=parse_qs(field_data)
@@ -70,12 +71,13 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if "SB_DefinitionTxt" in fields:
             if gv.DefinitionTxt != fields["SB_DefinitionTxt"][0]:
                 gv.DefinitionTxt = fields["SB_DefinitionTxt"][0]
-                #print gv.DefinitionTxt
-                subprocess.call(['mount', '-vo', 'remount,rw', gv.samplesdir])
+                if gv.rootprefix=="":
+                    subprocess.call(['mount', '-vo', 'remount,rw', gv.samplesdir])
                 fname=gv.samplesdir+gv.presetlist[gv.getindex(gv.PRESET,gv.presetlist)][1]+"/"+gv.SAMPLESDEF
                 with open(fname, 'w') as definitionfile:
                         definitionfile.write(gv.DefinitionTxt)
-                subprocess.call(['mount', '-vo', 'remount,ro', gv.samplesdir])
+                if gv.rootprefix=="":
+                    subprocess.call(['mount', '-vo', 'remount,ro', gv.samplesdir])
                 gv.basename="None"         # do a renew to sync the update
                 self.LoadSamples()
                 return
@@ -84,15 +86,28 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if "SB_MidiVolume"  in fields: gv.volumeCC          =float(fields["SB_MidiVolume"][0])/100
         if "SB_Gain"        in fields: gv.globalgain        =float(fields["SB_Gain"][0])/100
         if "SB_Pitchrange"  in fields: gv.pitchnotes        =int(fields["SB_Pitchrange"][0])*2
+        voicechange=False
         if "SB_Voice"       in fields:
-            if gv.voicelist[0][0]==0:   i=1
-            else:   i=0
-            gv.MC[gv.getindex(gv.VOICES,gv.MC)][2](int(fields["SB_Voice"][0])+i,0)
-        if "SB_Notemap"     in fields:gv.MC[gv.getindex(gv.NOTEMAPS,gv.MC)][2](int(fields["SB_Notemap"][0]))
+            currvoice=gv.currvoice
+            if gv.voicelist[0][0]==0: i=1
+            else: i=0
+            gv.setVoice(int(fields["SB_Voice"][0])+i,0)
+            if currvoice!=gv.currvoice: voicechange=True
+        notemapchange=False
+        if "SB_Notemap"     in fields and not voicechange:
+            if int(fields["SB_Notemap"][0])==0: currnotemap=""
+            else: currnotemap=gv.notemaps[int(fields["SB_Notemap"][0])-1]
+            if currnotemap!=gv.currnotemap:
+                gv.setNotemap(currnotemap)
+                notemapchange=True
+        if notemapchange:                       # restart the mapping circus when underlying table shifted
+            gv.SB_nm_inote=-1
+        elif "SB_nm_inote"  in fields:          # this field is supposed to be always there when mapping :-)
+            remap.notes(fields)
+        scalechange=False
         if "SB_Scale"       in fields:
             inval=int(fields["SB_Scale"][0])
-            if gv.currscale==inval: scalechange=False
-            else:
+            if gv.currscale!=inval:
                 scalechange=True
                 gv.currscale=inval
                 if gv.last_musicnote<0: gv.currchord=0
@@ -116,7 +131,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if "SB_AWrelease"   in fields: Cpp.AWsetRelease(float(fields["SB_AWrelease"][0])*0.254)
         if "SB_AWminfreq"   in fields: Cpp.AWsetMinFreq(float(fields["SB_AWminfreq"][0])*0.254)
         if "SB_AWmaxfreq"   in fields: Cpp.AWsetMaxFreq(float(fields["SB_AWmaxfreq"][0])*0.0127)
-        if "SB_AWqfactor"   in fields: Cpp.AWsetQualityFactor(float(fields["SB_AWqfactor"][0])*0.0508)
+        if "SB_AWqfactor"   in fields: Cpp.AWsetQualityFactor(float(fields["SB_AWqfactor"][0])*1.27)
         if "SB_AWspeed"     in fields: Cpp.AWsetSpeed((float(fields["SB_AWspeed"][0])-100)*0.127)
         if "SB_AWlvlrange"  in fields: Cpp.AWsetLVLrange(float(fields["SB_AWlvlrange"][0])*1.27)
         if "SB_DLYtype"     in fields: Cpp.DLYsetType(gv.getindex(fields["SB_DLYtype"][0],gv.DLYtypes,True))
@@ -168,6 +183,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def send_API(self):
         varName=["SB_RenewMedia","SB_SoundVolume","SB_MidiVolume",
                  "SB_Preset","SB_Gain","SB_Pitchrange","SB_Notemap",
+                 "SB_nm_Q","SB_nm_inote","SB_nm_onote","SB_nm_retune","SB_nm_voice","SB_nm_map","SB_nm_sav",
                  "SB_Voice","SB_Scale","SB_Chord",
                  "SB_FVtype","SB_FVroomsize","SB_FVdamp","SB_FVlevel","SB_FVwidth",
                  "SB_AWtype","SB_AWmixing","SB_AWattack","SB_AWrelease","SB_AWminfreq",
@@ -193,14 +209,18 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.wfile.write("var %s;" % (varName[i]) )
 
         self.wfile.write("\n\n// Informational (read-only) variables:")
-        self.wfile.write("\nSB_numvars=%d;var SB_VarName;var SB_VarVal;" % (len(varName)) )
-        self.wfile.write("\nvar SB_Samplesdir;var SB_LastMidiNote;var SB_LastMusicNote;var SB_DefErr;")
+        self.wfile.write("\nvar SB_numvars=%d;var SB_VarName;var SB_VarVal;" % (len(varName)) )
+        self.wfile.write("\nvar SB_LastMidiNote;var SB_LastMusicNote;var SB_DefErr;")
         self.wfile.write("\nvar SB_Mode;var SB_numpresets;var SB_Presetlist;")
         self.wfile.write("\nvar SB_xvoice;var SB_numvoices;var SB_Voicelist;")
-        self.wfile.write("\nvar SB_numbtracks;var SB_bTracks;var SB_numnotemaps;var SB_Notemaps;")
+        self.wfile.write("\nvar SB_numnotemaps;var SB_Notemaps;var SB_numnotemapping;var SB_NoteMapping;")
+        self.wfile.write("\nvar SB_numbtracks;var SB_bTracks;")
 
-        self.wfile.write("\n\n// Static tables:")
+        self.wfile.write("\n\n// Static variables & tables:")
+        self.wfile.write("\nSB_Samplesdir='%s';SB_Stop127=%d;" % (gv.samplesdir,gv.stop127) )
         self.wfile.write("\nSB_numnotes=%d;SB_Notename=%s;" % (len(notesymbol),notesymbol) )
+        self.wfile.write("\nSB_numqfractions=%i;SB_qFractions=%s;SB_numqnotes=%d;SB_qNotename=%s;" % (len(remap.fractions),remap.fractions,len(notesymbolQ),notesymbolQ) )
+        self.wfile.write("\nSB_numkeynames=%d;SB_KeyNames=%s;" % (len(gv.keynames),gv.keynames) )
         self.wfile.write("\nSB_numchords=%d;SB_Chordname=%s;\nSB_Chordnote=%s;" % (len(gv.chordname),gv.chordname,gv.chordnote) )
         self.wfile.write("\nSB_numscales=%d;SB_Scalename=%s;\nSB_Scalechord=%s;" % (len(gv.scalesymbol),gv.scalesymbol,gv.scalechord) )
         self.wfile.write("\nSB_ARPordlist=%s;" % (gv.ARPtypes) )
@@ -217,10 +237,28 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         else:                   ActuallyLoading="No"
         self.wfile.write("'%s',%d,%d," % (ActuallyLoading,gv.volume,gv.volumeCC*100) )
         self.wfile.write("%d,%d,%d,'%s'," % (gv.PRESET,gv.globalgain*100,gv.pitchnotes/2,gv.currnotemap) )
+        if gv.SB_nm_actmap!=gv.currnotemap:
+            gv.SB_nm_actmap=gv.currnotemap
+            gv.SB_nm_map=gv.SB_nm_actmap
+        gv.SB_nm_onote=-1
+        if len(gv.notemapping)>0:   gv.SB_nm_Q=gv.notemapping[0][1]
+        else:                       gv.SB_nm_Q=1
+        gv.SB_nm_retune=0
+        gv.SB_nm_voice=0
+        if gv.SB_nm_inote>-1:
+            i=gv.getindex(gv.SB_nm_inote,gv.notemapping)
+            if i>-1:
+                gv.SB_nm_Q=gv.notemapping[i][1]
+                gv.SB_nm_onote=gv.notemapping[i][2]
+                gv.SB_nm_retune=gv.notemapping[i][3]
+                gv.SB_nm_voice=gv.notemapping[i][4]
+            else:
+                gv.SB_nm_onote=gv.SB_nm_inote
+        self.wfile.write("%d,%d,%d,%d,%d,'%s','%d'," % (gv.SB_nm_Q,gv.SB_nm_inote,gv.SB_nm_onote,gv.SB_nm_retune,gv.SB_nm_voice,gv.SB_nm_map,0) )
         self.wfile.write("%d,%d,%d," % (gv.currvoice,gv.currscale,gv.currchord) )
         self.wfile.write("%d,%d,%d,%d,%d," % (gv.FVtype,gv.FVroomsize*100,gv.FVdamp*100,gv.FVlevel*100,gv.FVwidth*100) )
         self.wfile.write("%d,%d,%d,%d," % (gv.AWtype,gv.AWmixing*100,gv.AWattack*1000,gv.AWrelease*10000) )
-        self.wfile.write("%d,%d,%d,%d,%d," % (gv.AWminfreq,gv.AWmaxfreq,gv.AWqfactor*100,gv.AWspeed,gv.AWlvlrange) )
+        self.wfile.write("%d,%d,%d,%d,%d," % (gv.AWminfreq,gv.AWmaxfreq,gv.AWqfactor*10,gv.AWspeed,gv.AWlvlrange) )
         self.wfile.write("%d,%d,%d,%d,%d," % (gv.DLYtype,gv.DLYfb*100,gv.DLYwet*100,gv.DLYdry*100,gv.DLYtime) )
         self.wfile.write("%d,%d,%d,%d," % (gv.DLYsteep,gv.DLYsteplen,gv.DLYmin,gv.DLYmax) )
         self.wfile.write("%d,%d,%d,%d,%d,%d," % (gv.LFtype,gv.LFresonance*10,gv.LFcutoff,gv.LFdrive,gv.LFlvl*100,gv.LFgain*10) )
@@ -236,7 +274,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         else:           t=0
         self.wfile.write("%d,%d,'%s','%s',%d,%d," % (arp.length,arp.keepon,s,t,gv.ARPtype,arp.fadecycles) )
         self.wfile.write("%d,%d,%d,%d,'%s'" % (gv.CHOrus,gv.CHOdepth,gv.CHOgain*100,gv.MIDI_CHANNEL,gv.DefinitionTxt.replace('\n','&#10;').replace('\r','&#13;')) )   # make it a unix formatted JS acceptable string
-        self.wfile.write("];\n\tSB_Samplesdir='%s';SB_LastMidiNote=%d;SB_LastMusicNote=%s;SB_DefErr='%s';\n" % (gv.samplesdir,gv.last_midinote,gv.last_musicnote,gv.DefinitionErr) )
+        self.wfile.write("];\n\tSB_LastMidiNote=%d;SB_LastMusicNote=%s;SB_DefErr='%s';\n" % (gv.last_midinote,gv.last_musicnote,gv.DefinitionErr) )
         self.wfile.write("\tSB_Mode='%s';SB_numpresets=%d;SB_Presetlist=%s;\n" % (gv.sample_mode,len(gv.presetlist),gv.presetlist) )
         vlist=[]
         xvoice="No"
@@ -247,7 +285,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write("\tSB_numbtracks=%d;SB_bTracks=%s;\n" % (len(gv.btracklist),gv.btracklist) )
         notemaps=["None"]
         notemaps.extend(gv.notemaps)
-        self.wfile.write("\tSB_numnotemaps=%d;SB_Notemaps=%s;\n" % (len(notemaps),notemaps) )
+        self.wfile.write("\tSB_numnotemaps=%d;SB_Notemaps=%s;SB_numnotemapping=%d;SB_NoteMapping=%s;\n" % (len(notemaps),notemaps,len(gv.notemapping),gv.notemapping) )
         self.wfile.write("};")
 
 def HTTP_Server(server_class=BaseHTTPServer.HTTPServer, handler_class=HTTPRequestHandler, port=HTTP_PORT):

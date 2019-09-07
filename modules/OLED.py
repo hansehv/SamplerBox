@@ -1,3 +1,14 @@
+###############################################################
+#  OLED display via SPI interface contributed by TheNothingMan,
+#  see: https://github.com/TheNothingMan/SamplerBox
+#
+#  It uses Luma.OLED which has drivers for: SSD1306, SSD1309,
+#  SSD1322, SSD1325, SSD1327, SSD1331, SSD1351, SH1106.
+#  Current code only supports SH1106.
+#  Please contact me (Hans) if you have or need additions !
+#
+#   SamplerBox extended by HansEhv (https://github.com/hansehv)
+###############################################################
 # -*- coding:utf-8 -*-
 
 from luma.core.interface.serial import i2c, spi

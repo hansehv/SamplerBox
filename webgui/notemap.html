@@ -1,0 +1,50 @@
+<META NAME="Generator" CONTENT="Stone's WebWriter 3.5">
+<!DOCTYPE html><HTML><HEAD><meta charset="UTF-8">
+<!-- Minus AutoDato -->
+	<TITLE>Notemap</TITLE>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
+<script SRC="SamplerBox.API" TYPE="text/javascript"></script>
+<script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+</HEAD>
+<BODY>
+
+<TABLE WIDTH="100%"><TR>
+<TD WIDTH="112"><A HREF="index.html"><IMG SRC="SamplerBox.gif" BORDER="0" WIDTH="80" HEIGHT="27" ALIGN="middle" ALT=""></A></TD>
+<TD ALIGN="center"><B>Notemapping</B></TD>
+<TD ALIGN="center"><BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON></TD>
+</TR></TABLE>
+
+<script>SB_Update();SB_init_FullNotenames();</script>
+<FORM ID="elem_SB_Form">
+<TABLE border="1" cellpadding="5"><TR>
+<TD VALIGN="top">
+&nbsp;notemap:<BR>
+<span ID="input_SB_Notemap"></span><BR><BR>
+<DIV style="line-height:300%;"><HR>
+<B><span ID="input_SB_nm_inote">&nbsp;input key &nbsp;: </span></B>
+<HR><span ID="input_SB_nm_onote" >&nbsp;output note : </span>
+<BR><span ID="input_SB_nm_retune">&nbsp;retune cents: </span>
+<DIV style="line-height:100%;">&nbsp;voice to use :<BR><span ID="input_SB_nm_voice" ></span></DIV>
+<span ID="input_SB_nm_Q"      >&nbsp;Tone interval: </span>
+<BR><CENTER><BUTTON TYPE="submit">Set</BUTTON></CENTER>
+<HR>
+<span ID="input_SB_nm_sav" >&nbsp;Save map ? </span>
+</DIV>
+<DIV style="line-height:100%;">&nbsp;mapname to use (no name => no save !):<BR><span ID="input_SB_nm_map" ></span></DIV>
+<HR>
+<UL>
+<LI>Redundant entries (mapping to same note with default values) will be deleted.
+<LI>Saving a map will strip comments in it.
+<LI>The underlying notes do not change when changing the tone mapping interval, so don't mix quarter tone mapping on semi tone samples and vice versa.
+<BR>Changing interval will be ignored on redundant entries
+</UL>
+</TD><TD VALIGN="top">
+<span ID="elem_SB_Notemap" CLASS="inline valign_top">?</span>
+</TD></TR></TABLE>
+</FORM>
+
+<script>SB_Update();SB_init_FullNotenames();window.onload=SB_notemapselect();</script>
+</BODY>
+</HTML>

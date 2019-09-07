@@ -9,7 +9,7 @@
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 #   see docs at  http://homspace.xs4all.nl/homspace/samplerbox
-#   changelog in changelist.txt
+#   changelog in /boot/samplerbox/changelist.txt
 #
 
 ##########################################################################
@@ -17,22 +17,18 @@
 ##  WARNING: GPIO modules in this build use mode=BCM. Do not mix modes!
 ##########################################################################
 
-import wave
-import time
-import numpy
-import sys,os,re
-import sounddevice
-import threading   
+import wave,sounddevice,rtmidi2
 from chunk import Chunk
-import struct
-import rtmidi2
+import time,psutil,numpy,struct
+import sys,os,re,threading   
 import ConfigParser
 import samplerbox_audio   # audio-module (cython)
-rootprefix='/home/hans/Documents/SamplerBox'
-if not os.path.isdir(rootprefix):
-    rootprefix=""
-sys.path.append('./modules')
 import gv,getcsv
+gv.rootprefix='/home/pi/samplerbox'
+#gv.rootprefix='/home/hans/samplerbox'
+if not os.path.isdir(gv.rootprefix):
+    gv.rootprefix=""
+sys.path.append('./modules')
 
 ########  Define local general functions ########
 usleep = lambda x: time.sleep(x/1000000.0)
@@ -43,14 +39,14 @@ def getindex(key, table, onecol=False):
             if key==table[i]:   return i
         else:
             if key==table[i][0]:return i
-    return -1
+    return -100
+notenames=["C","Cs","C#","Dk","D","Ds","D#","Ek","E","Es","F","Fs","F#","Gk","G","Gs","G#","Ak","A","As","A#","Bk","B","Bs"]
 def notename2midinote(notename,fractions):
-    notenames=["C","CS","C#","DK","D","DS","D#","EK","E","ES","F","FS","F#","GK","G","GS","G#","AK","A","AS","A#","BK","B","BS"]
-    notename=notename.upper()
-    if notename[:2]=="CK":  # normalize synonyms
-        notename="BS%d" %(int(notename[-1])-1) # Octave number switches between B and C
+    notename=notename.title()
+    if notename[:2]=="Ck":  # normalize synonyms
+        notename="Bs%d" %(int(notename[-1])-1) # Octave number switches between B and C
     elif notename[:2]=="FK":
-        notename="ES%s"%notename[-1]
+        notename="Es%s"%notename[-1]
     try:
         x=notenames.index(format(notename[:len(notename)-1]))
         if fractions==1:    # we have undivided semi-tones = 12-tone scale
@@ -58,7 +54,7 @@ def notename2midinote(notename,fractions):
             if y!=0:        # and we can't process any found q's.
                 print "Ignored quartertone %s as we are in 12-tone mode" %notename
                 midinote=-1
-            # next statements places note 60 on C4
+            # next statements places note C4 on 60
             else:            # 12 note logic
                 midinote = x + (int(notename[-1])+1) * 12
         else:               # 24 note logic
@@ -67,11 +63,23 @@ def notename2midinote(notename,fractions):
         print "Ignored unrecognized notename '%s'" %notename
         midinote=-128
     return midinote
-def retune(voice,note,cents):   # 100 cents is a semitone
-    for velocity in xrange(128):
-        gv.samples[note,velocity,voice].retune=cents*PITCHSTEPS/100
-def setMC(mc,proc):
-    gv.MC[getindex(mc,gv.MC)][2]=proc
+def midinote2notename(midinote,fractions):
+    notename=None
+    octave=None
+    note=None
+    if   midinote==-2: notename="Ctrl"
+    elif midinote==-1: notename="None"
+    else:
+        if midinote<gv.stop127 and midinote>(127-gv.stop127):
+            if fractions==1:
+                octave,note=divmod(midinote,12)
+                octave-=1
+                note*=2
+            else:
+                octave,note=divmod(midinote+36,24)
+            notename="%s%d" %(notenames[note],octave)
+        else: notename="%d" %(midinote)
+    return notename
 def setChord(x,*z):
     y=getindex(x,gv.chordname,True)
     if y>-1:                # ignore if undefined
@@ -85,16 +93,18 @@ def setScale(x,*z):
         gv.currscale=y
         display("")
 CCmap=[]
-def setVoice(x, i=0, *z):
+def setVoice(x, iv=0, *z):
     global CCmap
-    if i==0:
+    if iv==0 or iv==-1:
         xvoice=int(x)
     else:
         xvoice=getindex(int(x),gv.voicelist)
     if xvoice>-1:                       # ignore if undefined
         voice=gv.voicelist[xvoice][0]
         if voice!=gv.currvoice:         # also ignore if active
-            setNotemap(gv.voicelist[xvoice][3])
+            #print gv.voicelist[xvoice]
+            if iv>-1:   # -1 means mapdriven voice change: map should not be changed by voice def!
+                setNotemap(gv.voicelist[xvoice][3])
             gv.currvoice=voice
             gv.sample_mode=gv.voicelist[xvoice][2]
             gv.CCmap = list(gv.CCmapBox)            # construct this voice's CC setup
@@ -110,23 +120,21 @@ def setVoice(x, i=0, *z):
                     if not found:
                         gv.CCmap.append(gv.CCmapSet[i])             # else add entry
         display("")
-notemap=[]
 def setNotemap(x, *z):
-    global notemap
     try:
         y=x-1
     except:
         y=getindex(x,gv.notemaps,True)
-    if y>-1:      
+    if y>-1:
         if gv.notemaps[y]!=gv.currnotemap:
             gv.currnotemap=gv.notemaps[y]
-            notemap=[]
+            gv.notemapping=[]
             for i in xrange(len(gv.notemap)):       # do we have note mapping ?
                 if gv.notemap[i][0]==gv.currnotemap:
-                    notemap.append(gv.notemap[i])
+                    gv.notemapping.append([gv.notemap[i][2],gv.notemap[i][1],gv.notemap[i][3],gv.notemap[i][4],gv.notemap[i][5]])
     else:
         gv.currnotemap=""
-        notemap=[]
+        gv.notemapping=[]
     display("")
     
 playingbacktracks=0
@@ -145,15 +153,17 @@ def playBackTrack(x,*z):
             print 'Unassigned/unfilled track or other exception for backtrack %s->%d' % (x,playnote)
 
 gv.getindex=getindex                    # and announce the procs to modules
-gv.retune=retune
 gv.notename2midinote=notename2midinote
-gv.MC[getindex(gv.CHORDS,gv.MC)][2]=setChord
-gv.MC[getindex(gv.SCALES,gv.MC)][2]=setScale
-gv.MC[getindex(gv.VOICES,gv.MC)][2]=setVoice
-gv.MC[getindex(gv.NOTEMAPS,gv.MC)][2]=setNotemap
-gv.MC[getindex(gv.BACKTRACKS,gv.MC)][2]=playBackTrack
+gv.midinote2notename=midinote2notename
+gv.setVoice=setVoice
+gv.setNotemap=setNotemap
+gv.setMC(gv.CHORDS,setChord)
+gv.setMC(gv.SCALES,setScale)
+gv.setMC(gv.VOICES,setVoice)
+gv.setMC(gv.NOTEMAPS,setNotemap)
+gv.setMC(gv.BACKTRACKS,playBackTrack)
 
-########  LITERALS ########
+########  LITERALS used in the main module only ########
 PLAYLIVE = "Keyb"                       # reacts on "keyboard" interaction
 PLAYBACK = "Once"                       # ignores loop markers ("just play the sample with option to stop")
 PLAYBACK2X = "Onc2"                     # ignores loop markers with note-off by same note
@@ -163,15 +173,14 @@ BACKTRACK = "Back"                      # recognize loop markers, loop-off by sa
 PLAYMONO = "Mono"                       # monophonic (with chords), loop like Loo2, but note/chord stops when next note is played.
 VELSAMPLE = "Sample"                    # velocity equals sampled value, requires multiple samples to get differentation
 VELACCURATE = "Accurate"                # velocity as played, allows for multiple (normalized!) samples for timbre
-SAMPLES_INBOX = rootprefix+"/samples/"  # Builtin directory containing the sample-sets.
-SAMPLES_ONUSB = rootprefix+"/media/"    # USB-Mount directory containing the sample-sets.
-CONFIG_LOC = rootprefix+"/boot/samplerbox/"
+SAMPLES_INBOX = gv.rootprefix+"/samples/"  # Builtin directory containing the sample-sets.
+SAMPLES_ONUSB = gv.rootprefix+"/media/"    # USB-Mount directory containing the sample-sets.
+CONFIG_LOC = gv.rootprefix+"/boot/samplerbox/"
 CHORDS_DEF = "chords.csv"
 SCALES_DEF = "scales.csv"
 CTRLCCS_DEF = "controllerCCs.csv"
-CTRLMAP_DEF = "CCmap.csv"
 KEYNAMES_DEF = "keynotes.csv"
-NOTEMAP_DEF = "notemap.csv"
+
 
 ##########  read LOCAL CONFIG ==> /boot/samplerbox/configuration.txt
 gv.cp=ConfigParser.ConfigParser()
@@ -187,9 +196,12 @@ USE_BUTTONS = gv.cp.getboolean(gv.cfg,"USE_BUTTONS".lower())
 USE_LEDS = gv.cp.getboolean(gv.cfg,"USE_LEDS".lower())
 USE_HTTP_GUI = gv.cp.getboolean(gv.cfg,"USE_HTTP_GUI".lower())
 gv.MIDI_CHANNEL = gv.cp.getint(gv.cfg,"MIDI_CHANNEL".lower())
+DRUMPAD_CHANNEL = gv.cp.getint(gv.cfg,"DRUMPAD_CHANNEL".lower())
+gv.NOTES_CC = gv.cp.getint(gv.cfg,"NOTES_CC".lower())
 gv.PRESET = gv.cp.getint(gv.cfg,"PRESET".lower())
 gv.PRESETBASE = gv.cp.getint(gv.cfg,"PRESETBASE".lower())
 MAX_POLYPHONY = gv.cp.getint(gv.cfg,"MAX_POLYPHONY".lower())
+MAX_MEMLOAD = gv.cp.getint(gv.cfg,"MAX_MEMLOAD".lower())
 BOXSAMPLE_MODE = gv.cp.get(gv.cfg,"BOXSAMPLE_MODE".lower())
 BOXVELOCITY_MODE = gv.cp.get(gv.cfg,"BOXVELOCITY_MODE".lower())
 BOXSTOP127 = gv.cp.getint(gv.cfg,"BOXSTOP127".lower())
@@ -211,10 +223,10 @@ gv.volumeCC = gv.cp.getfloat(gv.cfg,"volumeCC".lower())
 getcsv.readchords(CONFIG_LOC + CHORDS_DEF)
 getcsv.readscales(CONFIG_LOC + SCALES_DEF)
 
-# Midi controllers and keys mapping
+# Midi controllers and keyboard definition
 getcsv.readcontrollerCCs(CONFIG_LOC + CTRLCCS_DEF)
-gv.CCmapBox=getcsv.readCCmap(CONFIG_LOC + CTRLMAP_DEF)
 getcsv.readkeynames(CONFIG_LOC + KEYNAMES_DEF)
+gv.CCmapBox=getcsv.readCCmap(CONFIG_LOC + gv.CTRLMAP_DEF)
 
 ########## Initialize other globals, don't change
 
@@ -232,7 +244,7 @@ gv.pitchneutral = PITCHSTEPS/2
 gv.pitchdiv = 2**(14-PITCHBITS)
 
 if AUDIO_DEVICE_ID > 0:
-    if rootprefix=="":
+    if gv.rootprefix=="":
         gv.MIXER_CARD_ID = AUDIO_DEVICE_ID-1   # The jack/HDMI of PI use 1 alsa card index
     else:
         gv.MIXER_CARD_ID = 0                   # This may vary with your HW.....
@@ -316,6 +328,8 @@ import CHOrus   # take notice: part of process in midi callback and ARP
 class waveread(wave.Wave_read):
 #class waveread():
     def initfp(self, file):
+        s="%s" %file
+        wavname = s.split(',')[0][11:]
         self._convert = None
         self._soundpos = 0
         self._cue = []
@@ -323,11 +337,11 @@ class waveread(wave.Wave_read):
         self._ieee = False
         self._file = Chunk(file, bigendian=0)
         if self._file.getname() != 'RIFF':
-            print '%s does not start with RIFF id' % (file)
-            raise Error, '%s does not start with RIFF id' % (file)
+            print '%s does not start with RIFF id' % (wavname)
+            raise Error, '%s does not start with RIFF id' % (wavname)
         if self._file.read(4) != 'WAVE':
-            print '%s is not a WAVE file' % (file)
-            raise Error, '%s is not a WAVE file' % (file)
+            print '%s is not a WAVE file' % (wavname)
+            raise Error, '%s is not a WAVE file' % (wavname)
         self._fmt_chunk_read = 0
         self._data_chunk = None
         self._cue=0
@@ -339,11 +353,11 @@ class waveread(wave.Wave_read):
                 break
             except:
                 if self._fmt_chunk_read and self._data_chunk:
-                    print "Read %s with errors" % (file)
+                    print "Read %s with errors" % (wavname)
                     break   # we have sufficient data so leave the error as is
                 else:
                     print "Skipped %s because of chunk.skip error" %file
-                    raise Error, "Error in chunk.skip in %s" % (file)
+                    raise Error, "Error in chunk.skip in %s" % (wavname)
             chunkname = chunk.getname()
             #print "Found chunk:" + chunkname
             if chunkname == 'fmt ':
@@ -351,11 +365,11 @@ class waveread(wave.Wave_read):
                     self._read_fmt_chunk(chunk)
                     self._fmt_chunk_read = 1
                 except:
-                    print "Invalid fmt chunk in %s, please check: max sample rate = 44100, max bit rate = 24" % (file)
+                    print "Invalid fmt chunk in %s, please check: max sample rate = 44100, max bit rate = 24" % (wavname)
                     break
             elif chunkname == 'data':
                 if not self._fmt_chunk_read:
-                    print 'data chunk before fmt chunk in %s' % (file)
+                    print 'data chunk before fmt chunk in %s' % (wavname)
                 else:
                     self._data_chunk = chunk
                     self._nframes = chunk.chunksize // self._framesize
@@ -368,7 +382,7 @@ class waveread(wave.Wave_read):
                         if (sampleoffset>self._cue): self._cue=sampleoffset     # we need the last one in the sample
                         #self._cue.append(sampleoffset)                         # so we don't collect them all anymore...
                 except:
-                    print "invalid cue chunk in %s" % (file)
+                    print "invalid cue chunk in %s" % (wavname)
             elif chunkname == 'smpl':
                 manuf, prod, sampleperiod, midiunitynote, midipitchfraction, smptefmt, smpteoffs, numsampleloops, samplerdata = struct.unpack('<iiiiiiiii',chunk.read(36))
                 #for i in range(numsampleloops):
@@ -379,14 +393,14 @@ class waveread(wave.Wave_read):
                 chunk.skip()
             except:
                 if self._fmt_chunk_read and self._data_chunk:
-                    print "Read %s with errors" % (file)
+                    print "Read %s with errors" % (wavname)
                     break   # we have sufficient data so leave the error as is
                 else:
                     print "Skipped %s because of chunk.skip error" %file
-                    raise Error, "Error in chunk.skip in %s" % (file)
+                    raise Error, "Error in chunk.skip in %s" % (wavname)
         if not self._fmt_chunk_read or not self._data_chunk:
-            print 'fmt chunk and/or data chunk missing in %s' % (file)
-            raise Error, 'fmt chunk and/or data chunk missing in %s' % (file)
+            print 'fmt chunk and/or data chunk missing in %s' % (wavname)
+            raise Error, 'fmt chunk and/or data chunk missing in %s' % (wavname)
 
     def getmarkers(self):
         return self._cue
@@ -471,7 +485,6 @@ class Sound:
         self.gain = gain
         self.xfadein = xfadein
         self.xfadevol = xfadevol
-        self.retune = 0
         self.fractions = fractions
         self.eof = wf.getnframes()
         self.loop = GetLoopmode(mode)       # if no loop requested it's useless to check the wav's capability
@@ -600,6 +613,19 @@ except:
 ##   - CALLBACK
 #########################################
 
+def ControlChange(CCnum, CCval):
+    mc=False
+    for m in gv.CCmap:    # look for mapped controllers
+        j=m[0]
+        if gv.controllerCCs[j][1]==CCnum and (gv.controllerCCs[j][2]==-1 or gv.controllerCCs[j][2]==CCval or gv.MC[m[1]][1]==3):
+            if m[2]!=None: CCval=m[2]
+            #print "Recognized %d<=>%s related to %s" %(CCnum, gv.controllerCCs[j][0], gv.MC[m[1]][0])
+            gv.MC[m[1]][2](CCval,gv.MC[m[1]][0])
+            mc=True
+            break
+    if not mc and (CCnum==120 or CCnum==123):   # "All sounds off" or "all notes off"
+        AllNotesOff()
+
 def AllNotesOff(x=0,*z):
     global playingbacktracks
     playingbacktracks = 0
@@ -691,48 +717,60 @@ def DampLast(CCval,*z):
 def PitchSens(CCval,*z):
     gv.pitchnotes = (24*CCval+100)/127
                             # and announce the procs to modules
-gv.MC[getindex(gv.PANIC,gv.MC)][2]=AllNotesOff
-gv.MC[getindex(gv.EFFECTSOFF,gv.MC)][2]=EffectsOff
-gv.MC[getindex(gv.PROGUP,gv.MC)][2]=ProgramUp
-gv.MC[getindex(gv.PROGDN,gv.MC)][2]=ProgramDown
-gv.MC[getindex(gv.VOLUME,gv.MC)][2]=MidiVolume
-gv.MC[getindex(gv.AUTOCHORDOFF,gv.MC)][2]=AutoChordOff
-gv.MC[getindex(gv.PITCHWHEEL,gv.MC)][2]=PitchWheel
-gv.MC[getindex(gv.MODWHEEL,gv.MC)][2]=ModWheel
-gv.MC[getindex(gv.SUSTAIN,gv.MC)][2]=Sustain
-gv.MC[getindex(gv.DAMP,gv.MC)][2]=Damp
-gv.MC[getindex(gv.DAMPNEW,gv.MC)][2]=DampNew
-gv.MC[getindex(gv.DAMPLAST,gv.MC)][2]=DampLast
-gv.MC[getindex(gv.PITCHSENS,gv.MC)][2]=PitchSens
+gv.setMC(gv.PANIC,AllNotesOff)
+gv.setMC(gv.EFFECTSOFF,EffectsOff)
+gv.setMC(gv.PROGUP,ProgramUp)
+gv.setMC(gv.PROGDN,ProgramDown)
+gv.setMC(gv.VOLUME,MidiVolume)
+gv.setMC(gv.AUTOCHORDOFF,AutoChordOff)
+gv.setMC(gv.PITCHWHEEL,PitchWheel)
+gv.setMC(gv.MODWHEEL,ModWheel)
+gv.setMC(gv.SUSTAIN,Sustain)
+gv.setMC(gv.DAMP,Damp)
+gv.setMC(gv.DAMPNEW,DampNew)
+gv.setMC(gv.DAMPLAST,DampLast)
+gv.setMC(gv.PITCHSENS,PitchSens)
 
 def MidiCallback(src, message, time_stamp):
-    global RELSAMPLE, velocity_mode, notemap, playingbacktracks
+    global RELSAMPLE, velocity_mode, playingbacktracks
     keyboardarea=True
     messagetype = message[0] >> 4
-    messagechannel = (message[0]&0xF) + 1
+    messagechannel = (message[0]&0xF) + 1   # make channel# human..
     #print '%s -> Channel %d, message %d' % (src, messagechannel , messagetype)
     # -------------------------------------------------------
-    # Process system commands
+    # System commands and "hardware remap" of the drumpad
     # -------------------------------------------------------
     if messagetype==15:         # System messages apply to all channels, channel position contains commands
         if messagechannel==15:  # "realtime" reset has to reset all activity & settings
             AllNotesOff()       # (..other realtime expects everything to stay intact..)
+        return
+    if gv.drumpad:  # using less compact coding in favor of performance...
+        if messagechannel==DRUMPAD_CHANNEL:
+            if messagetype==8 or messagetype==9:        # We only remap notes
+                for i in xrange(len(gv.drumpadmap)):
+                    if gv.drumpadmap[i][0]==message[1]:
+                        message[1]=gv.drumpadmap[i][1]
+                        messagechannel=gv.MIDI_CHANNEL
+                        break       # found it, stop wasting time
     # -------------------------------------------------------
     # Then process channel commands if not muted
     # -------------------------------------------------------
-    elif (messagechannel == gv.MIDI_CHANNEL) and (gv.midi_mute == False):
+    if (messagechannel == gv.MIDI_CHANNEL) and (gv.midi_mute == False):
         midinote = message[1] if len(message) > 1 else None
         velocity = message[2] if len(message) > 2 else None
 
-        if messagetype==8 or messagetype==9:        # We may have a note on/off
+        if messagetype==8 or messagetype==9:           # We may have a note on/off
             retune=0
-            for i in xrange(len(notemap)):          # do we have note mapping ?
-                if midinote==notemap[i][2]:
-                    midinote=notemap[i][3]
-                    retune=notemap[i][4]
-                    if notemap[i][5]>0:
-                        setVoice(notemap[i][5])
-                    break       # found it, stop wasting time
+            i=getindex(midinote,gv.notemapping)
+            if i>-1:      # do we have a mapped note ?
+                if gv.notemapping[i][2]==-2:      # This key is actually a CC = control change
+                    if velocity==0 or messagetype==8: midinote=0
+                    ControlChange(gv.NOTES_CC, midinote)
+                    return  
+                midinote=gv.notemapping[i][2]
+                retune=gv.notemapping[i][3]
+                if gv.notemapping[i][4]>0:
+                    setVoice(gv.notemapping[i][4],-1)
             if velocity==0: messagetype=8           # prevent complexity in the rest of the checking
             if midinote>(127-gv.stop127) and midinote<gv.stop127:
                 keyboardarea=True
@@ -742,14 +780,14 @@ def MidiCallback(src, message, time_stamp):
             #    messagetype=8                                        # (like Roland PT-3100)
             if arp.active and keyboardarea:
                 arp.note_onoff(messagetype, midinote, velocity, velocity_mode, VELSAMPLE)
-                messagetype=128
+                return
             if messagetype==8:                      # should this note-off be ignored?
                 if midinote in gv.playingnotes and gv.triggernotes[midinote]<128:
                        for m in gv.playingnotes[midinote]:
                            if m.playingstopnote() < 128:    # are we in a special mode
-                               messagetype = 128            # if so, then ignore this note-off
+                               return                       # if so, then ignore this note-off
                 else:
-                    messagetype = 128               # nothing's playing, so there is nothing to stop
+                    return                                  # nothing's playing, so there is nothing to stop
             if messagetype == 9:    # is a note-off hidden in this note-on ?
                 if midinote in gv.playingnotes:     # this can only be if the note is already playing
                     for m in gv.playingnotes[midinote]:
@@ -758,10 +796,10 @@ def MidiCallback(src, message, time_stamp):
                             if midinote==xnote:     # could it be a push-twice stop?
                                 #if gv.sample_mode==PLAYMONO and midinote!=m.playingnote():
                                 #    pass    # ignore the chord generated notes when playing monophonic
-                                if m.playingstopmode()==3:
-                                    messagetype=128                     # backtracks end on sample end
-                                    m.playing2end()                     # so just let it finish
+                                if m.playingstopmode()==3:  # backtracks end on sample end
+                                    m.playing2end()         # so just let it finish
 				    playingbacktracks-=1
+                                    return
                                 else:
                                     messagetype = 8                     # all the others have an instant end
                             elif midinote >= gv.stop127:   # could it be mirrored stop?
@@ -865,19 +903,7 @@ def MidiCallback(src, message, time_stamp):
             PitchWheel(midinote,velocity)
 
         elif messagetype == 11: # control change (CC = Continuous Controllers)
-            CCnum = midinote
-            CCval = velocity
-            mc=False
-            for m in gv.CCmap:    # look for mapped controllers
-                j=m[0]
-                if gv.controllerCCs[j][1]==CCnum and (gv.controllerCCs[j][2]==-1 or gv.controllerCCs[j][2]==CCval or gv.MC[m[1]][1]==3):
-                    if m[2]!=None: CCval=m[2]
-                    #print "Recognized %d<=>%s related to %s" %(CCnum, gv.controllerCCs[j][0], gv.MC[m[1]][0])
-                    gv.MC[m[1]][2](CCval,gv.MC[m[1]][0])
-                    mc=True
-                    break
-            if not mc and (CCnum==120 or CCnum==123):   # "All sounds off" or "all notes off"
-                AllNotesOff()
+            ControlChange(midinote,velocity)
 
 gv.MidiCallback=MidiCallback
 
@@ -942,8 +968,8 @@ def ActuallyLoad():
     mode=[]
     gv.globalgain = 1
     gv.currvoice = 0
-    gv.notemap=[]
     gv.currnotemap=""
+    gv.notemapping=[]
     gv.sample_mode=BOXSAMPLE_MODE   # fallback to the samplerbox default
     velocity_mode=BOXVELOCITY_MODE  # fallback to the samplerbox default
     gv.stop127=BOXSTOP127           # fallback to the samplerbox default
@@ -956,7 +982,6 @@ def ActuallyLoad():
     PREXFADEVOL=BOXXFADEVOL         # fallback to the samplerbox default
     PREFRACTIONS=1                  # 1 midinote for 1 semitone for note filling; fractions=2 fills Q-notes = the octave having 24 notes in equal intervals
     PREQNOTE="N"                    # The midinotes mapping the quarternotes (No/Yes/Even/Odd)
-    PREQCENT=50                     # The cents of qsharp (sori), the qflat (koron) is qcent-100
     PRENOTEMAP=""
     RELSAMPLE='N'
     PRETRANSPOSE=0
@@ -974,7 +999,6 @@ def ActuallyLoad():
     voicemodes = [""]*128
     voicenotemap= [""]*128
     voiceqnote = ["N"]*128
-    voiceqcent = [50]*128
     gv.DefinitionTxt = ''
     gv.DefinitionErr = ''
 
@@ -987,8 +1011,8 @@ def ActuallyLoad():
 
     #print 'Preset loading: %s ' % gv.basename
     display("Loading %s" % gv.basename,"L%03d" % gv.PRESET)
-    getcsv.readnotemap(os.path.join(dirname, NOTEMAP_DEF))
-    gv.CCmapSet=getcsv.readCCmap(os.path.join(dirname, CTRLMAP_DEF), True)
+    getcsv.readnotemap(os.path.join(dirname, gv.NOTEMAP_DEF))
+    gv.CCmapSet=getcsv.readCCmap(os.path.join(dirname, gv.CTRLMAP_DEF), True)
     definitionfname = os.path.join(dirname, gv.SAMPLESDEF)
     if os.path.isfile(definitionfname):
         if USE_HTTP_GUI:
@@ -997,6 +1021,8 @@ def ActuallyLoad():
         with open(definitionfname, 'r') as definitionfile:
             for i, pattern in enumerate(definitionfile):
                 try:
+                    if len(pattern.strip())==0 or pattern[0]=="#":
+                        continue
                     if r'%%transpose' in pattern:
                         PRETRANSPOSE = (int(pattern.split('=')[1].strip()))
                     if r'%%gain' in pattern:
@@ -1050,16 +1076,6 @@ def ActuallyLoad():
                         if m == 'Y' or m == 'O' or m == 'E':
                             PREQNOTE = m
                         continue
-                    if r'%%qcent' in pattern:
-                        v = int(pattern.split('=')[1].strip())
-                        if v<0: v=v+100
-                        if v>99 or v==0:
-                            print "Qcent= %d ignored, should between 0 and +/- 100" % v
-                        else:
-                            PREQCENT = v
-                            if PREQNOTE == 'N':
-                                PREQNOTE = 'Y'
-                        continue
                     #if r'%%fractions' in pattern:
                     #    PREFRACTIONS = abs(int(pattern.split('=')[1].strip()))
                     #    if PREFRACTIONS<1:
@@ -1106,7 +1122,7 @@ def ActuallyLoad():
                         PRENOTEMAP = pattern.split('=')[1].strip().title()
                         continue
                     defaultparams = { 'midinote':'-128', 'velocity':'127', 'gain':'1', 'notename':'', 'voice':'1', 'mode':gv.sample_mode, 'transpose':PRETRANSPOSE, 'release':PRERELEASE, 'damp':PREDAMP, 'retrigger':PRERETRIGGER,\
-                                      'xfadeout':PREXFADEOUT, 'xfadein':PREXFADEIN, 'xfadevol':PREXFADEVOL, 'qnote':PREQNOTE, 'qcent':PREQCENT, 'notemap':PRENOTEMAP, 'fillnote':fillnote, 'backtrack':'-1'}
+                                      'xfadeout':PREXFADEOUT, 'xfadein':PREXFADEIN, 'xfadevol':PREXFADEVOL, 'qnote':PREQNOTE, 'notemap':PRENOTEMAP, 'fillnote':fillnote, 'backtrack':'-1'}
                     if len(pattern.split(',')) > 1:
                         defaultparams.update(dict([item.split('=') for item in pattern.split(',', 1)[1].replace(' ','').replace('%', '').split(',')]))
                     pattern = pattern.split(',')[0]
@@ -1114,7 +1130,7 @@ def ActuallyLoad():
                     pattern = pattern.replace(r"\%midinote", r"(?P<midinote>\d+)").replace(r"\%velocity", r"(?P<velocity>\d+)").replace(r"\%gain", r"(?P<gain>[-+]?\d*\.?\d+)").replace(r"\%voice", r"(?P<voice>\d+)")\
                                      .replace(r"\%fillnote", r"(?P<fillnote>[YNyn])").replace(r"\%mode", r"(?P<mode>[A-Za-z0-9])").replace(r"\%transpose", r"(?P<transpose>\d+)").replace(r"\%release", r"(?P<release>\d+)")\
                                      .replace(r"\%damp", r"(?P<damp>\d+)").replace(r"\%retrigger", r"(?P<retrigger>[YyRrDd])").replace(r"\%xfadeout", r"(?P<xfadeout>\d+)").replace(r"\%xfadein", r"(?P<xfadein>\d+)")\
-                                     .replace(r"\%qnote", r"(?P<qnote>[YyNnOoEe])").replace(r"\%qcent", r"(?P<qcent>\d+)").replace(r"\%notemap", r"(?P<notemap>[A-Za-z0-9]\_\-\&)")\
+                                     .replace(r"\%qnote", r"(?P<qnote>[YyNnOoEe])").replace(r"\%notemap", r"(?P<notemap>[A-Za-z0-9]\_\-\&)")\
                                      .replace(r"\%backtrack", r"(?P<backtrack>\d+)").replace(r"\%notename", r"(?P<notename>[A-Ga-g][#ks]?[0-9])").replace(r"\*", r".*?").strip()    # .*? => non greedy
                     for fname in os.listdir(dirname):
                         if LoadingInterrupt:
@@ -1124,6 +1140,10 @@ def ActuallyLoad():
                         m = re.match(pattern, fname)
                         if m:
                             #print 'Processing ' + fname
+                            mem=psutil.virtual_memory()
+                            if mem.percent>MAX_MEMLOAD:
+                                print "'%s' skipped because memory reached %d%%" %(fname,mem.percent)
+                                continue
                             info = m.groupdict()
                             midinote = int(info.get('midinote', defaultparams['midinote']))
                             notename = info.get('notename', defaultparams['notename'])
@@ -1154,19 +1174,10 @@ def ActuallyLoad():
                                 continue
                             #print 'Processing %s, voice %d ' %(fname,voice)
                             qnote = info.get('qnote', defaultparams['qnote']).title()[0][:1] 
-                            qcent = int(info.get('qcent', defaultparams['qcent']))
-                            if qcent < 0: qcent = qcent+100
-                            if qcent > 99 or qcent == 0:
-                                print "%qcent=%d ignored, should between 0 and +/- 100" % qcent
-                                qcent = PREQCENT
-                            else:
-                                if qnote == 'N' and qcent != PREQCENT:
-                                    qnote = 'Y'
                             if qnote == 'Y': qnote = 'O'    # the default for qnotes is on odd midi notes (60=C).
                             fractions = PREFRACTIONS        # not yet implemented for user change (future??)
                             if qnote != 'N':
                                 voiceqnote[voice] = qnote   # pick the latest; we can't check everything, RTFM :-)
-                                voiceqcent[voice] = qcent   # pick the latest; we can't check everything, RTFM :-)
                                 if fractions == 1:          # condition needed in future
                                     fractions=2             # for now always true
                             voicenotemap[voice] = info.get('notemap', defaultparams['notemap']).strip().title()   # pick the latest; we can't check everything, RTFM :-)
@@ -1275,15 +1286,8 @@ def ActuallyLoad():
                     if midinote <= 0.5+(nexthigh+lastlow)/2: m=lastlow
                     else: m=nexthigh
                     #print "Note %d will be generated from %d" % (midinote, m)
-                    retune = 0
-                    if voiceqnote[voice] != 'N':
-                        if (midinote%2 ==0 and voiceqnote[voice]=='E') or (midinote%2 !=0 and voiceqnote[voice]=='O'):
-                            retune = voiceqcent[voice]-50      # value for filling above sample (=sharp)
-                            if midinote < m:        # but we're filling below sample (=flat)
-                                retune = -retune
                     for velocity in xrange(128):
                         gv.samples[midinote, velocity, voice] = gv.samples[m, velocity, voice]
-                        gv.samples[midinote, velocity, voice].retune = retune*PITCHSTEPS/100
 
         if voicemodes[0]!="":                       # do we have the override / special effects voice ?
             for midinote in xrange(128):
@@ -1300,6 +1304,8 @@ def ActuallyLoad():
         if gv.currvoice!=0: gv.sample_mode=gv.voicelist[getindex(gv.currvoice,gv.voicelist)][2]
 
         gv.ActuallyLoading=False
+        mem=psutil.virtual_memory()
+        print "Loaded '%s', %d%% free memory left" %(gv.basename, 100-mem.percent)
         display("","%04d" % gv.PRESET)
 
     else:
@@ -1322,6 +1328,8 @@ LoadSamples()
 ##  - MIDI IN via SERIAL PORT
 #########################################
 
+gv.getvolume=gv.NoProc
+gv.setvolume=gv.NoProc
 if gv.USE_ALSA_MIXER:
     import DACvolume
 

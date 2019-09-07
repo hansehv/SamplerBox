@@ -34,6 +34,8 @@
 #  April 2019
 #      - moved global variables from call to import gv
 #      - implemented panning
+#  July 2019
+#      - removed the %retune value
 #
 #  Rebuild with "python setup.py build_ext --inplace"
 
@@ -76,7 +78,7 @@ def mixaudiobuffers(list rmlist, int frame_count, numpy.ndarray FADEOUT, int FAD
                 j=0
             else:
                 j=1/fractions-0.00001  # enable rounding without math
-            i = (SPEEDRANGE+(snd.note-snd.sound.midinote+j)/fractions) * PITCHSTEPS + snd.sound.retune + snd.retune + PITCHBEND
+            i = (SPEEDRANGE+(snd.note-snd.sound.midinote+j)/fractions) * PITCHSTEPS + snd.retune + PITCHBEND
             if i < 0:                                # below zero is out of limits
                 i = 0                                # save the program by ruining the pitch :-(
             else:

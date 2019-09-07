@@ -12,7 +12,7 @@
 #   see docs at  http://homspace.xs4all.nl/homspace/samplerbox
 #   changelog in changelist.txt
 #
-import re, gv
+import re, gv   #, copy
 sheet={}
 
 def readcsv(ifile, numtxt=100, header=True):
@@ -87,7 +87,7 @@ def readcontrollerCCs(ifile):
     gv.controllerCCs=[[gv.UA,-1,-1]]  # define controller for unassigned controls
     for i in range(len(sheet)):
         if len(sheet[i])>2:     # skip useless lines
-            if gv.getindex(sheet[0],gv.controllerCCs)!=-1:
+            if gv.getindex(sheet[0],gv.controllerCCs)>-1:
                 print ("%s: Controller %s already defined, ignored %s" %(ifile,sheet[0],sheet[i]))
             else:
                 values=[]
@@ -132,7 +132,7 @@ def readCCmap(ifile, override=False):
                                 print ("%s: Controller '%s' already mapped, ignored %s" %(ifile,gv.controllerCCs[x][0],sheet[i]))
                                 gv.ConfigErr=True
                                 continue
-                        if gv.getindex(sheet[i][3].lower(),["continuous","toggle","switch","switchon","switchoff"],True)==-1:
+                        if gv.getindex(sheet[i][3].lower(),["continuous","toggle","switch","switchon","switchoff"],True)<0:
                             print("%s: Mode '%s' unrecognized, ignored: %s" %(ifile, sheet[i][3], str(sheet[i])))
                             gv.ConfigErr=True
                         elif (sheet[i][3].lower()!="continuous" and gv.controllerCCs[x][2]==-1 or sheet[i][3].lower()=="continuous" and gv.controllerCCs[x][2]!=-1):
@@ -158,35 +158,60 @@ def readCCmap(ifile, override=False):
             print "%s: No default controller mapping found" %(ifile)
     return CCmap
 
+keynames=[]
 def readkeynames(ifile):
     # keynames: [name of key/string/pad, midinote sent by this trigger]
-    gv.keynames=[]
+    global keynames
+    gv.keynames=[["-1","None"]]
+    keynames=[]
+    gv.drumpadmap=[]
+    gv.drumpad=False
     try:        # giving keys/strings/triggers a name is optional
         sheet=readcsv(ifile)
         for i in range(len(sheet)):
             values=[]
+            valucas=[]
+            valuesDP=[]
+            valuesCC=[]
             if len(sheet[i])>1:     # skip useless lines
-                if gv.getindex(sheet[0],gv.keynames)!=-1:
-                    print ("%s: Key %s already defined, ignored %s" %(ifile,sheet[0],sheet[i]))
+                if gv.getindex(sheet[0],gv.keynames)>-1:
+                    print ("%s: Key %s already defined, ignored %s" %(ifile,sheet[i][0],sheet[i]))
                 else:
-                    values.append(sheet[i][0])
-                    values.append(sheet[i][1])
+                    try:
+                        values.append(sheet[i][1])
+                        values.append(sheet[i][0])
+                        gv.keynames.append(values)
+                        valucas.append(sheet[i][0].upper())
+                        valucas.append(sheet[i][1])
+                        keynames.append(valucas)
+                        valuesCC.append(sheet[i][0])
+                        valuesCC.append(gv.NOTES_CC)
+                        valuesCC.append(int(sheet[i][1]))
+                        gv.controllerCCs.append(valuesCC)
+                        if len(sheet[i])>2: # drumpad remap definition
+                            valuesDP.append(int(sheet[i][2]))
+                            valuesDP.append(int(sheet[i][1]))
+                            gv.drumpadmap.append(valuesDP)
+                    except:
+                        print ("%s: %s contains errors, partly processed" %(ifile, sheet[i]))
             else:
                 print ("%s: ignored %s" %(ifile, sheet[i]))
                 gv.ConfigErr=True
-            gv.keynames.append(values)
+        if len(gv.drumpadmap)>0: gv.drumpad=True
     except:
         pass    # giving keys/strings/triggers a name is optional
     return 
 
 def readnotemap(ifile):
     # notemap: [set, fractions, key, note, retune, playvoice]
+    global keynames
     gv.notemap=[]
+    gv.notemaps=[]
     try:        # note mapping is optional
         sheet=readcsv(ifile,4)
         for i in range(len(sheet)):
             if len(sheet[i])>3:     # skip useless lines
-                values=["",0,0,0,0,0]
+                values=["",1,0,-1,0,0]
                 values[0]=format(sheet[i][0]).title()   # force num to string and normalize upper/lowercase usage
                 if values[0]=="":
                     print ("%s: Sets must have a name, ignored %s" %(ifile, sheet[i]))
@@ -201,23 +226,27 @@ def readnotemap(ifile):
                 try:
                     values[2]=int(sheet[i][2])
                 except:
-                    x=gv.getindex(sheet[i][2],gv.keynames)
+                    ucas=sheet[i][2].upper()
+                    x=gv.getindex(ucas,keynames)
                     if x<0:
                         print ("%s: keyname '%s' not defined, ignored %s" %(ifile, sheet[i][2], sheet[i]))
                         continue
                     else:
-                        values[2]=int(gv.keynames[x][1])
+                        values[2]=int(gv.keynames[x+1][0])
                 try:
                     values[3]=int(sheet[i][3])
-                    if values[3]<0 or values[5]>127:
-                        print ("%s: invalid notenumber, ignored %s" %(ifile, sheet[i]))
                 except:
-                    midinote=gv.notename2midinote(sheet[i][3],sheet[i][1])
-                    if midinote>-1:
-                        values[3]=midinote
+                    if sheet[i][3].title()=="Ctrl":
+                        values[3]=-2
+                    elif sheet[i][3].title()=="None":
+                        values[3]=-1
                     else:
-                        print ("%s: invalid notename '%s', ignored %s" %(ifile, sheet[i][2], sheet[i]))
-                        continue
+                        midinote=gv.notename2midinote(sheet[i][3],values[1])
+                        if midinote>-1:
+                            values[3]=midinote
+                        else:
+                            print ("%s: invalid notename '%s', ignored %s" %(ifile, sheet[i][3], sheet[i]))
+                            continue
                 if len(sheet[i])>4: # the values are optional
                     try:
                         values[4]=int(sheet[i][4])

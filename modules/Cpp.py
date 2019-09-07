@@ -50,11 +50,11 @@ def FVreset():
     FVsetlevel(gv.cp.getfloat(gv.cfg,"FVlevel".lower())*127)
     FVsetwidth(gv.cp.getfloat(gv.cfg,"FVwidth".lower())*127)
 FVreset()
-gv.MC[gv.getindex(gv.REVERB,gv.MC)][2]=FVsetReverb      # announce to CCmap
-gv.MC[gv.getindex(gv.REVERBLVL,gv.MC)][2]=FVsetlevel
-gv.MC[gv.getindex(gv.REVERBROOM,gv.MC)][2]=FVsetroomsize
-gv.MC[gv.getindex(gv.REVERBDAMP,gv.MC)][2]=FVsetdamp
-gv.MC[gv.getindex(gv.REVERBWIDTH,gv.MC)][2]=FVsetwidth
+gv.setMC(gv.REVERB,FVsetReverb)      # announce to CCmap
+gv.setMC(gv.REVERBLVL,FVsetlevel)
+gv.setMC(gv.REVERBROOM,FVsetroomsize)
+gv.setMC(gv.REVERBDAMP,FVsetdamp)
+gv.setMC(gv.REVERBWIDTH,FVsetwidth)
 
 #
 # AutoWah (envelope & LFO) and Wah-Wah (pedal) based on
@@ -81,9 +81,9 @@ def AWsetMaxFreq(x,*z):         # 1000-10000
     gv.AWmaxfreq=10000.0*x/127.0
     if gv.AWminfreq>(gv.AWmaxfreq-100): gv.AWmaxfreq=gv.AWminfreq+100
     c_filters.awsetMinMaxFreq(gv.AWminfreq,gv.AWmaxfreq)
-def AWsetQualityFactor(x,*z):   # 0.25-25
+def AWsetQualityFactor(x,*z):   #
     if x==0: x=1
-    gv.AWqfactor=25.0*x/127.0
+    gv.AWqfactor=10.0*x/127.0
     c_filters.awsetQualityFactor(gv.AWqfactor)
 def AWsetMixing(x,*z):          # 0-1, where 0=dry and 1 is wet
     gv.AWmixing=1.0*x/127.0
@@ -132,18 +132,18 @@ def AWreset():
     AWsetSpeed((gv.cp.getfloat(gv.cfg,"AWspeed".lower())-100)/1000*127)
     AWsetLVLrange(gv.cp.getfloat(gv.cfg,"AWlvlrange".lower())/100*127)
 AWreset()
-gv.MC[gv.getindex(gv.AUTOWAHENV,gv.MC)][2]=AWsetENV     # announce to CCmap
-gv.MC[gv.getindex(gv.AUTOWAHLFO,gv.MC)][2]=AWsetLFO
-gv.MC[gv.getindex(gv.AUTOWAHMAN,gv.MC)][2]=AWsetMAN
-gv.MC[gv.getindex(gv.AUTOWAHMIN,gv.MC)][2]=AWsetMinFreq
-gv.MC[gv.getindex(gv.AUTOWAHMAX,gv.MC)][2]=AWsetMaxFreq
-gv.MC[gv.getindex(gv.AUTOWAHQ,gv.MC)][2]=AWsetQualityFactor
-gv.MC[gv.getindex(gv.AUTOWAHLVL,gv.MC)][2]=AWsetMixing
-gv.MC[gv.getindex(gv.AUTOWAHATTACK,gv.MC)][2]=AWsetAttack
-gv.MC[gv.getindex(gv.AUTOWAHRELEASE,gv.MC)][2]=AWsetRelease
-gv.MC[gv.getindex(gv.AUTOWAHSPEED,gv.MC)][2]=AWsetSpeed
-gv.MC[gv.getindex(gv.AUTOWAHPEDAL,gv.MC)][2]=AWsetCCval
-gv.MC[gv.getindex(gv.AUTOWAHLVLRNGE,gv.MC)][2]=AWsetLVLrange
+gv.setMC(gv.AUTOWAHENV,AWsetENV)     # announce to CCmap
+gv.setMC(gv.AUTOWAHLFO,AWsetLFO)
+gv.setMC(gv.AUTOWAHMAN,AWsetMAN)
+gv.setMC(gv.AUTOWAHMIN,AWsetMinFreq)
+gv.setMC(gv.AUTOWAHMAX,AWsetMaxFreq)
+gv.setMC(gv.AUTOWAHQ,AWsetQualityFactor)
+gv.setMC(gv.AUTOWAHLVL,AWsetMixing)
+gv.setMC(gv.AUTOWAHATTACK,AWsetAttack)
+gv.setMC(gv.AUTOWAHRELEASE,AWsetRelease)
+gv.setMC(gv.AUTOWAHSPEED,AWsetSpeed)
+gv.setMC(gv.AUTOWAHPEDAL,AWsetCCval)
+gv.setMC(gv.AUTOWAHLVLRNGE,AWsetLVLrange)
 
 #
 # Echo and flanger (delay line effects) based on codesnippets by
@@ -169,10 +169,10 @@ def DLYsetType(x,*z):
     gv.DLYtype=x
 def DLYsetEcho(*z):      # in Hz, should be same as audiovalue
     if gv.DLYtype==1: gv.DLYtype=0
-    else: DLYsettype(1)
+    else: DLYsetType(1)
 def DLYsetFlanger(*z):
     if gv.DLYtype==2: gv.DLYtype=0
-    else: DLYsettype(2)
+    else: DLYsetType(2)
 def DLYsetfb(x,*z):     # 0-1
     gv.DLYfb=1.0*x/127.0
     c_filters.dlysetfb(gv.DLYfb)
@@ -209,16 +209,16 @@ def DLYreset():
     DLYsetmin((gv.cp.getfloat(gv.cfg,"DLYmin".lower())-5)/20*127)
     DLYsetmax((gv.cp.getfloat(gv.cfg,"DLYmax".lower())-50)/100*127)
 DLYreset()
-gv.MC[gv.getindex(gv.ECHO,gv.MC)][2]=DLYsetEcho     # announce to CCmap
-gv.MC[gv.getindex(gv.FLANGER,gv.MC)][2]=DLYsetFlanger
-gv.MC[gv.getindex(gv.DELAYFB,gv.MC)][2]=DLYsetfb
-gv.MC[gv.getindex(gv.DELAYFW,gv.MC)][2]=DLYsetwet
-gv.MC[gv.getindex(gv.DELAYMIX,gv.MC)][2]=DLYsetdry
-gv.MC[gv.getindex(gv.DELAYTIME,gv.MC)][2]=DLYsettime
-gv.MC[gv.getindex(gv.DELAYSTEEP,gv.MC)][2]=DLYsetsteep
-gv.MC[gv.getindex(gv.DELAYSTEPLEN,gv.MC)][2]=DLYsetsteplen
-gv.MC[gv.getindex(gv.DELAYMIN,gv.MC)][2]=DLYsetmin
-gv.MC[gv.getindex(gv.DELAYMAX,gv.MC)][2]=DLYsetmax
+gv.setMC(gv.ECHO,DLYsetEcho)     # announce to CCmap
+gv.setMC(gv.FLANGER,DLYsetFlanger)
+gv.setMC(gv.DELAYFB,DLYsetfb)
+gv.setMC(gv.DELAYFW,DLYsetwet)
+gv.setMC(gv.DELAYMIX,DLYsetdry)
+gv.setMC(gv.DELAYTIME,DLYsettime)
+gv.setMC(gv.DELAYSTEEP,DLYsetsteep)
+gv.setMC(gv.DELAYSTEPLEN,DLYsetsteplen)
+gv.setMC(gv.DELAYMIN,DLYsetmin)
+gv.setMC(gv.DELAYMAX,DLYsetmax)
 
 #
 # Moog lowpass ladderfilter based on algorithm developed by Stefano D'Angelo and Vesa Valimaki
@@ -243,8 +243,9 @@ def LFsetResonance(x,*z):       # 0 - 3.8
 def LFsetCutoff(x,*z):          # 1000 - 11000
     gv.LFcutoff=1000.0+x*10000/127
     c_filters.lfsetcutoff(gv.LFcutoff)
-def LFsetDrive(x,*z):           # 1 - 21 ?
+def LFsetDrive(x,*z):           # 1 - 20 ?
     gv.LFdrive=1.0+x*0.1575     # =20/127
+    if gv.LFdrive>20: gv.LFdrive=20
     c_filters.lfsetdrive(gv.LFdrive)
 def LFsetLvl(x,*z):             # 0 - 1
     gv.LFlvl=x*1.0/127
@@ -261,9 +262,9 @@ def LFreset():
     LFsetLvl(gv.cp.getfloat(gv.cfg,"LFlvl".lower())*127)
     LFsetGain((gv.cp.getfloat(gv.cfg,"LFgain".lower())-1)/10*127)
 LFreset()
-gv.MC[gv.getindex(gv.LADDER,gv.MC)][2]=LFsetLadder      # announce to CCmap
-gv.MC[gv.getindex(gv.LADDERRES,gv.MC)][2]=LFsetResonance
-gv.MC[gv.getindex(gv.LADDERLVL,gv.MC)][2]=LFsetLvl
-gv.MC[gv.getindex(gv.LADDERCUTOFF,gv.MC)][2]=LFsetCutoff
-gv.MC[gv.getindex(gv.LADDERDRIVE,gv.MC)][2]=LFsetDrive
-gv.MC[gv.getindex(gv.LADDERGAIN,gv.MC)][2]=LFsetGain
+gv.setMC(gv.LADDER,LFsetLadder)      # announce to CCmap
+gv.setMC(gv.LADDERRES,LFsetResonance)
+gv.setMC(gv.LADDERLVL,LFsetLvl)
+gv.setMC(gv.LADDERCUTOFF,LFsetCutoff)
+gv.setMC(gv.LADDERDRIVE,LFsetDrive)
+gv.setMC(gv.LADDERGAIN,LFsetGain)

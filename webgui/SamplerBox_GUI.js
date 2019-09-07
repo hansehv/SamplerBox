@@ -35,6 +35,13 @@ var SB_variables={	// make sure all passed parameters are covered here
 	v_SB_Gain: function(val){SB_Gain=val;},
 	v_SB_Pitchrange: function(val){SB_Pitchrange=val;},
 	v_SB_Notemap: function(val){SB_Notemap=val;},
+	v_SB_nm_inote: function(val){SB_nm_inote=val;},
+	v_SB_nm_onote: function(val){SB_nm_onote=val;},
+	v_SB_nm_Q: function(val){SB_nm_Q=val;},
+	v_SB_nm_map: function(val){SB_nm_name=val;},
+	v_SB_nm_sav: function(val){SB_nm_name=val;},
+	v_SB_nm_retune: function(val){SB_nm_retune=val;},
+	v_SB_nm_voice: function(val){SB_nm_voice=val;},
 	v_SB_Voice: function(val){SB_Voice=val;},
 	v_SB_Scale: function(val){SB_Scale=val;},
 	v_SB_Chord: function(val){SB_Chord=val;},
@@ -90,167 +97,188 @@ var SB_variables={	// make sure all passed parameters are covered here
 }
 var SB_input={	// make sure all passed parameters are covered here, be it with a dummy
 	input_SB_MidiChannel: function(input_name,name,val,text){
-		return(text+SB_numselect(input_name,name,val,1,16,1));
+		return(text+SB_numselect(input_name,name,val,1,16,1,1));
 	},
 	input_SB_Pitchrange: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,12,1)+SB_numselect(input_name,name,val,0,12,1));
+		return(text+SB_slider(input_name,name,val,0,12,1)+SB_numselect(input_name,name,val,0,12,1,1));
 	},
 	input_SB_Chord: function(input_name,name,val,text){
-		return(text+SB_listselect(input_name,name,val,SB_Chordname,1,SB_numchords));
+		return(text+SB_listselect(input_name,name,val,SB_Chordname,1,SB_numchords,1));
 	},
 	input_SB_Scale: function(input_name,name,val,text){
-		return(text+SB_listselect(input_name,name,val,SB_Scalename,1,SB_numscales));
+		return(text+SB_listselect(input_name,name,val,SB_Scalename,1,SB_numscales,1));
 	},
 	input_SB_Preset: function(input_name,name,val,text){
 		if (SB_numvoices==0&&SB_xvoice=='No') m=" Empty!" ;else m="";
-		return(text+SB_listselect(input_name,name,val,SB_Presetlist,2,SB_numpresets)+m);
+		return(text+SB_listselect(input_name,name,val,SB_Presetlist,2,SB_numpresets,1)+m);
 	},
 	input_SB_Voice: function(input_name,name,val,text){
-		return(text+SB_listselect(input_name,name,val,SB_Voicelist,2,SB_numvoices));
+		return(text+SB_listselect(input_name,name,val,SB_Voicelist,2,SB_numvoices,1));
 	},
 	input_SB_Notemap: function(input_name,name,val,text){
-		for (i=1;i<SB_numnotemaps;i++){
-			if (SB_Notemaps[i]==SB_Notemap) break;
-			}
-		return(text+SB_listselect(input_name,name,i,SB_Notemaps,1,SB_numnotemaps));
+		for (i=1;i<SB_numnotemaps;i++){if (SB_Notemaps[i]==SB_Notemap) break;}
+		return(text+SB_listselect(input_name,name,i,SB_Notemaps,1,SB_numnotemaps,1));
+	},
+	input_SB_nm_inote: function(input_name,name,val,text){
+		return(text+SB_listselect(input_name,name,val,SB_KeyNames,2,SB_numkeynames,1));
+	},
+	input_SB_nm_onote: function(input_name,name,val,text){
+		return(text+SB_listselect(input_name,name,val,SB_FullNotename,2,SB_FullNotename.length,0));
+	},
+	input_SB_nm_retune: function(input_name,name,val,text){
+		return(text+SB_numselect(input_name,name,val,-50,50,1,0));
+	},
+	input_SB_nm_voice: function(input_name,name,val,text){
+		//return(text+SB_numselect(input_name,name,val,0,127,1,0));
+		return(text+SB_listselect(input_name,name,val,[[-1,"None"]].concat(SB_Voicelist),2,SB_numvoices+1,2,0));
+	},
+	input_SB_nm_Q: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val-1,text,SB_qFractions,SB_numqfractions,0));
+	},
+	input_SB_nm_map: function(input_name,name,val,text){
+		return(text+'<INPUT type="text" size="25" name="'+name+'" value="'+val+'"</INPUT>');
+		//return(text+'<INPUT type="text" size="25" name="'+name+'" value="'+val+'" pattern="[A-Za-z0-9],_\ -" title="Invalid character found"</INPUT>');
+	},
+	input_SB_nm_sav: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,["No",'Yes (also does "Set")'],1,1));
 	},
 	input_SB_SoundVolume: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_MidiVolume: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_Gain: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,300,5)+SB_numselect(input_name,name,val,0,300,5));
+		return(text+SB_slider(input_name,name,val,0,300,5)+SB_numselect(input_name,name,val,0,300,5,1));
 	},
 	input_SB_FVtype: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"]));
+		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
 	},
 	input_SB_FVroomsize: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_FVdamp: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_FVlevel: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_FVwidth: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_AWtype: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,SB_AWtypes));
+		return(SB_radioselect(input_name,name,val,text,SB_AWtypes,1,1));
 	},
 	input_SB_AWattack: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,5,500,5)+SB_numselect(input_name,name,val,5,500,5));
+		return(text+SB_slider(input_name,name,val,5,500,5)+SB_numselect(input_name,name,val,5,500,5,1));
 	},
 	input_SB_AWrelease: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,5,500,5)+SB_numselect(input_name,name,val,5,500,5));
+		return(text+SB_slider(input_name,name,val,5,500,5)+SB_numselect(input_name,name,val,5,500,5,1));
 	},
 	input_SB_AWminfreq: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,20,500,20)+SB_numselect(input_name,name,val,20,500,20));
+		return(text+SB_slider(input_name,name,val,20,500,20)+SB_numselect(input_name,name,val,20,500,20,1));
 	},
 	input_SB_AWmaxfreq: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,1000,10000,500)+SB_numselect(input_name,name,val,1000,10000,500));
+		return(text+SB_slider(input_name,name,val,1000,10000,500)+SB_numselect(input_name,name,val,1000,10000,500,1));
 	},
 	input_SB_AWqfactor: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_AWspeed: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,100,1100,20)+SB_numselect(input_name,name,val,100,1100,20));
+		return(text+SB_slider(input_name,name,val,100,1100,20)+SB_numselect(input_name,name,val,100,1100,20,1));
 	},
 	input_SB_AWmixing: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_AWlvlrange: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_DLYtype: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,SB_DLYtypes));
+		return(SB_radioselect(input_name,name,val,text,SB_DLYtypes,1,1));
 	},
 	input_SB_DLYfb: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_DLYwet: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_DLYdry: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_DLYtime: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,1000,61000,1000)+SB_numselect(input_name,name,val,1000,61000,1000));
+		return(text+SB_slider(input_name,name,val,1000,61000,1000)+SB_numselect(input_name,name,val,1000,61000,1000,1));
 	},
 	input_SB_DLYsteep: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,1,11,1)+SB_numselect(input_name,name,val,1,11,1));
+		return(text+SB_slider(input_name,name,val,1,11,1)+SB_numselect(input_name,name,val,1,11,1,1));
 	},
 	input_SB_DLYsteplen: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,300,3300,50)+SB_numselect(input_name,name,val,300,3300,50));
+		return(text+SB_slider(input_name,name,val,300,3300,50)+SB_numselect(input_name,name,val,300,3300,50,1));
 	},
 	input_SB_DLYmin: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,5,25,5)+SB_numselect(input_name,name,val,5,25,5));
+		return(text+SB_slider(input_name,name,val,5,25,5)+SB_numselect(input_name,name,val,5,25,5,1));
 	},
 	input_SB_DLYmax: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,50,150,10)+SB_numselect(input_name,name,val,50,150,10));
+		return(text+SB_slider(input_name,name,val,50,150,10)+SB_numselect(input_name,name,val,50,150,10,1));
 	},
 	input_SB_LFtype: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"]));
+		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
 	},
 	input_SB_LFresonance: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,38,2)+SB_numselect(input_name,name,val,0,38,2));
+		return(text+SB_slider(input_name,name,val,0,38,2)+SB_numselect(input_name,name,val,0,38,2,1));
 	},
 	input_SB_LFcutoff: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,1000,11000,1000)+SB_numselect(input_name,name,val,1000,11000,1000));
+		return(text+SB_slider(input_name,name,val,1000,11000,1000)+SB_numselect(input_name,name,val,1000,11000,1000,1));
 	},
 	input_SB_LFdrive: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,1,20,1)+SB_numselect(input_name,name,val,1,20,1));
+		return(text+SB_slider(input_name,name,val,1,20,1)+SB_numselect(input_name,name,val,1,20,1,1));
 	},
 	input_SB_LFlvl: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,10)+SB_numselect(input_name,name,val,0,100,10));
+		return(text+SB_slider(input_name,name,val,0,100,10)+SB_numselect(input_name,name,val,0,100,10,1));
 	},
 	input_SB_LFgain: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,10,110,5)+SB_numselect(input_name,name,val,10,110,5));
+		return(text+SB_slider(input_name,name,val,10,110,5)+SB_numselect(input_name,name,val,10,110,5,1));
 	},
 	input_SB_LFOtype: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,SB_LFOtypes));
+		return(SB_radioselect(input_name,name,val,text,SB_LFOtypes,1,1));
 	},
 	input_SB_VIBRpitch: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,1,64,1)+SB_numselect(input_name,name,val,1,64,1));
+		return(text+SB_slider(input_name,name,val,1,64,1)+SB_numselect(input_name,name,val,1,64,1,1));
 	},
 	input_SB_VIBRspeed: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1));
+		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1,1));
 	},
 	input_SB_VIBRtrill: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"]));
+		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
 	},
 	input_SB_TREMampl: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,1,100,1)+SB_numselect(input_name,name,val,1,100,1));
+		return(text+SB_slider(input_name,name,val,1,100,1)+SB_numselect(input_name,name,val,1,100,1,1));
 	},
 	input_SB_TREMspeed: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1));
+		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1,1));
 	},
 	input_SB_TREMtrill: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"]));
+		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
 	},
 	input_SB_PANwidth: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,2,20,2)+SB_numselect(input_name,name,val,2,20,2));
+		return(text+SB_slider(input_name,name,val,2,20,2)+SB_numselect(input_name,name,val,2,20,2,1));
 	},
 	input_SB_PANspeed: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1));
+		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1,1));
 	},
 	input_SB_ARPstep: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_ARPsustain: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_ARPloop: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"]));
+		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
 	},
 	input_SB_ARP2end: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"]));
+		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
 	},
 	input_SB_ARPord: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,SB_ARPordlist));
+		return(SB_radioselect(input_name,name,val,text,SB_ARPordlist,1,1));
 	},
 	input_SB_ARPfade: function(input_name,name,val,text){
 		j=""
@@ -258,13 +286,13 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return(text+'<label class="inline alignx"><INPUT type="checkbox" onclick="return false;"'+j+'></label>'+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
 	},
 	input_SB_CHOrus: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"]));
+		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
 	},
 	input_SB_CHOdepth: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,2,15,1)+SB_numselect(input_name,name,val,2,15,1));
+		return(text+SB_slider(input_name,name,val,2,15,1)+SB_numselect(input_name,name,val,2,15,1,1));
 	},
 	input_SB_CHOgain: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,30,80,2)+SB_numselect(input_name,name,val,30,80,2));
+		return(text+SB_slider(input_name,name,val,30,80,2)+SB_numselect(input_name,name,val,30,80,2,1));
 	},
 	input_SB_RenewMedia: function(input_name,name,val,text){
 		return('<LABEL><INPUT type="checkbox" name="'+name+'" class="hidden" value="Yes" onclick="SB_Submit();"><span class="button">'+text+'</span></LABEL>');
@@ -275,13 +303,14 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 	}
 }
 
-SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_xvoice","elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote","elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales","elem_SB_bTracks"];
+SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_xvoice","elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote","elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales","elem_SB_Notemap","elem_SB_bTracks"];
 SB_numelems=SB_ElemID.length;
 var SB_element={
 	elem_SB_Form: function(elem_name){
 		document.getElementById(elem_name).action = window.location.pathname;
 		document.getElementById(elem_name).method = 'POST';
 		document.getElementById(elem_name).type = 'SUBMIT';
+
 	},
 	elem_SB_Samplesdir: function(elem_name){
 		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+SB_Samplesdir+'</SPAN>';
@@ -291,7 +320,7 @@ var SB_element={
 	},
 	elem_SB_xvoice: function(elem_name,text) {
 		if (SB_xvoice=="No") j="";else j="CHECKED";
-		document.getElementById(elem_name).innerHTML=text+'<label class="inline alignx"><INPUT type="checkbox" onclick="return false;"'+j+';"></label>';
+		document.getElementById(elem_name).innerHTML=text+'<label class="inline alignx"><INPUT type="checkbox" onclick="return false;"'+j+'></label>';
 	},
 	elem_SB_DefErr: function(elem_name,text) {
 		if (SB_DefErr=="") document.getElementById(elem_name).innerHTML=''
@@ -339,6 +368,30 @@ var SB_element={
 		}
 		document.getElementById(elem_name).innerHTML=html+'</TABLE>';
 	},
+	elem_SB_Notemap: function(elem_name){
+		html='<TABLE BORDER="1" CELLPADDING="3" ID="TableID_Notemap"><TR><TH style="display:none;"></TH><TH>Q</TH><TH>Key</TH><TH>Plays</TH><TH>Tune</TH><TH>Voice</TH></TR>';
+		for (i=0;i<SB_numnotemapping;i++){
+			inote=SB_NoteMapping[i][0];
+			inotenam=SB_NoteMapping[i][1];
+			retune="";
+			voice="";
+			j=0;k="";
+			for (j=0;i<SB_numkeynames;j++){
+				if (SB_KeyNames[j][0]==inote){
+					inotenam=SB_KeyNames[j][1];
+					if (inote==SB_nm_inote){k=' style="background-color:Khaki;"'}
+					break;
+				}
+			}
+			onote=(SB_NoteMapping[i][2]-(SB_NoteMapping[i][1]-1)*12)%(SB_NoteMapping[i][1]*12);
+			onotenam=SB_FullNotename[SB_NoteMapping[i][2]+2][1];
+			if (onotenam=="None"){onotenam="";}
+			if (SB_NoteMapping[i][3]!=0){retune=SB_NoteMapping[i][3]}
+			if (SB_NoteMapping[i][4]!=0){voice=SB_NoteMapping[i][4]}
+			html=html+'<TR VALIGN="top"'+k+'><TD style="display:none;">'+j+'</TD><TD ALIGN="center">'+SB_NoteMapping[i][1]+'</TD><TD ALIGN="center">'+inotenam+'</TD><TD ALIGN="center">'+onotenam+'</TD><TD ALIGN="center">'+retune+'</TD><TD ALIGN="center">'+voice+'</TD></TR>';
+		}
+		document.getElementById(elem_name).innerHTML=html+'</TABLE>';
+	},
 	elem_SB_bTracks: function(elem_name){
 		if (SB_numbtracks==0) {document.getElementById(elem_name).innerHTML='';}
 		else {
@@ -350,6 +403,7 @@ var SB_element={
 		}
 	}
 }
+
 function SB_notechord(note,chord){
 	if (SB_Chordname[chord]=="Maj") c="";
 	else c=SB_Chordname[chord].toLowerCase();
@@ -358,21 +412,34 @@ function SB_notechord(note,chord){
 function SB_slider(input_name,name,val,min,max,step){
 	return('<INPUT ID="'+input_name+'_r" name="'+name+'" TYPE="range" VALUE="'+val+'" min="'+min+'" max="'+max+'" step="'+step+'" onchange=SB_slidersync("'+input_name+'_r","'+input_name+'_v",true)>');
 }
-function SB_numselect(input_name,name,val,min,max,step){
-	html='<SELECT ID="'+input_name+'_v" name="'+name+'" SIZE="1" onchange=SB_slidersync("'+input_name+'_r","'+input_name+'_v",false)>';
+function SB_numselect(input_name,name,val,min,max,step,update){
+	html='<SELECT ID="'+input_name+'_v" name="'+name+'" SIZE="1"';
+	if (update==1) {html=html+' onchange=SB_slidersync("'+input_name+'_r","'+input_name+'_v",false)'}
+	html=html+'>';
 	for(var i=min, j=false;i<=max;i+=step){
 		if ((!j) && (i>=val)) {ii=" selected";j=true} else {ii=""}
 		html=html+'<OPTION VALUE='+i+ii+'>'+i+'</OPTION>';}
 	return(html+'</SELECT>');
 }
-function SB_listselect(input_name,name,val,table,dims,size){
-	html='<SELECT name="'+name+'" SIZE="1" onchange=SB_Submit()>';
+function SB_listselect(input_name,name,val,table,dims,size,update){
+	html='<SELECT name="'+name+'" id="select_'+name+'" SIZE="1"';
+	if (update==1) {html=html+' onchange=SB_Submit()';}
+	html=html+'>';
 	for(var i=0;i<size;i++){
 		j="";
 		if (dims==1){if (i==val) j=" selected";k=table[i];}
-		else {if (table[i][0]==val) j=" selected";	k=table[i][1];}
+		else {if (table[i][0]==val) j=" selected";k=table[i][1];}
 		html=html+'<OPTION VALUE='+i+j+'>'+k+'</OPTION>';}
 	return(html+'</SELECT>');
+}
+function SB_notemapselect() {
+    var rows = document.getElementById("TableID_Notemap").rows;
+    for (i = 0; i < rows.length; i++) {
+        rows[i].onclick = function(){ return function(){
+			document.getElementById("select_SB_nm_inote").value = this.cells[0].innerHTML;
+            SB_Submit();
+        };}(rows[i]);
+    }
 }
 function SB_slidersync(IDslider, IDvar, sliderchange){
 	if (document.getElementById(IDvar) && document.getElementById(IDslider)){
@@ -380,18 +447,48 @@ function SB_slidersync(IDslider, IDvar, sliderchange){
 		else document.getElementById(IDslider).value=document.getElementById(IDvar).value;}
 	SB_Submit();
 }
-function SB_radioselect(input_name,name,val,text,table){
+function SB_radioselect(input_name,name,val,text,table,dims,update){
 	html=""
 	for (i=0;i<table.length;i++){
+		j="";
 		if (i==val) j="CHECKED"; else j="";
-		html=html+' <INPUT type="radio" name="'+name+'"  value="'+table[i]+'"'+j+' onclick="SB_Submit();">'+table[i];
+		if (dims==1){if (i==val) j=" CHECKED";k=table[i];l=table[i];}
+		else {if (table[i][0]==val) j=" CHECKED";k=table[i][1];l=table[i][0];}
+		html=html+' <INPUT type="radio" name="'+name+'" value="'+l+'" '+j;
+		if (update==1) {html=html+' onclick="SB_Submit()"'};
+		html=html+'>'+k;
 	}
 	return(text+html);
+}
+
+var SB_FullNotename=new Array(130);
+function SB_init_FullNotenames(){
+	SB_FullNotename[0]=[-2,"Ctrl"];
+	SB_FullNotename[1]=[-1,"None"];
+	firstnote=127-SB_Stop127+1;
+	lastnote=SB_Stop127;
+	j=0;k=-1;
+	if (SB_nm_Q==1){
+		for (i=2;i<130;i++){
+			l=i-2
+			if (i<firstnote||i>lastnote) {SB_FullNotename[i]=[l,l];}
+			else {SB_FullNotename[i]=[l,SB_Notename[j]+k];}
+			if (j<11) {j++;} else {j=0;k++;}
+		}
+	} else {
+		j=12;k=1;
+		for (i=2;i<130;i++){
+			l=i-2
+			if (l<firstnote||l>lastnote) {SB_FullNotename[i]=[l,l];}
+			else {SB_FullNotename[i]=[l,SB_qNotename[j]+k];}
+			if (j<23) {j++;} else {j=0;k++;}
+		}
+	}
 }
 
 function SB_Refresh(){	// gets the page again without resending any form values
 	window.location.assign(window.location.pathname);
 }
-function SB_Submit(){	// Reload the Media directory and current preset samples
+function SB_Submit(){
 	document.getElementById("elem_SB_Form").submit();
 }
