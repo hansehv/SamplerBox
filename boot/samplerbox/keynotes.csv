@@ -1,17 +1,6 @@
 Key,Midinote,Optional drumpad midinote
 # Key is case insensitive name of midi sensor you play,,
 #------------------------------------,,
-# Remapped drumpads,,Drumpadchannel notes are mapped to active channel
-#------------------------------------,,
-DP01,1,36
-DP02,3,37
-DP03,5,38
-DP04,7,39
-DP05,2,40
-DP06,4,41
-DP07,6,42
-DP08,8,43
-#------------------------------------,,
 # Piano keys,,Keynames are the respective standard notes
 #------------------------------------,,
 A0,21,# 88 keyboard
