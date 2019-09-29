@@ -36,3 +36,4 @@ else:
     gv.display("Invalid mixerdev")
     print 'Invalid mixer card id "%i" or control "%s" --' % (gv.MIXER_CARD_ID, MIXER_CONTROL)
     print '-- Mixer card id is "x" in "(hw:x,y)" (if present) in opened audio device.'
+    exit(1)
