@@ -159,7 +159,7 @@ def RotaTidy(TurnOn):
     else:
         gv.VIBRvalue=0              # tune the note
         gv.TREMvalue=1              # restore volume
-        gv.PANvalue=1               # restore center
+        gv.PANvalue=0               # restore center
 
 def LFOspeed(CCval,*z):
     if gv.LFOtype==3:
