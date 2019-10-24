@@ -233,6 +233,13 @@ def readnotemap(ifile):
                         continue
                     else:
                         values[2]=int(gv.keynames[x+1][0])
+                if len(gv.notemap)>0:
+                    for j in range(len(gv.notemap)):
+                        if values[0]==gv.notemap[j][0] and values[2]==gv.notemap[j][2]:
+                            print ("%s: duplicate midinote %d in notemap %s, ignored %s" %(ifile, values[2], values[0], sheet[i]))
+                            break
+                    if j<len(gv.notemap)-1:
+                        continue
                 try:
                     values[3]=int(sheet[i][3])
                 except:
@@ -259,6 +266,10 @@ def readnotemap(ifile):
             else:
                 print ("%s: ignored %s" %(ifile, sheet[i]))
                 gv.ConfigErr=True
+        #print gv.notemap.sort(key=sort3rd)
     except:
         pass    # notemapping is optional
     return
+
+def sort3rd(elem):
+    return elem[2]
