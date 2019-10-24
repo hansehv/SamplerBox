@@ -12,7 +12,7 @@
 #   see docs at  http://homspace.xs4all.nl/homspace/samplerbox
 #   changelog in changelist.txt
 #
-import re, gv   #, copy
+import re,operator,gv   #, copy
 sheet={}
 
 def readcsv(ifile, numtxt=100, header=True):
@@ -266,10 +266,7 @@ def readnotemap(ifile):
             else:
                 print ("%s: ignored %s" %(ifile, sheet[i]))
                 gv.ConfigErr=True
-        #print gv.notemap.sort(key=sort3rd)
+        gv.notemap.sort(key=operator.itemgetter(0,2))   # sort on: map->input(midi)key
     except:
         pass    # notemapping is optional
     return
-
-def sort3rd(elem):
-    return elem[2]
