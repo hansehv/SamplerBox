@@ -33,6 +33,10 @@ sys.path.append('./modules')
 ########  Define local general functions ########
 usleep = lambda x: time.sleep(x/1000000.0)
 msleep = lambda x: time.sleep(x/1000.0)
+def GPIOcleanup():
+    if USE_GPIO:
+        import RPi.GPIO as GPIO
+        GPIO.cleanup()
 def getindex(key, table, onecol=False):
     for i in range(len(table)):
         if onecol:
@@ -95,7 +99,7 @@ def setScale(x,*z):
 CCmap=[]
 def setVoice(x, iv=0, *z):
     global CCmap
-    if iv==0 or iv==-1:
+    if iv==0:
         xvoice=int(x)
     else:
         xvoice=getindex(int(x),gv.voicelist)
@@ -152,7 +156,8 @@ def playBackTrack(x,*z):
         except:
             print 'Unassigned/unfilled track or other exception for backtrack %s->%d' % (x,playnote)
 
-gv.getindex=getindex                    # and announce the procs to modules
+gv.GPIOcleanup=GPIOcleanup              # and announce the procs to modules
+gv.getindex=getindex
 gv.notename2midinote=notename2midinote
 gv.midinote2notename=midinote2notename
 gv.setVoice=setVoice
@@ -254,41 +259,47 @@ else:
 #########################################
 # Display routine
 #########################################
+try:
 
-if USE_HD44780_16x2_LCD:
-    USE_GPIO=True
-    import lcd_16x2
-    lcd = lcd_16x2.HD44780()
-    def display(s2,s7=""):
-        lcd.display(s2)
-    display('Start Samplerbox')
+    if USE_HD44780_16x2_LCD:
+        USE_GPIO=True
+        import lcd_16x2
+        lcd = lcd_16x2.HD44780()
+        def display(s2,s7=""):
+            lcd.display(s2)
+        display('Start Samplerbox')
 
-elif USE_OLED:
-    USE_GPIO=True
-    import OLED
-    oled = OLED.oled()
-    def display(s2,s7=""):
-        oled.display(s2)
-    display('Start Samplerbox')
+    elif USE_OLED:
+        USE_GPIO=True
+        import OLED
+        oled = OLED.oled()
+        def display(s2,s7=""):
+            oled.display(s2)
+        display('Start Samplerbox')
 
-elif USE_I2C_7SEGMENTDISPLAY:
-    import I2C_7segment
-    def display(s2,s7=""):
-        I2C_7segment.display(s7)
-    display('','----')
+    elif USE_I2C_7SEGMENTDISPLAY:
+        import I2C_7segment
+        def display(s2,s7=""):
+            I2C_7segment.display(s7)
+        display('','----')
 
-elif USE_LEDS:
-    USE_GPIO=True
-    import LEDs
-    def display(s2,s7=""):
-        LEDs.signal()
-    LEDs.green(False)
-    LEDs.red(True,True)
+    elif USE_LEDS:
+        USE_GPIO=True
+        import LEDs
+        def display(s2,s7=""):
+            LEDs.signal()
+        LEDs.green(False)
+        LEDs.red(True,True)
 
-else:
-    def display(s2,s7=""):
-        pass    
-gv.display=display                          # and announce the procs to modules
+    else:
+        def display(s2,s7=""):
+            pass    
+    gv.display=display                          # and announce the procs to modules
+
+except:
+    print "Error activating requested display routine"
+    GPIOcleanup()
+    exit(1)
 
 ##################################################################################
 # Effects/Filters
@@ -602,9 +613,7 @@ except:
     display("Invalid audiodev")
     print 'Invalid audio device #%i' % AUDIO_DEVICE_ID
     time.sleep(0.5)
-    if USE_GPIO:
-        import RPi.GPIO as GPIO
-        GPIO.cleanup()
+    GPIOcleanup()
     exit(1)
 
 #########################################
@@ -628,15 +637,18 @@ def ControlChange(CCnum, CCval):
 
 def AllNotesOff(x=0,*z):
     global playingbacktracks
+    # stop the robots first
+    arp.power(False)
     playingbacktracks = 0
+    # empty all queues
     gv.playingsounds = []
     gv.playingnotes = {}
     gv.sustainplayingnotes = []
     gv.triggernotes = [128]*128     # fill with unplayable note
+    # reset effects & display
     EffectsOff()
     display("")
 def EffectsOff(*z):
-    arp.power(False)
     Cpp.FVsetType(0)
     Cpp.AWsetType(0)
     Cpp.DLYsetType(0)
@@ -798,7 +810,7 @@ def MidiCallback(src, message, time_stamp):
                                 #    pass    # ignore the chord generated notes when playing monophonic
                                 if m.playingstopmode()==3:  # backtracks end on sample end
                                     m.playing2end()         # so just let it finish
-				    playingbacktracks-=1
+                                    playingbacktracks-=1
                                     return
                                 else:
                                     messagetype = 8                     # all the others have an instant end
@@ -1255,7 +1267,7 @@ def ActuallyLoad():
             v=getindex(voice, voicenames)
             gv.voicelist.append([voice, voicenames[v][1], voicemodes[voice], voicenotemap[voice]])
             if gv.currvoice==0:     # make sure to start with a playable non-empty voice
-                setVoice(voice, None)
+                setVoice(voice,1)
             for midinote in xrange(128):    # first complete velocities in found normal notes
                 lastvelocity = None
                 for velocity in xrange(128):
@@ -1328,20 +1340,28 @@ LoadSamples()
 ##  - MIDI IN via SERIAL PORT
 #########################################
 
-gv.getvolume=gv.NoProc
-gv.setvolume=gv.NoProc
-if gv.USE_ALSA_MIXER:
-    import DACvolume
+try:
 
-if USE_BUTTONS:
-    USE_GPIO=True
-    import buttons
+    gv.getvolume=gv.NoProc
+    gv.setvolume=gv.NoProc
+    if gv.USE_ALSA_MIXER:
+        import DACvolume
 
-if USE_HTTP_GUI:
-    import http_gui
+    if USE_BUTTONS:
+        USE_GPIO=True
+        import buttons
 
-if USE_SERIALPORT_MIDI:
-    import serialMIDI
+    if USE_HTTP_GUI:
+        import http_gui
+
+    if USE_SERIALPORT_MIDI:
+        import serialMIDI
+
+except:
+    print "Error loading optionals, can be alsa-mixer, buttons, http-gui or serial-midi"
+    time.sleep(0.5)
+    GPIOcleanup()
+    exit(1)
 
 #########################################
 ##  MIDI DEVICES DETECTION
@@ -1374,6 +1394,4 @@ except:
 finally:
     display('Stopped')
     time.sleep(0.5)
-    if USE_GPIO:
-        import RPi.GPIO as GPIO
-        GPIO.cleanup()
+    GPIOcleanup()
