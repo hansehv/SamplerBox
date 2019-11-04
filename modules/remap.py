@@ -25,7 +25,7 @@ import gv,subprocess
 #   - gv.notemapping[] - the current active map
 #   - gv.notemap[] and gv.notemaps - the available maps while this preset is active
 #   - notemap.csv in the preset directory - persistent definition 
-#   In current implementation the last two are done at the same time (I see nor reason for split, please feedback if you disagree)
+#   In current implementation the last two are done at the same time (I see no reason for split, please feedback if you disagree)
 #
 fractions=[[1,"Semi"],[2,"Quarter"]]
 newnotemap=[]
@@ -39,9 +39,19 @@ def notes(fields):
 			gv.SB_nm_Q=int(fields["SB_nm_Q"][0])
 			for j in xrange(len(gv.notemapping)):
 				gv.notemapping[j][1]=gv.SB_nm_Q
-		if "SB_nm_onote" in fields:		gv.SB_nm_onote=int(fields["SB_nm_onote"][0])-2
-		if "SB_nm_retune" in fields:	gv.SB_nm_retune=int(fields["SB_nm_retune"][0])
-		if "SB_nm_voice"  in fields:	gv.SB_nm_voice=int(fields["SB_nm_voice"][0])
+		if "SB_nm_onote"	in fields:	gv.SB_nm_onote=int(fields["SB_nm_onote"][0])-2
+		if "SB_nm_retune"	in fields:	gv.SB_nm_retune=int(fields["SB_nm_retune"][0])
+		if "SB_nm_voice"	in fields:
+			x=int(fields["SB_nm_voice"][0])
+			if x==0:
+				gv.SB_nm_voice=0
+			else:
+				xvoice=-1      # filter out effects track
+				for i in range(len(gv.voicelist)):
+					if gv.voicelist[i][0]==0:
+						xvoice=0
+						break
+				gv.SB_nm_voice=gv.voicelist[x+xvoice][0]
 		app=True
 		rem=(gv.SB_nm_onote==gv.SB_nm_inote and gv.SB_nm_retune==0 and gv.SB_nm_voice==0)
 		for i in xrange(len(gv.notemapping)):

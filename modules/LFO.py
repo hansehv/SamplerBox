@@ -132,9 +132,9 @@ def PanProc(*z):
 def PanTidy(TurnOn):
     if TurnOn:
         PanLFO.settriangle(63)      # start centered (don't care anyway)
-        PanLFO.setstep(gv.PANspeed)  # and with correct speed
+        PanLFO.setstep(gv.PANspeed) # and with correct speed
     else:
-        gv.PANvalue=1              # restore center
+        gv.PANvalue=0               # restore center
 def PanSetwidth(CCval,*z):
     gv.PANwidth=CCval/127.0 # values 0-1, both left & right
 def PanSetspeed(CCval,*z):
@@ -159,7 +159,7 @@ def RotaTidy(TurnOn):
     else:
         gv.VIBRvalue=0              # tune the note
         gv.TREMvalue=1              # restore volume
-        gv.PANvalue=1               # restore center
+        gv.PANvalue=0               # restore center
 
 def LFOspeed(CCval,*z):
     if gv.LFOtype==3:

@@ -5,10 +5,10 @@ UA,Fixed,PitchWheel,Continuous,# Not needed when standard pitchwheel present
 UA,Fixed,PitchSens,Continuous,
 UA,Fixed,ModWheel,Continuous,
 UA,Fixed,Volume,Continuous,
-UA,Fixed,Sustain,Switch,"# Pedal: Sustain. Pedal functions are complex to mix, so preferably use only one"
-UA,Fixed,Damp,Switch,# Pedal: Damp all (conventional damp)
-UA,Fixed,DampNew,Switch,"# Pedal: Damp only new notes,  a kind of pizzicato effect"
-UA,Fixed,DampLast,Switch,# Pedal: Notes played during pedal press are damped on pedal release
+UA,Fixed,Sustain,Continuous,"# Pedal: Sustain. Pedal functions are complex to mix, so preferably use only one"
+UA,Fixed,Damp,Continuous,# Pedal: Damp all (conventional damp)
+UA,Fixed,DampNew,Continuous,"# Pedal: Damp only new notes,  a kind of pizzicato effect"
+UA,Fixed,DampLast,Continuous,# Pedal: Notes played during pedal press are damped on pedal release
 UA,Fixed,Rotate,Toggle,
 UA,Fixed,Vibrato,Toggle,
 UA,Fixed,Tremolo,Toggle,
@@ -74,11 +74,11 @@ UA,Fixed,Panic,SwitchOff,
 UA,Fixed,AutoChordOff,SwitchOff,
 UA,Scales,C,SwitchOn,# Scale has to defined in scales.csv
 UA,Chords,Min,SwitchOn,# Chord has to be defined in chords.csv
-UA,Voices,1,SwitchOn,"# Voice > 0, voice# should be assigned to a sample pattern"
-UA,BackTracks,1,Toggle,"# Value > 0, track# should be assigned to a sample"
+UA,Voices,<voice number>,SwitchOn,"# Voice > 0, voice# should be assigned to a sample pattern"
+UA,BackTracks,<backtrack number>,Toggle,"# Backtrack > 0, track# should be assigned to a sample"
 UA,Notemaps,<notemap name>,SwitchOn,# Use “None” or any not existing notemap for no notemapping
-,,,,
-,,,,
-,,,,
-,,,,
-,2,,,
+UA,SMFs,<SMFseq number>,Toggle,"# SMF > 0, seq# should be assigned to a sample"
+UA,Fixed,SMFstart,Toggle,
+UA,Fixed,SMFstop,SwitchOff,
+UA,Fixed,SMFloop,Toggle,
+UA,Fixed,SMFtempo,Continuous,

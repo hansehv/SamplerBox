@@ -12,7 +12,7 @@
 #   see docs at  http://homspace.xs4all.nl/homspace/samplerbox
 #   changelog in changelist.txt
 #
-import re, gv   #, copy
+import re,operator,gv   #, copy
 sheet={}
 
 def readcsv(ifile, numtxt=100, header=True):
@@ -233,6 +233,13 @@ def readnotemap(ifile):
                         continue
                     else:
                         values[2]=int(gv.keynames[x+1][0])
+                if len(gv.notemap)>0:
+                    for j in range(len(gv.notemap)):
+                        if values[0]==gv.notemap[j][0] and values[2]==gv.notemap[j][2]:
+                            print ("%s: duplicate midinote %d in notemap %s, ignored %s" %(ifile, values[2], values[0], sheet[i]))
+                            break
+                    if j<len(gv.notemap)-1:
+                        continue
                 try:
                     values[3]=int(sheet[i][3])
                 except:
@@ -259,6 +266,7 @@ def readnotemap(ifile):
             else:
                 print ("%s: ignored %s" %(ifile, sheet[i]))
                 gv.ConfigErr=True
+        gv.notemap.sort(key=operator.itemgetter(0,2))   # sort on: map->input(midi)key
     except:
         pass    # notemapping is optional
     return
