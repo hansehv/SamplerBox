@@ -68,11 +68,11 @@ def process():
             playnote=currnote+sequence[stepnr]
             if playnote>(127-gv.stop127) and playnote<gv.stop127:   # stay within keyboard range
                 if gv.CHOrus:
-                    gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(playnote, playnote, velmixer*gv.globalgain*gv.CHOgain, 0, 0))
-                    gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(playnote, playnote, velmixer*gv.globalgain*gv.CHOgain, 2, 0-(gv.CHOdepth/2+1))) #5
-                    gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(playnote, playnote, velmixer*gv.globalgain*gv.CHOgain, 5, 0+gv.CHOdepth)) #8
+                    gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(playnote, playnote, velocity, velmixer*gv.globalgain*gv.CHOgain, 0, 0))
+                    gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(playnote, playnote, velocity, velmixer*gv.globalgain*gv.CHOgain, 2, 0-(gv.CHOdepth/2+1))) #5
+                    gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(playnote, playnote, velocity, velmixer*gv.globalgain*gv.CHOgain, 5, 0+gv.CHOdepth)) #8
                 else:
-                    gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(playnote, playnote, velmixer*gv.globalgain, 0, 0))
+                    gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(playnote, playnote, velocity, velmixer*gv.globalgain, 0, 0))
             else:
                 playnote=-1
             if fadecycles<100 and (not pressed or not loop):

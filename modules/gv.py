@@ -17,6 +17,10 @@ FIXED="Fixed"
 VOICES="Voices"
 NOTEMAPS="Notemaps"
 BACKTRACKS="BackTracks"
+SMFS="SMFs"
+SMFTEMPO="SMFtempo"
+SMFLOOP="SMFloop"
+SMFSTOP="SMFstop"
 CHORDS="Chords"
 SCALES="Scales"
 PITCHWHEEL="PitchWheel"
@@ -237,5 +241,9 @@ MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch)
 [SCALES,2,safeguard],
 [VOICES,2,safeguard],
 [BACKTRACKS,2,safeguard],
+[SMFS,2,safeguard],
+[SMFLOOP,1,safeguard],
+[SMFSTOP,1,safeguard],
+[SMFTEMPO,0,safeguard],
 [NOTEMAPS,2,safeguard]
 ]
