@@ -758,9 +758,9 @@ def PlayRelSample(relsample,midinote,voice,velocity,mixer,retune,channel=0,dampn
             startparm=-2
             voice=-voice
         if dampnoise:   # Dampnoises are uncontrolled :-)
-            gv.samples[midinote, velocity, voice].play(midinote, midinote, velocity, mixer, startparm, retune, channel)
+            gv.samples[midinote, velocity, voice].play(midinote, midinote, velocity, mixer, startparm, retune)
         else:
-            gv.playingnotes.setdefault(midinote,[]).append(gv.samples[midinote, velocity, voice].play(midinote, midinote, velocity, mixer, startparm, retune, channel))
+            gv.playingnotes.setdefault(midinote,[]).append(gv.samples[midinote, velocity, voice].play(midinote, midinote, velocity, mixer, startparm, retune))
 
 def PitchSens(CCval,*z):
     gv.pitchnotes = (24*CCval+100)/127
@@ -778,6 +778,7 @@ gv.setMC(gv.DAMP,Damp)
 gv.setMC(gv.DAMPNEW,DampNew)
 gv.setMC(gv.DAMPLAST,DampLast)
 gv.setMC(gv.PITCHSENS,PitchSens)
+gv.PlayRelSample=PlayRelSample
 
 def MidiCallback(src, message, time_stamp):
     global velocity_mode, playingbacktracks
