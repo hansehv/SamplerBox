@@ -269,7 +269,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         else:           s=0
         if arp.play2end:t=1
         else:           t=0
-        self.wfile.write("%d,%d,'%s','%s',%d,%d," % (arp.length,arp.keepon,s,t,gv.ARPtype,arp.fadecycles) )
+        self.wfile.write("%d,%d,'%s','%s',%d,%d," % (arp.stepticks,arp.noteticks,s,t,gv.ARPtype,arp.fadecycles) )
         self.wfile.write("%d,%d,%d,%d,'%s'" % (gv.CHOrus,gv.CHOdepth,gv.CHOgain*100,gv.MIDI_CHANNEL,gv.DefinitionTxt.replace('\n','&#10;').replace('\r','&#13;')) )   # make it a unix formatted JS acceptable string
         self.wfile.write("];\n\tSB_LastMidiNote=%d;SB_LastMusicNote=%s;SB_DefErr='%s';\n" % (gv.last_midinote,gv.last_musicnote,gv.DefinitionErr) )
         self.wfile.write("\tSB_Mode='%s';SB_numpresets=%d;SB_Presetlist=%s;\n" % (gv.sample_mode,len(gv.presetlist),gv.presetlist) )
