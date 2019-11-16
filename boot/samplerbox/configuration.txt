@@ -74,9 +74,9 @@ PITCHBITS = 7                   ; pitchwheel resolution, 0=disable, max=14 (=163
 #     -- HiFiBerry   : 2,3,18,19,20,21      
 #
 #     -- USE_BUTTONS --
-BUT_incr=5                      ; Increase button
-BUT_decr=13                     ; Decrease button
-BUT_sel=26                      ; Select button
+BUT_incr=26                      ; Increase button
+BUT_decr=5                     ; Decrease button
+BUT_sel=13                      ; Select button
 #
 #     -- USE_LEDS --
 LED_red=27                      ; Red light
