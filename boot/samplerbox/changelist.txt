@@ -4,12 +4,15 @@ For changes on the image, see http://homspace.xs4all.nl/homspace/samplerbox/SBbu
 
 Oct-Nov 2019:
   - Finished embedded release samples (relsample=E)
+    NOTE!!
+      configuration.txt parameter RELSAMPLE changed to BOXRELSAMPLE
+      Startup will fail when this is not adapted in your local setup.
   - Added separate release samples (relsample=S)
   - Added dampnoise feature (useful for dampers, rattling snares, funny synth effects etcetara)
   - Added (%)%fillnotes=F : This fills missing notes with "same pitch" notes.
     So you can define damper noise that won't change pitch when generated
   - Fixed notemapping GUI screen
-  - Bufixed arpeggiator and added release sample processing to it
+  - Bugfixed arpeggiator and added release sample processing to it
 Aug-Sept 2019:
   - Adapted sustain pedal for "half-damper" compatibility.
     ==> This makes this a continuous controller acting as switch !!
