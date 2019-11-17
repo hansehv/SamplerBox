@@ -11,8 +11,9 @@ from urlparse import urlparse,parse_qs
 import os,shutil,subprocess
 import gv,remap,arp,LFO,Cpp,CHOrus
 notesymbol=["C","C&#9839;","D","E&#9837;","E","F","F&#9839;","G","G&#9839;","A","B&#9837;","B","FX"]
-notesymbolQ=["C","Ck","C&#9839;","Dk","D","Ds","E&#9837;","Ek","E","Es","F","Fs","F&#9839;","Gk","G","Gs","G&#9839;","Ak","A","As","B&#9837;","Bk","B","Bs","FX"]
-HTTP_PORT = 80
+notesymbolQ=["C","Cs","C&#9839;","Dk","D","Ds","E&#9837;","Ek","E","Es","F","Fs","F&#9839;","Gk","G","Gs","G&#9839;","Ak","A","As","B&#9837;","Bk","B","Bs","FX"]
+HTTP_PORT=80
+hidden_voices=0
 
 class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
@@ -52,6 +53,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.end_headers()
         
     def do_POST(self):
+        global hidden_voices
         inval=0
         length = int(self.headers.getheader('content-length'))
         field_data = self.rfile.read(length)
@@ -89,9 +91,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         voicechange=False
         if "SB_Voice"       in fields:
             currvoice=gv.currvoice
-            if gv.voicelist[0][0]==0: i=1
-            else: i=0
-            gv.setVoice(int(fields["SB_Voice"][0])+i,0)
+            gv.setVoice(int(fields["SB_Voice"][0])+hidden_voices,0)
             if currvoice!=gv.currvoice: voicechange=True
         notemapchange=False
         if "SB_Notemap"     in fields and not voicechange:
@@ -104,19 +104,15 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             gv.SB_nm_inote=-1
         elif "SB_nm_inote"  in fields:          # this field is supposed to be always there when mapping :-)
             remap.notes(fields)
-        scalechange=False
         if "SB_Scale"       in fields:
             inval=int(fields["SB_Scale"][0])
             if gv.currscale!=inval:
-                scalechange=True
                 gv.currscale=inval
-                if gv.last_musicnote<0: gv.currchord=0
-                else: gv.currchord=gv.scalechord[gv.currscale][gv.last_musicnote]
-        if "SB_Chord"       in fields and not scalechange:
+                gv.currchord=0
+        if "SB_Chord"       in fields and gv.currscale==0:
             inval=int(fields["SB_Chord"][0])
             if not gv.currchord==inval:
                 gv.currchord=inval
-                gv.currscale=0
         if "SB_CHOrus"      in fields: CHOrus.setType(gv.getindex(fields["SB_CHOrus"][0],["Off","On"],True))
         if "SB_CHOdepth"    in fields: CHOrus.setdepth((float(fields["SB_CHOdepth"][0])-2)*9.77)
         if "SB_CHOgain"     in fields: CHOrus.setgain((float(fields["SB_CHOgain"][0])-30)*2.54)
@@ -181,6 +177,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.do_GET()               # answer the browser
 
     def send_API(self):
+        global hidden_voices
         varName=["SB_RenewMedia","SB_SoundVolume","SB_MidiVolume",
                  "SB_Preset","SB_Gain","SB_Pitchrange","SB_Notemap",
                  "SB_nm_Q","SB_nm_inote","SB_nm_onote","SB_nm_retune","SB_nm_voice","SB_nm_map","SB_nm_sav",
@@ -272,15 +269,20 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         else:           s=0
         if arp.play2end:t=1
         else:           t=0
-        self.wfile.write("%d,%d,'%s','%s',%d,%d," % (arp.length,arp.keepon,s,t,gv.ARPtype,arp.fadecycles) )
+        self.wfile.write("%d,%d,'%s','%s',%d,%d," % (arp.stepticks,arp.noteticks,s,t,gv.ARPtype,arp.fadecycles) )
         self.wfile.write("%d,%d,%d,%d,'%s'" % (gv.CHOrus,gv.CHOdepth,gv.CHOgain*100,gv.MIDI_CHANNEL,gv.DefinitionTxt.replace('\n','&#10;').replace('\r','&#13;')) )   # make it a unix formatted JS acceptable string
         self.wfile.write("];\n\tSB_LastMidiNote=%d;SB_LastMusicNote=%s;SB_DefErr='%s';\n" % (gv.last_midinote,gv.last_musicnote,gv.DefinitionErr) )
         self.wfile.write("\tSB_Mode='%s';SB_numpresets=%d;SB_Presetlist=%s;\n" % (gv.sample_mode,len(gv.presetlist),gv.presetlist) )
         vlist=[]
         xvoice="No"
-        for i in range(len(gv.voicelist)):      # filter out effects track
-            if gv.voicelist[i][0]==0:  xvoice="Yes"
-            else:   vlist.append(gv.voicelist[i])
+        hidden_voices=0
+        for i in range(len(gv.voicelist)):      # filter out effects track and release samples
+            if gv.voicelist[i][0]>0:
+                vlist.append(gv.voicelist[i])
+            else:
+                hidden_voices=hidden_voices+1
+                if gv.voicelist[i][0]==0:  xvoice="Yes"
+                
         self.wfile.write("\tSB_numvoices=%d;SB_xvoice='%s';SB_Voicelist=%s;\n" % (len(vlist),xvoice,vlist) )
         self.wfile.write("\tSB_numbtracks=%d;SB_bTracks=%s;\n" % (len(gv.btracklist),gv.btracklist) )
         notemaps=["None"]
