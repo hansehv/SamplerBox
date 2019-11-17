@@ -749,7 +749,7 @@ def DampLast(CCval,*z):
         gv.sustainplayingnotes = []
 def DampNoise(m):
     if m.playingdampnoise():
-        PlayRelSample(m.playingrelsample(),m.playingnote(),m.playingvoice(),m.playedvelocity(),m.playingvelocity(),m.playingretune(),m.playingchannel(),True)
+        PlayRelSample(m.playingrelsample(),m.playingnote(),m.playingvoice(),m.playedvelocity(),m.playingvelocity(),m.playingretune(),True)
 def PlayRelSample(relsample,midinote,voice,velocity,mixer,retune,channel=0,dampnoise=False):
     if relsample in "ES":
         if relsample=='E':
