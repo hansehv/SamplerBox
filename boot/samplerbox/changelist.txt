@@ -9,6 +9,7 @@ Oct-Nov 2019:
   - Added (%)%fillnotes=F : This fills missing notes with "same pitch" notes.
     So you can define damper noise that won't change pitch when generated
   - Fixed notemapping GUI screen
+  - Bufixed arpeggiator and added release sample processing to it
 Aug-Sept 2019:
   - Adapted sustain pedal for "half-damper" compatibility.
     ==> This makes this a continuous controller acting as switch !!

@@ -56,7 +56,7 @@ BOXRETRIGGER = R                ; action on retriggered still playing notes (occ
 #               R:      - Noteoff and fadeout according release value
 #               D:      - Noteoff and fadeout according damp value
 #               Y:      - Yes, retrigger is allowed, keep the playing sound
-BOXRELSAMPLE = N                ; release samples: N=none, E=Embedded, S=Separate(not implemented)
+BOXRELSAMPLE = N                ; release samples: N=none, E=Embedded, S=Separate
 BOXXFADEOUT = 10                ; crossfade glues the sample to the release sample
 BOXXFADEIN = 1                  ; crossfade glues the sample to the release sample
 BOXXFADEVOL = 1.0               ; crossfade glues the sample to the release sample
