@@ -3,6 +3,7 @@ For changes on samplerbox_audio.pyx, see top of the source file
 For changes on the image, see http://homspace.xs4all.nl/homspace/samplerbox/SBbuild.html
 
 Oct-Nov 2019:
+  - Fixed notemapping GUI screen
   - Finished embedded release samples (relsample=E)
     NOTE!!
       configuration.txt parameter RELSAMPLE changed to BOXRELSAMPLE
@@ -11,8 +12,11 @@ Oct-Nov 2019:
   - Added dampnoise feature (useful for dampers, rattling snares, funny synth effects etcetara)
   - Added (%)%fillnotes=F : This fills missing notes with "same pitch" notes.
     So you can define damper noise that won't change pitch when generated
-  - Fixed notemapping GUI screen
   - Bugfixed arpeggiator and added release sample processing to it
+  - Reduced overhead in velocity table and related processing
+    As a result, granularity of velocity samples can be defined per sample
+  - Velocity mode (sample or accurate) can be specified per sample
+  - Various cleanups and small fixes
 Aug-Sept 2019:
   - Adapted sustain pedal for "half-damper" compatibility.
     ==> This makes this a continuous controller acting as switch !!
