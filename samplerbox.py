@@ -177,6 +177,7 @@ BACKTRACK = "Back"                      # recognize loop markers, loop-off by sa
 PLAYMONO = "Mono"                       # monophonic (with chords), loop like Loo2, but note/chord stops when next note is played.
 VELSAMPLE = "Sample"                    # velocity equals sampled value, requires multiple samples to get differentation
 VELACCURATE = "Accurate"                # velocity as played, allows for multiple (normalized!) samples for timbre
+VELOSTEPS = [127,64,32,16,8,4,2,1]      # accepted numer of velocity layers
 SAMPLES_INBOX = gv.rootprefix+"/samples/"  # Builtin directory containing the sample-sets.
 SAMPLES_ONUSB = gv.rootprefix+"/media/"    # USB-Mount directory containing the sample-sets.
 CONFIG_LOC = gv.rootprefix+"/boot/samplerbox/"
@@ -207,7 +208,8 @@ gv.PRESETBASE = gv.cp.getint(gv.cfg,"PRESETBASE".lower())
 MAX_POLYPHONY = gv.cp.getint(gv.cfg,"MAX_POLYPHONY".lower())
 MAX_MEMLOAD = gv.cp.getint(gv.cfg,"MAX_MEMLOAD".lower())
 BOXSAMPLE_MODE = gv.cp.get(gv.cfg,"BOXSAMPLE_MODE".lower())
-BOXVELOCITY_MODE = gv.cp.get(gv.cfg,"BOXVELOCITY_MODE".lower())
+BOXVELMODE = gv.cp.get(gv.cfg,"BOXVELOCITY_MODE".lower())
+BOXVELOLEVS = 127
 BOXSTOP127 = gv.cp.getint(gv.cfg,"BOXSTOP127".lower())
 BOXRELEASE = gv.cp.getint(gv.cfg,"BOXRELEASE".lower())
 BOXDAMP = gv.cp.getint(gv.cfg,"BOXDAMP".lower())
@@ -243,7 +245,6 @@ PITCHRANGE *= 2     # actually it is 12 up and 12 down
 gv.samplesdir = SAMPLES_INBOX
 gv.stop127 = BOXSTOP127
 gv.sample_mode = BOXSAMPLE_MODE
-velocity_mode = BOXVELOCITY_MODE
 gv.pitchnotes = PITCHRANGE
 PITCHSTEPS = 2**PITCHBITS
 gv.pitchneutral = PITCHSTEPS/2
@@ -440,7 +441,7 @@ def GetLoopmode(mode):
     return loopmode
         
 class PlayingSound:
-    def __init__(self, sound, voice, note, velocity, mixer, pos, end, loop, stopnote, retune):
+    def __init__(self, sound, voice, note, velocity, pos, end, loop, stopnote, retune):
         self.sound = sound
         self.pos = pos
         self.end = end
@@ -454,18 +455,18 @@ class PlayingSound:
         self.voice = voice
         self.note = note
         self.retune = retune
-        self.playedvel = velocity
-        self.vel = mixer
+        self.velocity = velocity
+        self.vel = velocity*gv.globalgain
         self.stopnote = stopnote
 
     def __str__(self):
         return "<PlayingSound note: '%i', velocity: '%i', pos: '%i'>" %(self.note, self.vel, self.pos)
     def playingnote(self):
         return self.note
-    def playedvelocity(self):
-        return self.playedvel
+    def playingretune(self):
+        return self.retune
     def playingvelocity(self):
-        return self.vel
+        return self.velocity
     def playingstopnote(self):
         return self.stopnote
     def playingstopmode(self):
@@ -490,12 +491,13 @@ class PlayingSound:
     #    except: pass
 
 class Sound:
-    def __init__(self, filename, voice, midinote, velocity, mode, release, damp, dampnoise, retrigger, gain, relsample, xfadeout, xfadein, xfadevol, fractions):
+    def __init__(self, filename, voice, midinote, velocity, velmode, mode, release, damp, dampnoise, retrigger, gain, relsample, xfadeout, xfadein, xfadevol, fractions):
         wf = waveread(filename)
         self.fname = filename
         self.voice = voice
         self.midinote = midinote
         self.velocity = velocity
+        self.velsample = True if velmode==VELSAMPLE else False
         self.stopmode = GetStopmode(mode)
         self.release = release
         self.damp = damp
@@ -515,9 +517,10 @@ class Sound:
             self.loop = GetLoopmode(mode)   # if no loop requested it's useless to check the wav's capability
         if self.loop > 0 and wf.getloops():
             self.loop = wf.getloops()[0][0] # Yes! the wav can loop
-            self.nframes = wf.getloops()[0][1] + 2
+            endloop = wf.getloops()[0][1]
+            self.nframes = endloop + 2
             self.relmark = wf.getmarkers()
-            if self.relmark < self.nframes:
+            if self.relmark < endloop:
                 self.relmark = self.nframes # a potential release marker before loop-end cannot be right
                 self.eof = self.nframes     # so we just stick to the loop to savegv.playingsounds processing and memory
                 if relsample == "E":        # if embedded sample was configured, notify this is impossible
@@ -538,12 +541,13 @@ class Sound:
 
         wf.close()            
 
-    def play(self, midinote, note, velocity, mixer, startparm, retune):
+    def play(self, midinote, note, velocity, startparm, retune):
+        if self.velsample: velocity=127
         if startparm < 0:       # playing of sampled release is requested
             loop = -1           # a release sample does not loop
             end = self.eof      # and it ends on sample end
             stopnote = 128      # don't react on any artificial note-off's anymore
-            mixer = mixer*self.xfadevol # apply the defined volume correction
+            velocity = velocity*self.xfadevol # apply the defined volume correction
             if startparm==-1:       # the release sample is embedded
                 pos = self.relmark  # so it starts at embed start = the marker
             if startparm==-2:       # the release sample is separate
@@ -560,7 +564,7 @@ class Sound:
                     stopnote = midinote     # let autochordnotes be turned off by their trigger only
                 elif stopnote==127:
                     stopnote = 127-note
-        snd = PlayingSound(self, self.voice, note, velocity, mixer, pos, end, loop, stopnote, retune)
+        snd = PlayingSound(self, self.voice, note, velocity, pos, end, loop, stopnote, retune)
         gv.playingsounds.append(snd)
         return snd
 
@@ -698,6 +702,8 @@ def PitchWheel(LSB,MSB=0,*z):   # This allows for single and double precision.
         MSB=LSB # justify the complexity it will introduce in the mapping.
         LSB=0   # So I ignore them here. If you want to try, plse share with me.
     gv.PITCHBEND=(((128*MSB+LSB)/gv.pitchdiv)-gv.pitchneutral)*gv.pitchnotes
+def PitchSens(CCval,*z):
+    gv.pitchnotes = (24*CCval+100)/127
 def ModWheel(CCval,*z):
     print "Modwheel"
     pass        # still in idea stage
@@ -749,22 +755,24 @@ def DampLast(CCval,*z):
         gv.sustainplayingnotes = []
 def DampNoise(m):
     if m.playingdampnoise():
-        PlayRelSample(m.playingrelsample(),m.playingnote(),m.playingvoice(),m.playedvelocity(),m.playingvelocity(),m.playingretune(),True)
-def PlayRelSample(relsample,midinote,voice,velocity,mixer,retune,channel=0,dampnoise=False):
+        PlayRelSample(m.playingrelsample(),m.playingvoice(),m.playingnote(),m.playingvelocity(),m.playingretune(),True)
+def PlayRelSample(relsample,voice,playnote,velocity,retune,play_as_is=False):
     if relsample in "ES":
         if relsample=='E':
             startparm=-1  
         else:
             startparm=-2
             voice=-voice
-        if dampnoise:   # Dampnoises are uncontrolled :-)
-            gv.samples[midinote, velocity, voice].play(midinote, midinote, velocity, mixer, startparm, retune)
-        else:
-            gv.playingnotes.setdefault(midinote,[]).append(gv.samples[midinote, velocity, voice].play(midinote, midinote, velocity, mixer, startparm, retune))
-
-def PitchSens(CCval,*z):
-    gv.pitchnotes = (24*CCval+100)/127
+        PlaySample(playnote,playnote,voice,velocity,startparm,retune,play_as_is)
                             # and announce the procs to modules
+def PlaySample(midinote,playnote,voice,velocity,startparm,retune,play_as_is=False):
+    velolevs=gv.voicelist[getindex(voice,gv.voicelist)][4]
+    velidx=int(1.0*(velocity*velolevs)/128+.9999)   # roundup without math
+    if play_as_is:
+        gv.samples[midinote,velidx,voice].play(midinote,playnote,velocity,startparm,retune)
+    else:
+        gv.playingnotes.setdefault(playnote,[]).append(gv.samples[midinote,velidx,voice].play(midinote,playnote,velocity,startparm,retune))
+
 gv.setMC(gv.PANIC,AllNotesOff)
 gv.setMC(gv.EFFECTSOFF,EffectsOff)
 gv.setMC(gv.PROGUP,ProgramUp)
@@ -772,16 +780,17 @@ gv.setMC(gv.PROGDN,ProgramDown)
 gv.setMC(gv.VOLUME,MidiVolume)
 gv.setMC(gv.AUTOCHORDOFF,AutoChordOff)
 gv.setMC(gv.PITCHWHEEL,PitchWheel)
+gv.setMC(gv.PITCHSENS,PitchSens)
 gv.setMC(gv.MODWHEEL,ModWheel)
 gv.setMC(gv.SUSTAIN,Sustain)
 gv.setMC(gv.DAMP,Damp)
 gv.setMC(gv.DAMPNEW,DampNew)
 gv.setMC(gv.DAMPLAST,DampLast)
-gv.setMC(gv.PITCHSENS,PitchSens)
 gv.PlayRelSample=PlayRelSample
+gv.PlaySample=PlaySample
 
 def MidiCallback(src, message, time_stamp):
-    global velocity_mode, playingbacktracks
+    global playingbacktracks
     keyboardarea=True
     messagetype = message[0] >> 4
     messagechannel = (message[0]&0xF) + 1   # make channel# human..
@@ -828,7 +837,7 @@ def MidiCallback(src, message, time_stamp):
             #if gv.triggernotes[midinote]==midinote and velocity==64: # Older MIDI implementations
             #    messagetype=8                                        # (like Roland PT-3100)
             if arp.active and keyboardarea:
-                arp.note_onoff(messagetype, midinote, velocity, velocity_mode, VELSAMPLE)
+                arp.note_onoff(messagetype, midinote, velocity)
                 return
             if messagetype==8:                      # should this note-off be ignored?
                 if midinote in gv.playingnotes and gv.triggernotes[midinote]<128:
@@ -858,7 +867,6 @@ def MidiCallback(src, message, time_stamp):
                                             messagetype = 8
 
             if messagetype == 9:    # Note on 
-                #print 'Note on %d, voice=%d, chord=%s in %s/%s, velocity=%d, gv.globalgain=%d' % (midinote, gv.currvoice, gv.chordname[gv.currchord], gv.sample_mode, velocity_mode, velocity, gv.globalgain) #debug
                 if gv.sample_mode == PLAYMONO:     # monophonic: new note stops all that's playing in the keyboard range
                     for playnote in xrange(127-gv.stop127, gv.stop127):     # so leave the effects range out of this
                         if playnote in gv.playingnotes:
@@ -870,11 +878,7 @@ def MidiCallback(src, message, time_stamp):
                                 gv.playingnotes[playnote] = []
                                 gv.triggernotes[playnote] = 128  # housekeeping
                                 # In this mode we ignore the relsamples. I see no use and it makes previous code more complex
-                try:
-                    if velocity_mode == VELSAMPLE:
-                        velmixer = 127
-                    else:
-                        velmixer = velocity
+                if True: #try:
                     gv.last_midinote=midinote      # save original midinote for the webgui
                     if keyboardarea:
                         gv.last_musicnote=midinote-12*int(midinote/12) # do a "remainder midinote/12" without having to import the full math module
@@ -900,13 +904,13 @@ def MidiCallback(src, message, time_stamp):
                                         else:
                                             m.fadeout(False)    # ..or damp without optional dampnoise (considered unsuitable, based on current knowledge)
                                     #gv.playingnotes[playnote]=[]   # housekeeping
-                        #print "start playingnotes playnote %d, velocity %d, gv.currvoice %d, velmixer %d" %(playnote, velocity, gv.currvoice, velmixer)
+                        #print "start playingnotes playnote %d, velocity %d, gv.currvoice %d" %(playnote, velocity, gv.currvoice)
                         if gv.CHOrus:
-                            gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(midinote, playnote, velocity, velmixer*gv.globalgain*gv.CHOgain, 0, retune))
-                            gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(midinote, playnote, velocity, velmixer*gv.globalgain*gv.CHOgain, 2, retune-(gv.CHOdepth/2+1))) #5
-                            gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(midinote, playnote, velocity, velmixer*gv.globalgain*gv.CHOgain, 5, retune+gv.CHOdepth)) #8
+                            PlaySample(midinote,playnote,gv.currvoice,velocity*gv.CHOgain,0,retune)
+                            PlaySample(midinote,playnote,gv.currvoice,velocity*gv.CHOgain,2,retune-(gv.CHOdepth/2+1))
+                            PlaySample(midinote,playnote,gv.currvoice,velocity*gv.CHOgain,5,retune+gv.CHOdepth)
                         else:
-                            gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(midinote, playnote, velocity, velmixer*gv.globalgain, 0, retune))
+                            PlaySample(midinote,playnote,gv.currvoice,velocity,0,retune)
                         for m in gv.playingnotes[playnote]:
                             if m.playingstopmode()== 3:
                                 playingbacktracks+=1
@@ -918,9 +922,10 @@ def MidiCallback(src, message, time_stamp):
                                         gv.sustainplayingnotes.append(m)
                                     else:           # damp+dampnew (=damp played notes immediately)
                                         m.fadeout(False)
+                                        DampNoise(m)
                                     gv.triggernotes[playnote]=128
                                     gv.playingnotes[playnote]=[]
-                except:
+                else: #except:
                     print 'Unassigned/unfilled note or other exception in note %d' % (midinote)
                     pass
 
@@ -930,18 +935,20 @@ def MidiCallback(src, message, time_stamp):
                     if gv.triggernotes[playnote] == midinote:   # did we make this one play ?
                         if playnote in gv.playingnotes:
                             for m in gv.playingnotes[playnote]:
-                                velmixer = m.playingvelocity()  # save org value for release sample
                                 stopmode = m.playingstopmode()
                                 if stopmode == 3:
                                     m.playing2end()
-                                elif sustain:    # sustain only works for mode=keyb notes in the keyboard area
-                                    if stopmode==128 and keyboardarea:
-                                        gv.sustainplayingnotes.append(m)
+                                elif sustain and stopmode==128 and keyboardarea:    # sustain only works for mode=keyb notes in the keyboard area
+                                    gv.sustainplayingnotes.append(m)
+                                    gv.playingnotes[playnote] = []
                                 else:
+                                    velocity = m.playingvelocity()
+                                    retune   = m.playingretune()
+                                    relsample= m.playingrelsample()
                                     m.fadeout()
-                                gv.playingnotes[playnote] = []
+                                    gv.playingnotes[playnote] = []
+                                    PlayRelSample(relsample,gv.currvoice,playnote,velocity,retune,messagechannel)
                                 gv.triggernotes[playnote] = 128  # housekeeping
-                                PlayRelSample(m.playingrelsample(),midinote,gv.currvoice,velocity,velmixer,retune)
 
         elif messagetype == 12: # Program change
             gv.PRESET = midinote+gv.PRESETBASE
@@ -978,7 +985,6 @@ def LoadSamples():
 gv.LoadSamples=LoadSamples              # and announce the procs to modules
 
 def ActuallyLoad():    
-    global velocity_mode
     gv.ActuallyLoading=True
     AllNotesOff()
     gv.currbase = gv.basename    
@@ -1018,9 +1024,10 @@ def ActuallyLoad():
     gv.currnotemap=""
     gv.notemapping=[]
     gv.sample_mode=BOXSAMPLE_MODE   # fallback to the samplerbox default
-    velocity_mode=BOXVELOCITY_MODE  # fallback to the samplerbox default
+    PREVELMODE=BOXVELMODE           # fallback to the samplerbox default
     gv.stop127=BOXSTOP127           # fallback to the samplerbox default
     gv.pitchnotes=PITCHRANGE        # fallback to the samplerbox default
+    PREVELOLEVS=BOXVELOLEVS         # fallback to the samplerbox default
     PRERELEASE=BOXRELEASE           # fallback to the samplerbox default
     PREDAMP=BOXDAMP                 # fallback to the samplerbox default
     PREDAMPNOISE="Y" if BOXDAMPNOISE else "N"       # fallback to the samplerbox default
@@ -1040,7 +1047,7 @@ def ActuallyLoad():
     tracknames  = []
     for backtrack in range(128):
         tracknames.append([False, "", ""])
-    gv.voicelist =[]
+    gv.voicelist =[]        # voicenumber, description, mode, notemap, velocitylevels
     voicenames  = []
     gv.DefinitionTxt = ''
     gv.DefinitionErr = ''
@@ -1143,7 +1150,14 @@ def ActuallyLoad():
                         continue
                     if r'%%velmode' in pattern:
                         m = pattern.split('=')[1].strip().title()
-                        if m in [VELSAMPLE,VELACCURATE]: velocity_mode = m
+                        if m in [VELSAMPLE,VELACCURATE]: PREVELMODE = m
+                        continue
+                    if r'%%velolevs' in pattern:
+                        m = abs(int(pattern.split('=')[1].strip()))
+                        if m not in VELOSTEPS:
+                            print "velolevs %d, should be one of %s" %(m, VELOSTEPS)
+                        else:
+                            PREVELOLEVS=m
                         continue
                     if r'%%relsample' in pattern:
                         m = pattern.split('=')[1].strip().title()
@@ -1169,14 +1183,14 @@ def ActuallyLoad():
                     if r'%%notemap' in pattern:
                         PRENOTEMAP = pattern.split('=')[1].strip().title()
                         continue
-                    defaultparams = { 'midinote':'-128', 'velocity':'127', 'gain':'1', 'notename':'', 'voice':'1', 'mode':gv.sample_mode, 'transpose':PRETRANSPOSE, 'release':PRERELEASE, 'damp':PREDAMP, 'dampnoise':PREDAMPNOISE, 'retrigger':PRERETRIGGER,\
+                    defaultparams = { 'midinote':'-128', 'velocity':'-1', 'gain':'1', 'notename':'', 'voice':'1', 'velolevs':PREVELOLEVS, 'mode':gv.sample_mode, 'velmode':PREVELMODE, 'transpose':PRETRANSPOSE, 'release':PRERELEASE, 'damp':PREDAMP, 'dampnoise':PREDAMPNOISE, 'retrigger':PRERETRIGGER,\
                                       'relsample':PRERELSAMPLE, 'xfadeout':PREXFADEOUT, 'xfadein':PREXFADEIN, 'xfadevol':PREXFADEVOL, 'qnote':PREQNOTE, 'notemap':PRENOTEMAP, 'fillnote':fillnote, 'backtrack':'-1'}
                     if len(pattern.split(',')) > 1:
                         defaultparams.update(dict([item.split('=') for item in pattern.split(',', 1)[1].replace(' ','').replace('%', '').split(',')]))
                     pattern = pattern.split(',')[0]
                     pattern = re.escape(pattern.strip())
-                    pattern = pattern.replace(r"\%midinote", r"(?P<midinote>\d+)").replace(r"\%velocity", r"(?P<velocity>\d+)").replace(r"\%gain", r"(?P<gain>[-+]?\d*\.?\d+)").replace(r"\%voice", r"(?P<voice>\d+)")\
-                                     .replace(r"\%fillnote", r"(?P<fillnote>[YNFynf])").replace(r"\%mode", r"(?P<mode>[A-Za-z0-9])").replace(r"\%transpose", r"(?P<transpose>\d+)").replace(r"\%release", r"(?P<release>\d+)").replace(r"\%damp", r"(?P<damp>\d+)")\
+                    pattern = pattern.replace(r"\%midinote", r"(?P<midinote>\d+)").replace(r"\%velocity", r"(?P<velocity>\d+)").replace(r"\%gain", r"(?P<gain>[-+]?\d*\.?\d+)").replace(r"\%voice", r"(?P<voice>\d+)").replace(r"\%velolevs", r"(?P<velolevs>\d+)")\
+                                     .replace(r"\%fillnote", r"(?P<fillnote>[YNFynf])").replace(r"\%mode", r"(?P<mode>[A-Za-z0-9])").replace(r"\%velmode", r"(?P<velmode>[A-Za-z])").replace(r"\%transpose", r"(?P<transpose>\d+)").replace(r"\%release", r"(?P<release>\d+)").replace(r"\%damp", r"(?P<damp>\d+)")\
                                      .replace(r"\%dampnoise", r"(?P<dampnoise>\[YNyn])").replace(r"\%retrigger", r"(?P<retrigger>[YyRrDd])").replace(r"\%relsample", r"(?P<relsample>[NnSsEe])").replace(r"\%xfadeout", r"(?P<xfadeout>\d+)").replace(r"\%xfadein", r"(?P<xfadein>\d+)")\
                                      .replace(r"\%qnote", r"(?P<qnote>[YyNnOoEe])").replace(r"\%notemap", r"(?P<notemap>[A-Za-z0-9]\_\-\&)")\
                                      .replace(r"\%backtrack", r"(?P<backtrack>\d+)").replace(r"\%notename", r"(?P<notename>[A-Ga-g][#ks]?[0-9])").replace(r"\*", r".*?").strip()    # .*? => non greedy
@@ -1194,9 +1208,9 @@ def ActuallyLoad():
                                 continue
                             info = m.groupdict()
                             midinote = int(info.get('midinote', defaultparams['midinote']))
-                            notename = info.get('notename', defaultparams['notename'])
-                            mode = info.get('mode', defaultparams['mode']).strip().title()
-                            retrigger = info.get('retrigger', defaultparams['retrigger']).strip().title()
+                            notename = info.get('notename', defaultparams['notename']).rstrip()
+                            mode = info.get('mode', defaultparams['mode']).strip().title().rstrip()
+                            retrigger = info.get('retrigger', defaultparams['retrigger']).strip().title().rstrip()
                             backtrack = int(info.get('backtrack', defaultparams['backtrack']))
                             if mode==BACKTRACK and backtrack<0: backtrack=0
                             if backtrack>-1 and backtrack<128:
@@ -1222,15 +1236,15 @@ def ActuallyLoad():
                                 voicefillnote = (info.get('fillnote', defaultparams['fillnote'])).title().rstrip()
                             voicex=getindex(voice,gv.voicelist)
                             if voicex<0:
-                                gv.voicelist.append([voice,"","",""])
+                                gv.voicelist.append([voice,"","","",PREVELOLEVS])
                                 voicex=len(gv.voicelist)-1
-                            qnote = info.get('qnote', defaultparams['qnote']).title()[0][:1] 
+                            qnote = info.get('qnote', defaultparams['qnote']).title()[0][:1]
                             if qnote == 'Y': qnote = 'O'    # the default for qnotes is on odd midi notes (60=C).
                             fractions = PREFRACTIONS        # not yet implemented for user change (future??)
                             if qnote != 'N':
                                 if fractions == 1:          # condition needed in future
                                     fractions=2             # for now always true
-                            gv.voicelist[voicex][3] = info.get('notemap', defaultparams['notemap']).strip().title()   # pick the latest; we can't check everything, RTFM :-)
+                            gv.voicelist[voicex][3] = info.get('notemap', defaultparams['notemap']).strip().title().rstrip()   # pick the latest; we can't check everything, RTFM :-)
                             if notename:
                                 midinote=notename2midinote(notename,fractions)
                             transpose = int(info.get('transpose', defaultparams['transpose']))
@@ -1254,7 +1268,20 @@ def ActuallyLoad():
                                 else:
                                     tracknames[0][0]=True
                                     tracknames[0][1]=fname[:-4]
+                            velmode = info.get('velmode', defaultparams['velmode']).title().rstrip()
+                            if velmode not in [VELSAMPLE,VELACCURATE]:
+                                print "%s: velmode %s, should be one of %s" %(fname, velmode, [VELSAMPLE,VELACCURATE])
+                                velmode=PREVELMODE
+                            velolevs=1 if voice==0 else int(info.get('velolevs', defaultparams['velolevs']))
+                            if velolevs in VELOSTEPS:
+                                if velolevs>gv.voicelist[voicex][4]: gv.voicelist[voicex][4]=velolevs
+                            else:
+                                print "%s: velolevs %d, should be one of %s, set to %d" %(fname, velolevs, VELOSTEPS,PREVELOLEVS,gv.voicelist[voicex][4])
                             velocity = int(info.get('velocity', defaultparams['velocity']))
+                            if velocity==-1: velocity=velolevs
+                            if velocity>velolevs:
+                                print "%s: ignored sample as velocity %d higher than velolevs %d for voice %d" %(fname, velocity, velolevs, voice)
+                                continue
                             gain = abs(float((info.get('gain', defaultparams['gain']))))
                             release = int(info.get('release', defaultparams['release']))
                             if (release>127): release=127
@@ -1276,9 +1303,9 @@ def ActuallyLoad():
                                 mode=PLAYLIVE
                             try:
                                 if backtrack>-1:    # Backtracks are intended for start/stop via controller, so we can use unplayable notes
-                                    gv.samples[130+backtrack, velocity, voice] = Sound(os.path.join(dirname, fname), voice, 130+backtrack, velocity, mode, release, damp, dampnoise, retrigger, gain, relsample, xfadeout, xfadein, xfadevol, fractions)
+                                    gv.samples[130+backtrack, velocity, voice] = Sound(os.path.join(dirname, fname), voice, 130+backtrack, velocity, mode, velmode, release, damp, dampnoise, retrigger, gain, relsample, xfadeout, xfadein, xfadevol, fractions)
                                 if midinote>-1:
-                                    gv.samples[midinote, velocity, voice] = Sound(os.path.join(dirname, fname), voice, midinote, velocity, mode, release, damp, dampnoise, retrigger, gain, relsample, xfadeout, xfadein, xfadevol, fractions)
+                                    gv.samples[midinote, velocity, voice] = Sound(os.path.join(dirname, fname), voice, midinote, velocity, velmode, mode, release, damp, dampnoise, retrigger, gain, relsample, xfadeout, xfadein, xfadevol, fractions)
                                     fillnotes[midinote, voice] = voicefillnote
                                     if gv.voicelist[voicex][2]=="" or mode==PLAYMONO: gv.voicelist[voicex][2]=mode
                                     elif gv.voicelist[voicex][2]!=PLAYMONO and gv.voicelist[voicex][2]!=mode: gv.voicelist[voicex][2]="Mixed"
@@ -1306,7 +1333,7 @@ def ActuallyLoad():
         # We have found useful samples, so expanding to full instrument can be done
         gv.voicelist.sort(key=operator.itemgetter(0))
         #
-        # Validate the separate release samples including dampnoise definitions
+        # Validate the separate release samples including dampnoise definitions and if ok, prepare fadeout
         for m in gv.samples:
             if gv.samples[m].relsample=="S" and gv.samples[m].voice>0:
                 xd="&dampnoise" if gv.samples[m].dampnoise else ""
@@ -1316,7 +1343,8 @@ def ActuallyLoad():
                     print "Release%s of voice %d set to normal as voice %d was not found" %(xd,gv.samples[m].voice,-gv.samples[m].voice)
                 elif fillnotes[gv.samples[m].midinote, gv.samples[m].voice] == 'N' and gv.samples[m].voice>0:
                     y=False
-                    for velocity in xrange(128):
+                    velolevs=gv.samples[m].velolevs
+                    for velocity in xrange(1,velolevs+1):
                         try:
                             x=gv.samples[gv.samples[m].midinote, velocity, gv.samples[m].voice]
                             y=True
@@ -1339,12 +1367,16 @@ def ActuallyLoad():
                 setVoice(voice,1)   # make sure to start with a playable non-empty voice
             #
             # Fill missing velocity levels in found normal notes
+            velolevs=gv.voicelist[voicex][4]
             for midinote in xrange(128):
                 lastvelocity = None
-                for velocity in xrange(128):
+                last=0
+                for velocity in xrange(1,velolevs+1):
                     if (midinote, velocity, voice) in initial_keys:
                         if not lastvelocity:
-                            for v in range(velocity): gv.samples[midinote, v, voice] = gv.samples[midinote, velocity, voice]
+                            for v in range(1,velocity):
+                                gv.samples[midinote, v, voice] = gv.samples[midinote, velocity, voice]
+                        last=velocity
                         lastvelocity = gv.samples[midinote, velocity, voice]
                     else:
                         if lastvelocity:
@@ -1370,7 +1402,7 @@ def ActuallyLoad():
                         break                       # no, stop trying
                     m=lastlow if midinote <= 0.5+(nexthigh+lastlow)/2 else nexthigh
                     #print "Note %d will be generated from %d" % (midinote, m)
-                    for velocity in xrange(128):
+                    for velocity in xrange(1,velolevs+1):
                         gv.samples[midinote, velocity, voice] = gv.samples[m, velocity, voice]
                         if fillnotes[m, voice] == 'F':  # sample should be played without adjusting pitch,
                             gv.samples[midinote, velocity, voice].midinote=midinote     # so fool the audiomodule...
@@ -1381,8 +1413,10 @@ def ActuallyLoad():
                 if (midinote, 0) in fillnotes:
                     for voicex in range(len(gv.voicelist)):
                         voice=gv.voicelist[voicex][0]
-                        for velocity in xrange(128):
-                            gv.samples[midinote, velocity, voice] = gv.samples[midinote, velocity, 0]
+                        if voice>0:
+                            velolevs=gv.voicelist[voicex][4]
+                            for velocity in xrange(1,velolevs+1):
+                                gv.samples[midinote, velocity, voice] = gv.samples[midinote, 1, 0]
         #
         # Inventorize the found backtracks
         for track in xrange(128):
