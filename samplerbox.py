@@ -492,7 +492,26 @@ class PlayingSound:
 
 class Sound:
     def __init__(self, filename, voice, midinote, velocity, velmode, mode, release, damp, dampnoise, retrigger, gain, relsample, xfadeout, xfadein, xfadevol, fractions):
-        wf = waveread(filename)
+        read = False
+        for m in gv.samples:
+            if gv.samples[m].fname==filename:
+                read=True
+                self.loops=gv.samples[m].loops
+                self.relmark=gv.samples[m].relmark
+                self.eof=gv.samples[m].eof
+                self.sampwidth=gv.samples[m].sampwidth
+                self.nchannels=gv.samples[m].nchannels
+                self.data=gv.samples[m].data
+        if not read:
+            wf = waveread(filename)
+            self.loops = wf.getloops()
+            self.relmark = wf.getmarkers()
+            self.eof = wf.getnframes()
+            self.sampwidth = wf.getsampwidth()
+            self.nchannels = wf.getnchannels()
+            self.data = self.frames2array(wf.readframes(self.eof), self.sampwidth, self.nchannels)
+            wf.close()            
+
         self.fname = filename
         self.voice = voice
         self.midinote = midinote
@@ -509,20 +528,17 @@ class Sound:
         self.xfadeout = xfadeout
         self.xfadevol = xfadevol
         self.fractions = fractions
-        self.eof = wf.getnframes()
         self.loop = GetLoopmode(mode)       # if no loop requested it's useless to check the wav's capability
         if voice<0:
             self.loop=-1                    # release samples (belong to relsample="S") don't loop
         else:
             self.loop = GetLoopmode(mode)   # if no loop requested it's useless to check the wav's capability
-        if self.loop > 0 and wf.getloops():
-            self.loop = wf.getloops()[0][0] # Yes! the wav can loop
-            endloop = wf.getloops()[0][1]
+        if self.loop > 0 and self.loops:
+            self.loop = self.loops[0][0]         # Yes! the wav can loop
+            endloop = self.loops[0][1]
             self.nframes = endloop + 2
-            self.relmark = wf.getmarkers()
             if self.relmark < endloop:
                 self.relmark = self.nframes # a potential release marker before loop-end cannot be right
-                self.eof = self.nframes     # so we just stick to the loop to savegv.playingsounds processing and memory
                 if relsample == "E":        # if embedded sample was configured, notify this is impossible
                     print "Release of %s set to normal as release marker was not present or invalid" %(filename)
             else:
@@ -534,12 +550,7 @@ class Sound:
                 print "Release of %s set to normal as embedded samples require loop" %(filename)
         if self.loop == -1:
             self.relmark = self.eof         # no extra release processing
-            self.nframes = self.eof         # and use full length (with default samplerbox release processing
-
-        #print "%s %s loopmode=%d stopmode=%d gain=%.2f" % (filename, mode, self.loop, self.stopmode, self.gain)
-        self.data = self.frames2array(wf.readframes(self.eof), wf.getsampwidth(), wf.getnchannels())
-
-        wf.close()            
+            self.nframes = self.eof         # and use full length (with default samplerbox release processing)
 
     def play(self, midinote, note, velocity, startparm, retune):
         if self.velsample: velocity=127
@@ -878,7 +889,7 @@ def MidiCallback(src, message, time_stamp):
                                 gv.playingnotes[playnote] = []
                                 gv.triggernotes[playnote] = 128  # housekeeping
                                 # In this mode we ignore the relsamples. I see no use and it makes previous code more complex
-                if True: #try:
+                try:
                     gv.last_midinote=midinote      # save original midinote for the webgui
                     if keyboardarea:
                         gv.last_musicnote=midinote-12*int(midinote/12) # do a "remainder midinote/12" without having to import the full math module
@@ -925,7 +936,7 @@ def MidiCallback(src, message, time_stamp):
                                         DampNoise(m)
                                     gv.triggernotes[playnote]=128
                                     gv.playingnotes[playnote]=[]
-                else: #except:
+                except:
                     print 'Unassigned/unfilled note or other exception in note %d' % (midinote)
                     pass
 
@@ -1274,9 +1285,14 @@ def ActuallyLoad():
                                 velmode=PREVELMODE
                             velolevs=1 if voice==0 else int(info.get('velolevs', defaultparams['velolevs']))
                             if velolevs in VELOSTEPS:
-                                if velolevs>gv.voicelist[voicex][4]: gv.voicelist[voicex][4]=velolevs
+                                if velolevs!=127:
+                                    if velolevs>gv.voicelist[voicex][4] or gv.voicelist[voicex][4]==127:
+                                        gv.voicelist[voicex][4]=velolevs
+                                    elif velolevs<gv.voicelist[voicex][4]:
+                                        print "%s: velolevs %d smaller than earlier defined %d, ignored" %(fname,velolevs,gv.voicelist[voicex][4])
                             else:
-                                print "%s: velolevs %d, should be one of %s, set to %d" %(fname, velolevs, VELOSTEPS,PREVELOLEVS,gv.voicelist[voicex][4])
+                                print "%s: velolevs %d, should be one of %s, set to %d" %(fname, velolevs, VELOSTEPS,gv.voicelist[voicex][4])
+                            velolevs=gv.voicelist[voicex][4]
                             velocity = int(info.get('velocity', defaultparams['velocity']))
                             if velocity==-1: velocity=velolevs
                             if velocity>velolevs:
