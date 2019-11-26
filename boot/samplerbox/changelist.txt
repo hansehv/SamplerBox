@@ -11,11 +11,12 @@ Oct-Nov 2019:
   - Added separate release samples (relsample=S)
   - Added dampnoise feature (useful for dampers, rattling snares, funny synth effects etcetara)
   - Added (%)%fillnotes=F : This fills missing notes with "same pitch" notes.
-    So you can define damper noise that won't change pitch when generated
+    So you can define separate damper noise that won't change pitch when generated
   - Bugfixed arpeggiator and added release sample processing to it
   - Reduced overhead in velocity table and related processing
     As a result, granularity of velocity samples can be defined per sample
   - Velocity mode (sample or accurate) can be specified per sample
+  - Wav's are read once if reused
   - Various cleanups and small fixes
 Aug-Sept 2019:
   - Adapted sustain pedal for "half-damper" compatibility.
