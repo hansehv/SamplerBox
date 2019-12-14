@@ -25,7 +25,6 @@ sequence=[]
 currnote=-1
 playnote=-1
 velocity=0
-velmixer=0
 steps=1         # steps in the cycle = chordnotes
 cycletick=0     # position in the cycle
 steptick=0      # position in the cyclestep
@@ -38,7 +37,7 @@ def stepguard(xn=noteticks,xs=stepticks):
 stepguard()
 
 def process():
-    global playnote, velmixer, sequence, steps, cycletick, steptick, stepticks, noteticks, cycleticks
+    global playnote, velocity, sequence, steps, cycletick, steptick, stepticks, noteticks, cycleticks
     if currnote>-1:     # are we playing?
         if gv.ActuallyLoading:              # playing while loading new data is impossible
             return(rewind())                # so it ends here
@@ -64,16 +63,16 @@ def process():
             playnote=currnote+sequence[int(cycletick//xs)]
             if playnote>(127-gv.stop127) and playnote<gv.stop127:   # stay within keyboard range
                 if gv.CHOrus:
-                    gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(playnote, playnote, velocity, velmixer*gv.globalgain*gv.CHOgain, 0, 0))
-                    gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(playnote, playnote, velocity, velmixer*gv.globalgain*gv.CHOgain, 2, 0-(gv.CHOdepth/2+1))) #5
-                    gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(playnote, playnote, velocity, velmixer*gv.globalgain*gv.CHOgain, 5, 0+gv.CHOdepth)) #8
+                    gv.PlaySample(playnote,playnote,gv.currvoice,velocity*gv.CHOgain,0,0)
+                    gv.PlaySample(playnote,playnote,gv.currvoice,velocity*gv.CHOgain,2,-(gv.CHOdepth/2+1))
+                    gv.PlaySample(playnote,playnote,gv.currvoice,velocity*gv.CHOgain,5,gv.CHOdepth)
                 else:
-                    gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, gv.currvoice].play(playnote, playnote, velocity, velmixer*gv.globalgain, 0, 0))
+                    gv.PlaySample(playnote,playnote,gv.currvoice,velocity,0,0)
             else:
                 playnote=-1
             if fadecycles<100 and (not pressed or not loop):
-                velmixer-=fadestep
-                if velmixer<=1:
+                velocity-=fadestep
+                if velocity<=1:
                     return(rewind())
 
 def power(onoff):
@@ -104,15 +103,14 @@ def togglepower(CCval, *z):
 gv.setMC(gv.ARP,togglepower)
 
 def noteoff():
-    global playnote,velmixer,velocity
+    global playnote,velocity
     if playnote>-1:
         if playnote in gv.playingnotes:
             for m in gv.playingnotes[playnote]:
-                #m.fadeout(not(noteticks==stepticks)) # damp when notes are consecutive
                 m.fadeout(noteticks<stepticks)  # damp when notes are consecutive
                 gv.playingnotes[playnote]=[]
                 if noteticks<stepticks:         # process release sample if notes are not consecutive
-                    gv.PlayRelSample(m.playingrelsample(),playnote,gv.currvoice,m.playedvel,m.vel,m.retune)
+                    gv.PlayRelSample(m.playingrelsample(),gv.currvoice,playnote,velocity,m.playingretune())
         playnote=-1
 
 def rewind():
@@ -121,8 +119,8 @@ def rewind():
     noteoff()       # so we're sure to stop the playing note :-)
     cycletick=-1     # not cycling
 
-def note_onoff(messagetype, midinote, played_velocity, velocity_mode, VELSAMPLE):
-    global pressed, noteon, sequence, currnote, velmixer, velocity, steps, cycleticks, stepticks
+def note_onoff(messagetype, midinote, played_velocity):
+    global pressed, noteon, sequence, currnote, velocity, steps, cycleticks, stepticks
     if loop:
         if messagetype==8:
             pressed=False   # keep track of keypress
@@ -141,12 +139,7 @@ def note_onoff(messagetype, midinote, played_velocity, velocity_mode, VELSAMPLE)
         rewind()            # stop anything playing and initialize
         pressed=True        # keep track of keypress
         noteon=True
-        currnote=midinote
         velocity=played_velocity
-        if velocity_mode==VELSAMPLE: 
-            velmixer=127
-        else:
-            velmixer=velocity
         gv.last_musicnote=midinote-12*int(currnote/12) # do a "remainder midinote/12" without having to import the full math module
         if gv.currscale>0:               # scales require a chords mix
             sequence=gv.chordnote[gv.scalechord[gv.currscale][gv.last_musicnote]]
@@ -157,6 +150,7 @@ def note_onoff(messagetype, midinote, played_velocity, velocity_mode, VELSAMPLE)
         steps=len(sequence)
         cycleticks=steps*stepticks
         fadeout(1.27*fadecycles)
+        currnote=midinote       # And activate!
 
 def tempo(CCval,*z):    # time between note-on's
     global noteticks
@@ -219,12 +213,12 @@ gv.setMC(gv.ARPRNDLIN,rndlin)
 fadecycles=100
 fadestep=0.0
 def fadeout(CCval,*z):  # number of cycles to fadeout (default no fadeout)
-    global fadestep, fadecycles
+    global fadestep, fadecycles, velocity
     x=((CCval)*100)/127.0
     fadecycles=x
     if fadecycles<100:
         if fadecycles<=0: fadecycles=0.5
-        fadestep=1.0*velmixer/fadecycles
+        fadestep=1.0*velocity/fadecycles
     else:
         fadestep=0.0
 gv.setMC(gv.ARPFADE,fadeout)

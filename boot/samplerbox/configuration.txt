@@ -40,7 +40,8 @@ BOXSAMPLE_MODE = Keyb	        ; we need a default: original samplerbox
 #		Loop	- recognize loop markers, note-off by 127-note ("just play the loop with option to stop")
 #		Loo2	- recognize loop markers, note-off by same note ("just play the loop with option to stop")
 #		Mono	- monophonic (with chords), loop like Loo2, but note/chord stops when next note is played.
-BOXVELOCITY_MODE = Sample       ; we need a default: original samplerbox
+BOXVELOCITY_LEVELS = 1          ; Granularity of velocity samples/levels (127 is original samplerbox)
+BOXVELOCITY_MODE = Accurate     ; Accurate: calculated in 127 steps, Sample: determinde by wavs/level (original samplerbox)
 #		Sample	- velocity equals sampled value, requires multiple samples to get differentation
 #		Accurate- velocity as played, allows for multiple (normalized!) samples for timbre
 BOXSTOP127 = 109                ; Value of "Right side", "Left side" has some notes slack
@@ -56,7 +57,7 @@ BOXRETRIGGER = R                ; action on retriggered still playing notes (occ
 #               R:      - Noteoff and fadeout according release value
 #               D:      - Noteoff and fadeout according damp value
 #               Y:      - Yes, retrigger is allowed, keep the playing sound
-BOXRELSAMPLE = N                ; release samples: N=none, E=Embedded, S=Separate
+BOXRELSAMPLE = N                ; release samples: N=none, E=Embedded, S=Separate(not implemented)
 BOXXFADEOUT = 10                ; crossfade glues the sample to the release sample
 BOXXFADEIN = 1                  ; crossfade glues the sample to the release sample
 BOXXFADEVOL = 1.0               ; crossfade glues the sample to the release sample
