@@ -17,6 +17,10 @@ FIXED="Fixed"
 VOICES="Voices"
 NOTEMAPS="Notemaps"
 BACKTRACKS="BackTracks"
+SMFS="SMFs"
+SMFTEMPO="SMFtempo"
+SMFLOOP="SMFloop"
+SMFSTOP="SMFstop"
 CHORDS="Chords"
 SCALES="Scales"
 PITCHWHEEL="PitchWheel"
@@ -97,6 +101,9 @@ UA="UA"
 # Internal vars
 ConfigErr=False
 LEDblink=False
+USE_ALSA_MIXER=False
+BTNOTES=130         # Backtracknotes start
+MTCHNOTES=1024      # Multitimbral channel notes start - so leaves <1024 for main keyboard notes, next available 17408 (theoretically)
 buttfunc=0
 button_disp=[""]
 ActuallyLoading=False
@@ -120,12 +127,7 @@ last_musicnote=-1
 last_midinote=-1
 midi_mute=False
 globalgain=1        # the input volume correction, change per set in definition.txt
-stop127=0
-sample_mode=""
 PITCHBEND=0
-pitchnotes=0
-pitchneutral=0
-pitchdiv=0
 chordname=[]
 chordnote=[]
 scalesymbol=[]
@@ -237,5 +239,9 @@ MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch)
 [SCALES,2,safeguard],
 [VOICES,2,safeguard],
 [BACKTRACKS,2,safeguard],
+[SMFS,2,safeguard],
+[SMFLOOP,1,safeguard],
+[SMFSTOP,1,safeguard],
+[SMFTEMPO,0,safeguard],
 [NOTEMAPS,2,safeguard]
 ]

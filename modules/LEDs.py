@@ -35,6 +35,7 @@ def blink():
     blinkstage+=1
     if blinkstage>blinkstages:
         blinkstage=0
+gv.LEDsblink=blink
 
 def setblink(short):
     global blinkstage,blinkstages,blinkstage1
