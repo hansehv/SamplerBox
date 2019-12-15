@@ -18,7 +18,7 @@
 ##  Miscellaneous generic procs (too small to split off), published via gv
 ##########################################################################
 
-import wave,sounddevice,rtmidi2
+import wave,rtmidi2
 from chunk import Chunk
 import time,psutil,numpy,struct
 import sys,os,re,operator,threading   
@@ -37,6 +37,7 @@ msleep = lambda x: time.sleep(x/1000.0)
 def GPIOcleanup():
     if USE_GPIO:
         import RPi.GPIO as GPIO
+        GPIO.setmode(GPIO.BCM)
         GPIO.cleanup()
 def getindex(key, table, onecol=False):
     for i in range(len(table)):
@@ -140,20 +141,6 @@ def setNotemap(x, *z):
         gv.currnotemap=""
         gv.notemapping=[]
     display("")
-    
-gv.playingbacktracks=0
-def playBackTrack(x,*z):
-    playnote=int(x)+BTNOTES
-    if playnote in gv.playingnotes and gv.playingnotes[playnote]!=[]: # is the track playing?
-        gv.playingbacktracks-=1
-        for m in gv.playingnotes[playnote]:
-            m.playing2end()         # let it finish
-    else:
-        try:
-            gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, 127, 0].play(playnote, playnote, 127, 127*gv.globalgain, 0, 0))
-            gv.playingbacktracks+=1
-        except:
-            print 'Unassigned/unfilled track or other exception for backtrack %s->%d' % (x,playnote)
 
 gv.GPIOcleanup=GPIOcleanup              # and announce the procs to modules
 gv.getindex=getindex
@@ -165,7 +152,6 @@ gv.setMC(gv.CHORDS,setChord)
 gv.setMC(gv.SCALES,setScale)
 gv.setMC(gv.VOICES,setVoice)
 gv.setMC(gv.NOTEMAPS,setNotemap)
-gv.setMC(gv.BACKTRACKS,playBackTrack)
 
 ########  LITERALS used in the main module only ########
 PLAYLIVE = "Keyb"                       # reacts on "keyboard" interaction
@@ -189,13 +175,10 @@ KEYNAMES_DEF = "keynotes.csv"
 ##########  read LOCAL CONFIG ==> /boot/samplerbox/configuration.txt
 gv.cp=ConfigParser.ConfigParser()
 gv.cp.read(CONFIG_LOC + "configuration.txt")
-AUDIO_DEVICE_ID = gv.cp.getint(gv.cfg,"AUDIO_DEVICE_ID".lower())
 USE_SERIALPORT_MIDI = gv.cp.getboolean(gv.cfg,"USE_SERIALPORT_MIDI".lower())
 USE_HD44780_16x2_LCD = gv.cp.getboolean(gv.cfg,"USE_HD44780_16x2_LCD".lower())
 USE_OLED = gv.cp.getboolean(gv.cfg,"USE_OLED".lower())
 USE_I2C_7SEGMENTDISPLAY = gv.cp.getboolean(gv.cfg,"USE_I2C_7SEGMENTDISPLAY".lower())
-gv.USE_ALSA_MIXER = gv.cp.getboolean(gv.cfg,"USE_ALSA_MIXER".lower())
-USE_48kHz = gv.cp.getboolean(gv.cfg,"USE_48kHz".lower())
 USE_BUTTONS = gv.cp.getboolean(gv.cfg,"USE_BUTTONS".lower())
 USE_LEDS = gv.cp.getboolean(gv.cfg,"USE_LEDS".lower())
 USE_HTTP_GUI = gv.cp.getboolean(gv.cfg,"USE_HTTP_GUI".lower())
@@ -204,7 +187,6 @@ DRUMPAD_CHANNEL = gv.cp.getint(gv.cfg,"DRUMPAD_CHANNEL".lower())
 gv.NOTES_CC = gv.cp.getint(gv.cfg,"NOTES_CC".lower())
 gv.PRESET = gv.cp.getint(gv.cfg,"PRESET".lower())
 gv.PRESETBASE = gv.cp.getint(gv.cfg,"PRESETBASE".lower())
-MAX_POLYPHONY = gv.cp.getint(gv.cfg,"MAX_POLYPHONY".lower())
 MAX_MEMLOAD = gv.cp.getint(gv.cfg,"MAX_MEMLOAD".lower())
 BOXSAMPLE_MODE = gv.cp.get(gv.cfg,"BOXSAMPLE_MODE".lower())
 BOXVELMODE = gv.cp.get(gv.cfg,"BOXVELOCITY_MODE".lower())
@@ -218,9 +200,6 @@ BOXRELSAMPLE= gv.cp.get(gv.cfg,"BOXRELSAMPLE".lower())
 BOXXFADEOUT = gv.cp.getint(gv.cfg,"BOXXFADEOUT".lower())
 BOXXFADEIN = gv.cp.getint(gv.cfg,"BOXXFADEIN".lower())
 BOXXFADEVOL = gv.cp.getfloat(gv.cfg,"BOXXFADEVOL".lower())
-PITCHRANGE = gv.cp.getint(gv.cfg,"PITCHRANGE".lower())
-PITCHBITS = gv.cp.getint(gv.cfg,"PITCHBITS".lower())
-gv.volume = gv.cp.getint(gv.cfg,"volume".lower())
 gv.volumeCC = gv.cp.getfloat(gv.cfg,"volumeCC".lower())
 
 ########## read CONFIGURABLE TABLES from config dir
@@ -238,29 +217,14 @@ gv.CCmap = list(gv.CCmapBox)
 ########## Initialize other globals, don't change
 
 USE_GPIO=False
-PITCHCORR = 0       # This is the 44100 to 48000 correction / hack
-PITCHRANGE *= 2     # actually it is 12 up and 12 down
-
 gv.samplesdir = SAMPLES_INBOX
 gv.stop127 = BOXSTOP127
 gv.sample_mode = BOXSAMPLE_MODE
-gv.pitchnotes = PITCHRANGE
-PITCHSTEPS = 2**PITCHBITS
-gv.pitchneutral = PITCHSTEPS/2
-gv.pitchdiv = 2**(14-PITCHBITS)
-BTNOTES = 130
-
-if AUDIO_DEVICE_ID > 0:
-    if gv.rootprefix=="":
-        gv.MIXER_CARD_ID = AUDIO_DEVICE_ID-1   # The jack/HDMI of PI use 1 alsa card index
-    else:
-        gv.MIXER_CARD_ID = 0                   # This may vary with your HW.....
-else:
-    gv.MIXER_CARD_ID = 0
 
 #########################################
-# Display routine
+# Setup display routine  (if any..)
 #########################################
+display=gv.NoProc       # set display to dummy
 try:
 
     if USE_HD44780_16x2_LCD:
@@ -296,16 +260,20 @@ try:
     else:
         def display(s2,s7=""):
             pass    
-    gv.display=display                          # and announce the procs to modules
 
 except:
     print "Error activating requested display routine"
     GPIOcleanup()
-    exit(1)
+gv.display=display      # announce resulting proc to modules
 
 ##################################################################################
-# Effects/Filters
+# Audio, Effects/Filters
 ##################################################################################
+
+# Sounddevice setup (detect/determine/check soundcard etc) & callback routine (the actual sound generator)
+# Alsamixer setup for volume control (optional)
+#
+import audio
 
 # Arpeggiator (play chordnotes sequentially, ie open chords)
 # Process replaces the note-on/off logic, so rather cheap
@@ -315,9 +283,7 @@ import arp
 # Reverb, Moogladder, Wah (envelope, lfo and pedal) and Delay (echo and flanger)
 # Based on changing the audio output which requires heavy processing
 #
-import ctypes
 import Cpp
-c_float_p = ctypes.POINTER(ctypes.c_float)
 
 # Vibrato, tremolo, pan and rotate (poor man's single speaker leslie)
 # Being input based, these effects are cheap: less than 1% CPU on PI3
@@ -585,7 +551,7 @@ class Sound:
                     ps.fadeout(False)   # fadeout the mutegroup sound(s) and cleanup admin where possible
                     try: gv.playingnotes[ps.playednote]=[]
                     except: pass
-                    if ps.playednote>=BTNOTES and ps.playednote<MTCHNOTES:
+                    if ps.playednote>=gv.BTNOTES and ps.playednote<gv.MTCHNOTES:
                         gv.playingbacktracks-=1
                     try:
                         gv.triggernotes[ps.note]=128
@@ -610,70 +576,6 @@ class Sound:
         if numchan == 1:        # make a left and right track from a mone sample
             npdata = numpy.repeat(npdata, 2)
         return npdata
-
-#########################################
-##  AUDIO stuff
-##  CALLBACK routine
-##  OPEN AUDIO DEVICE   org frames_per_buffer = 512
-##  Setup the sound card's volume control
-#########################################
-
-FADEOUTLENGTH = 640*1000  # a large table gives reasonable results (640 up to 2 sec)
-FADEOUT = numpy.linspace(1., 0., FADEOUTLENGTH)     # by default, float64
-FADEOUT = numpy.power(FADEOUT, 6)
-FADEOUT = numpy.append(FADEOUT, numpy.zeros(FADEOUTLENGTH, numpy.float32)).astype(numpy.float32)
-SPEEDRANGE = 48     # 2*48=96 is larger than 88, so a (middle) C4-A4 can facilitate largest keyboard
-SPEED = numpy.power(2, numpy.arange(-1.0*SPEEDRANGE*PITCHSTEPS, 1.0*SPEEDRANGE*PITCHSTEPS)/(12*PITCHSTEPS)).astype(numpy.float32)
-
-def AudioCallback(outdata, frame_count, time_info, status):
-    p=len(gv.playingsounds)-MAX_POLYPHONY
-    if p>0:
-        print "MAX_POLYPHONY %d exceeded with %d notes" %(MAX_POLYPHONY,p)
-        for i in xrange(p+gv.playingbacktracks-1):
-            if gv.playingsounds[i].playingstopmode()!=3:    # let the backtracks be
-                del gv.playingsounds[i]     # get it out of the system
-    # Handle arpeggiator before soundgen to reduce timing issues at chord/sequence changes
-    if arp.active: arp.process()
-    # audio-module:
-    rmlist = []
-    b = samplerbox_audio.mixaudiobuffers(rmlist, frame_count, FADEOUT, FADEOUTLENGTH, SPEED, SPEEDRANGE, gv.PITCHBEND+gv.VIBRvalue+PITCHCORR, PITCHSTEPS)
-    for e in rmlist:
-        try:
-            if e.sound.stopmode==3 or e.sound.stopmode==-1:     # keep track of backtrack/once status
-                gv.playingnotes[e.note]=[]
-            gv.playingsounds.remove(e)
-        except: pass
-    # volume control and audio effects/filters
-    LFO.process[gv.LFOtype]()
-    b *= (10**(gv.TREMvalue*gv.volumeCC)-1)/9     # linear doesn't sound natural, this may be to complicated too though...
-    if gv.LFtype>0: Cpp.c_filters.moog(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
-    if gv.AWtype>0: Cpp.c_filters.autowah(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
-    if gv.DLYtype>0: Cpp.c_filters.delay(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
-    if gv.FVtype>0: Cpp.c_filters.reverb(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
-    outdata[:] = b.reshape(outdata.shape)
-    # Use this module as timer for ledblinks
-    if gv.LEDblink: LEDs.blink()
-
-print 'Available audio devices'
-print(sounddevice.query_devices())
-try:
-    i=44100
-    if USE_48kHz:
-        if PITCHBITS < 7:
-            print "==> Can't tune to 48kHz, please set PITCHBITS to 7 or higher <=="
-        else:
-            PITCHCORR = -147*(2**(PITCHBITS-7))
-        i=48000
-    sd = sounddevice.OutputStream(device=AUDIO_DEVICE_ID, blocksize=512, samplerate=i, channels=2, dtype='int16', callback=AudioCallback)
-    sd.start()
-    print 'Opened audio device #%i on %iHz' % (AUDIO_DEVICE_ID, i)
-    Cpp.c_filters.setSampleRate(i)   # align the filters
-except:
-    display("Invalid audiodev")
-    print 'Invalid audio device #%i' % AUDIO_DEVICE_ID
-    time.sleep(0.5)
-    GPIOcleanup()
-    exit(1)
 
 #########################################
 ##  MIDI
@@ -806,6 +708,19 @@ def PlaySample(midinote,playnote,voice,velocity,startparm,retune,play_as_is=Fals
         gv.samples[midinote,velidx,voice].play(midinote,playnote,velocity,startparm,retune)
     else:
         gv.playingnotes.setdefault(playnote,[]).append(gv.samples[midinote,velidx,voice].play(midinote,playnote,velocity,startparm,retune))
+gv.playingbacktracks=0
+def playBackTrack(x,*z):
+    playnote=int(x)+gv.BTNOTES
+    if playnote in gv.playingnotes and gv.playingnotes[playnote]!=[]: # is the track playing?
+        gv.playingbacktracks-=1
+        for m in gv.playingnotes[playnote]:
+            m.playing2end()         # let it finish
+    else:
+        try:
+            PlaySample(playnote,playnote,0,127,0,0)
+            gv.playingbacktracks+=1
+        except:
+            print 'Unassigned/unfilled track or other exception for backtrack %s->%d' % (x,playnote)
 
 gv.setMC(gv.PANIC,AllNotesOff)
 gv.setMC(gv.EFFECTSOFF,EffectsOff)
@@ -822,6 +737,7 @@ gv.setMC(gv.DAMPNEW,DampNew)
 gv.setMC(gv.DAMPLAST,DampLast)
 gv.PlayRelSample=PlayRelSample
 gv.PlaySample=PlaySample
+gv.setMC(gv.BACKTRACKS,playBackTrack)
 
 def MidiCallback(src, message, time_stamp):
     keyboardarea=True
@@ -898,7 +814,7 @@ def MidiCallback(src, message, time_stamp):
                                             messagetype = 8
 
             if messagetype == 9:    # Note on 
-                if True:#try:
+                try:
                     gv.last_midinote=midinote      # save original midinote for the webgui
                     if keyboardarea:
                         gv.last_musicnote=midinote-12*int(midinote/12) # do a "remainder midinote/12" without having to import the full math module
@@ -940,7 +856,7 @@ def MidiCallback(src, message, time_stamp):
                                         DampNoise(m)
                                     gv.triggernotes[playnote]=128
                                     gv.playingnotes[playnote]=[]
-                else:#except:
+                except:
                     print 'Unassigned/unfilled note or other exception in note %d' % (midinote)
                     return
 
@@ -1038,7 +954,7 @@ def ActuallyLoad():
     gv.sample_mode=BOXSAMPLE_MODE   # fallback to the samplerbox default
     PREVELMODE=BOXVELMODE           # fallback to the samplerbox default
     gv.stop127=BOXSTOP127           # fallback to the samplerbox default
-    gv.pitchnotes=PITCHRANGE        # fallback to the samplerbox default
+    gv.pitchnotes=gv.PITCHRANGE     # fallback to the samplerbox default
     PREVELOLEVS=BOXVELOLEVS         # fallback to the samplerbox default
     PRERELEASE=BOXRELEASE           # fallback to the samplerbox default
     PREDAMP=BOXDAMP                 # fallback to the samplerbox default
@@ -1323,7 +1239,7 @@ def ActuallyLoad():
                                 mode=PLAYLIVE
                             try:
                                 if backtrack>-1:    # Backtracks are intended for start/stop via controller, so we can use unplayable notes
-                                    gv.samples[BTNOTES+backtrack, velocity, voice] = Sound(os.path.join(dirname, fname), voice, BTNOTES+backtrack, velocity, mode, velmode, release, damp, dampnoise, retrigger, gain, mutegroup, relsample, xfadeout, xfadein, xfadevol, fractions)
+                                    gv.samples[gv.BTNOTES+backtrack, velocity, voice] = Sound(os.path.join(dirname, fname), voice, gv.BTNOTES+backtrack, velocity, velmode, mode, release, damp, dampnoise, retrigger, gain, mutegroup, relsample, xfadeout, xfadein, xfadevol, fractions)
                                 if midinote>-1:
                                     gv.samples[midinote, velocity, voice] = Sound(os.path.join(dirname, fname), voice, midinote, velocity, velmode, mode, release, damp, dampnoise, retrigger, gain, mutegroup, relsample, xfadeout, xfadein, xfadevol, fractions)
                                     fillnotes[midinote, voice] = fillnote
@@ -1343,10 +1259,10 @@ def ActuallyLoad():
             file = os.path.join(dirname, "%d.wav" % midinote)
             #print "Trying " + file
             if os.path.isfile(file):
-                gv.samples[midinote, 127, 1] = Sound(file, 1, midinote, 127, gv.sample_mode, PRERELEASE, PREDAMP, PRERETRIGGER, gv.globalgain, PREMUTEGROUP, BOXRELSAMPLE, PREXFADEOUT, PREXFADEIN, PREXFADEVOL, PREFRACTIONS)
-                fillnotes[midinote, 1] = fillnote
+                gv.samples[midinote,1,1] = Sound(file, 1, midinote, 127, VELACCURATE, gv.sample_mode, PRERELEASE, PREDAMP, PREDAMPNOISE, PRERETRIGGER, gv.globalgain, PREMUTEGROUP, BOXRELSAMPLE, PREXFADEOUT, PREXFADEIN, PREXFADEVOL, PREFRACTIONS)
+                fillnotes[midinote,1] = PREFILLNOTE
         voicenames=[[1,"Default"]]
-        gv.voicelist=[[1,'','Keyb','']]
+        gv.voicelist=[[1,'','Keyb','',1]]
 
     initial_keys = set(gv.samples.keys())
     if len(initial_keys) > 0:
@@ -1465,18 +1381,12 @@ LoadSamples()
 
 #########################################
 ##      O P T I O N A L S        
-##  - DAC volume control via alsamixer
 ##  - BUTTONS via GPIO
 ##  - WebGUI thread
 ##  - MIDI IN via SERIAL PORT
 #########################################
 
 try:
-
-    gv.getvolume=gv.NoProc
-    gv.setvolume=gv.NoProc
-    if gv.USE_ALSA_MIXER:
-        import DACvolume
 
     if USE_BUTTONS:
         USE_GPIO=True
@@ -1489,7 +1399,7 @@ try:
         import serialMIDI
 
 except:
-    print "Error loading optionals, can be alsa-mixer, buttons, http-gui or serial-midi"
+    print "Error loading optionals (either buttons, http-gui or serial-midi)"
     time.sleep(0.5)
     GPIOcleanup()
     exit(1)
