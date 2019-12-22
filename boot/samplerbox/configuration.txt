@@ -17,15 +17,15 @@
 
 ######  General values ######
 #
-AUDIO_DEVICE_ID = 2             ; Examples: 0 for PI-builtin or HiFiBerry, 2 for USB soundcard
+AUDIO_DEVICE_ID = -1            ; Specify ID of your device to override autodetection..
+AUDIO_DEVICE_NAME = Detect	; ..or specify it's name. SB uses the first match of ID or NAME.
+MIXER_CONTROL = Detect          ; Fill this to override autodetection, specify None to disable alsa volume control
+USE_48kHz = False               ; Output 48kHz iso 44100Hz. Try to avoid this...
 USE_SERIALPORT_MIDI = False     ; Set to True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
-USE_HD44780_16x2_LCD = True     ; Set to True to use a HD44780 based 16x2 LCD
+USE_HD44780_16x2_LCD = False     ; Set to True to use a HD44780 based 16x2 LCD
 USE_OLED = False                ; Set to True to use an OLED display !!! Configure below
 USE_I2C_7SEGMENTDISPLAY = False ; Set to True to use a 7-segment display via I2C
-USE_ALSA_MIXER = True           ; Set to True to use to use the alsa mixer (via pyalsaaudio)
-MIXER_CONTROL = PCM,Speaker,Headphone,Digital ; Mixercontrols I experienced, add your soundcard's specific....
-USE_48kHz = False               ; Output 48kHz iso 44100Hz. Try to avoid this...
-USE_BUTTONS = True              ; Set to True to use momentary buttons connected to RaspberryPi's GPIO pins
+USE_BUTTONS = False              ; Set to True to use momentary buttons connected to RaspberryPi's GPIO pins
 USE_LEDS = False                ; Set to True to use LED's connected to RaspberryPi's GPIO pins
 USE_HTTP_GUI = True             ; should webgui server be started?
 MAX_POLYPHONY = 80              ; This can be set higher, but 80 is a safe value
@@ -39,7 +39,6 @@ BOXSAMPLE_MODE = Keyb	        ; we need a default: original samplerbox
 #		Onc2	- ignores loop markers with note-off by same note ("just play the sample with option to stop")
 #		Loop	- recognize loop markers, note-off by 127-note ("just play the loop with option to stop")
 #		Loo2	- recognize loop markers, note-off by same note ("just play the loop with option to stop")
-#		Mono	- monophonic (with chords), loop like Loo2, but note/chord stops when next note is played.
 BOXVELOCITY_LEVELS = 1          ; Granularity of velocity samples/levels (127 is original samplerbox)
 BOXVELOCITY_MODE = Accurate     ; Accurate: calculated in 127 steps, Sample: determinde by wavs/level (original samplerbox)
 #		Sample	- velocity equals sampled value, requires multiple samples to get differentation
@@ -57,7 +56,8 @@ BOXRETRIGGER = R                ; action on retriggered still playing notes (occ
 #               R:      - Noteoff and fadeout according release value
 #               D:      - Noteoff and fadeout according damp value
 #               Y:      - Yes, retrigger is allowed, keep the playing sound
-BOXRELSAMPLE = N                ; release samples: N=none, E=Embedded, S=Separate(not implemented)
+BOXRELSAMPLE = N                ; release samples: N=none, E=Embedded, S=Separate
+RELSAMPLE = N                ; release samples: N=none, E=Embedded, S=Separate(not implemented)
 BOXXFADEOUT = 10                ; crossfade glues the sample to the release sample
 BOXXFADEIN = 1                  ; crossfade glues the sample to the release sample
 BOXXFADEVOL = 1.0               ; crossfade glues the sample to the release sample

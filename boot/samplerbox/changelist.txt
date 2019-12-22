@@ -8,7 +8,7 @@ Oct-Dec 2019:
     Configuration.txt parameter RELSAMPLE changed to BOXRELSAMPLE
   - Added separate release samples (relsample=S)
   - Added dampnoise feature (useful for dampers, rattling snares, funny synth effects etcetara)
-  - Added (%)%fillnotes=F : This fills missing notes with "same pitch" notes.
+  - Added (%)%fillnote=F : This fills missing notes with "same pitch" notes.
     So you can define separate damper noise that won't change pitch when generated
   - Bugfixed arpeggiator and added release sample processing to it
   - Reduced overhead in velocity table and related processing
@@ -18,7 +18,10 @@ Oct-Dec 2019:
   - Added mutegroups
   - Removed %mode=mono. Code was clumsy and became redundant: %mode=loo2,%mutegroup=x achieves exactly the same
   - Added relsamples to sustain
-  - Various cleanups and small fixes
+  - Autodetect audio device & alsamixer, moved all related coding to separate module
+  - Changed DAC volume control changed to logarithmic iso linear making it more human
+    Sideffect: the set value slightly differs from actual value due to roundings
+  - Various cleanups and fixes
 Aug-Sept 2019:
   - Adapted sustain pedal for "half-damper" compatibility.
     ==> This makes this a continuous controller acting as switch !!

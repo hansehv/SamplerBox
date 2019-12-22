@@ -140,7 +140,7 @@ def note_onoff(messagetype, midinote, played_velocity):
         pressed=True        # keep track of keypress
         noteon=True
         velocity=played_velocity
-        gv.last_musicnote=midinote-12*int(currnote/12) # do a "remainder midinote/12" without having to import the full math module
+        gv.last_musicnote=midinote-12*int(midinote/12) # do a "remainder midinote/12" without having to import the full math module
         if gv.currscale>0:               # scales require a chords mix
             sequence=gv.chordnote[gv.scalechord[gv.currscale][gv.last_musicnote]]
         else:
