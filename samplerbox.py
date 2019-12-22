@@ -551,7 +551,7 @@ class Sound:
                     ps.fadeout(False)   # fadeout the mutegroup sound(s) and cleanup admin where possible
                     try: gv.playingnotes[ps.playednote]=[]
                     except: pass
-                    if ps.playednote>=gv.BTNOTES and ps.playednote<gv.MTCHNOTES:
+                    if ps.playednote>=gv.BTNOTES:
                         gv.playingbacktracks-=1
                     try:
                         gv.triggernotes[ps.note]=128
