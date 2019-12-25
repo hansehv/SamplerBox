@@ -1,0 +1,17 @@
+# Change the country code (NL will work for the majority, but still...).
+# Define the existing wifi network you want to connect to if available.
+# If you need multiple networks, just add more "network={..}" blocks.
+# This file is actually /etc/wpa-supplicant.conf, so please refer to the
+# related manpages for exact syntax and allowed parameters if needed.
+
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=NL
+
+network={
+	ssid="ssid-name"
+	psk="password/key"
+	key_mgmt=WPA-PSK
+}
+
+

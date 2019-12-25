@@ -1,0 +1,25 @@
+# Adapt to your preference:
+# ssid is the wireless networkname. Don't conflict with existing ones !
+# wpa_passphrase is the wpa-key / password (duh)
+#    make sure it complies with password policies (length etc)
+#    otherwise your mobile device might refuse it before trying
+#
+
+ssid=SamplerBox
+wpa_passphrase=go2samplerbox
+
+#------------------------------------#
+# Below values work for PI3 - PI3B+  #
+#------------------------------------#
+
+interface=wlan0
+hw_mode=g
+channel=6
+wmm_enabled=1
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
