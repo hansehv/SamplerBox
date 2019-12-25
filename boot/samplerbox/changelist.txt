@@ -16,11 +16,13 @@ Oct-Dec 2019:
   - Velocity mode (sample or accurate) can be specified per sample
   - Wav's are now read only once if reused
   - Added mutegroups
-  - Removed %mode=mono. Code was clumsy and became redundant: %mode=loo2,%mutegroup=x achieves exactly the same
+  - Removed %mode=mono. Code was clumsy and became redundant:
+    %mode=loo2,%mutegroup=x now achieves exactly the same
   - Added relsamples to sustain
   - Autodetect audio device & alsamixer, moved all related coding to separate module
-  - Changed DAC volume control changed to logarithmic iso linear making it more human
+  - Changed DAC volume control to logarithmic iso linear making it more human
     Sideffect: the set value slightly differs from actual value due to roundings
+  - Wifi now either connects to known wifi or starts hotspot (mainly OS update)
   - Various cleanups and fixes
 Aug-Sept 2019:
   - Adapted sustain pedal for "half-damper" compatibility.
