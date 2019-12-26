@@ -929,10 +929,7 @@ def MidiCallback(mididev, message, time_stamp):
                             velmixer = m.playingvelocity()  # save org value for release sample
                             m.fadeout()
                             gv.playingnotes[mtchnote] = []
-                            if  m.playingrelsample() == 'E':
-                                gv.playingnotes.setdefault(mtchnote,[]).append(gv.samples[midinote, velocity, gv.currvoice].play(midinote, midinote, velocity, velmixer*gv.globalgain, -1, retune, messagechannel))
-                            elif  m.playingrelsample() == 'S':
-                                gv.playingnotes.setdefault(playnote,[]).append(gv.samples[playnote, velocity, -gv.currvoice].play(midinote, playnote, velocity, velmixer*gv.globalgain, -2, retune, messagechannel))
+                            PlayRelSample(m.playingrelsample(),m.playingvoice(),m.playingnote(),m.playingvelocity(),m.playingretune(),m.playingchannel())
                 else:
                     for playnote in xrange(128):
                         if gv.triggernotes[playnote] == midinote:   # did we make this one play ?
