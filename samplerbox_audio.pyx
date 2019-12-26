@@ -34,8 +34,9 @@
 #  April 2019
 #      - moved global variables from call to import gv
 #      - implemented panning
-#  Jul/Aug 2019
+#  July 2019
 #      - removed the %retune value
+#  December 2019
 #      - Excluded sequencer channels from pitchbend/vibrato/panning
 #
 #  Rebuild with "python setup.py build_ext --inplace"

@@ -99,7 +99,6 @@ def setScale(x,*z):
         gv.currscale=y
         display("")
 def setVoice(x,iv=0,mididev="",*z):
-    print "setvoice"
     if iv==0:       # we got the index of the voice table
         xvoice=int(x)
     else:           # we got the voicenumber
@@ -870,7 +869,7 @@ def MidiCallback(mididev, message, time_stamp):
                                             messagetype = 8
 
             if messagetype == 9:    # Note on 
-                if True: #try:
+                try:
                     gv.last_midinote=midinote      # save original midinote for the webgui
                     if keyboardarea and not MT_in:
                         gv.last_musicnote=midinote-12*int(midinote/12) # do a "remainder midinote/12" without having to import the full math module
@@ -914,7 +913,7 @@ def MidiCallback(mididev, message, time_stamp):
                                             DampNoise(m)
                                         gv.triggernotes[playnote]=128
                                         gv.playingnotes[playnote]=[]
-                else: #except:
+                except:
                     print 'Unassigned/unfilled note or other exception in note %d in voice %d' % (midinote,gv.currvoice)
                     if MT_in:               # restore previous saved voice and some effects
                         gv.currchord=gv.sqsav_chord
@@ -1081,7 +1080,7 @@ def ActuallyLoad():
                 gv.DefinitionTxt=definitionfile.read()
         with open(definitionfname, 'r') as definitionfile:
             for i, pattern in enumerate(definitionfile):
-                if True: #try:
+                try:
                     if len(pattern.strip())==0 or pattern[0]=="#":
                         continue
                     if r'%%transpose' in pattern:
@@ -1323,7 +1322,7 @@ def ActuallyLoad():
                             if (GetStopmode(mode)<-1) or (GetStopmode(mode)==127 and midinote>(127-gv.stop127)):
                                 print "invalid mode '%s' or note %d out of range, set to keyboard mode." % (mode, midinote)
                                 mode=PLAYLIVE
-                            if True:#try:
+                            try:
                                 if backtrack>-1:    # Backtracks are intended for start/stop via controller, so we can use unplayable notes
                                     gv.samples[gv.BTNOTES+backtrack, velocity, voice] = Sound(os.path.join(dirname, fname), voice, gv.BTNOTES+backtrack, velocity, velmode, mode, release, damp, dampnoise, retrigger, gain, mutegroup, relsample, xfadeout, xfadein, xfadevol, fractions)
                                 if midinote>-1:
@@ -1331,8 +1330,8 @@ def ActuallyLoad():
                                     fillnotes[midinote, voice] = fillnote
                                     if gv.voicelist[voicex][2]=="": gv.voicelist[voicex][2]=mode
                                     elif gv.voicelist[voicex][2]!=mode: gv.voicelist[voicex][2]="Mixed"
-                            #except: pass    # Error should be handled & communicated in subprocs
-                else: #except:
+                            except: pass    # Error should be handled & communicated in subprocs
+                except:
                     m=i+1
                     print "Error in definition file, skipping line %d." % (m)
                     v=", " if gv.DefinitionErr != "" else ""
@@ -1478,7 +1477,7 @@ LoadSamples()
 ##  - MIDI IN via SERIAL PORT
 #########################################
 
-if True:#try:
+try:
 
     if USE_BUTTONS:
         USE_GPIO=True
@@ -1490,7 +1489,7 @@ if True:#try:
     if USE_SERIALPORT_MIDI:
         import serialMIDI
 
-else:#except:
+except:
     print "Error loading optionals (either buttons, http-gui or serial-midi)"
     time.sleep(0.5)
     GPIOcleanup()
