@@ -23,6 +23,8 @@ Oct-Dec 2019:
   - Changed DAC volume control to logarithmic iso linear making it more human
     Sideffect: the set value slightly differs from actual value due to roundings
   - Wifi now either connects to known wifi or starts hotspot (mainly OS update)
+  - Support for multimbral devices = using multiple midi channels and independent voices
+  - Internal SMF player: can play ".mid" files in the samples directory
   - Various cleanups and fixes
 Aug-Sept 2019:
   - Adapted sustain pedal for "half-damper" compatibility.
