@@ -1509,6 +1509,7 @@ try:
         prev_ports = []
         i=0
         for port in curr_inports:
+            if 'Midi Through' in port and not USE_SMFPLAYER: continue
             print 'Opened "%s" as MIDI IN %d ' %(port,i)  #(port.split(":",1)[1],i) #(port.split(":",1)[0].strip(),i)
             midi_in.open_ports(port)
             i+=1
