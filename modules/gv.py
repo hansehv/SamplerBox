@@ -12,11 +12,16 @@ cfg="config"
 SAMPLESDEF="definition.txt"
 CTRLMAP_DEF="CCmap.csv"
 NOTEMAP_DEF="notemap.csv"
+VOICEMAP_DEF="MTchannelmap.csv"
 HTTP_ROOT="webgui"
 FIXED="Fixed"
 VOICES="Voices"
 NOTEMAPS="Notemaps"
 BACKTRACKS="BackTracks"
+SMFS="SMFs"
+SMFTEMPO="SMFtempo"
+SMFLOOP="SMFloop"
+SMFSTOP="SMFstop"
 CHORDS="Chords"
 SCALES="Scales"
 PITCHWHEEL="PitchWheel"
@@ -99,6 +104,7 @@ ConfigErr=False
 LEDblink=False
 USE_ALSA_MIXER=False
 BTNOTES=130         # Backtracknotes start
+MTCHNOTES=1024      # Multitimbral channel notes start - so leaves <1024 for main keyboard notes, next available 17408 (theoretically)
 buttfunc=0
 button_disp=[""]
 ActuallyLoading=False
@@ -234,5 +240,9 @@ MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch)
 [SCALES,2,safeguard],
 [VOICES,2,safeguard],
 [BACKTRACKS,2,safeguard],
+[SMFS,2,safeguard],
+[SMFLOOP,1,safeguard],
+[SMFSTOP,1,safeguard],
+[SMFTEMPO,0,safeguard],
 [NOTEMAPS,2,safeguard]
 ]

@@ -7,7 +7,7 @@
 #
 #  samplerbox_audio.pyx: Audio engine (Cython) 
 #
-#  Original version adapted extended by HansEhv (https://github.com/hansehv)
+#  Original version adapted extended by HansEhv (https://github.com/hansehv):
 #
 #  June 18 2016:
 #      - implemented velocity fix by Erik Nieuwlands (http://www.nickyspride.nl/sb2/) of april 30.
@@ -36,6 +36,8 @@
 #      - implemented panning
 #  July 2019
 #      - removed the %retune value
+#  December 2019
+#      - Excluded sequencer channels from pitchbend/vibrato/panning
 #
 #  Rebuild with "python setup.py build_ext --inplace"
 
@@ -69,7 +71,19 @@ def mixaudiobuffers(list rmlist, int frame_count, numpy.ndarray FADEOUT, int FAD
         fractions=snd.sound.fractions
 
         # Below overflow protection values correspond with tables in samplerbox.py
-        if snd.sound.voice==0:      # Exclude FXtrack from notefill, pitchbend and panning
+        # The way of coding is longer than necessary, but faster. Optimizing leads to crippled sounds
+        if snd.channel>0:           # Exclude sequencer from pitchbend and panning
+            i = (SPEEDRANGE+snd.note-snd.sound.midinote) * PITCHSTEPS + snd.retune
+            if i < 0:                                # below zero is out of limits
+                i = 0                                # save the program by ruining the pitch :-(
+            else:
+                speedrange=2*SPEEDRANGE              # save a multiply and indirect addressing
+                if i >= speedrange*PITCHSTEPS:       # 2*48=96 and higher is out of limits
+                    i = (speedrange-1) * PITCHSTEPS  # save the program by ruining the pitch :-(
+            speed = SPEED[i]
+            lpan = 1.0
+            rpan = 1.0
+        elif snd.sound.voice==0:    # Exclude FXtrack from notefill, pitchbend and panning
             speed = SPEED[SPEEDRANGE*PITCHSTEPS]
             lpan = 1.0
             rpan = 1.0

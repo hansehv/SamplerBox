@@ -270,3 +270,29 @@ def readnotemap(ifile):
     except:
         pass    # notemapping is optional
     return
+
+def readMTchannelmap(ifile):
+    # MTchannelmap: [name of MTdevice/smf/mid/song, channel used in MTdevice/smf, voice to use]
+    # Channels are the "human channels", so range 1-16 making piano=1 and drum=10
+    # SMF files are zero based, so range 0-15 - take care when debugging
+    gv.voicemap=[]  # name,from,to
+    try:
+        sheet=readcsv(ifile,1)
+        for i in range(len(sheet)):
+            if len(sheet[i])>2:     # skip useless lines
+                if sheet[i][1]>-1 and sheet[i][1]<17 and sheet[i][2]>0 and sheet[i][2]<128:
+                    ok=True
+                    for v in gv.voicemap:
+                        if v[0]==sheet[i][0] and v[1]==sheet[i][1]:
+                            print ("%s: ignored %s, previously defined" %(ifile, sheet[i]))
+                            ok=False
+                    if ok: gv.voicemap.append(sheet[i])
+                else:
+                    print ("%s: ignored %s as channel or voice is out of range" %(ifile, sheet[i]))
+                    gv.ConfigErr=True
+            else:
+                print ("%s: ignored %s" %(ifile, sheet[i]))
+        gv.voicemap.sort(key=operator.itemgetter(0,1))  # sort on: map->input(midi)channel
+    except:
+        pass    # this is all optional, default is channel#->voice#
+    return 

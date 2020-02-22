@@ -45,7 +45,7 @@ def AudioCallback(outdata, frame_count, time_info, status):
     for e in rmlist:
         try:
             if e.sound.stopmode==3 or e.sound.stopmode==-1:     # keep track of backtrack/once status
-                gv.playingnotes[e.note]=[]
+                gv.playingnotes[e.note+(e.channel*MTCHNOTES)]=[]
             gv.playingsounds.remove(e)
         except: pass
     # volume control and audio effects/filters
