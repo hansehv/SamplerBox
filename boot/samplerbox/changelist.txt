@@ -2,6 +2,9 @@ This file contains changelog of samplerbox.py
 For changes on samplerbox_audio.pyx, see top of the source file
 For changes on the image, see http://homspace.xs4all.nl/homspace/samplerbox/SBbuild.html
 
+Jan-March 2020:
+  - Introduced user interface module = make SB-engine a black box with a predictable/documented API
+  - WebGUI adapted for this approach (for giving show&testcase)
 Oct-Dec 2019:
   - Fixed notemapping GUI screen
   - Finished embedded release samples (relsample=E)
