@@ -24,7 +24,7 @@ def readcsv(ifile, numtxt=100, header=True):
                 header=False
             else:
                 # Split on common delimiters for csv after cleaning text and line separators
-                inrow=re.split(',|;|\t',re.sub(' |"|\'|\n|\r', "", line))
+                inrow=re.split(',|;|\t',re.sub('"|\'|\n|\r', "", line))
                 for i in range(len(inrow)):
                     if inrow[i]=="":        # stop after emptycell
                         if i==0:            # is this the first cell?
@@ -35,10 +35,10 @@ def readcsv(ifile, numtxt=100, header=True):
                             i=-1            # then indicate empty row
                         break
                     if i < numtxt:          # Take the textfields as is
-                        row.append(inrow[i])
+                        row.append(inrow[i].strip())
                     else:                   # Convert the rest to integer
                         try:
-                            row.append(int(inrow[i]))
+                            row.append(int(inrow[i].strip()))
                         except:
                             print("%s: Found '%s' when expecting a digit, ignoring rest of line %s" %(ifile, inrow[i], inrow))
                             break
@@ -62,10 +62,8 @@ def readscales(ifile):
     sheet=readcsv(ifile)
     gv.scalechord=[[0,0,0,0,0,0,0,0,0,0,0,0]]  # single notes
     gv.scalename=[""]
-    gv.scalesymbol=[""]
     for i in range(len(sheet)):
         gv.scalename.append(sheet[i][0])
-        gv.scalesymbol.append(re.sub('b','&#9837;',re.sub('#','&#9839;',gv.scalename[i+1])))
         values=[]
         for j in range(1,len(sheet[i])):
             if sheet[i][j]=="0" or sheet[i][j]=="-":
@@ -211,7 +209,7 @@ def readnotemap(ifile):
         sheet=readcsv(ifile,4)
         for i in range(len(sheet)):
             if len(sheet[i])>3:     # skip useless lines
-                values=["",1,0,-1,0,0]
+                values=["",1,0,-1,0,0,0]
                 values[0]=format(sheet[i][0]).title()   # force num to string and normalize upper/lowercase usage
                 if values[0]=="":
                     print ("%s: Sets must have a name, ignored %s" %(ifile, sheet[i]))
@@ -258,6 +256,7 @@ def readnotemap(ifile):
                     try:
                         values[4]=int(sheet[i][4])
                         values[5]=int(sheet[i][5])
+                        values[6]=int(sheet[i][6])
                     except:
                         pass
                 gv.notemap.append(values)

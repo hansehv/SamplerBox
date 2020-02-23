@@ -13,7 +13,6 @@ SAMPLESDEF="definition.txt"
 CTRLMAP_DEF="CCmap.csv"
 NOTEMAP_DEF="notemap.csv"
 VOICEMAP_DEF="MTchannelmap.csv"
-HTTP_ROOT="webgui"
 FIXED="Fixed"
 VOICES="Voices"
 NOTEMAPS="Notemaps"
@@ -131,7 +130,6 @@ globalgain=1        # the input volume correction, change per set in definition.
 PITCHBEND=0
 chordname=[]
 chordnote=[]
-scalesymbol=[]
 scalename=[]
 scalechord=[]
 controllerCCs=[]
@@ -145,13 +143,6 @@ notemap=[]
 notemaps=[]
 currnotemap=""
 notemapping=[]
-SB_nm_inote=-1
-SB_nm_onote=None
-SB_nm_Q=None
-SB_nm_retune=None
-SB_nm_voice=None
-SB_nm_map=None
-SB_nm_actmap="%$@"
 
 def NoProc(*vals):      # Dummy
     pass

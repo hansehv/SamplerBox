@@ -17,6 +17,8 @@ USE_48kHz = gv.cp.getboolean(gv.cfg,"USE_48kHz".lower())
 MAX_POLYPHONY = gv.cp.getint(gv.cfg,"MAX_POLYPHONY".lower())
 gv.PITCHRANGE = gv.cp.getint(gv.cfg,"PITCHRANGE".lower())*2     # actually it is 12 up and 12 down
 PITCHBITS = gv.cp.getint(gv.cfg,"PITCHBITS".lower())
+BLOCKSIZE=0     # either power of 2 (512 is original samplerbox) or 0 to let the system choose/optimize
+LATENCY='low'   # either (float) seconds or "low"/"high"
 
 gv.pitchnotes = gv.PITCHRANGE
 PITCHSTEPS = 2**PITCHBITS
@@ -31,6 +33,7 @@ SPEEDRANGE = 48     # 2*48=96 is larger than 88, so a (middle) C4-A4 can facilit
 SPEED = numpy.power(2, numpy.arange(-1.0*SPEEDRANGE*PITCHSTEPS, 1.0*SPEEDRANGE*PITCHSTEPS)/(12*PITCHSTEPS)).astype(numpy.float32)
 
 def AudioCallback(outdata, frame_count, time_info, status):
+    global bug
     p=len(gv.playingsounds)-MAX_POLYPHONY
     if p>0:
         print "MAX_POLYPHONY %d exceeded with %d notes" %(MAX_POLYPHONY,p)
@@ -41,20 +44,20 @@ def AudioCallback(outdata, frame_count, time_info, status):
     if arp.active: arp.process()
     # audio-module:
     rmlist = []
-    b = samplerbox_audio.mixaudiobuffers(rmlist, frame_count, FADEOUT, FADEOUTLENGTH, SPEED, SPEEDRANGE, gv.PITCHBEND+gv.VIBRvalue+PITCHCORR, PITCHSTEPS)
+    b = samplerbox_audio.mixaudiobuffers(rmlist, frame_count, FADEOUT, FADEOUTLENGTH, SPEED, SPEEDRANGE, gv.PITCHBEND+LFO.VIBRvalue+PITCHCORR, PITCHSTEPS)
     for e in rmlist:
         try:
             if e.sound.stopmode==3 or e.sound.stopmode==-1:     # keep track of backtrack/once status
-                gv.playingnotes[e.note+(e.channel*MTCHNOTES)]=[]
+                gv.playingnotes[e.note+(e.channel*gv.MTCHNOTES)]=[]
             gv.playingsounds.remove(e)
         except: pass
     # volume control and audio effects/filters
-    LFO.process[gv.LFOtype]()
-    b *= (10**(gv.TREMvalue*gv.volumeCC)-1)/9     # linear doesn't sound natural, this may be to complicated too though...
-    if gv.LFtype>0: Cpp.c_filters.moog(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
-    if gv.AWtype>0: Cpp.c_filters.autowah(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
-    if gv.DLYtype>0: Cpp.c_filters.delay(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
-    if gv.FVtype>0: Cpp.c_filters.reverb(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
+    LFO.process[LFO.effect]()
+    b *= (10**(LFO.TREMvalue*gv.volumeCC)-1)/9     # linear doesn't sound natural, this may be to complicated too though...
+    if Cpp.LFtype>0: Cpp.c_filters.moog(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
+    if Cpp.AWtype>0: Cpp.c_filters.autowah(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
+    if Cpp.DLYtype>0: Cpp.c_filters.delay(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
+    if Cpp.FVtype>0: Cpp.c_filters.reverb(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
     outdata[:] = b.reshape(outdata.shape)
     # Use this module as timer for ledblinks
     if gv.LEDblink: gv.LEDsblink()
@@ -75,15 +78,17 @@ try:
             AUDIO_DEVICE_NAME=d['name']
             if d['max_output_channels']==0 or re.search('\(hw:(.*),', AUDIO_DEVICE_NAME)!=None:
                 try:
-                    sd = sounddevice.OutputStream(device=AUDIO_DEVICE_ID, blocksize=512,samplerate=f,channels=2,dtype='int16',callback=AudioCallback)
+                    sd = sounddevice.OutputStream(device=AUDIO_DEVICE_ID,latency=LATENCY,blocksize=BLOCKSIZE,samplerate=f,channels=2,dtype='int16',callback=AudioCallback)
                     sd.start()
-                    device_found = True         # found device requested by configuration.txt
+                    device_found = True         # found device requested by configuration.txt can be started
                 except: pass
             if not device_found:
                 print 'Ignored requested audio device #%i %s' %(AUDIO_DEVICE_ID,AUDIO_DEVICE_NAME)
             break
         i+=1
     if not device_found:
+        print "Available audio devices:"
+        print sounddevice.query_devices()
         i=0
         for d in sounddevice.query_devices():
             if d['max_output_channels'] > 0:
@@ -97,7 +102,8 @@ try:
                     AUDIO_DEVICE_NAME=d['name']
                     break                   # found a valid non-builtin device
             i+=1
-        sd = sounddevice.OutputStream(device=AUDIO_DEVICE_ID, blocksize=512,samplerate=f,channels=2,dtype='int16',callback=AudioCallback)
+        if 'bcm2835' in AUDIO_DEVICE_NAME: LATENCY="high"   # force the PI sound device to sound OK
+        sd = sounddevice.OutputStream(device=AUDIO_DEVICE_ID,latency=LATENCY,blocksize=BLOCKSIZE,samplerate=f,channels=2,dtype='int16',callback=AudioCallback)
         sd.start()
     print 'Opened audio device #%i %s on %iHz' %(AUDIO_DEVICE_ID,AUDIO_DEVICE_NAME,f)
     Cpp.c_filters.setSampleRate(f)   # align the filters
@@ -119,6 +125,7 @@ if mixer_control.title()!="None":
     mixer_card_index = re.search('\(hw:(.*),', AUDIO_DEVICE_NAME) # get x from (hw:x,y) in device name
     mixer_card_index = int(mixer_card_index.group(1))
     mixer_controls=alsaaudio.mixers(mixer_card_index)
+    print "Available mixer controls: %s" %mixer_controls
     mixer_controls.insert(0,mixer_control)
     for mixer_control in mixer_controls:
         try:
@@ -137,9 +144,10 @@ if device_found:
     gv.USE_ALSA_MIXER=True
     import math
     def getvolume():
-        vol = int(amix.getvolume()[0])
+        vol = int(round(amix.getvolume()[0]))
         gv.volume = 10**(0.02*vol)
     def setvolume(volume):
+        if volume==0: volume=1
         amix.setvolume(int(math.log(volume,10)*50))
         getvolume()
     setvolume(gv.cp.getint(gv.cfg,"volume".lower()))

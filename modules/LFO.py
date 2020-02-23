@@ -69,77 +69,99 @@ class plfo:
 import gv
 
 VibrLFO=plfo()
-gv.VIBRvalue=0         # Value 0 gives original note
+VIBRvalue=0         # Value 0 gives original note
+VIBRpitch=0         # declare
+VIBRspeed=0         # declare
+VIBRtrill=False     # declare
 def VibrProc(*z):
+    global VIBRvalue,VIBRpitch,VIBRtrill
     VibrLFO.process()
-    if gv.VIBRtrill:
-        gv.VIBRvalue=(( (128*(VibrLFO.getblock())) /gv.pitchdiv)-gv.pitchneutral)*gv.VIBRpitch
+    if VIBRtrill:
+        VIBRvalue=(( (128*(VibrLFO.getblock())) /gv.pitchdiv)-gv.pitchneutral)*VIBRpitch
     else:
-        gv.VIBRvalue=(( (128*(VibrLFO.gettriangle())) /gv.pitchdiv)-gv.pitchneutral)*gv.VIBRpitch
+        VIBRvalue=(( (128*(VibrLFO.gettriangle())) /gv.pitchdiv)-gv.pitchneutral)*VIBRpitch
 def VibrTidy(TurnOn):
+    global VIBRvalue,VIBRspeed
     if TurnOn:
         VibrLFO.settriangle(63)     # start about neutral, going up
-        VibrLFO.setstep(gv.VIBRspeed)  # and with correct speed
+        VibrLFO.setstep(VIBRspeed)  # and with correct speed
     else:
-        gv.VIBRvalue=0              # tune the note
+        VIBRvalue=0              # tune the note
 def VibrSetpitch(CCval,*z):
-    gv.VIBRpitch=1.0*CCval/32   # steps of 1/32th, range like GUI
+    global VIBRpitch
+    VIBRpitch=1.0*CCval/32   # steps of 1/32th, range like GUI
 def VibrSetspeed(CCval,*z):
-    gv.VIBRspeed=1.0*CCval/4    # range=32
-    VibrLFO.setstep(gv.VIBRspeed)
+    global VIBRspeed
+    VIBRspeed=1.0*CCval/4    # range=32
+    VibrLFO.setstep(VIBRspeed)
 def VibrToggletrill(CCval,*z):
-    gv.VIBRtrill=not(gv.VIBRtrill)
+    global VIBRtrill
+    VIBRtrill=not(VIBRtrill)
 gv.setMC(gv.VIBRDEPTH,VibrSetpitch)
 gv.setMC(gv.VIBRSPEED,VibrSetspeed)
 gv.setMC(gv.VIBRTRILL,VibrToggletrill)
 #gv.VibrSetspeed=VibrSetspeed
 
 TremLFO=plfo()
-gv.TREMvalue=1.0       # Full volume
+TREMvalue=1.0       # Full volume
+TREMampl=0          # declare
+TREMspeed=0         # declare
+TREMtrill=False     # declare
 def TremProc(*z):
-    if gv.LFOtype==4:
-        TremLFO.setstep(gv.VIBRspeed)
+    global VIBRspeed,TREMtrill,TREMvalue,TREMampl
+    if effect==4:
+        TremLFO.setstep(VIBRspeed)
     TremLFO.process()
-    if gv.TREMtrill:
-        gv.TREMvalue=1-(gv.TREMampl*TremLFO.getinvsaw()/127)
+    if TREMtrill:
+        TREMvalue=1-(TREMampl*TremLFO.getinvsaw()/127)
     else:
-        gv.TREMvalue=1-(gv.TREMampl*TremLFO.gettriangle()/127)
+        TREMvalue=1-(TREMampl*TremLFO.gettriangle()/127)
 def TremTidy(TurnOn):
+    global TREMspeed,TREMvalue
     if TurnOn:
         TremLFO.settriangle(0)      # start at max
-        TremLFO.setstep(gv.TREMspeed)  # and with correct speed
+        TremLFO.setstep(TREMspeed)  # and with correct speed
     else:
-        gv.TREMvalue=1              # restore volume
+        TREMvalue=1                 # restore volume
 def TremSetampl(CCval,*z):
-    gv.TREMampl=1.0*CCval/127.0 # values 0-1, range like GUI
+    global TREMampl
+    TREMampl=1.0*CCval/127.0 # values 0-1, range like GUI
 def TremSetspeed(CCval,*z):
-    gv.TREMspeed=1.0*CCval/4    # align with GUI
-    TremLFO.setstep(gv.TREMspeed)
+    global TREMspeed
+    TREMspeed=1.0*CCval/4    # align with GUI
+    TremLFO.setstep(TREMspeed)
 def TremToggletrill(CCval,*z):
-    gv.TREMtrill=not(gv.TREMtrill)
+    global TREMtrill
+    TREMtrill=not(TREMtrill)
 gv.setMC(gv.TREMDEPTH,TremSetampl)
 gv.setMC(gv.TREMSPEED,TremSetspeed)
 gv.setMC(gv.TREMTRILL,TremToggletrill)
 #gv.TremSetspeed=TremSetspeed
 
 PanLFO=plfo()
-gv.PANvalue=0.0        # Center
+gv.PANvalue=0.0     # Center, in gv for samplerbox_audio only
+PANwidth=0          # declare
+PANspeed=0          # declare
 def PanProc(*z):
-    if gv.LFOtype==4:
-        PanLFO.setstep(gv.VIBRspeed)
+    global VIBRspeed,PANwidth
+    if effect==4:
+        PanLFO.setstep(VIBRspeed)
     PanLFO.process()
-    gv.PANvalue=1-2.0*gv.PANwidth*PanLFO.gettriangle()/127
+    gv.PANvalue=1-2.0*PANwidth*PanLFO.gettriangle()/127
 def PanTidy(TurnOn):
+    global PANspeed
     if TurnOn:
         PanLFO.settriangle(63)      # start centered (don't care anyway)
-        PanLFO.setstep(gv.PANspeed) # and with correct speed
+        PanLFO.setstep(PANspeed)    # and with correct speed
     else:
         gv.PANvalue=0               # restore center
 def PanSetwidth(CCval,*z):
-    gv.PANwidth=CCval/127.0 # values 0-1, both left & right
+    global PANwidth
+    PANwidth=CCval/127.0            # values 0-1, both left & right
 def PanSetspeed(CCval,*z):
-    gv.PANspeed=1.0*CCval/4    # align with GUI
-    PanLFO.setstep(gv.PANspeed)
+    global PANspeed
+    PANspeed=1.0*CCval/4    # align with GUI
+    PanLFO.setstep(PANspeed)
 gv.setMC(gv.PANWIDTH,PanSetwidth)
 gv.setMC(gv.PANSPEED,PanSetspeed)
 #gv.PanSetspeed=PanSetspeed
@@ -149,38 +171,40 @@ def RotaProc(*z):
     TremProc()
     PanProc()
 def RotaTidy(TurnOn):
+    global VIBRvalue,VIBRspeed,VIBRtrill,TREMtrill,TREMvalue
     if TurnOn:
         VibrLFO.settriangle(-63)    # start about neutral, going down (=going away)
-        VibrLFO.setstep(gv.VIBRspeed)  # and with correct speed
-        gv.VIBRtrill=False
+        VibrLFO.setstep(VIBRspeed)  # and with correct speed
+        VIBRtrill=False
         TremLFO.settriangle(0)      # start at max (so it will go away too)
-        gv.TREMtrill=False
+        TREMtrill=False
         PanLFO.settriangle(63)      # start in the middle
     else:
-        gv.VIBRvalue=0              # tune the note
-        gv.TREMvalue=1              # restore volume
+        VIBRvalue=0                 # tune the note
+        TREMvalue=1                 # restore volume
         gv.PANvalue=0               # restore center
 
 def LFOspeed(CCval,*z):
-    if gv.LFOtype==3:
+    if effect==3:
         PanSetspeed(CCval)
-    elif gv.LFOtype==2:
+    elif effect==2:
         TremSetspeed(CCval)
     else:
         VibrSetspeed(CCval)
 gv.setMC(gv.LFOSPEED,LFOspeed)
 
-gv.LFOtypes=["Off",gv.VIBRATO,gv.TREMOLO,gv.PANNING,gv.ROTATE]
+effects=["Off",gv.VIBRATO,gv.TREMOLO,gv.PANNING,gv.ROTATE]
 process=[gv.NoProc,VibrProc,TremProc,PanProc,RotaProc]
 tidy=[gv.NoProc,VibrTidy,TremTidy,PanTidy,RotaTidy]
-gv.LFOtype=0   # 0 = no vibrato/tremolo/pan/rotate
+effect=0   # 0 = no vibrato/tremolo/pan/rotate
 def setType(x,*z):
-    if x!=gv.LFOtype:
-        tidy[gv.LFOtype](False)
+    global effect
+    if x!=effect:
+        tidy[effect](False)
         tidy[x](True)
-        gv.LFOtype=x
+        effect=x
 def toggleType(x):
-    if x==gv.LFOtype:
+    if x==effect:
         setType(0)
     else:
         setType(x)
@@ -199,14 +223,15 @@ gv.setMC(gv.PANNING,Panning)
 gv.setMC(gv.ROTATE,Rotate)
 
 def LFOreset():
+    global VIBRpitch,VIBRspeed,VIBRtrill,TREMampl,BOXTREMspeed,TREMspeed,TREMtrill,PANwidth,PANspeed
     setType(0)
-    gv.VIBRpitch=gv.cp.getfloat(gv.cfg,"VIBRpitch".lower())
-    gv.VIBRspeed=gv.cp.getint(gv.cfg,"VIBRspeed".lower())
-    gv.VIBRtrill=gv.cp.getboolean(gv.cfg,"VIBRtrill".lower())
-    gv.TREMampl=gv.cp.getfloat(gv.cfg,"TREMampl".lower())
-    gv.BOXTREMspeed=gv.cp.getint(gv.cfg,"TREMspeed".lower())
-    gv.TREMspeed=gv.BOXTREMspeed
-    gv.TREMtrill=gv.cp.getboolean(gv.cfg,"TREMtrill".lower())
-    gv.PANwidth=gv.cp.getfloat(gv.cfg,"PANwidth".lower())
-    gv.PANspeed=gv.cp.getint(gv.cfg,"PANspeed".lower())
+    VIBRpitch=gv.cp.getfloat(gv.cfg,"VIBRpitch".lower())
+    VIBRspeed=gv.cp.getint(gv.cfg,"VIBRspeed".lower())
+    VIBRtrill=gv.cp.getboolean(gv.cfg,"VIBRtrill".lower())
+    TREMampl=gv.cp.getfloat(gv.cfg,"TREMampl".lower())
+    BOXTREMspeed=gv.cp.getint(gv.cfg,"TREMspeed".lower())
+    TREMspeed=BOXTREMspeed
+    TREMtrill=gv.cp.getboolean(gv.cfg,"TREMtrill".lower())
+    PANwidth=gv.cp.getfloat(gv.cfg,"PANwidth".lower())
+    PANspeed=gv.cp.getint(gv.cfg,"PANspeed".lower())
 LFOreset()

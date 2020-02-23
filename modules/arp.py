@@ -12,7 +12,7 @@
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 ###############################################################
-import random,gv
+import random,gv,chorus
 active=False
 pressed=False
 noteon=False
@@ -37,14 +37,14 @@ def stepguard(xn=noteticks,xs=stepticks):
 stepguard()
 
 def process():
-    global playnote, velocity, sequence, steps, cycletick, steptick, stepticks, noteticks, cycleticks
+    global mode,playnote,velocity,sequence,steps,cycletick,steptick,stepticks,noteticks,cycleticks
     if currnote>-1:     # are we playing?
         if gv.ActuallyLoading:              # playing while loading new data is impossible
             return(rewind())                # so it ends here
         xs=stepticks
         xn=noteticks
         xc=cycleticks
-        if gv.ARPtype==3:
+        if mode==3:
             if steptick>=xs-1:              # step (note+rest) end reached
                 cycletick=xs*random.randint(0,steps-1)
         else:
@@ -62,10 +62,10 @@ def process():
         if steptick==0:
             playnote=currnote+sequence[int(cycletick//xs)]
             if playnote>(127-gv.stop127) and playnote<gv.stop127:   # stay within keyboard range
-                if gv.CHOrus:
-                    gv.PlaySample(playnote,playnote,gv.currvoice,velocity*gv.CHOgain,0,0)
-                    gv.PlaySample(playnote,playnote,gv.currvoice,velocity*gv.CHOgain,2,-(gv.CHOdepth/2+1))
-                    gv.PlaySample(playnote,playnote,gv.currvoice,velocity*gv.CHOgain,5,gv.CHOdepth)
+                if chorus.effect:
+                    gv.PlaySample(playnote,playnote,gv.currvoice,velocity*chorus.gain,0,0)
+                    gv.PlaySample(playnote,playnote,gv.currvoice,velocity*chorus.gain,2,-(chorus.depth/2+1))
+                    gv.PlaySample(playnote,playnote,gv.currvoice,velocity*chorus.gain,5,chorus.depth)
                 else:
                     gv.PlaySample(playnote,playnote,gv.currvoice,velocity,0,0)
             else:
@@ -91,14 +91,14 @@ def power(onoff):
         active=False    # stop first
         rewind()        # initialize completely for safety...
 def togglepower(CCval, *z):
-    global lastARPtype
+    global mode,lastmode
     #if currnote<0:
     if not active:
-        if gv.ARPtype==0: gv.ARPtype=lastARPtype
+        if mode==0: mode=lastmode
         power(True)
     else:
-        lastARPtype=gv.ARPtype
-        gv.ARPtype=0
+        lastmode=mode
+        mode=0
         power(False)
 gv.setMC(gv.ARP,togglepower)
 
@@ -120,7 +120,7 @@ def rewind():
     cycletick=-1     # not cycling
 
 def note_onoff(messagetype, midinote, played_velocity):
-    global pressed, noteon, sequence, currnote, velocity, steps, cycleticks, stepticks
+    global mode,pressed,noteon,sequence,currnote,velocity,steps,cycleticks,stepticks
     if loop:
         if messagetype==8:
             pressed=False   # keep track of keypress
@@ -131,7 +131,7 @@ def note_onoff(messagetype, midinote, played_velocity):
         if currnote==midinote:
             pressed=False   # keep track of keypress
             noteon=False
-            if not play2end or gv.ARPtype==3:  # random(ord=2) will never reach an end
+            if not play2end or mode==3:  # random(ord=2) will never reach an end
                 rewind()
         else:
             return          # ignore unrelated note-off's (keys held while pressing a new one)
@@ -145,7 +145,7 @@ def note_onoff(messagetype, midinote, played_velocity):
             sequence=gv.chordnote[gv.scalechord[gv.currscale][gv.last_musicnote]]
         else:
             sequence=gv.chordnote[gv.currchord]
-        if gv.ARPtype==2:
+        if mode==2:
             sequence=list(reversed(sequence))
         steps=len(sequence)
         cycleticks=steps*stepticks
@@ -167,43 +167,45 @@ def sustain(CCval,*z):  # time between note-on and note-off,
     stepguard(x,stepticks)
 gv.setMC(gv.ARPSUSTAIN,sustain)
 
-gv.ARPtypes=["Off","Up","Down","Random"]
-gv.ARPtype=0
-lastARPtype=1
-lastlinord=1
+modes=["Off","Up","Down","Random"]
+mode=0
+lastmode=1
+lastlinmode=1
 def ordnum(num):
-    global lastlinord,sequence,lastARPtype
+    global mode,lastlinmode,sequence,lastmode
     if num==0:
         power(False)
     else:
-        lastARPtype=gv.ARPtype
+        lastmode=mode
         power(True)
         if num<3:
-            if lastlinord!=num:
+            if lastlinmode!=num:
                 sequence=list(reversed(sequence))
-                lastlinord=num
-    gv.ARPtype=num
+                lastlinmode=num
+    mode=num
 def up(*z):
     ordnum(1)
 def down(*z):
     ordnum(2)
 def updown(*z):
-    global lastlinord, sequence
-    if lastlinord==1:
-        lastlinord=2
+    global mode,lastlinmode,sequence
+    if lastlinmode==1:
+        lastlinmode=2
         sequence=list(reversed(sequence))
     else:
-        lastlinord=1
+        lastlinmode=1
         sequence=list(reversed(sequence))
-    if gv.ARPtype!=3:
-        gv.ARPtype=lastlinord
+    if mode!=3:
+        mode=lastlinmode
 def rand(*z):
-    gv.ARPtype=3
+    global mode
+    mode=3
 def rndlin(*z):
-    if gv.ARPtype==3:
-        gv.ARPtype=lastlinord
+    global mode
+    if mode==3:
+        mode=lastlinmode
     else:
-        gv.ARPtype=3
+        mode=3
 gv.setMC(gv.ARPUP,up)
 gv.setMC(gv.ARPDOWN,down)
 gv.setMC(gv.ARPUPDOWN,updown)
