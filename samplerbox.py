@@ -46,28 +46,39 @@ def getindex(key, table, onecol=False):
         else:
             if key==table[i][0]:return i
     return -100000
+def parseBoolean(val):
+	if val:
+		try:
+			val+=0		# is it an integer (~=boolean) ?
+		except:			# text is True unless starting with: Of(f), Y(es), N(one), T(rue), F(alse)
+			if str(val)[0:2].title()=="Of" or str(val)[0].upper()=="N" or str(val)[0].upper()=="F":
+				return False
+	return val
 notenames=["C","Cs","C#","Dk","D","Ds","D#","Ek","E","Es","F","Fs","F#","Gk","G","Gs","G#","Ak","A","As","A#","Bk","B","Bs"]
 def notename2midinote(notename,fractions):
     notename=notename.title()
-    if notename[:2]=="Ck":  # normalize synonyms
-        notename="Bs%d" %(int(notename[-1])-1) # Octave number switches between B and C
-    elif notename[:2]=="FK":
-        notename="Es%s"%notename[-1]
-    try:
-        x=notenames.index(format(notename[:len(notename)-1]))
-        if fractions==1:    # we have undivided semi-tones = 12-tone scale
-            x,y=divmod(x,2) # so our range is half of what's tested
-            if y!=0:        # and we can't process any found q's.
-                print "Ignored quartertone %s as we are in 12-tone mode" %notename
-                midinote=-1
-            # next statements places note C4 on 60
-            else:            # 12 note logic
-                midinote = x + (int(notename[-1])+1) * 12
-        else:               # 24 note logic
-            midinote = x + (int(notename[-1])-2) * 24 +12
-    except:
-        print "Ignored unrecognized notename '%s'" %notename
-        midinote=-128
+    if notename=="Ctrl": midinote=-2
+    elif notename=="None": midinote=-1
+    else:
+        if notename[:2]=="Ck":  # normalize synonyms
+            notename="Bs%d" %(int(notename[-1])-1) # Octave number switches between B and C
+        elif notename[:2]=="Fk":
+            notename="Es%s"%notename[-1]
+        try:
+            x=notenames.index(format(notename[:len(notename)-1]))
+            if fractions==1:    # we have undivided semi-tones = 12-tone scale
+                x,y=divmod(x,2) # so our range is half of what's tested
+                if y!=0:        # and we can't process any found q's.
+                    print "Ignored quartertone %s as we are in 12-tone mode" %notename
+                    midinote=-1
+                # next statements places note C4 on 60
+                else:            # 12 note logic
+                    midinote = x + (int(notename[-1])+1) * 12
+            else:               # 24 note logic
+                midinote = x + (int(notename[-1])-2) * 24 +12
+        except:
+            print "Ignored unrecognized notename '%s'" %notename
+            midinote=-128
     return midinote
 def midinote2notename(midinote,fractions):
     notename=None
@@ -157,9 +168,9 @@ def setNotemap(x, *z):
         if gv.notemaps[y]!=gv.currnotemap:
             gv.currnotemap=gv.notemaps[y]
             gv.notemapping=[]
-            for i in xrange(len(gv.notemap)):       # do we have note mapping ?
-                if gv.notemap[i][0]==gv.currnotemap:
-                    gv.notemapping.append([gv.notemap[i][2],gv.notemap[i][1],gv.notemap[i][3],gv.notemap[i][4],gv.notemap[i][5]])
+            for notemap in gv.notemap:       # do we have note mapping ?
+                if notemap[0]==gv.currnotemap:
+                    gv.notemapping.append([notemap[2],notemap[1],notemap[3],notemap[4],notemap[5],notemap[6]])
     else:
         gv.currnotemap=""
         gv.notemapping=[]
@@ -167,6 +178,7 @@ def setNotemap(x, *z):
 
 gv.GPIOcleanup=GPIOcleanup              # and announce the procs to modules
 gv.getindex=getindex
+gv.parseBoolean=parseBoolean
 gv.notename2midinote=notename2midinote
 gv.midinote2notename=midinote2notename
 gv.setVoice=setVoice
@@ -320,7 +332,7 @@ import LFO      # take notice: part of process in audio callback
 # Chorus (add pitch modulated and delayed copies of notes)
 # Process incorporated in the note-on logic, so rather cheap as well
 #
-import CHOrus   # take notice: part of process in midi callback and ARP
+import chorus   # take notice: part of process in midi callback and ARP
 
 # Plays standard MIDI files ("play part" of a sequencer)
 # Parallel process of sending midinotes to samplerbox midi-in channels
@@ -652,7 +664,7 @@ def EffectsOff(*z):
     Cpp.DLYsetType(0)
     Cpp.LFsetType(0)
     LFO.setType(0)
-    CHOrus.setType(0)
+    chorus.setType(0)
     #AutoChordOff()
 def ProgramUp(CCval,*z):
     x=gv.getindex(gv.PRESET,gv.presetlist)+1
@@ -847,7 +859,7 @@ def MidiCallback(mididev, message, time_stamp):
                     return                                  # nothing's playing, so there is nothing to stop
             if MT_in:               # save voice and some effects, set voice according channel and reset those effects
                 gv.sqsav_chord=gv.currchord
-                gv.sqsav_chorus=gv.CHOrus
+                gv.sqsav_chorus=chorus.effect
                 gv.sqsav_voice=gv.currvoice
                 setVoice(messagechannel,-2,mididev)
             if messagetype == 9:    # is a note-off hidden in this note-on ?
@@ -891,10 +903,10 @@ def MidiCallback(mididev, message, time_stamp):
                                             m.fadeout(False)    # ..or damp without optional dampnoise (considered unsuitable, based on current knowledge)
                                     #gv.playingnotes[playnote]=[]   # housekeeping, unnecessary as we will refill it immediately..
                         #print "start playingnotes playnote %d, velocity %d, gv.currvoice %d, retune %d" %(playnote, velocity, gv.currvoice, retune)
-                        if gv.CHOrus:
-                            PlaySample(midinote,playnote,gv.currvoice,velocity*gv.CHOgain,0,retune,messagechannel)
-                            PlaySample(midinote,playnote,gv.currvoice,velocity*gv.CHOgain,2,retune-(gv.CHOdepth/2+1),messagechannel)
-                            PlaySample(midinote,playnote,gv.currvoice,velocity*gv.CHOgain,5,retune+gv.CHOdepth,messagechannel)
+                        if chorus.effect:
+                            PlaySample(midinote,playnote,gv.currvoice,velocity*chorus.gain,0,retune,messagechannel)
+                            PlaySample(midinote,playnote,gv.currvoice,velocity*chorus.gain,2,retune-(chorus.depth/2+1),messagechannel)
+                            PlaySample(midinote,playnote,gv.currvoice,velocity*chorus.gain,5,retune+chorus.depth,messagechannel)
                         else:
                             PlaySample(midinote,playnote,gv.currvoice,velocity,0,retune,messagechannel)
                         if not MT_in:
@@ -917,7 +929,7 @@ def MidiCallback(mididev, message, time_stamp):
                     print 'Unassigned/unfilled note or other exception in note %d in voice %d' % (midinote,gv.currvoice)
                     if MT_in:               # restore previous saved voice and some effects
                         gv.currchord=gv.sqsav_chord
-                        gv.CHOrus=gv.sqsav_chorus
+                        chorus.effect=gv.sqsav_chorus
                         setVoice(gv.sqsav_voice,-1)
                     return
 
@@ -949,7 +961,7 @@ def MidiCallback(mididev, message, time_stamp):
 
             if MT_in:               # restore previous saved voice and some effects
                 gv.currchord=gv.sqsav_chord
-                gv.CHOrus=gv.sqsav_chorus
+                chorus.effect=gv.sqsav_chorus
                 setVoice(gv.sqsav_voice,-1)
 
         elif messagetype == 12: # Program change
@@ -975,6 +987,7 @@ def LoadSamples():
     global LoadingThread
     global LoadingInterrupt
 
+    gv.ActuallyLoading=True     # bookkeeping as quick as possible
     if LoadingThread:
         LoadingInterrupt = True
         LoadingThread.join()
@@ -987,7 +1000,7 @@ def LoadSamples():
 gv.LoadSamples=LoadSamples              # and announce the procs to modules
 
 def ActuallyLoad():    
-    gv.ActuallyLoading=True
+    gv.ActuallyLoading=True     # bookkeeping for safety
     AllNotesOff()
     gv.currbase = gv.basename    
 
