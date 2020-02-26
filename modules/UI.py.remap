@@ -12,7 +12,7 @@
 ###############################################################
 
 #import operator,math
-import re,subprocess
+import re
 import gv,remap,arp,chorus,Cpp,LFO
 
 # Writable variables
@@ -77,15 +77,6 @@ def Notemap(val=None):						# active notemap, either index in notemap or "notema
 			return mapchange
 		return gv.currnotemap
 	except: return ""
-nm_inote=remap.notes_inote
-nm_Q=remap.notes_Q
-nm_unote=remap.notes_unote
-nm_onote=remap.notes_onote
-nm_retune=remap.notes_retune
-nm_voice=remap.notes_voice
-nm_map=remap.notes_map
-nm_clr=remap.notes_clear
-nm_sav=remap.notes_sav
 def Scale(val=None):						# index of ScaleName
 	try:
 		if val!=None:
@@ -511,8 +502,6 @@ def Chordname(*z):					# Chordnames as defined in chord.csv
 	return gv.chordname
 def Chordnote(*z):					# Chordnotes as defined in chord.csv
 	return gv.chordnote
-def Scalename(*z):					# Scalenames as defined in scales.csv
-	return gv.scalename
 def Scalechord(*z):					# [[0];[0,...],.....], chords(indexes) per scale
 	return gv.scalechord
 def ARPordlist(*z):					# Playorders available for ARP
@@ -576,17 +565,17 @@ procs={
 	"Preset":["w",Preset],					# 0-127, returns either preset or renewmedia
 	"Voice":["w",Voice],					# (integer) index of Voicelist or (string) actual voice, returns either voice or voicechange
 	"Notemap":["w",Notemap],				# (string) Notemap or (integer) index in notemap of active notemap, returns either notemap or notemapchange
-	"nm_inote":["w",nm_inote],				# (string) Keyname or (integer) index in KeyNames for keyboardnote
+	"nm_inote":["w",remap.notes_inote],		# (string) Keyname or (integer) index in KeyNames for keyboardnote
 
 		# next procedures always return the value of the respective parameter
-	"nm_Q":["w",nm_Q],						# (integer) index of qFractions or (string) tones, so currently either "Semi" or "Quarter"
-	"nm_unote":["w",nm_unote],  			# index of an interface defined table/note to present the output note (when user prefers Bb above A# etcetera)
-	"nm_onote":["w",nm_onote],				# (integer) -2 to 127 with -2=Ctrl, -1=None and 0-127=midinotes or (string) notename + None/Ctrl
-	"nm_retune":["w",nm_retune],			# -50 - +50, retune in cents (0 is neutral)
-	"nm_voice":["w",nm_voice],     			# index of Voicelist to switch to, so you can only define switches to know voices in this preset
-	"nm_map":["w",nm_map],					# name of map to save
-	"nm_clr":["w",nm_clr],					# boolean, requesting clear notemap if True
-	"nm_sav":["w",nm_sav],					# boolean, requesting save notemap if True
+	"nm_Q":["w",remap.notes_Q],				# (integer) index of qFractions or (string) tones, so currently either "Semi" or "Quarter"
+	"nm_unote":["w",remap.notes_unote],  	# index of an interface defined table/note to present the output note (when user prefers Bb above A# etcetera)
+	"nm_onote":["w",remap.notes_onote],		# (integer) -2 to 127 with -2=Ctrl, -1=None and 0-127=midinotes or (string) notename + None/Ctrl
+	"nm_retune":["w",remap.notes_retune],	# -50 - +50, retune in cents (0 is neutral)
+	"nm_voice":["w",remap.notes_voice],     # index of Voicelist to switch to, so you can only define switches to know voices in this preset
+	"nm_map":["w",remap.notes_map],			# name of map to save
+	"nm_clr":["w",remap.notes_clear],		# boolean, requesting clear notemap if True
+	"nm_sav":["w",remap.notes_sav],			# boolean, requesting save notemap if True
 	"Scale":["w",Scale],					# index of ScaleName (& ScaleChord)
 	"Chord":["w",Chord],					# index of Chordname
 	"SoundVolume":["w",SoundVolume],		# 0-100
@@ -663,8 +652,7 @@ procs={
 	"KeyNames":["f",KeyNames],				# Notenames as defined in keynotes.csv
 	"Chordname":["f",Chordname],			# Chordnames as defined in chord.csv
 	"Chordnote":["f",Chordnote],			# Chordnotes as defined in chord.csv
-	"Scalename":["f",Scalename],			# Scalenames as defined in scales.csv
-	"Scalechord":["f",Scalechord],			# [[0,...],.....], chords(indexes) per scale, defined in scales.csv
+	"Scalechord":["f",Scalechord],			# [[0,...],.....], chords(indexes) per scale
 	"ARPordlist":["f",ARPordlist],			# Playorders available for ARP  <====uitzoeken !!
 	"DLYtypes":["f",DLYtypes],				# Effects implemented via the Delay line filter
 	"AWtypes":["f",AWtypes],				# Wah types implemented via the AutoWah filter
@@ -673,10 +661,3 @@ procs={
 	"CHOtypes":["f",CHOtypes],				# Chorus (just on/off..)
 	"LFOtypes":["f",LFOtypes]				# Effects implemented via the Low Frequency Oscillator
 	}
-
-# Extra procedures, no directly related to in/output fields
-
-display=gv.display							# if the user interface needs to display something on the system display
-nm_sync=remap.notes_sync					# Execute before showing results on the display to be in sync with play status
-nm_consolidate=remap.notes_consolidate		# Executed before using/presenting changes on nm_inote, nm_onote, nm_retune, nm_voice or nm_unote
-
