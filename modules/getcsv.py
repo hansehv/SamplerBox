@@ -85,8 +85,8 @@ def readcontrollerCCs(ifile):
     gv.controllerCCs=[[gv.UA,-1,-1]]  # define controller for unassigned controls
     for i in range(len(sheet)):
         if len(sheet[i])>2:     # skip useless lines
-            if gv.getindex(sheet[0],gv.controllerCCs)>-1:
-                print ("%s: Controller %s already defined, ignored %s" %(ifile,sheet[0],sheet[i]))
+            if gv.getindex(sheet[i][0],gv.controllerCCs)>-1:
+                print ("%s: Controller %s already defined, ignored %s" %(ifile,sheet[i][0],sheet[i]))
             else:
                 values=[]
                 for j in range(3):
@@ -172,7 +172,7 @@ def readkeynames(ifile):
             valuesDP=[]
             valuesCC=[]
             if len(sheet[i])>1:     # skip useless lines
-                if gv.getindex(sheet[0],gv.keynames)>-1:
+                if gv.getindex(sheet[i][0],gv.keynames)>-1:
                     print ("%s: Key %s already defined, ignored %s" %(ifile,sheet[i][0],sheet[i]))
                 else:
                     try:
@@ -294,4 +294,43 @@ def readMTchannelmap(ifile):
         gv.voicemap.sort(key=operator.itemgetter(0,1))  # sort on: map->input(midi)channel
     except:
         pass    # this is all optional, default is channel#->voice#
+    return 
+
+def readmenu(ifile):
+    # menu: [Menu, Item, Show as, Spectype, Spec1, Spec2]
+    import UI,menu
+    sheet=readcsv(ifile,100,False)
+    menu.maintxt=sheet[0][0]
+    currmenu=menu.maintxt
+    for i in range(1,len(sheet)):
+        if len(sheet[i])>2:     # skip useless lines
+            values=["","",""]
+            if sheet[i][0]!="-":
+                if currmenu!="": currmenu=sheet[i][0]
+            values[0]=currmenu
+            if sheet[i][1] in UI.procs and UI.procs[sheet[i][1]][0]=="w":
+                values[1]=sheet[i][1]
+                values[2]=values[1] if len(sheet[i])<4 or sheet[i][3]=="" else sheet[i][3]
+                if sheet[i][2].lower()=="boolean": values.append("boolean")
+                elif sheet[i][2] in UI.procs and UI.procs[sheet[i][2]][0]!="w":
+                    values.append(sheet[i][2])
+                else:
+                    if not isinstance(sheet[i][2],str): values=None
+                    else:
+                        spec=sheet[i][2].split('-')
+                        if len(spec)<2: values=None
+                        elif spec[0].isdigit() and spec[1].isdigit():
+                            values.append(int(spec[0]))
+                            values.append(int(spec[1]))
+                            if len(spec)>2 and spec[2].isdigit():values.append(int(spec[2]))
+                            else: values.append(1)
+                        else: values=None
+                if values: menu.definition.append(values)
+                else: print ("%s: Don't understand spec %s, ignored %s" %(ifile,sheet[i][2],sheet[i]))
+            else:
+                print ("%s: Item %s unknown or not writable, ignored %s" %(ifile,sheet[i][1],sheet[i]))
+        else:
+            print ("%s: ignored %s" %(ifile, sheet[i]))
+            gv.ConfigErr=True
+    menu.init()
     return 

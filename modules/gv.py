@@ -104,8 +104,6 @@ LEDblink=False
 USE_ALSA_MIXER=False
 BTNOTES=130         # Backtracknotes start
 MTCHNOTES=1024      # Multitimbral channel notes start - so leaves <1024 for main keyboard notes, next available 17408 (theoretically)
-buttfunc=0
-button_disp=[""]
 ActuallyLoading=False
 basename="None"
 DefinitionTxt=""
@@ -146,7 +144,7 @@ notemapping=[]
 
 def NoProc(*vals):      # Dummy
     pass
-def safeguard (*vals):  # dedicated proc for MC-table
+def safeguard (*vals):  # dedicated proc for debugging MC-table
     arr=[]
     for val in vals :
         arr.append(val)

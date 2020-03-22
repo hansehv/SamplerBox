@@ -48,17 +48,14 @@ def process():
             if steptick>=xs-1:              # step (note+rest) end reached
                 cycletick=xs*random.randint(0,steps-1)
         else:
+            cycletick+=1
             if cycletick>=xc:               # chord / sequence end reached
                 if play2end and not noteon: # in note off stage
                     return(rewind())        # so it ends here.
                 cycletick=0                 # otherwise loop through chord / sequence
-        if cycletick==0:
-            steptick=0
-        else:
-            steptick=cycletick%xs
+        steptick=cycletick%xs
         if steptick>=xn or steptick==0:
             noteoff()
-        cycletick+=1
         if steptick==0:
             playnote=currnote+sequence[int(cycletick//xs)]
             if playnote>(127-gv.stop127) and playnote<gv.stop127:   # stay within keyboard range
@@ -156,6 +153,7 @@ def tempo(CCval,*z):    # time between note-on's
     global noteticks
     x=(CCval*100)/127.0
     if x>100:x=100
+    elif x<10:x=10
     stepguard(noteticks,x)
 gv.setMC(gv.ARPTEMPO,tempo)
 

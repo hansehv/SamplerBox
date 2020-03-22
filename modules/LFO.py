@@ -136,7 +136,6 @@ def TremToggletrill(CCval,*z):
 gv.setMC(gv.TREMDEPTH,TremSetampl)
 gv.setMC(gv.TREMSPEED,TremSetspeed)
 gv.setMC(gv.TREMTRILL,TremToggletrill)
-#gv.TremSetspeed=TremSetspeed
 
 PanLFO=plfo()
 gv.PANvalue=0.0     # Center, in gv for samplerbox_audio only
@@ -164,7 +163,6 @@ def PanSetspeed(CCval,*z):
     PanLFO.setstep(PANspeed)
 gv.setMC(gv.PANWIDTH,PanSetwidth)
 gv.setMC(gv.PANSPEED,PanSetspeed)
-#gv.PanSetspeed=PanSetspeed
 
 def RotaProc(*z):
     VibrProc()
@@ -216,7 +214,6 @@ def Panning(*z):
     toggleType(3)
 def Rotate(*z):
     toggleType(4)
-#gv.LFOsetType=setType
 gv.setMC(gv.TREMOLO,Tremolo)
 gv.setMC(gv.VIBRATO,Vibrato)
 gv.setMC(gv.PANNING,Panning)

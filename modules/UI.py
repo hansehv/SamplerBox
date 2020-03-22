@@ -2,8 +2,9 @@
 #
 #   Provide an interface/API for user-interface related modules
 #
-#   The dictionary at the bottom explains the calling specifications (API)
-#   plus commented examples on how to get lists to facilitate code generation.
+#   The dictionary at the bottom explains the calling specifications
+#   of the fields for user interaction, followed by some extra
+#   control functions needing no user interaction.
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 #   see docs at  http://homspace.xs4all.nl/homspace/samplerbox
@@ -13,7 +14,7 @@
 
 #import operator,math
 import re,subprocess
-import gv,remap,arp,chorus,Cpp,LFO
+import gv,remap,menu,arp,chorus,Cpp,LFO
 
 # Writable variables
 
@@ -133,7 +134,8 @@ def Pitchrange(val=None):					# 0-12 (so max 1 octave up & down)
 def FVtype(val=None):						# value in FVtypes
 	try:
 		if val!=None:
-			Cpp.FVsetType(gv.getindex(val,Cpp.FVtypes,True))
+			if isinstance(val,int): Cpp.FVsetType(val)
+			else: Cpp.FVsetType(gv.getindex(val,Cpp.FVtypes,True))
 		return Cpp.FVtype
 	except: return 0
 def FVroomsize(val=None):					# 0-100
@@ -167,7 +169,8 @@ def FVwidth(val=None):						# 0-100
 def AWtype(val=None):						# value in AWtypes
 	try:
 		if val!=None:
-			Cpp.AWsetType(gv.getindex(val,Cpp.AWtypes,True))
+			if isinstance(val,int): Cpp.AWsetType(val)
+			else: Cpp.AWsetType(gv.getindex(val,Cpp.AWtypes,True))
 		return Cpp.AWtype
 	except: return 0
 def AWmixing(val=None):						# 0-100
@@ -229,7 +232,8 @@ def AWlvlrange(val=None):					# 0-100
 def DLYtype(val=None):						# value in DLYtypes
 	try:
 		if val!=None:
-			Cpp.DLYsetType(gv.getindex(val,Cpp.DLYtypes,True))
+			if isinstance(val,int): Cpp.DLYsetType(val)
+			else: Cpp.DLYsetType(gv.getindex(val,Cpp.DLYtypes,True))
 		return Cpp.DLYtype
 	except: return 0
 def DLYfb(val=None):						# 0-100
@@ -291,7 +295,8 @@ def DLYmax(val=None):						# 50-150
 def LFtype(val=None):						# value in LFtypes
 	try:
 		if val!=None:
-			Cpp.LFsetType(gv.getindex(val,Cpp.LFtypes,True))
+			if isinstance(val,int): Cpp.LFsetType(val)
+			else: Cpp.LFsetType(gv.getindex(val,Cpp.LFtypes,True))
 		return Cpp.LFtype
 	except: return 0
 def LFresonance(val=None):					# 0-38
@@ -332,7 +337,8 @@ def LFgain(val=None):						# 10-110, Carefully test before using values above 50
 def LFOtype(val=None):						# value in LFOtypes
 	try:
 		if val!=None:
-			LFO.setType(gv.getindex(val,LFO.effects,True))
+			if isinstance(val,int): LFO.setType(val)
+			else: LFO.setType(gv.getindex(val,LFO.effects,True))
 		return LFO.effect
 	except: return 0
 def VIBRpitch(val=None):					# 1-64
@@ -353,8 +359,8 @@ def VIBRtrill(val=None):					# boolean, or "N*" / "*"
 	try:
 		if val!=None:
 			LFO.VIBRtrill=gv.parseBoolean(val)
-		return LFO.VIBRtrill
-	except: return False
+		return 1 if LFO.VIBRtrill else 0
+	except: return 0
 def TREMampl(val=None):						# 1-100
 	try:
 		if val!=None:
@@ -373,7 +379,7 @@ def TREMtrill(val=None):					# boolean, or "N*" / "*"
 	try:
 		if val!=None:
 			LFO.TREMtrill=gv.parseBoolean(val)
-		return LFO.TREMtrill
+		return 1 if LFO.TREMtrill else 0
 	except: return False
 def PANwidth(val=None):						# 2-20
 	try:
@@ -389,7 +395,7 @@ def PANspeed(val=None):						# 1-32
 				LFO.PanSetspeed(val*4)
 		return LFO.PANspeed	#bug/4
 	except: return 0
-def ARPstep(val=None):						# 0-100
+def ARPstep(val=None):						# 10-100
 	try:
 		if val!=None:
 			if val>=1 and val<=100:
@@ -418,7 +424,8 @@ def ARP2end(val=None):						# boolean, or "N*" / "*"
 def ARPord(val=None):						# value in ARPordlist
 	try:
 		if val!=None:
-			arp.ordnum(gv.getindex(val,arp.modes,True))
+			if isinstance(val,int): arp.ordnum(val)
+			else: arp.ordnum(gv.getindex(val,arp.modes,True))
 		return arp.mode
 	except: return 0
 def ARPfade(val=None):						# 0-100 (100 means "no fadeout")
@@ -431,7 +438,8 @@ def ARPfade(val=None):						# 0-100 (100 means "no fadeout")
 def CHOrus(val=None):						# value in CHOtypes
 	try:
 		if val!=None:
-			chorus.setType(gv.getindex(val,chorus.effects,True))
+			if isinstance(val,int): chorus.setType(val)
+			else: chorus.setType(gv.getindex(val,chorus.effects,True))
 		return chorus.effect
 	except: return 0
 def CHOdepth(val=None):						# 2-15
@@ -593,12 +601,12 @@ procs={
 	"MidiVolume":["w",MidiVolume],			# 0-100
 	"Gain":["w",Gain],						# 0-300 (100 is neutral
 	"Pitchrange":["w",Pitchrange],			# 0-12 (so max 1 octave up & down)
-	"FVtype":["w",FVtype],					# value in FVtypes
+	"FVtype":["w",FVtype],					# (integer) index or (string) of value in FVtypes
 	"FVroomsize":["w",FVroomsize],			# 0-100
 	"FVdamp":["w",FVdamp],					# 0-100
 	"FVlevel":["w",FVlevel],				# 0-100
 	"FVwidth":["w",FVwidth],				# 0-100
-	"AWtype":["w",AWtype],					# value in AWtypes
+	"AWtype":["w",AWtype],					# (integer) index or (string) of value in AWtypes
 	"AWmixing":["w",AWmixing],				# 0-100
 	"AWattack":["w",AWattack],				# 0-500
 	"AWrelease":["w",AWrelease],			# 0-500
@@ -607,7 +615,7 @@ procs={
 	"AWqfactor":["w",AWqfactor],			# 0-100
 	"AWspeed":["w",AWspeed],				# 100-1100
 	"AWlvlrange":["w",AWlvlrange],			# 0-100
-	"DLYtype":["w",DLYtype],				# value in DLYtypes
+	"DLYtype":["w",DLYtype],				# (integer) index or (string) of value in DLYtypes
 	"DLYfb":["w",DLYfb],					# 0-100
 	"DLYwet":["w",DLYwet],					# 0-100
 	"DLYdry":["w",DLYdry],					# 0-100
@@ -616,13 +624,13 @@ procs={
 	"DLYsteplen":["w",DLYsteplen],			# 300-3300
 	"DLYmin":["w",DLYmin],					# 5-25
 	"DLYmax":["w",DLYmax],					# 50-150
-	"LFtype":["w",LFtype],					# value in LFtypes
+	"LFtype":["w",LFtype],					# (integer) index or (string) of value in LFtypes
 	"LFresonance":["w",LFresonance],		# 0-38
 	"LFcutoff":["w",LFcutoff],				# 1000-11000	
 	"LFdrive":["w",LFdrive],				# 1-20
 	"LFlvl":["w",LFlvl],					# 0-100
 	"LFgain":["w",LFgain],					# 10-110, Carefully test before using values above 50
-	"LFOtype":["w",LFOtype],				# value in LFOtypes
+	"LFOtype":["w",LFOtype],				# (integer) index or (string) of value in LFOtypes
 	"VIBRpitch":["w",VIBRpitch],			# 1-64
 	"VIBRspeed":["w",VIBRspeed],			# 1-32	
 	"VIBRtrill":["w",VIBRtrill],			# boolean
@@ -631,13 +639,13 @@ procs={
 	"TREMtrill":["w",TREMtrill],			# boolean
 	"PANwidth":["w",PANwidth],				# 2-20
 	"PANspeed":["w",PANspeed],				# 1-32
-	"ARPord":["w",ARPord],					# value in ARPordlist  <====uitzoeken !!
-	"ARPstep":["w",ARPstep],				# 0-100
+	"ARPord":["w",ARPord],					# (integer) index or (string) of value in ARPordlist
+	"ARPstep":["w",ARPstep],				# 10-100
 	"ARPsustain":["w",ARPsustain],			# 0-100
 	"ARPloop":["w",ARPloop],				# boolean
 	"ARP2end":["w",ARP2end],				# boolean
 	"ARPfade":["w",ARPfade],				# 0-100 (100 means "no fadeout")
-	"CHOrus":["w",CHOrus],					# value in CHOeffects
+	"CHOrus":["w",CHOrus],					# (integer) index or (string) of value in CHOeffects
 	"CHOdepth":["w",CHOdepth],				# 2-15
 	"CHOgain":["w",CHOgain],				# 30-80
 	"MidiChannel":["w",MidiChannel],		# 1-16
@@ -674,9 +682,18 @@ procs={
 	"LFOtypes":["f",LFOtypes]				# Effects implemented via the Low Frequency Oscillator
 	}
 
-# Extra procedures, no directly related to in/output fields
+#             = = = = =   Extra procedures, no directly related to in/output fields   = = = = =
 
-display=gv.display							# if the user interface needs to display something on the system display
+# notemap housekeeping
 nm_sync=remap.notes_sync					# Execute before showing results on the display to be in sync with play status
 nm_consolidate=remap.notes_consolidate		# Executed before using/presenting changes on nm_inote, nm_onote, nm_retune, nm_voice or nm_unote
-
+# access to configuration.txt, example: up=UI.cfg_int("BUT_incr")
+cfg_txt=lambda x: gv.cp.get(gv.cfg,x.lower())
+cfg_int=lambda x: gv.cp.getint(gv.cfg,x.lower())
+cfg_float=lambda x: gv.cp.getfloat(gv.cfg,x.lower())
+cfg_bool=lambda x: gv.cp.getboolean(gv.cfg,x.lower())
+# miscellaneous
+getindex=gv.getindex						# index=getindex(searchval,table<,onecol>). "onecol" is optional boolean "has table one column only". Default=False
+display=gv.NoProc							# if the user interface needs to display something on the system display
+USE_ALSA_MIXER=False						# this is (re)set by audio detection
+menu=menu.nav								# the buttons menu navigation

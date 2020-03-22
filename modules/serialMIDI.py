@@ -38,7 +38,7 @@ try:
                     message[2] = 0
                     i = 3
 
-            gv.MidiCallback(src='MIDISERIALPORT', message=message, time_stamp=None)
+            gv.MidiCallback(mididev='MIDISERIALPORT', message=message, time_stamp=None)
 
     MidiThread = threading.Thread(target=midi_serial_callback)
     MidiThread.daemon = True
