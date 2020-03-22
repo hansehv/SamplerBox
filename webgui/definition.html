@@ -10,19 +10,20 @@
 </HEAD>
 <BODY>
 
-<FORM ID="elem_SB_Form" STYLE="line-height:300%;">
-
+<FORM ID="elem_SB_Form">
 <TABLE WIDTH="100%"><TR>
 <TD WIDTH="112"><A HREF="index.html"><IMG SRC="SamplerBox.gif" BORDER="0" WIDTH="80" HEIGHT="27" ALIGN="middle" ALT=""></A></TD>
 <TD ALIGN="center"><B>definition.txt</B></TD>
 <TD ALIGN="center"><BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON> &nbsp; <span ID="input_SB_RenewMedia">New USB</span></TD>
 </TR></TABLE>
-
 <span ID="input_SB_Preset">Preset: </span>
- &nbsp; &nbsp; <BUTTON TYPE="submit">Save</BUTTON>
+ &nbsp; &nbsp; <BUTTON TYPE="submit">Save Text</BUTTON>
 <BR>
+<span ID="input_SB_Voice">Voice: </span>
+<span ID="elem_SB_Mode"></span><span ID="elem_SB_xvoice"> FX:</span>
+<div STYLE="line-height:150%;"><BR></div>
 <span ID="input_SB_DefinitionTxt"></span>
-<BR><BR><div ID="elem_SB_DefErr">Skipped because of errors: line#  </div>
+<BR><div ID="elem_SB_DefErr">Skipped because of errors: line#  </div>
 </FORM>
 
 <script>SB_Update();</script>

@@ -275,7 +275,7 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1,1));
 	},
 	input_SB_ARPstep: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
+		return(text+SB_slider(input_name,name,val,10,100,1)+SB_numselect(input_name,name,val,10,100,1,1));
 	},
 	input_SB_ARPsustain: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
