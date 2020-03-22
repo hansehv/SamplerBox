@@ -205,16 +205,15 @@ CHORDS_DEF = "chords.csv"
 SCALES_DEF = "scales.csv"
 CTRLCCS_DEF = "controllerCCs.csv"
 KEYNAMES_DEF = "keynotes.csv"
+MENU_DEF = "menu.csv"
 
 
 ##########  read LOCAL CONFIG ==> /boot/samplerbox/configuration.txt
 gv.cp=ConfigParser.ConfigParser()
 gv.cp.read(CONFIG_LOC + "configuration.txt")
 USE_SERIALPORT_MIDI = gv.cp.getboolean(gv.cfg,"USE_SERIALPORT_MIDI".lower())
-USE_HD44780_16x2_LCD = gv.cp.getboolean(gv.cfg,"USE_HD44780_16x2_LCD".lower())
 USE_OLED = gv.cp.getboolean(gv.cfg,"USE_OLED".lower())
 USE_I2C_7SEGMENTDISPLAY = gv.cp.getboolean(gv.cfg,"USE_I2C_7SEGMENTDISPLAY".lower())
-USE_BUTTONS = gv.cp.getboolean(gv.cfg,"USE_BUTTONS".lower())
 USE_LEDS = gv.cp.getboolean(gv.cfg,"USE_LEDS".lower())
 USE_HTTP_GUI = gv.cp.getboolean(gv.cfg,"USE_HTTP_GUI".lower())
 USE_SMFPLAYER=gv.cp.getboolean(gv.cfg,"USE_SMFPLAYER".lower())
@@ -241,6 +240,14 @@ BOXXFADEIN = gv.cp.getint(gv.cfg,"BOXXFADEIN".lower())
 BOXXFADEVOL = gv.cp.getfloat(gv.cfg,"BOXXFADEVOL".lower())
 gv.volumeCC = gv.cp.getfloat(gv.cfg,"volumeCC".lower())
 
+########## Initialize other internal globals
+
+USE_GPIO=False
+gv.samplesdir = SAMPLES_INBOX
+gv.stop127 = BOXSTOP127
+gv.sample_mode = BOXSAMPLE_MODE
+display=gv.NoProc       # set display to dummy
+
 ########## read CONFIGURABLE TABLES from config dir
 
 # Definition of notes, chords and scales
@@ -252,58 +259,50 @@ getcsv.readcontrollerCCs(CONFIG_LOC + CTRLCCS_DEF)
 getcsv.readkeynames(CONFIG_LOC + KEYNAMES_DEF)
 gv.CCmapBox=getcsv.readCCmap(CONFIG_LOC + gv.CTRLMAP_DEF)
 gv.CCmap = list(gv.CCmapBox)
-
-########## Initialize other globals, don't change
-
-USE_GPIO=False
-gv.samplesdir = SAMPLES_INBOX
-gv.stop127 = BOXSTOP127
-gv.sample_mode = BOXSAMPLE_MODE
+getcsv.readmenu(CONFIG_LOC + MENU_DEF)
 
 #########################################
 # Setup display routine  (if any..)
 #########################################
-display=gv.NoProc       # set display to dummy
+import UI
+display=gv.NoProc
 try:
 
-    if USE_HD44780_16x2_LCD:
+    if gv.cp.getboolean(gv.cfg,"USE_HD44780_16x2_LCD".lower()):
         USE_GPIO=True
         import lcd_16x2
         lcd = lcd_16x2.HD44780()
-        def display(s2,s7=""):
-            lcd.display(s2)
+        def display(l2='',s7='',l3='',l4='',*z):
+            lcd.display(l2,l3,l4)
         display('Start Samplerbox')
 
     elif USE_OLED:
         USE_GPIO=True
         import OLED
         oled = OLED.oled()
-        def display(s2,s7=""):
-            oled.display(s2)
+        def display(l2,*z):
+            oled.display(l2)
         display('Start Samplerbox')
 
     elif USE_I2C_7SEGMENTDISPLAY:
         import I2C_7segment
-        def display(s2,s7=""):
+        def display(l2,s7="",*z):
             I2C_7segment.display(s7)
         display('','----')
 
     elif USE_LEDS:
         USE_GPIO=True
         import LEDs
-        def display(s2,s7=""):
+        def display(*z):
             LEDs.signal()
         LEDs.green(False)
         LEDs.red(True,True)
-
-    else:
-        def display(s2,s7=""):
-            pass    
 
 except:
     print "Error activating requested display routine"
     GPIOcleanup()
 gv.display=display      # announce resulting proc to modules
+UI.display=display
 
 ##################################################################################
 # Audio, Effects/Filters/SMFplayer
@@ -313,6 +312,7 @@ gv.display=display      # announce resulting proc to modules
 # Alsamixer setup for volume control (optional)
 #
 import audio
+UI.USE_ALSA_MIXER=audio.USE_ALSA_MIXER
 
 # Arpeggiator (play chordnotes sequentially, ie open chords)
 # Process replaces the note-on/off logic, so rather cheap
@@ -1463,7 +1463,6 @@ def ActuallyLoad():
 
         #
         # Indicate we're ready and give memory status
-        gv.ActuallyLoading=False
         mem=psutil.virtual_memory()
         print "Loaded '%s', %d%% free memory left" %(gv.basename, 100-mem.percent)
         display("","%04d" % gv.PRESET)
@@ -1471,8 +1470,8 @@ def ActuallyLoad():
     else:
         print 'Preset empty: ' + str(gv.PRESET)
         gv.basename = "%d Empty preset" %gv.PRESET
-        gv.ActuallyLoading=False
         display("","E%03d" % gv.PRESET)
+    gv.ActuallyLoading=False
 
 #########################################
 ##  LOAD FIRST SOUNDBANK
@@ -1489,9 +1488,9 @@ LoadSamples()
 
 try:
 
-    if USE_BUTTONS:
+    import buttons  # availablity of the optional buttons is tested in the module
+    if buttons.numbuttons:  # found some :-)
         USE_GPIO=True
-        import buttons
 
     if USE_HTTP_GUI:
         import http_gui
