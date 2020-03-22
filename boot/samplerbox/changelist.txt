@@ -5,6 +5,8 @@ For changes on the image, see http://homspace.xs4all.nl/homspace/samplerbox/SBbu
 Jan-March 2020:
   - Introduced user interface module = make SB-engine a black box with a predictable/documented API
   - WebGUI adapted for this approach (for giving show&testcase)
+  - added lcd_16x2, buttons with extra menu
+  - bugfixes
 Oct-Dec 2019:
   - Fixed notemapping GUI screen
   - Finished embedded release samples (relsample=E)

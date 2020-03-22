@@ -18,11 +18,11 @@ This list will be appended with the notenames as defined in keynotes.csv:
   The Val is the notenumber (so C4 sends CC=60, but this is transparant for you)
   All this to facilitate the "Ctrl" in the notemaps
   It requires the optional keynotes.csv
----- ==> the distributed file showes my setup, you should adapt that to your equipment
+---- ==> the distributed file shows my setup, you should adapt that to your equipment
 -----------------------------------------------------------------------------------
 Syntax of CCmap.csv:
 - Headings!
-- Controller: name as defined in midi_controllers.csv (this is the link)
+- Controller: name as defined in controllerCCs.csv (this is the link)
      You can, but do not have to, list all defined controllers here
      UA=unassigned means no controller is set to the function mapped in this row
 - Next columns refer to internal functions/values (see Controls.csv for overview)
@@ -71,3 +71,13 @@ Syntax of scales.csv (only works in 12-tone scales):
   These chords have to be defined in the chords.csv
 - Values 0 or - mean single note
 - You must fill 12 note values !! The samplerbox will run, but misbehave otherwise
+-----------------------------------------------------------------------------------
+Syntax of menu.csv (for buttons, both GPIO and midi):
+- Headings! Column1 heading title is adaptable and used as name for top level menu
+- Column1=Menu: Adaptable names of the second level (sub)menus.
+- Column2=Item: Second level menu items, this have to correspond with UI-procs
+- Column3=Specs: Either:
+  - UI-proc referring to table related to the item (Chord has Chordname as related table)
+  - Value range (0-100) optionally extended with changevalue (changevalue=1 is default)
+    (0-100-5 has a range 0-100 and button will make 20 steps of 5) 
+- Column4=Show as: Gives the name to show for the item if you want it to be different
