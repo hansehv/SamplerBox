@@ -32,6 +32,7 @@ Syntax of CCmap.csv:
     - Chords: defined in the chords.csv (see below)
     - Scales: defined in the scales.csv (see below)
     - Voices: depends on the voices defined in active preset.
+    - SMFs  : depends on the midifiles defined in active preset.
     - UA=unassigned: to be used when you don't assign a controller
 - Sets: depends on the type
     - Fixed: function that will be called using the value (Col3 of midi_controllers)

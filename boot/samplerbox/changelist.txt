@@ -2,10 +2,16 @@ This file contains changelog of samplerbox.py
 For changes on samplerbox_audio.pyx, see top of the source file
 For changes on the image, see http://homspace.xs4all.nl/homspace/samplerbox/SBbuild.html
 
+April 2020:
+  - button menu can be operated via midi and webgui
+  - webgui can handover info to next screen via both cookies and url parameters
+  - webgui modernized using more sophisticated style elements
+  - bugfixes
 Jan-March 2020:
   - Introduced user interface module = make SB-engine a black box with a predictable/documented API
   - WebGUI adapted for this approach (for giving show&testcase)
-  - added lcd_16x2, buttons with extra menu
+  - added lcd_16x2 & OLED, GPIO buttons with extra menu
+  - above menu can be operated via MIDI controls(buttons)
   - bugfixes
 Oct-Dec 2019:
   - Fixed notemapping GUI screen

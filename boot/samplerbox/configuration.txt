@@ -23,14 +23,16 @@ AUDIO_DEVICE_NAME = Detect      ; ..or specify (part of) it's name. SB uses the 
 MIXER_CONTROL = Detect          ; Fill this to override autodetection, specify None to disable alsa volume control
 SAMPLERATE = 44100              ; Sets value for wav's and audio device
 BLOCKSIZE = High                ; Blocksize or "Low"/"High". High may cause latency, low may cause distortion; just try.
+#                                 Valid numbers for blocksize are shown in the console messages when started manually
 USE_48kHz = False               ; Sets audio to 48kHz while keeping wav's on 44100Hz. Try to avoid this...
 USE_SERIALPORT_MIDI = False     ; Set to True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
 USE_HD44780_16x2_LCD = False    ; Set to True to use a HD44780 based 16x2 LCD
 USE_OLED = False                ; Set to True to use an OLED display !!! Configure below
 USE_I2C_7SEGMENTDISPLAY = False ; Set to True to use a 7-segment display via I2C
+USE_BUTTONS = False             ; Set to True to use the GPIO buttons
 USE_LEDS = False                ; Set to True to use LED's connected to RaspberryPi's GPIO pins
 USE_HTTP_GUI = True             ; should webgui server be started?
-USE_SMFPLAYER = True            ; should "sequencer" be started?
+USE_SMFPLAYER = False           ; should internal "sequencer" be started? If True, it will be added to the multi-timbrals
 MULTI_TIMBRALS =                ; Multi timbral devices, comma separated. Exactly as in the midi open message, but without quotes!
 MAX_POLYPHONY = 80              ; This can be set higher, but 80 is a safe value
 MAX_MEMLOAD = 90                ; Used memory percentage at which loading of samples stops
@@ -94,9 +96,9 @@ LED_green=22                    ; Green light
 #     -- USE_HD44780_16x2_LCD -- 4 bits operation
 LCD_RS=7                        ; LCD Register select
 LCD_E=8                         ; Enable
-LCD_D4=27                       ; Data4
+LCD_D4=27                       ; Data4 <== this overlap doesn't matter as only one hw display can be defined
 LCD_D5=17                       ; Data5
-LCD_D6=18                       ; Data6
+LCD_D6=18                       ; Data6 <== reprogram/rewire if using HiFiberry compatible
 LCD_D7=4                        ; Data7
 #
 #     -- USE_OLED -- OLED connection and device settings (SPI connection)
