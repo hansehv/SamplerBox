@@ -1,3 +1,8 @@
+// -----------------------------------------------------------------
+// Majority of functions below are part of the API, handle with care
+// -----------------------------------------------------------------
+
+// Connection with webgui.py
 function SB_Update(){
 	SB_GetAPI();
 	if (SB_busy!=0) {		// this means SB is busy interpreting a sample set
@@ -27,7 +32,7 @@ function SB_Update(){
 		}
 	}
 }
-var SB_variables={	// make sure all passed parameters are covered here
+var SB_variables={	// make sure all passed I/O parameters are covered here
 	v_SB_MidiChannel: function(val){SB_MidiChannel=val;},
 	v_SB_SoundVolume: function(val){SB_SoundVolume=val;},
 	v_SB_MidiVolume: function(val){SB_MidiVolume=val;},
@@ -94,10 +99,13 @@ var SB_variables={	// make sure all passed parameters are covered here
 	v_SB_CHOrus: function(val){SB_CHOrus=val;},
 	v_SB_CHOdepth: function(val){SB_CHOdepth=val;},
 	v_SB_CHOgain: function(val){SB_CHOgain=val;},
+	v_SB_Button: function(val){SB_Button=val;},
 	v_SB_RenewMedia: function(val){SB_RenewMedia=val;},
 	v_SB_DefinitionTxt: function(val){SB_DefinitionTxt=val;}
 }
-var SB_input={	// make sure all passed parameters are covered here, be it with a dummy
+
+// I-O Building blocks
+var SB_input={	// make sure all passed I/O parameters are covered here, be it with a dummy
 	input_SB_MidiChannel: function(input_name,name,val,text){
 		return(text+SB_numselect(input_name,name,val,1,16,1,1));
 	},
@@ -306,13 +314,17 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 	input_SB_RenewMedia: function(input_name,name,val,text){
 		return('<LABEL><INPUT type="checkbox" name="'+name+'" class="hidden" value="Yes" onclick="SB_Submit();"><span class="button">'+text+'</span></LABEL>');
 	},
+	input_SB_Button: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val-1,text,SB_Buttons,1,1));
+	},
 	input_SB_DefinitionTxt: function(input_name,name,val,text){
 		if (SB_Samplesdir.charAt(0)=='/') m='';else m=' readonly';
 		return('<DIV STYLE="line-height:100%;text-align:center">'+text+m+'</DIV><TEXTAREA name="'+name+'"'+m+'>'+val+'</TEXTAREA>');
 	}
 }
 
-SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_xvoice","elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote","elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales","elem_SB_Notemap","elem_SB_bTracks"];
+// Read-only building blocks
+SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_xvoice","elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote","elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales","elem_SB_Notemap","elem_SB_bTracks","elem_SB_LCDdisplay"];
 SB_numelems=SB_ElemID.length;
 var SB_element={
 	elem_SB_Form: function(elem_name){
@@ -350,9 +362,9 @@ var SB_element={
 		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+SB_Chordname[SB_Chord]+'</SPAN>';
 	},
 	elem_SB_Chords: function(elem_name){
-		html='<TABLE BORDER="1"><TR><TH>Chord</TH><TH>Notes for C</TH></TR>';
+		html='<TABLE CLASS="datatable"><TR><TH>Chord</TH><TH>Notes for C</TH></TR>';
 		for (i=1;i<SB_Chordname.length;i++){
-			html=html+'<TR VALIGN="top"><TD>'+SB_Chordname[i]+'</TD><TD>';
+			html=html+'<TR CLASS="datatable"><TD CLASS="datatable" STYLE="text-align:left;">'+SB_Chordname[i]+'&nbsp;</TD><TD CLASS="datatable" STYLE="text-align:left;">&nbsp;';
 			filler="";
 			for (j=0;j<SB_Chordnote[i].length;j++){
 				html=html+filler+SB_Noteprint(SB_Chordnote[i][j]);
@@ -363,9 +375,10 @@ var SB_element={
 		document.getElementById(elem_name).innerHTML=html+'</TABLE>';
 	},
 	elem_SB_Scales: function(elem_name){
-		html='<TABLE BORDER="1"><TR><TH>Scale</TH><TH>Implemented Chords</TH></TR>';
+		html='<TABLE CLASS="datatable"><TR><TH>Scale</TH><TH>Implemented Chords</TH></TR>';
 		for (i=1;i<SB_Scalename.length;i++){
-			html=html+'<TR VALIGN="top"><TD>'+SB_Scalename[i]+'</TD><TD>';
+			//html=html+'<TR VALIGN="top"><TD>'+SB_Scalename[i]+'</TD><TD>';
+			html=html+'<TR CLASS="datatable"><TD CLASS="datatable"  STYLE="text-align:left;">'+SB_Scalename[i]+'&nbsp;</TD><TD CLASS="datatable" STYLE="text-align:left;">&nbsp;';
 			filler="";
 			for (j=0;j<SB_Scalechord[i].length;j++){
 				if (SB_Scalechord[i][j]>0){
@@ -378,7 +391,7 @@ var SB_element={
 		document.getElementById(elem_name).innerHTML=html+'</TABLE>';
 	},
 	elem_SB_Notemap: function(elem_name){
-		html='<TABLE BORDER="1" CELLPADDING="3" ID="TableID_Notemap"><TR><TH style="display:none;"><TH>Key</TH><TH>Plays</TH><TH>Tune</TH><TH>Voice</TH></TR>';
+		html='<TABLE CLASS="datatable" ID="TableID_Notemap"><TR><TH style="display:none;"><TH>Key</TH><TH>Plays</TH><TH>Tune</TH><TH>Voice</TH></TR>';
 		for (var i=0;i<SB_NoteMapping.length;i++){
 			var inote=SB_NoteMapping[i][0];
 			var inotenam="%s" %inote;
@@ -388,7 +401,8 @@ var SB_element={
 			for (j=0;i<SB_KeyNames.length;j++){
 				if (SB_KeyNames[j][0]==inote){
 					inotenam=SB_KeyNames[j][1];
-					if (inote==SB_nm_inote){k=' style="background-color:Khaki;"'}
+					if (inote==SB_nm_inote){k='CLASS="rowsel"'}
+					else {k='CLASS="datatable"'}
 					break;
 				}
 			}
@@ -397,22 +411,30 @@ var SB_element={
 			if (onotenam=="None"){onotenam="";}
 			if (SB_NoteMapping[i][3]!=0){retune=SB_NoteMapping[i][3]}
 			if (SB_NoteMapping[i][4]!=0){voice=SB_NoteMapping[i][4]}
-			html=html+'<TR VALIGN="top"'+k+'><TD style="display:none;">'+j+'</TD><TD ALIGN="center">'+inotenam+'</TD><TD ALIGN="center">'+onotenam+'</TD><TD ALIGN="center">'+retune+'</TD><TD ALIGN="center">'+voice+'</TD></TR>';
+			html=html+'<TR '+k+'><TD style="display:none;">'+j+'</TD><TD CLASS="datatable">'+inotenam+'</TD><TD CLASS="datatable">'+onotenam+'</TD><TD CLASS="datatable">'+retune+'</TD><TD CLASS="datatable">'+voice+'</TD></TR>';
 		}
 		document.getElementById(elem_name).innerHTML=html+'</TABLE>';
 	},
 	elem_SB_bTracks: function(elem_name){
 		if (SB_bTracks.length==0) {document.getElementById(elem_name).innerHTML='';}
 		else {
-			html='<TABLE BORDER="1" CELLPADDING="3"><TR><TD>Knob</TD><TH>Backtrack</TH><TD>Note</TH></TD>';
+			html='<TABLE BORDER="1" CLASS="datatable"><TR><TH>Knob</TH><TH>Backtrack</TH><TH>Note</TH></TR>';
 			for (i=0;i<SB_bTracks.length;i++){
-				html=html+'<TR VALIGN="top"><TD ALIGN="center">'+SB_bTracks[i][0]+'</TD><TD ALIGN="center">'+SB_bTracks[i][1]+'</TD><TD ALIGN="center">'+SB_bTracks[i][2]+'</TD></TR>';
+				html=html+'<TR CLASS="datatable"><TD CLASS="datatable"">'+SB_bTracks[i][0]+'</TD><TD CLASS="datatable"">'+SB_bTracks[i][1]+'</TD><TD CLASS="datatable"">'+SB_bTracks[i][2]+'</TD></TR>';
 			}
 			document.getElementById(elem_name).innerHTML=html+'</TABLE><P>';
 		}
+	},
+	elem_SB_LCDdisplay: function(elem_name){
+		html='<TABLE BORDER="2" CELLPADDING="10"  CELLSPACING="5" WIDTH="350" align="center">';
+		for (i=0;i<SB_MenuDisplay.length;i++){
+			html=html+'<TR BORDER="0"><TD align="center" class="value LCD">'+SB_MenuDisplay[i]+'</TD></TR>';
+		}
+		document.getElementById(elem_name).innerHTML=html+'</TABLE><P>';
 	}
 }
 
+// Subroutines
 function SB_notechord(note,chord){
 	if (SB_Chordname[chord]=="Maj") c="";
 	else c=SB_Chordname[chord].toLowerCase();
@@ -432,7 +454,7 @@ function SB_numselect(input_name,name,val,min,max,step,update){
 	return(html+'</SELECT>');
 }
 function SB_listselect(input_name,name,val,table,dims,size,update){
-	html='<SELECT name="'+name+'" id="select_'+name+'" SIZE="1"';
+	html='<SELECT class="custom-dropdown__select custom-dropdown__select--white" name="'+name+'" id="select_'+name+'" SIZE="1"';
 	if (update==1) {html=html+' onchange=SB_Submit()';}
 	//else {html=html+' onchange=SB_updateval(this)';}
 	html=html+'>';
@@ -481,17 +503,18 @@ function SB_slidersync(IDslider, IDvar, sliderchange){
 	SB_Submit();
 }
 function SB_radioselect(input_name,name,val,text,table,dims,update){
-	html=""
+	html='<div class="switch-field">'
 	for (i=0;i<table.length;i++){
 		j="";
+		id=name+"-id_"+i
 		if (i==val) j="CHECKED"; else j="";
 		if (dims==1){if (i==val) j=" CHECKED";k=table[i];l=table[i];}
 		else {if (table[i][0]==val) j=" CHECKED";k=table[i][1];l=table[i][0];}
-		html=html+' <INPUT type="radio" name="'+name+'" value="'+l+'" '+j;
+		html=html+' <INPUT type="radio" name="'+name+'" id="'+id+'" value="'+l+'" '+j;
 		if (update==1) {html=html+' onclick="SB_Submit()"'};
-		html=html+'>'+k;
+		html=html+'><LABEL for="'+id+'">'+k+'</LABEL>';
 	}
-	return(text+html);
+	return(text+html+'</div>');
 }
 
 var SB_Notename=[["C"],["Cs"],["C&#9839;","D&#9837;"],["Dk"],["D"],["Ds"],["D&#9839;","E&#9837;"],["Ek"],["E"],["Es","Fk"],["F"],["Fs"],["F&#9839;","G&#9837;"],["Gk"],["G"],["Gs"],["G&#9839;","A&#9837;"],["Ak"],["A"],["As"],["A&#9839;","B&#9837;"],["Bk"],["B"],["Bs","Ck"],["FX"]];
@@ -530,8 +553,51 @@ function SB_Noteprint(note){
 }
 
 function SB_Refresh(){	// gets the page again without resending any form values
-	window.location.assign(window.location.pathname);
+    var qstr="";
+    var sep="?";
+    for (var i=0; i < arguments.length; i+=2) {
+        qstr+=sep+arguments[i]+'='+arguments[i+1];
+        sep="&";
+    }
+    console.log(qstr)
+	window.location.assign(window.location.pathname+qstr);
 }
 function SB_Submit(){
 	document.getElementById("elem_SB_Form").submit();
+}
+
+// -----------------------------------------------------------------
+// Next functions are not part of the API but useful in some screens
+// -----------------------------------------------------------------
+
+function setCookie(cname, cvalue, exhours=4) {
+	var d = new Date();
+	d.setTime(d.getTime() + (exhours*60*60*1000));
+	var expires = "expires="+ d.toUTCString();
+	document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+function getCookie(cname) {
+	var name = cname + "=";
+	var decodedCookie = decodeURIComponent(document.cookie);
+	var ca = decodedCookie.split(';');
+	for(var i = 0; i <ca.length; i++) {
+		var c = ca[i];
+		while (c.charAt(0) == ' ') {
+			c = c.substring(1);
+		}
+		if (c.indexOf(name) == 0) {
+			return c.substring(name.length, c.length);
+		}
+	}
+	return "";
+}
+function getURLparm(name) {
+	name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+	var regexS = "[\\?&]"+name+"=([^&#]*)";
+	var regex = new RegExp( regexS );
+	var results = regex.exec( window.location.href );
+	if( results == null )
+		return "";
+	else
+		return results[1];
 }

@@ -1,6 +1,4 @@
-<META NAME="Generator" CONTENT="Stone's WebWriter 3.5">
 <!DOCTYPE html><HTML><HEAD><meta charset="UTF-8">
-<!-- Minus AutoDato -->
 <BR><TITLE>BuildingBlocks</TITLE>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Script-Type" content="text/javascript">
@@ -9,11 +7,17 @@
 <BODY>
 
 <TABLE WIDTH="100%"><TR>
-<TD WIDTH="112"><A HREF="index.html"><IMG SRC="SamplerBox.gif" BORDER="0" WIDTH="80" HEIGHT="27" ALIGN="middle" ALT=""></A></TD>
+<TD width="125"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Dashboard</BUTTON></TD>
 <TD ALIGN="center"><B>Building Blocks</B></TD>
 <TD ALIGN="center"><BUTTON TYPE="button" onclick='window.location.assign("readme.html");'>back to Readme</BUTTON></TD>
 </TR></TABLE>
-
+<style>
+TD {padding: 2px 5px;}
+TD:first-of-type {
+    border-radius: 6px 0 0 6px;}
+TD:last-of-type {
+    border-radius: 0 6px 6px 0;}
+</style>
 <TABLE BORDER="1">
 <TR><TD>
 General / miscellaneous
@@ -25,6 +29,8 @@ General / miscellaneous
 <BR>elem_SB_Mode
 <BR>elem_SB_Samplesdir
 <BR>elem_SB_xvoice
+<BR>elem_SB_LCDdisplay
+<BR>input_SB_Button
 <BR>input_SB_DefinitionTxt
 <BR>input_SB_MidiChannel
 <BR>input_SB_Pitchrange
@@ -94,9 +100,11 @@ Notemapping<BR>(redefine keyboard)
 <BR>input_SB_Notemap
 <BR>input_SB_nm_inote
 <BR>input_SB_nm_onote
+<BR>input_SB_nm_unote
 <BR>input_SB_nm_Q
 <BR>input_SB_nm_retune
 <BR>input_SB_nm_voice
+<BR>input_SB_nm_clr
 <BR>input_SB_nm_map
 <BR>input_SB_nm_sav
 </TD></TR><TR><TD>

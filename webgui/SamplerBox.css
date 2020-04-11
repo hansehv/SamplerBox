@@ -1,17 +1,49 @@
+:root {
+  --bgcolor-main: #C0C0C0;
+  --bgcolor-value: #00FFFF;
+  --bgcolor-focus: #00FFFF;
+  --bgcolor-clickable: #80FFFF;
+  --bgcolor-listodd: #f2f2f2;
+  --bgcolor-listeven: #e4e4e4;
+  --bgcolor-focusrow: #ff9999;
+  --bgcolor-radio: #e4e4e4;
+  --bgcolor-LCD: #f2f2f2;
+  --color-LCD: #00ff;
+  --color-text: #000000;
+  --color-slider: #FFFFFF;}
+@font-face {
+  font-family: 'lcddot';
+  src: url('lcddot.ttf')  format('truetype');}
+
 BODY {
-	background-color:#C0C0C0;
-	color:#000000;}
+	background-color:var(--bgcolor-main);
+	color:var(--color-text);}
 BODY, TABLE {
 	font-size:medium;
-	font-family:"Lucida Sans Unicode"; "Lucida Grande"; sans-serif;}
+	font-family:"Lucida Sans Unicode", "Lucida Grande", sans-serif;}
+TABLE {
+	border-radius:6px;
+	-moz-border-radius:6px;}
+
 H1, H2, H3 {display:inline;}
 
 FORM {line-height:300%;}
-INPUT, SELECT, BUTTON, .button, .value {
+INPUT, SELECT, .value {
 	font-family:"Lucida Console", Monaco, monospace;
 	font-size:large;
 	vertical-align:middle;
-	background-color:#80FFFF;}
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	background-color:var(--bgcolor-value);}
+OPTION:nth-child(odd) {background-color: var(--bgcolor-listodd);}
+OPTION:nth-child(even) {background-color: var(--bgcolor-listeven);}
+.LCD {
+	font-family:lcddot;
+	font-size:xx-large;
+	color:var(--color-LCD);
+	background-color:var(--bgcolor-LCD);
+	}
 TEXTAREA {
 	unicode-bidi:font-family:monospace;
 	font-size:large;
@@ -23,46 +55,90 @@ TEXTAREA {
 	overflow-x:scroll;}
 
 BUTTON, .button {
+	font-family:"Lucida Console", Monaco, monospace;
+	font-size:large;
+	background-color:var(--bgcolor-clickable);
 	padding: 2px 8px;
 	text-align: center;
+	vertical-align:middle;
 	cursor: pointer;
 	border: none;
 	border-radius: 10px;
 	box-shadow: 0 3px #999;}
-BUTTON:hover, .button:hover {background-color:#00FFFF;}
+BUTTON:hover, .button:hover {background-color:var(--bgcolor-focus);}
 BUTTON:active, .button:active {
-	background-color:#00FFFF;
+	background-color:var(--bgcolor-focus);
 	box-shadow: 0 5px #666;
 	transform: translateY(2px);}
 
-TD.value {text-align:center;}
 .inline {display: inline-block;}
 .valign_top {vertical-align:top;}
 .valign_middle {vertical-align:middle;}
 .hidden {display: none;}
 .alignx input[type=checkbox]{position: relative;vertical-align: middle;bottom: 1px;}
 
+.datatable {
+    border-collapse: collapse;
+    border: 1px solid var(--bgcolormain);
+    border-top: 0px; border-bottom: 0px;
+    padding: 3px;}
+.rowsel {background-color:var(--bgcolor-focusrow);}
+TR.datatable:nth-child(even) {background-color: var(--bgcolor-listodd);}
+TR.datatable:nth-child(odd) {background-color: var(--bgcolor-listeven);}
+TR.datatable:hover, TR.datatable:active {background-color: var(--bgcolor-focus);}
+TD.datatable {text-align:center;}
+
+/* ----- RADIO BUTTONS ----- (<div>class="switch-field" ... radiobuttons ... </div>) ----- */
+.switch-field {
+    display: inline;
+    margin-bottom: 36px;
+    overflow: hidden;}
+.switch-field input {
+    position: absolute !important;
+    clip: rect(0, 0, 0, 0);
+    height: 1px;
+    width: 1px;
+    border: 0;
+    overflow: hidden;}
+.switch-field label {
+    background-color: var(--bgcolor-radio);
+    font-family:"Lucida Console", Monaco, monospace;
+    vertical-align:middle;
+    line-height: 1;
+    text-align: center;
+    padding: 4px 8px;
+    margin-left: -2px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px rgba(255, 255, 255, 0.1);
+    transition: all 0.1s ease-in-out;}
+.switch-field label:hover {
+    cursor: pointer;
+    background-color:var(--bgcolor-clickable);}
+.switch-field input:checked + label {
+    background-color: var(--bgcolor-value);
+    box-shadow: none;}
+.switch-field label:first-of-type {
+    border-radius: 10px 0 0 10px;}
+.switch-field label:last-of-type {
+    border-radius: 0 10px 10px 0;}
+
 /* ----- SLIDER ----- (input type=range) ----- */
 /* SLIDER: hide defaults */
 input[type=range] {
   -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
   width: 100%; /* Specific width is required for Firefox. */
-  background: transparent; /* Otherwise white in Chrome */
-}
+  background: transparent;} /* Otherwise white in Chrome */
 input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-}
+  -webkit-appearance: none;}
 input[type=range]:focus {
-  outline: none; /* Removes the blue border. You should probably do some kind of focus styling for accessibility reasons though. */
-}
+  outline: none;} /* Removes the blue border. You should probably do some kind of focus styling for accessibility reasons though. */
 input[type=range]::-ms-track {
   width: 100%;
   cursor: pointer;
   /* Hides the slider so custom styles can be added */
   background: transparent; 
   border-color: transparent;
-  color: transparent;
-}
+  color: transparent;}
 /* SLIDER: new values */
 input[type=range] {
   height: 30px;
@@ -70,56 +146,48 @@ input[type=range] {
   margin: 5 5px;
   width: 250px;
   vertical-align: text-bottom;
-  padding: 0;
-}
+  padding: 0;}
 input[type=range]:focus {
-  outline: none;
-}
+  outline: none;}
 input[type=range]::-webkit-slider-runnable-track {
   width: 100%;
   height: 17px;
   cursor: pointer;
   animate: 0.2s;
-  box-shadow: 1px 1px 1px #000000;
-  background: #80ffff;
+  box-shadow: 1px 1px 1px var(--color-text);
+  background: var(--bgcolor-clickable);
   border-radius: 5px;
-  border: 1px solid #000000;
-}
+  border: 1px solid var(--color-text);}
 input[type=range]::-webkit-slider-thumb {
-  box-shadow: 1px 1px 1px #000000;
-  border: 1px solid #000000;
+  box-shadow: 1px 1px 1px var(--color-text);
+  border: 1px solid var(--color-text);
   height: 27px;
   width: 20px;
   border-radius: 10px;
-  background: #FFFFFF;
+  background: var(--color-slider);
   cursor: pointer;
   -webkit-appearance: none;
-  margin-top: -5px;
-  /* margin-top: -8px; */
-}
+  margin-top: -5px;}
 input[type=range]:focus::-webkit-slider-runnable-track {
-  background: #80ffff;
-}
+  background: var(--bgcolor-clickable);}
 input[type=range]::-moz-range-track {
   width: 100%;
   height: 17px;
   cursor: pointer;
   animate: 0.2s;
-  box-shadow: 1px 1px 1px #000000;
-  background: #80ffff;
+  box-shadow: 1px 1px 1px var(--color-text);
+  background: var(--bgcolor-clickable);
   border-radius: 5px;
-  border: 1px solid #000000;
-}
+  border: 1px solid var(--color-text);}
 input[type=range]::-moz-range-thumb {
-  box-shadow: 1px 1px 1px #000000;
-  border: 1px solid #000000;
+  box-shadow: 1px 1px 1px var(--color-text);
+  border: 1px solid var(--color-text);
   height: 27px;
   width: 20px;
   border-radius: 10px;
   margin-top: 0;
-  background: #FFFFFF;
-  cursor: pointer;
-}
+  background: var(--color-slider);
+  cursor: pointer;}
 input[type=range]::-ms-track {
   width: 100%;
   height: 8px;
@@ -127,34 +195,28 @@ input[type=range]::-ms-track {
   animate: 0.2s;
   background: transparent;
   border-color: transparent;
-	/*border-width: 8px 0;*/
-  color: transparent;
-}
+  /*border-width: 8px 0;*/
+  color: transparent;}
 input[type=range]::-ms-fill-lower {
-  background: #80ffff;
-  border: 1px solid #000000;
+  background: var(--bgcolor-clickable);
+  border: 1px solid var(--color-text);
   border-radius: 5px;
-  box-shadow: 1px 1px 1px #000000;
-}
+  box-shadow: 1px 1px 1px var(--color-text);}
 input[type=range]::-ms-fill-upper {
-  background: #80ffff;
-  border: 1px solid #000000;
+  background: var(--bgcolor-clickable);
+  border: 1px solid var(--color-text);
   border-radius: 5px;
-  box-shadow: 1px 1px 1px #000000;
-}
+  box-shadow: 1px 1px 1px var(--color-text);}
 input[type=range]::-ms-thumb {
   margin-top: 1px;
-  box-shadow: 1px 1px 1px #000000;
-  border: 1px solid #000000;
+  box-shadow: 1px 1px 1px var(--color-text);
+  border: 1px solid var(--color-text);
   height: 27px;
   width: 20px;
   border-radius: 5px;
-  background: #FFFFFF;
-  cursor: pointer;
-}
+  background: var(--color-slider);
+  cursor: pointer;}
 input[type=range]:focus::-ms-fill-lower {
-  background: #80ffff;
-}
+  background: var(--bgcolor-clickable);}
 input[type=range]:focus::-ms-fill-upper {
-  background: #80ffff;
-}
+  background: var(--bgcolor-clickable);}
