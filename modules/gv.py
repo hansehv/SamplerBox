@@ -21,6 +21,10 @@ SMFS="SMFs"
 SMFTEMPO="SMFtempo"
 SMFLOOP="SMFloop"
 SMFSTOP="SMFstop"
+MENU_INCR="Menu_Incr"
+MENU_DECR="Menu_Decr"
+MENU_SEL="Menu_Sel"
+MENU_RET="Menu_Ret"
 CHORDS="Chords"
 SCALES="Scales"
 PITCHWHEEL="PitchWheel"
@@ -150,7 +154,9 @@ def safeguard (*vals):  # dedicated proc for debugging MC-table
         arr.append(val)
     print "gv.Safeguard: call to unset procedure for %s:%s" %(arr[1],arr[0])
 def setMC(mc,proc):
-    MC[getindex(mc,MC)][2]=proc
+    x=getindex(mc,MC)
+    MC[x][2]=proc
+    return x
 MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch),procedure)
 [PROGUP,1,safeguard],
 [PROGDN,1,safeguard],
@@ -233,5 +239,9 @@ MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch)
 [SMFLOOP,1,safeguard],
 [SMFSTOP,1,safeguard],
 [SMFTEMPO,0,safeguard],
+[MENU_INCR,1,safeguard],
+[MENU_DECR,1,safeguard],
+[MENU_SEL,1,safeguard],
+[MENU_RET,1,safeguard],
 [NOTEMAPS,2,safeguard]
 ]

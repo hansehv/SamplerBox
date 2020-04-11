@@ -40,6 +40,8 @@ class HD44780:
         for pin in self.pins_db:
             GPIO.setup(pin, GPIO.OUT)
         self.clear()
+        self.prevs1=""
+        self.prevs2=""
         self.busy=False
         print 'Started 16x2 LCD via GPIO: RegisterSelect=%d, Enable=%d and Datalines=%s' %(pin_rs, pin_e, str(pins_db).replace(" ", ""))
 
@@ -90,24 +92,34 @@ class HD44780:
         l=("%s%s"%(s," "*16))[:16]
         for c in l: self.cmd(ord(c),1)
 
-    def display(self,l2,l3='',l4=''):
+    def display(self,msg='',menu1='',menu2='',menu3='',*z):
         if self.busy: return False
         self.busy=True
+        # ---   default behaviour
         s1=""
-        s2=""
-        if l3=='':
+        s2=msg
+        if msg=='':
+            if UI.Voice()>1: s2=str(UI.Voice())+":"
+            if UI.Presetlist()!=[]: s2 += UI.Presetlist()[UI.getindex(UI.Preset(),UI.Presetlist())][1]
+        if menu1=='':   # The menu will also override s2
             vol=" %d%%" %UI.SoundVolume() if UI.USE_ALSA_MIXER else ""
             s1 = "%s%s %s%s" % (UI.Scalename()[UI.Scale()], UI.Chordname()[UI.Chord()], UI.Mode(), vol)
-        else: s1=l3
-        if l4=="":
-            if l2=="":
-                if UI.Voice()>1: s2=str(UI.Voice())+":"
-                if UI.Presetlist()!=[]: s2 += UI.Presetlist()[UI.getindex(UI.Preset(),UI.Presetlist())][1]
-            else: s2=l2
-        else: s2=l4
-        self.cmd(0x02)  # go home first
-        self.displayline(s1)
-        self.cmd(0xC0) # next line
-        self.displayline(s2)
+        # ---   menu control, fit the 3 menu lines into two display lines
+        else:
+            if menu3=='':
+                s1=menu1
+                s2=menu2
+            else:
+                s1=menu1+":"+menu2
+                if len(s1)>16:  # make sure the most significant part is displayed
+                    s1=menu1[:15-len(menu2)]+":"+menu2
+                s2=menu3
+        if not(s1==self.prevs1 and s2==self.prevs2):
+            self.prevs1=s1
+            self.prevs2=s2
+            self.cmd(0x02)  # go home first
+            self.displayline(s1)
+            self.cmd(0xC0) # next line
+            self.displayline(s2)
         self.busy=False
         return True

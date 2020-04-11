@@ -64,6 +64,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         length = int(self.headers.getheader('content-length'))
         field_data = self.rfile.read(length)
         fields=parse_qs(field_data)
+        display=True
         #----------------------------------------------#
         # Process fields with special logic first      #
         #----------------------------------------------#
@@ -97,15 +98,16 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         scalechange=False       # Scale takes precedence over Chord
         if "SB_Scale" in fields: scalechange=(UI.Scale()!=UI.Scale(int(fields["SB_Scale"][0])))
         if "SB_Chord" in fields and not scalechange: UI.Chord(int(fields["SB_Chord"][0]))
+        if "SB_Button" in fields: display = not (UI.Button(fields["SB_Button"][0])) # if we had succesfull button, a display was shown already
         #----------------------------------------------#
         # Next process straightforward fields in bulk  #
         #----------------------------------------------#
         for n in fields:
             nam=n[3:]
-            if nam not in ["RenewMedia","Preset","DefinitionTxt","Voice","Notemap","nm_inote","nm_Q","nm_onote","nm_retune","nm_voice","Scale","Chord"]:    #"nm_map","nm_sav",
+            if nam not in ["RenewMedia","Preset","DefinitionTxt","Voice","Notemap","nm_inote","nm_Q","nm_onote","nm_retune","nm_voice","Scale","Chord","Button"]:    #"nm_map","nm_sav",
                 self.set_UI_parm(nam,fields[n][0])
 
-        UI.display("") # show it on the box
+        if display: UI.display("") # show it on the box if not done already
         self.do_GET()       # as well as on the gui
 
     def get_UI_parm(self,nam,proc):

@@ -14,7 +14,8 @@
 
 #import operator,math
 import re,subprocess
-import gv,remap,menu,arp,chorus,Cpp,LFO
+import gv,remap,arp,chorus,Cpp,LFO
+import menu as butmenu
 
 # Writable variables
 
@@ -413,13 +414,13 @@ def ARPloop(val=None):						# boolean, or "N*" / "*"
 	try:
 		if val!=None:
 			arp.loop=gv.parseBoolean(val)
-		return arp.loop
+		return 1 if arp.loop else 0
 	except: return False
 def ARP2end(val=None):						# boolean, or "N*" / "*"
 	try:
 		if val!=None:
 			arp.play2end=gv.parseBoolean(val)
-		return arp.play2end
+		return 1 if arp.play2end else 0
 	except: return False
 def ARPord(val=None):						# value in ARPordlist
 	try:
@@ -461,6 +462,16 @@ def MidiChannel(val=None):					# 1-16
 				gv.MIDICHANNEL=val
 		return gv.MIDICHANNEL
 	except: return 1
+def Button(val=None):
+	if True:#try:
+		if val!=None:
+			if isinstance(val,int): but=int(val)
+			else: but=gv.getindex(val,butmenu.buttons,True)
+			if but>-1:
+				butmenu.nav(but,4)
+				return True
+		return False
+	else: return False
 
 # Readonly variables changing during play
 
@@ -504,6 +515,9 @@ def Notemaps(*z):					# Available notemaps (names)
 def NoteMapping(*z):				# [[keybnote,qfraction,soundnote,retune,voice]...]
 	try: return gv.notemapping
 	except: return []
+def MenuDisplay(*z):				# [line1,line2, ..] lines of the characterdisplay of the (button) menu
+	try: return [butmenu.line1(),butmenu.line2(),butmenu.line3()]
+	except: return ["No menu defined",""]
 
 # Readonly variables from configuration and mapping files
 
@@ -545,6 +559,8 @@ def LFOtypes(*z):					# Effects implemented via the Low Frequency Oscillator
 	except: return ["Off"]
 def CHOtypes(*z):					# Effects implemented via Chorus
 	return chorus.effects
+def Buttons(*z):					# Buttons supported by button menu
+	return butmenu.buttons
 
 
 #                         = = = = =   D I C T I O N A R Y   = = = = =
@@ -649,6 +665,7 @@ procs={
 	"CHOdepth":["w",CHOdepth],				# 2-15
 	"CHOgain":["w",CHOgain],				# 30-80
 	"MidiChannel":["w",MidiChannel],		# 1-16
+	"Button":["w",Button],					# index of Buttons, where 0 has no function (no button touched)
 
 # Readonly variables changing during play (parameters are ignored)
 
@@ -662,6 +679,7 @@ procs={
 	"bTracks":["v",bTracks],				# [[#,name,notename in notemap],.....]. Number >0 can be assigned to a midiCC
 	"Notemaps":["v",Notemaps],				# Available notemaps (names)
 	"NoteMapping":["v",NoteMapping],		# [[keybnote,qfraction,soundnote,retune,voice]...]	
+	"MenuDisplay":["v",MenuDisplay],		# [line1,line2, ..] lines of the characterdisplay of the (button) menu
 
 # Readonly variables from configuration and mapping files (parameters are ignored)
 
@@ -673,13 +691,14 @@ procs={
 	"Chordnote":["f",Chordnote],			# Chordnotes as defined in chord.csv
 	"Scalename":["f",Scalename],			# Scalenames as defined in scales.csv
 	"Scalechord":["f",Scalechord],			# [[0,...],.....], chords(indexes) per scale, defined in scales.csv
-	"ARPordlist":["f",ARPordlist],			# Playorders available for ARP  <====uitzoeken !!
+	"ARPordlist":["f",ARPordlist],			# Playorders available for ARP
 	"DLYtypes":["f",DLYtypes],				# Effects implemented via the Delay line filter
 	"AWtypes":["f",AWtypes],				# Wah types implemented via the AutoWah filter
 	"FVtypes":["f",FVtypes],				# Reverb/Freeverb types (just on/off..)
 	"LFtypes":["f",LFtypes],				# Moog low pass (just on/off..)
 	"CHOtypes":["f",CHOtypes],				# Chorus (just on/off..)
-	"LFOtypes":["f",LFOtypes]				# Effects implemented via the Low Frequency Oscillator
+	"LFOtypes":["f",LFOtypes],				# Effects implemented via the Low Frequency Oscillator
+	"Buttons":["f",Buttons]					# Buttons supported by button menu
 	}
 
 #             = = = = =   Extra procedures, no directly related to in/output fields   = = = = =
@@ -696,4 +715,4 @@ cfg_bool=lambda x: gv.cp.getboolean(gv.cfg,x.lower())
 getindex=gv.getindex						# index=getindex(searchval,table<,onecol>). "onecol" is optional boolean "has table one column only". Default=False
 display=gv.NoProc							# if the user interface needs to display something on the system display
 USE_ALSA_MIXER=False						# this is (re)set by audio detection
-menu=menu.nav								# the buttons menu navigation
+menu=butmenu.nav							# the buttons menu navigation

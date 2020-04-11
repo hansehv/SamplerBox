@@ -17,8 +17,8 @@ active=False
 pressed=False
 noteon=False
 loop=True
-stepticks=10
-noteticks=5
+stepticks=20
+noteticks=10
 cycleticks=30
 play2end=False
 sequence=[]
@@ -48,14 +48,17 @@ def process():
             if steptick>=xs-1:              # step (note+rest) end reached
                 cycletick=xs*random.randint(0,steps-1)
         else:
-            cycletick+=1
             if cycletick>=xc:               # chord / sequence end reached
                 if play2end and not noteon: # in note off stage
                     return(rewind())        # so it ends here.
                 cycletick=0                 # otherwise loop through chord / sequence
-        steptick=cycletick%xs
+        if cycletick==0:
+            steptick=0
+        else:
+            steptick=cycletick%xs
         if steptick>=xn or steptick==0:
             noteoff()
+        cycletick+=1
         if steptick==0:
             playnote=currnote+sequence[int(cycletick//xs)]
             if playnote>(127-gv.stop127) and playnote<gv.stop127:   # stay within keyboard range
@@ -226,9 +229,11 @@ gv.setMC(gv.ARPFADE,fadeout)
 def ArpLoop(*z):
     global loop
     loop=not(loop)
+    if loop: loop=1
 def ArpPlay2end(*z):
     global play2end
     play2end=not(play2end)
+    if play2end: play2end=1
 gv.setMC(gv.ARPLOOP,ArpLoop)
 gv.setMC(gv.ARP2END,ArpPlay2end)
 

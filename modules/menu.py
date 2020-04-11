@@ -17,7 +17,7 @@
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 ###############################################################
-import UI,time
+import UI,gv,time
 
 definition=[]	# ready by getcsv
 maintxt=""		# ready by getcsv
@@ -95,6 +95,9 @@ def value_idx_walk(val,t,x):
 	
 def nofunc(): pass
 
+###############################################################
+#		Navigation including display control
+###############################################################
 butfunc={
 	1: [menu_next,menu_next,value_up],
 	2: [menu_prev,menu_prev,value_dn],
@@ -114,19 +117,21 @@ def nav(button, numbut):
 		butfunc[button][level]()
 		while True:
 			if not UI.RenewMedia():
-				displayed=UI.display('','',menutxt(),itemtxt())
+				displayed=UI.display('','',line1(),line2(),line3())
 				if displayed==None or displayed: break
 			time.sleep(0.1)
-	else: print "Unknown menu button", button
+	elif button!=0: print "Unknown menu button", button
 
-def menutxt(*z):
+def line1(*z):
 	if level==0: return maintxt
-	if level==1: return menus[menu[0]]
+	return menus[menu[0]]
+	
+def line2(*z):
+	if level==0: return menus[0 if menu[0]<0 else menu[0]]
 	return procs[menu[1]][2]
 
-def itemtxt(*z):
-	if level==0: return menus[menu[0]]
-	if level==1: return procs[menu[1]][2]
+def line3(*z):
+	if level<2: return ""
 	s=""
 	x=UI.procs[procs[menu[1]][1]][1]()
 	if isinstance(x,basestring):	# luckily it's a string
@@ -146,3 +151,32 @@ def itemtxt(*z):
 	else:
 		s="%i" %int(x)			# and pfew, yes, there are straighforward numbers too
 	return ("___" if s=="" else s)
+
+###############################################################
+#		Define buttons suitable for midicontrol messages
+###############################################################
+CCbuts=0
+CCbut=[]
+def incr(*z):
+	nav(1,CCbuts)
+def decr(*z):
+	nav(2,CCbuts)
+def sel(*z):
+	nav(3,CCbuts)
+def ret(*z):
+	nav(4,CCbuts)
+def CCdef():
+	global CCbuts
+	CCbuts=0
+	for m in gv.CCmap:
+		if m[1] in CCbut: CCbuts+=1
+CCbut.append(gv.setMC(gv.MENU_INCR,incr))  	# and announce the procs while preserving its index
+CCbut.append(gv.setMC(gv.MENU_DECR,decr))
+CCbut.append(gv.setMC(gv.MENU_SEL,sel))
+CCbut.append(gv.setMC(gv.MENU_RET,ret))
+gv.menu_CCdef=CCdef
+
+###############################################################
+#		Define table for general user interface use (UI.py)
+###############################################################
+buttons=["","Up/Next","Down/Prev","Select","Return"]
