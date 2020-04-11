@@ -159,6 +159,7 @@ def setVoice(x,iv=0,mididev="",*z):
                         if not found:
                             gv.CCmap.append(gv.CCmapSet[i])             # else add entry
                 display("")
+                gv.menu_CCdef()
 def setNotemap(x, *z):
     try:
         y=x-1
@@ -215,6 +216,7 @@ USE_SERIALPORT_MIDI = gv.cp.getboolean(gv.cfg,"USE_SERIALPORT_MIDI".lower())
 USE_OLED = gv.cp.getboolean(gv.cfg,"USE_OLED".lower())
 USE_I2C_7SEGMENTDISPLAY = gv.cp.getboolean(gv.cfg,"USE_I2C_7SEGMENTDISPLAY".lower())
 USE_LEDS = gv.cp.getboolean(gv.cfg,"USE_LEDS".lower())
+USE_BUTTONS = gv.cp.getboolean(gv.cfg,"USE_BUTTONS".lower())
 USE_HTTP_GUI = gv.cp.getboolean(gv.cfg,"USE_HTTP_GUI".lower())
 USE_SMFPLAYER=gv.cp.getboolean(gv.cfg,"USE_SMFPLAYER".lower())
 gv.MULTI_TIMBRALS=gv.cp.get(gv.cfg,"MULTI_TIMBRALS".lower()).split(',')
@@ -265,29 +267,28 @@ getcsv.readmenu(CONFIG_LOC + MENU_DEF)
 # Setup display routine  (if any..)
 #########################################
 import UI
-display=gv.NoProc
 try:
 
     if gv.cp.getboolean(gv.cfg,"USE_HD44780_16x2_LCD".lower()):
         USE_GPIO=True
         import lcd_16x2
         lcd = lcd_16x2.HD44780()
-        def display(l2='',s7='',l3='',l4='',*z):
-            lcd.display(l2,l3,l4)
+        def display(msg='',msg7seg='',menu1='',menu2='',menu3='',*z):
+            lcd.display(msg,menu1,menu2,menu3)
         display('Start Samplerbox')
 
     elif USE_OLED:
         USE_GPIO=True
         import OLED
         oled = OLED.oled()
-        def display(l2,*z):
-            oled.display(l2)
+        def display(msg='',msg7seg='',menu1='',menu2='',menu3='',*z):
+            oled.display(msg,menu1,menu2,menu3)
         display('Start Samplerbox')
 
     elif USE_I2C_7SEGMENTDISPLAY:
         import I2C_7segment
-        def display(l2,s7="",*z):
-            I2C_7segment.display(s7)
+        def display(msg,msg7seg='',*z):
+            I2C_7segment.display(msg7seg)
         display('','----')
 
     elif USE_LEDS:
@@ -1211,7 +1212,7 @@ def ActuallyLoad():
                     pattern = re.escape(pattern.strip())
                     pattern = pattern.replace(r"\%midinote", r"(?P<midinote>\d+)").replace(r"\%velocity", r"(?P<velocity>\d+)").replace(r"\%gain", r"(?P<gain>[-+]?\d*\.?\d+)").replace(r"\%voice", r"(?P<voice>\d+)").replace(r"\%velolevs", r"(?P<velolevs>\d+)").replace(r"\%mutegroup", r"(?P<mutegroup>\d+)")\
                                      .replace(r"\%fillnote", r"(?P<fillnote>[YNFynf])").replace(r"\%mode", r"(?P<mode>[A-Za-z0-9])").replace(r"\%velmode", r"(?P<velmode>[A-Za-z])").replace(r"\%transpose", r"(?P<transpose>\d+)").replace(r"\%release", r"(?P<release>\d+)").replace(r"\%damp", r"(?P<damp>\d+)")\
-                                     .replace(r"\%dampnoise", r"(?P<dampnoise>\[YNyn])").replace(r"\%retrigger", r"(?P<retrigger>[YyRrDd])").replace(r"\%relsample", r"(?P<relsample>[NnSsEe])").replace(r"\%xfadeout", r"(?P<xfadeout>\d+)").replace(r"\%xfadein", r"(?P<xfadein>\d+)")\
+                                     .replace(r"\%dampnoise", r"(?P<dampnoise>\[YNyn])").replace(r"\%retrigger", r"(?P<retrigger>[YyRrDd])").replace(r"\%relsample", r"(?P<relsample>[NnSsEe])").replace(r"\%xfadeout", r"(?P<xfadeout>\d+)").replace(r"\%xfadein", r"(?P<xfadein>\d+)").replace(r"\%xfadevol", r"(?P<xfadevol>\d+)")\
                                      .replace(r"\%qnote", r"(?P<qnote>[YyNnOoEe])").replace(r"\%notemap", r"(?P<notemap>[A-Za-z0-9]\_\-\&)").replace(r"\%smfseq", r"(?P<smfseq>\d+)").replace(r"\%voicemap", r"(?P<voicemap>[A-Za-z0-9]\_\-\&)")\
                                      .replace(r"\%backtrack", r"(?P<backtrack>\d+)").replace(r"\%notename", r"(?P<notename>[A-Ga-g][#ks]?[0-9])").replace(r"\*", r".*?").strip()    # .*? => non greedy
                     for fname in os.listdir(dirname):
@@ -1488,9 +1489,10 @@ LoadSamples()
 
 try:
 
-    import buttons  # availablity of the optional buttons is tested in the module
-    if buttons.numbuttons:  # found some :-)
-        USE_GPIO=True
+    if USE_BUTTONS:     # applies to hardware GPIO buttons, the button menu is remains available for others
+        import buttons  # actual availablity of the optional buttons is tested in the module
+        if buttons.numbuttons: USE_GPIO=True    # found some :-)
+        else: USE_BUTTONS=False
 
     if USE_HTTP_GUI:
         import http_gui
