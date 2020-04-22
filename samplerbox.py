@@ -46,28 +46,39 @@ def getindex(key, table, onecol=False):
         else:
             if key==table[i][0]:return i
     return -100000
+def parseBoolean(val):
+	if val:
+		try:
+			val+=0		# is it an integer (~=boolean) ?
+		except:			# text is True unless starting with: Of(f), Y(es), N(one), T(rue), F(alse)
+			if str(val)[0:2].title()=="Of" or str(val)[0].upper()=="N" or str(val)[0].upper()=="F":
+				return False
+	return val
 notenames=["C","Cs","C#","Dk","D","Ds","D#","Ek","E","Es","F","Fs","F#","Gk","G","Gs","G#","Ak","A","As","A#","Bk","B","Bs"]
 def notename2midinote(notename,fractions):
     notename=notename.title()
-    if notename[:2]=="Ck":  # normalize synonyms
-        notename="Bs%d" %(int(notename[-1])-1) # Octave number switches between B and C
-    elif notename[:2]=="FK":
-        notename="Es%s"%notename[-1]
-    try:
-        x=notenames.index(format(notename[:len(notename)-1]))
-        if fractions==1:    # we have undivided semi-tones = 12-tone scale
-            x,y=divmod(x,2) # so our range is half of what's tested
-            if y!=0:        # and we can't process any found q's.
-                print "Ignored quartertone %s as we are in 12-tone mode" %notename
-                midinote=-1
-            # next statements places note C4 on 60
-            else:            # 12 note logic
-                midinote = x + (int(notename[-1])+1) * 12
-        else:               # 24 note logic
-            midinote = x + (int(notename[-1])-2) * 24 +12
-    except:
-        print "Ignored unrecognized notename '%s'" %notename
-        midinote=-128
+    if notename=="Ctrl": midinote=-2
+    elif notename=="None": midinote=-1
+    else:
+        if notename[:2]=="Ck":  # normalize synonyms
+            notename="Bs%d" %(int(notename[-1])-1) # Octave number switches between B and C
+        elif notename[:2]=="Fk":
+            notename="Es%s"%notename[-1]
+        try:
+            x=notenames.index(format(notename[:len(notename)-1]))
+            if fractions==1:    # we have undivided semi-tones = 12-tone scale
+                x,y=divmod(x,2) # so our range is half of what's tested
+                if y!=0:        # and we can't process any found q's.
+                    print "Ignored quartertone %s as we are in 12-tone mode" %notename
+                    midinote=-1
+                # next statements places note C4 on 60
+                else:            # 12 note logic
+                    midinote = x + (int(notename[-1])+1) * 12
+            else:               # 24 note logic
+                midinote = x + (int(notename[-1])-2) * 24 +12
+        except:
+            print "Ignored unrecognized notename '%s'" %notename
+            midinote=-128
     return midinote
 def midinote2notename(midinote,fractions):
     notename=None
@@ -148,6 +159,7 @@ def setVoice(x,iv=0,mididev="",*z):
                         if not found:
                             gv.CCmap.append(gv.CCmapSet[i])             # else add entry
                 display("")
+                gv.menu_CCdef()
 def setNotemap(x, *z):
     try:
         y=x-1
@@ -157,9 +169,9 @@ def setNotemap(x, *z):
         if gv.notemaps[y]!=gv.currnotemap:
             gv.currnotemap=gv.notemaps[y]
             gv.notemapping=[]
-            for i in xrange(len(gv.notemap)):       # do we have note mapping ?
-                if gv.notemap[i][0]==gv.currnotemap:
-                    gv.notemapping.append([gv.notemap[i][2],gv.notemap[i][1],gv.notemap[i][3],gv.notemap[i][4],gv.notemap[i][5]])
+            for notemap in gv.notemap:       # do we have note mapping ?
+                if notemap[0]==gv.currnotemap:
+                    gv.notemapping.append([notemap[2],notemap[1],notemap[3],notemap[4],notemap[5],notemap[6]])
     else:
         gv.currnotemap=""
         gv.notemapping=[]
@@ -167,6 +179,7 @@ def setNotemap(x, *z):
 
 gv.GPIOcleanup=GPIOcleanup              # and announce the procs to modules
 gv.getindex=getindex
+gv.parseBoolean=parseBoolean
 gv.notename2midinote=notename2midinote
 gv.midinote2notename=midinote2notename
 gv.setVoice=setVoice
@@ -193,17 +206,17 @@ CHORDS_DEF = "chords.csv"
 SCALES_DEF = "scales.csv"
 CTRLCCS_DEF = "controllerCCs.csv"
 KEYNAMES_DEF = "keynotes.csv"
+MENU_DEF = "menu.csv"
 
 
 ##########  read LOCAL CONFIG ==> /boot/samplerbox/configuration.txt
 gv.cp=ConfigParser.ConfigParser()
 gv.cp.read(CONFIG_LOC + "configuration.txt")
 USE_SERIALPORT_MIDI = gv.cp.getboolean(gv.cfg,"USE_SERIALPORT_MIDI".lower())
-USE_HD44780_16x2_LCD = gv.cp.getboolean(gv.cfg,"USE_HD44780_16x2_LCD".lower())
 USE_OLED = gv.cp.getboolean(gv.cfg,"USE_OLED".lower())
 USE_I2C_7SEGMENTDISPLAY = gv.cp.getboolean(gv.cfg,"USE_I2C_7SEGMENTDISPLAY".lower())
-USE_BUTTONS = gv.cp.getboolean(gv.cfg,"USE_BUTTONS".lower())
 USE_LEDS = gv.cp.getboolean(gv.cfg,"USE_LEDS".lower())
+USE_BUTTONS = gv.cp.getboolean(gv.cfg,"USE_BUTTONS".lower())
 USE_HTTP_GUI = gv.cp.getboolean(gv.cfg,"USE_HTTP_GUI".lower())
 USE_SMFPLAYER=gv.cp.getboolean(gv.cfg,"USE_SMFPLAYER".lower())
 gv.MULTI_TIMBRALS=gv.cp.get(gv.cfg,"MULTI_TIMBRALS".lower()).split(',')
@@ -229,6 +242,14 @@ BOXXFADEIN = gv.cp.getint(gv.cfg,"BOXXFADEIN".lower())
 BOXXFADEVOL = gv.cp.getfloat(gv.cfg,"BOXXFADEVOL".lower())
 gv.volumeCC = gv.cp.getfloat(gv.cfg,"volumeCC".lower())
 
+########## Initialize other internal globals
+
+USE_GPIO=False
+gv.samplesdir = SAMPLES_INBOX
+gv.stop127 = BOXSTOP127
+gv.sample_mode = BOXSAMPLE_MODE
+display=gv.NoProc       # set display to dummy
+
 ########## read CONFIGURABLE TABLES from config dir
 
 # Definition of notes, chords and scales
@@ -240,58 +261,49 @@ getcsv.readcontrollerCCs(CONFIG_LOC + CTRLCCS_DEF)
 getcsv.readkeynames(CONFIG_LOC + KEYNAMES_DEF)
 gv.CCmapBox=getcsv.readCCmap(CONFIG_LOC + gv.CTRLMAP_DEF)
 gv.CCmap = list(gv.CCmapBox)
-
-########## Initialize other globals, don't change
-
-USE_GPIO=False
-gv.samplesdir = SAMPLES_INBOX
-gv.stop127 = BOXSTOP127
-gv.sample_mode = BOXSAMPLE_MODE
+getcsv.readmenu(CONFIG_LOC + MENU_DEF)
 
 #########################################
 # Setup display routine  (if any..)
 #########################################
-display=gv.NoProc       # set display to dummy
+import UI
 try:
 
-    if USE_HD44780_16x2_LCD:
+    if gv.cp.getboolean(gv.cfg,"USE_HD44780_16x2_LCD".lower()):
         USE_GPIO=True
         import lcd_16x2
         lcd = lcd_16x2.HD44780()
-        def display(s2,s7=""):
-            lcd.display(s2)
+        def display(msg='',msg7seg='',menu1='',menu2='',menu3='',*z):
+            lcd.display(msg,menu1,menu2,menu3)
         display('Start Samplerbox')
 
     elif USE_OLED:
         USE_GPIO=True
         import OLED
         oled = OLED.oled()
-        def display(s2,s7=""):
-            oled.display(s2)
+        def display(msg='',msg7seg='',menu1='',menu2='',menu3='',*z):
+            oled.display(msg,menu1,menu2,menu3)
         display('Start Samplerbox')
 
     elif USE_I2C_7SEGMENTDISPLAY:
         import I2C_7segment
-        def display(s2,s7=""):
-            I2C_7segment.display(s7)
+        def display(msg,msg7seg='',*z):
+            I2C_7segment.display(msg7seg)
         display('','----')
 
     elif USE_LEDS:
         USE_GPIO=True
         import LEDs
-        def display(s2,s7=""):
+        def display(*z):
             LEDs.signal()
         LEDs.green(False)
         LEDs.red(True,True)
-
-    else:
-        def display(s2,s7=""):
-            pass    
 
 except:
     print "Error activating requested display routine"
     GPIOcleanup()
 gv.display=display      # announce resulting proc to modules
+UI.display=display
 
 ##################################################################################
 # Audio, Effects/Filters/SMFplayer
@@ -301,6 +313,7 @@ gv.display=display      # announce resulting proc to modules
 # Alsamixer setup for volume control (optional)
 #
 import audio
+UI.USE_ALSA_MIXER=audio.USE_ALSA_MIXER
 
 # Arpeggiator (play chordnotes sequentially, ie open chords)
 # Process replaces the note-on/off logic, so rather cheap
@@ -320,7 +333,7 @@ import LFO      # take notice: part of process in audio callback
 # Chorus (add pitch modulated and delayed copies of notes)
 # Process incorporated in the note-on logic, so rather cheap as well
 #
-import CHOrus   # take notice: part of process in midi callback and ARP
+import chorus   # take notice: part of process in midi callback and ARP
 
 # Plays standard MIDI files ("play part" of a sequencer)
 # Parallel process of sending midinotes to samplerbox midi-in channels
@@ -652,7 +665,7 @@ def EffectsOff(*z):
     Cpp.DLYsetType(0)
     Cpp.LFsetType(0)
     LFO.setType(0)
-    CHOrus.setType(0)
+    chorus.setType(0)
     #AutoChordOff()
 def ProgramUp(CCval,*z):
     x=gv.getindex(gv.PRESET,gv.presetlist)+1
@@ -847,7 +860,7 @@ def MidiCallback(mididev, message, time_stamp):
                     return                                  # nothing's playing, so there is nothing to stop
             if MT_in:               # save voice and some effects, set voice according channel and reset those effects
                 gv.sqsav_chord=gv.currchord
-                gv.sqsav_chorus=gv.CHOrus
+                gv.sqsav_chorus=chorus.effect
                 gv.sqsav_voice=gv.currvoice
                 setVoice(messagechannel,-2,mididev)
             if messagetype == 9:    # is a note-off hidden in this note-on ?
@@ -891,10 +904,10 @@ def MidiCallback(mididev, message, time_stamp):
                                             m.fadeout(False)    # ..or damp without optional dampnoise (considered unsuitable, based on current knowledge)
                                     #gv.playingnotes[playnote]=[]   # housekeeping, unnecessary as we will refill it immediately..
                         #print "start playingnotes playnote %d, velocity %d, gv.currvoice %d, retune %d" %(playnote, velocity, gv.currvoice, retune)
-                        if gv.CHOrus:
-                            PlaySample(midinote,playnote,gv.currvoice,velocity*gv.CHOgain,0,retune,messagechannel)
-                            PlaySample(midinote,playnote,gv.currvoice,velocity*gv.CHOgain,2,retune-(gv.CHOdepth/2+1),messagechannel)
-                            PlaySample(midinote,playnote,gv.currvoice,velocity*gv.CHOgain,5,retune+gv.CHOdepth,messagechannel)
+                        if chorus.effect:
+                            PlaySample(midinote,playnote,gv.currvoice,velocity*chorus.gain,0,retune,messagechannel)
+                            PlaySample(midinote,playnote,gv.currvoice,velocity*chorus.gain,2,retune-(chorus.depth/2+1),messagechannel)
+                            PlaySample(midinote,playnote,gv.currvoice,velocity*chorus.gain,5,retune+chorus.depth,messagechannel)
                         else:
                             PlaySample(midinote,playnote,gv.currvoice,velocity,0,retune,messagechannel)
                         if not MT_in:
@@ -917,7 +930,7 @@ def MidiCallback(mididev, message, time_stamp):
                     print 'Unassigned/unfilled note or other exception in note %d in voice %d' % (midinote,gv.currvoice)
                     if MT_in:               # restore previous saved voice and some effects
                         gv.currchord=gv.sqsav_chord
-                        gv.CHOrus=gv.sqsav_chorus
+                        chorus.effect=gv.sqsav_chorus
                         setVoice(gv.sqsav_voice,-1)
                     return
 
@@ -949,7 +962,7 @@ def MidiCallback(mididev, message, time_stamp):
 
             if MT_in:               # restore previous saved voice and some effects
                 gv.currchord=gv.sqsav_chord
-                gv.CHOrus=gv.sqsav_chorus
+                chorus.effect=gv.sqsav_chorus
                 setVoice(gv.sqsav_voice,-1)
 
         elif messagetype == 12: # Program change
@@ -975,6 +988,7 @@ def LoadSamples():
     global LoadingThread
     global LoadingInterrupt
 
+    gv.ActuallyLoading=True     # bookkeeping as quick as possible
     if LoadingThread:
         LoadingInterrupt = True
         LoadingThread.join()
@@ -987,7 +1001,7 @@ def LoadSamples():
 gv.LoadSamples=LoadSamples              # and announce the procs to modules
 
 def ActuallyLoad():    
-    gv.ActuallyLoading=True
+    gv.ActuallyLoading=True     # bookkeeping for safety
     AllNotesOff()
     gv.currbase = gv.basename    
 
@@ -1198,7 +1212,7 @@ def ActuallyLoad():
                     pattern = re.escape(pattern.strip())
                     pattern = pattern.replace(r"\%midinote", r"(?P<midinote>\d+)").replace(r"\%velocity", r"(?P<velocity>\d+)").replace(r"\%gain", r"(?P<gain>[-+]?\d*\.?\d+)").replace(r"\%voice", r"(?P<voice>\d+)").replace(r"\%velolevs", r"(?P<velolevs>\d+)").replace(r"\%mutegroup", r"(?P<mutegroup>\d+)")\
                                      .replace(r"\%fillnote", r"(?P<fillnote>[YNFynf])").replace(r"\%mode", r"(?P<mode>[A-Za-z0-9])").replace(r"\%velmode", r"(?P<velmode>[A-Za-z])").replace(r"\%transpose", r"(?P<transpose>\d+)").replace(r"\%release", r"(?P<release>\d+)").replace(r"\%damp", r"(?P<damp>\d+)")\
-                                     .replace(r"\%dampnoise", r"(?P<dampnoise>\[YNyn])").replace(r"\%retrigger", r"(?P<retrigger>[YyRrDd])").replace(r"\%relsample", r"(?P<relsample>[NnSsEe])").replace(r"\%xfadeout", r"(?P<xfadeout>\d+)").replace(r"\%xfadein", r"(?P<xfadein>\d+)")\
+                                     .replace(r"\%dampnoise", r"(?P<dampnoise>\[YNyn])").replace(r"\%retrigger", r"(?P<retrigger>[YyRrDd])").replace(r"\%relsample", r"(?P<relsample>[NnSsEe])").replace(r"\%xfadeout", r"(?P<xfadeout>\d+)").replace(r"\%xfadein", r"(?P<xfadein>\d+)").replace(r"\%xfadevol", r"(?P<xfadevol>\d+)")\
                                      .replace(r"\%qnote", r"(?P<qnote>[YyNnOoEe])").replace(r"\%notemap", r"(?P<notemap>[A-Za-z0-9]\_\-\&)").replace(r"\%smfseq", r"(?P<smfseq>\d+)").replace(r"\%voicemap", r"(?P<voicemap>[A-Za-z0-9]\_\-\&)")\
                                      .replace(r"\%backtrack", r"(?P<backtrack>\d+)").replace(r"\%notename", r"(?P<notename>[A-Ga-g][#ks]?[0-9])").replace(r"\*", r".*?").strip()    # .*? => non greedy
                     for fname in os.listdir(dirname):
@@ -1450,7 +1464,6 @@ def ActuallyLoad():
 
         #
         # Indicate we're ready and give memory status
-        gv.ActuallyLoading=False
         mem=psutil.virtual_memory()
         print "Loaded '%s', %d%% free memory left" %(gv.basename, 100-mem.percent)
         display("","%04d" % gv.PRESET)
@@ -1458,8 +1471,8 @@ def ActuallyLoad():
     else:
         print 'Preset empty: ' + str(gv.PRESET)
         gv.basename = "%d Empty preset" %gv.PRESET
-        gv.ActuallyLoading=False
         display("","E%03d" % gv.PRESET)
+    gv.ActuallyLoading=False
 
 #########################################
 ##  LOAD FIRST SOUNDBANK
@@ -1476,9 +1489,10 @@ LoadSamples()
 
 try:
 
-    if USE_BUTTONS:
-        USE_GPIO=True
-        import buttons
+    if USE_BUTTONS:     # applies to hardware GPIO buttons, the button menu is remains available for others
+        import buttons  # actual availablity of the optional buttons is tested in the module
+        if buttons.numbuttons: USE_GPIO=True    # found some :-)
+        else: USE_BUTTONS=False
 
     if USE_HTTP_GUI:
         import http_gui

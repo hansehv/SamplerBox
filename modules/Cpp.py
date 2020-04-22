@@ -23,26 +23,37 @@ c_filters.fvsetdamp.argtypes = [c_float]
 c_filters.fvsetwet.argtypes = [c_float]
 c_filters.fvsetdry.argtypes = [c_float]
 c_filters.fvsetwidth.argtypes = [c_float]
-#gv.FVtypes=["Off","On"]
+FVtypes=["Off","On"]
+FVtype=0
 def FVsetType(x,*z):
+    global FVtype
     c_filters.fvmute()
-    gv.FVtype=x
+    FVtype=x
 def FVsetReverb(*z):
-    if gv.FVtype==1: gv.FVtype=0
+    global FVtype
+    if FVtype==1: FVtype=0
     else: FVsetType(1)
+FVroomsize=0.2
 def FVsetroomsize(x,*z):
-    gv.FVroomsize=1.0*x/127.0
-    c_filters.fvsetroomsize(gv.FVroomsize)
+    global FVroomsize
+    FVroomsize=1.0*x/127.0
+    c_filters.fvsetroomsize(FVroomsize)
+FVdamp=0.5
 def FVsetdamp(x,*z):
-    gv.FVdamp=1.0*x/127.0
-    c_filters.fvsetdamp(gv.FVdamp)
+    global FVdamp
+    FVdamp=1.0*x/127.0
+    c_filters.fvsetdamp(FVdamp)
+FVlevel=0.3
 def FVsetlevel(x,*z):
-    gv.FVlevel=1.0*x/127.0
-    c_filters.fvsetwet(gv.FVlevel)
-    c_filters.fvsetdry(1-gv.FVlevel)
+    global FVlevel
+    FVlevel=1.0*x/127.0
+    c_filters.fvsetwet(FVlevel)
+    c_filters.fvsetdry(1-FVlevel)
+FVwidth=1.0
 def FVsetwidth(x,*z):
-    gv.FVwidth=1.0*x/127.0
-    c_filters.fvsetwidth(gv.FVwidth)
+    global FVwidth
+    FVwidth=1.0*x/127.0
+    c_filters.fvsetwidth(FVwidth)
 def FVreset():
     FVsetType(0)
     FVsetroomsize(gv.cp.getfloat(gv.cfg,"FVroomsize".lower())*127)
@@ -70,31 +81,40 @@ c_filters.awsetSpeed.argtypes = [c_float]
 c_filters.awsetCCval.argtypes = [c_float]
 c_filters.awsetLVLrange.argtypes = [c_float]
 #def AWsetMinMaxFreq(minval,maxval): # in Hz
-gv.AWminfreq=0  # avoid undefined vars
-gv.AWmaxfreq=0
+AWminfreq=0.0  # avoid undefined vars
+AWmaxfreq=0.0
 def AWsetMinFreq(x,*z):         # 20-500
+    global AWminfreq,AWmaxfreq
     if x<4: x=4
-    gv.AWminfreq=500.0*x/127.0
-    if gv.AWminfreq>(gv.AWmaxfreq-100): gv.AWmaxfreq=gv.AWminfreq+100
-    c_filters.awsetMinMaxFreq(gv.AWminfreq,gv.AWmaxfreq)
+    AWminfreq=500.0*x/127.0
+    if AWminfreq>(AWmaxfreq-100): AWmaxfreq=AWminfreq+100
+    c_filters.awsetMinMaxFreq(AWminfreq,AWmaxfreq)
 def AWsetMaxFreq(x,*z):         # 1000-10000
-    gv.AWmaxfreq=10000.0*x/127.0
-    if gv.AWminfreq>(gv.AWmaxfreq-100): gv.AWmaxfreq=gv.AWminfreq+100
-    c_filters.awsetMinMaxFreq(gv.AWminfreq,gv.AWmaxfreq)
+    global AWminfreq,AWmaxfreq
+    AWmaxfreq=10000.0*x/127.0
+    if AWminfreq>(AWmaxfreq-100): AWmaxfreq=AWminfreq+100
+    c_filters.awsetMinMaxFreq(AWminfreq,AWmaxfreq)
+AWqfactor=0.0
 def AWsetQualityFactor(x,*z):   #
+    global AWqfactor
     if x==0: x=1
-    gv.AWqfactor=10.0*x/127.0
-    c_filters.awsetQualityFactor(gv.AWqfactor)
+    AWqfactor=10.0*x/127.0
+    c_filters.awsetQualityFactor(AWqfactor)
+AWmixing=.5
 def AWsetMixing(x,*z):          # 0-1, where 0=dry and 1 is wet
-    gv.AWmixing=1.0*x/127.0
-    c_filters.awsetMixing(gv.AWmixing)
-gv.AWtypes=["Off",gv.AUTOWAHENV,gv.AUTOWAHLFO,gv.AUTOWAHMAN]
+    global AWmixing
+    AWmixing=1.0*x/127.0
+    c_filters.awsetMixing(AWmixing)
+AWtypes=["Off",gv.AUTOWAHENV,gv.AUTOWAHLFO,gv.AUTOWAHMAN]
+AWtype=0
 def AWsetType(x,*z):         # 0,1,2,3 = off,envelope,LFO,CC
+    global AWtype
     c_filters.awmute()
     c_filters.awsetWahType(x)
-    gv.AWtype=x
+    AWtype=x
 def AWtoggle(x):
-    if gv.AWtype==x: gv.AWtype=0
+    global AWtype
+    if AWtype==x: AWtype=0
     else: AWsetType(x)
 def AWsetENV(*z):
     AWtoggle(1)
@@ -102,24 +122,34 @@ def AWsetLFO(*z):
     AWtoggle(2)
 def AWsetMAN(*z):
     AWtoggle(3)
+AWattack=0.05
 def AWsetAttack(x,*z):          # 0.5-0.005
+    global AWattack
     if x==0: x=1
-    gv.AWattack=.5*x/127.0
-    c_filters.awsetAttack(gv.AWattack)
+    AWattack=.5*x/127.0
+    c_filters.awsetAttack(AWattack)
+AWrelease=0.005
 def AWsetRelease(x,*z):
+    global AWrelease
       # 0.05-0.0005
     if x==0: x=1
-    gv.AWrelease=.05*x/127.0
-    c_filters.awsetRelease(gv.AWrelease)
+    AWrelease=.05*x/127.0
+    c_filters.awsetRelease(AWrelease)
+AWspeed=500
 def AWsetSpeed(x,*z):           # 100-1100 (?)
-    gv.AWspeed=100+1000*x/127.0
-    c_filters.awsetSpeed(gv.AWspeed)
+    global AWspeed
+    AWspeed=100+1000*x/127.0
+    c_filters.awsetSpeed(AWspeed)
+AWccval=0
 def AWsetCCval(x,*z):           # 0-127
-    gv.AWccval=x
-    c_filters.awsetCCval(gv.AWccval)
+    global AWccval
+    AWccval=x
+    c_filters.awsetCCval(AWccval)
+AWlvlrange=100
 def AWsetLVLrange(x,*z):           # 0-100
-    gv.AWlvlrange=100.0*x/127.0
-    c_filters.awsetLVLrange(gv.AWlvlrange)
+    global AWlvlrange
+    AWlvlrange=100.0*x/127.0
+    c_filters.awsetLVLrange(AWlvlrange)
 def AWreset():
     AWsetType(0)
     AWsetCCval(0)   # pedal back to base
@@ -156,48 +186,64 @@ c_filters.dlysetmix.argtypes = [c_float]
 c_filters.dlysetdelay.argtypes = [c_float]
 c_filters.dlysetsweep.argtypes = [c_float, c_float]
 c_filters.dlysetrange.argtypes = [c_float, c_float]
-gv.DLYsteep=0   # avoid undefined vars
-gv.DLYsteplen=0
-gv.DLYmin=0
-gv.DLYmax=0
-gv.DLYtypes=["Off",gv.ECHO,gv.FLANGER]
+DLYsteep=0   # avoid undefined vars
+DLYsteplen=0
+DLYmin=0
+DLYmax=0
+DLYtypes=["Off",gv.ECHO,gv.FLANGER]
+DLYtype=0
 def DLYsetType(x,*z):
+    global DLYtype,DYdry,DLYwet
     c_filters.dlymute()
     c_filters.dlysettype(x)
-    if x==1: c_filters.dlysetmix(gv.DLYdry)
-    if x==2: c_filters.dlysetmix(1-gv.DLYwet)
-    gv.DLYtype=x
+    if x==1: c_filters.dlysetmix(DLYdry)
+    if x==2: c_filters.dlysetmix(1-DLYwet)
+    DLYtype=x
 def DLYsetEcho(*z):      # in Hz, should be same as audiovalue
-    if gv.DLYtype==1: gv.DLYtype=0
+    global DLYtype
+    if DLYtype==1: DLYtype=0
     else: DLYsetType(1)
 def DLYsetFlanger(*z):
-    if gv.DLYtype==2: gv.DLYtype=0
+    global DLYtype
+    if DLYtype==2: DLYtype=0
     else: DLYsetType(2)
+DLYfb=0.5
 def DLYsetfb(x,*z):     # 0-1
-    gv.DLYfb=1.0*x/127.0
-    c_filters.dlysetfb(gv.DLYfb)
+    global DLYfb
+    DLYfb=1.0*x/127.0
+    c_filters.dlysetfb(DLYfb)
+DLYwet=0.5
 def DLYsetwet(x,*z):    # 0-1
-    gv.DLYwet=1.0*x/127.0
-    c_filters.dlysetfw(gv.DLYwet)
-    if gv.DLYtype==2: c_filters.dlysetmix(1-gv.DLYwet)
+    global DLYwet
+    DLYwet=1.0*x/127.0
+    c_filters.dlysetfw(DLYwet)
+    if DLYtype==2: c_filters.dlysetmix(1-DLYwet)
+DLYdry=0.5
 def DLYsetdry(x,*z):    # 0-1
-    gv.DLYdry=1.0*x/127.0
-    if gv.DLYtype==1: c_filters.dlysetmix(gv.DLYdry)
+    global DLYdry
+    DLYdry=1.0*x/127.0
+    if DLYtype==1: c_filters.dlysetmix(DLYdry)
+DLYtime=40000
 def DLYsettime(x,*z):   # 1000-61000 for echo
-    gv.DLYtime=1000+60000*x/127
-    c_filters.dlysetdelay(gv.DLYtime)
+    global DLYtime
+    DLYtime=1000+60000*x/127
+    c_filters.dlysetdelay(DLYtime)
 def DLYsetsteep(x,*z):    # 1-11
-    gv.DLYsteep=1+x/12.7
-    c_filters.dlysetsweep(gv.DLYsteep,gv.DLYsteplen)
+    global DLYsteep
+    DLYsteep=1+x/12.7
+    c_filters.dlysetsweep(DLYsteep,DLYsteplen)
 def DLYsetsteplen(x,*z):   # 300-3300 for flanger
-    gv.DLYsteplen=300.0+3000*x/127
-    c_filters.dlysetsweep(gv.DLYsteep,gv.DLYsteplen)
+    global DLYsteplen
+    DLYsteplen=300.0+3000*x/127
+    c_filters.dlysetsweep(DLYsteep,DLYsteplen)
 def DLYsetmin(x,*z):    # 5-25
-    gv.DLYmin=5.0+x/6.35
-    c_filters.dlysetrange(gv.DLYmin,gv.DLYmax)
+    global DLYmin
+    DLYmin=5.0+x/6.35
+    c_filters.dlysetrange(DLYmin,DLYmax)
 def DLYsetmax(x,*z):   # 50-150 for flanger
-    gv.DLYmax=50.0+x/1.27
-    c_filters.dlysetrange(gv.DLYmin,gv.DLYmax)
+    global DLYmax
+    DLYmax=50.0+x/1.27
+    c_filters.dlysetrange(DLYmin,DLYmax)
 def DLYreset():
     DLYsetType(0)
     DLYsetfb(gv.cp.getfloat(gv.cfg,"DLYfb".lower())*127)
@@ -230,30 +276,43 @@ c_filters.lfsetdrive.argtypes = [c_float]
 c_filters.lfsetdry.argtypes = [c_float]
 c_filters.lfsetwet.argtypes = [c_float]
 c_filters.lfsetgain.argtypes = [c_float]
-#gv.LFtypes=["Off","On"]
+LFtypes=["Off","On"]
+LFtype=0
 def LFsetType(x,*z):
+    global LFtype
     c_filters.lfmute()
-    gv.LFtype=x
+    LFtype=x
 def LFsetLadder(*z):
-    if gv.LFtype==1: gv.LFtype=0
+    global LFtype
+    if LFtype==1: LFtype=0
     else: LFsetType(1)
+LFresonance=1.5
 def LFsetResonance(x,*z):       # 0 - 3.8
-    gv.LFresonance=1.0*x*3.8/127
-    c_filters.lfsetresonance(gv.LFresonance)
+    global LFresonance
+    LFresonance=1.0*x*3.8/127
+    c_filters.lfsetresonance(LFresonance)
+LFcutoff=5000.0
 def LFsetCutoff(x,*z):          # 1000 - 11000
-    gv.LFcutoff=1000.0+x*10000/127
-    c_filters.lfsetcutoff(gv.LFcutoff)
+    global LFcutoff
+    LFcutoff=1000.0+x*10000/127
+    c_filters.lfsetcutoff(LFcutoff)
+LFdrive=1.0
 def LFsetDrive(x,*z):           # 1 - 20 ?
-    gv.LFdrive=1.0+x*0.1575     # =20/127
-    if gv.LFdrive>20: gv.LFdrive=20
-    c_filters.lfsetdrive(gv.LFdrive)
+    global LFdrive
+    LFdrive=1.0+x*0.1575     # =20/127
+    if LFdrive>20: LFdrive=20
+    c_filters.lfsetdrive(LFdrive)
+LFlvl=0.5
 def LFsetLvl(x,*z):             # 0 - 1
-    gv.LFlvl=x*1.0/127
-    c_filters.lfsetwet(gv.LFlvl)
-    c_filters.lfsetdry(1-gv.LFlvl)
+    global LFlvl
+    LFlvl=x*1.0/127
+    c_filters.lfsetwet(LFlvl)
+    c_filters.lfsetdry(1-LFlvl)
+LFgain=10.0
 def LFsetGain(x,*z):            # 1 - 11
-    gv.LFgain=1.0+x*0.0787      # =10/127
-    c_filters.lfsetgain(gv.LFgain)
+    global LFgain
+    LFgain=1.0+x*0.0787      # =10/127
+    c_filters.lfsetgain(LFgain)
 def LFreset():
     LFsetType(0)
     LFsetResonance((gv.cp.getfloat(gv.cfg,"LFresonance".lower())/3.8)*127)

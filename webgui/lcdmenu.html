@@ -1,0 +1,78 @@
+<!DOCTYPE html><HTML><HEAD><meta charset="UTF-8">
+	<TITLE>LCD Display</TITLE>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
+<script SRC="SamplerBox.API" TYPE="text/javascript"></script>
+<script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+<script>
+var auto=getURLparm('auto');
+if (!auto){
+	auto=getCookie('auto');
+	if (auto=='') auto="No"
+};
+var ticks=getURLparm('ticks');
+if (!ticks){
+	ticks=getCookie('ticks');
+	if (ticks=='') ticks=1.5;
+};
+var ticker;
+function refreshWithURLparms(){
+	SB_Refresh('ticks',ticks,'auto',auto);
+};
+function start(){
+	ticker=setInterval(refreshWithURLparms, 1000*ticks);
+	document.getElementById('playbutton').innerHTML='<BUTTON TYPE="button" onclick="stop();">Pause AutoRefresh</BUTTON>';
+	auto="yes"
+	setCookie('auto', auto)
+};
+function stop(){
+	window.clearTimeout(ticker)
+	document.getElementById('playbutton').innerHTML='<BUTTON TYPE="button" onclick="start();">Start AutoRefresh</BUTTON>';
+	auto="no"
+	setCookie('auto', auto)
+};
+function change(){
+	var sel=document.getElementById('set-ticks');
+	ticks=sel.options[sel.selectedIndex].value;
+	setCookie('ticks', ticks);
+};
+</script>
+</HEAD>
+<BODY>
+
+<TABLE WIDTH="100%"><TR>
+<TD width="125"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Dashboard</BUTTON></TD>
+<TD ALIGN="center"><B>LCD Display with Buttons</B></TD>
+<TD ALIGN="center"><BUTTON TYPE="button" onclick="refreshWithURLparms();">Refresh</BUTTON></TD>
+</TR></TABLE>
+
+<BR><BR>
+<div ID="elem_SB_LCDdisplay"></div>
+<BR><div STYLE="text-align:center;">
+<BUTTON TYPE="button" onclick="refreshWithURLparms();">Refresh</BUTTON>
+ &nbsp; <span ID="playbutton" STYLE="text-align:center;"></span>
+ &nbsp; <SELECT id="set-ticks" SIZE="1" onchange="change();">
+	 <script>
+		 values=[1,1.5,2,3,5];
+		 html="";
+		 for(var i=0;i<values.length;i++){
+			 s="";
+			 if (values[i]==ticks) s=" selected";
+			 document.write("<OPTION VALUE="+values[i]+s+">"+values[i]+"</OPTION>")
+		}
+	 </script>
+ </SELECT>
+</div>
+<BR><BR>
+<FORM ID="elem_SB_Form">
+<div ID="input_SB_Button" STYLE="text-align:center;"></div>
+</FORM>
+
+<script>
+	SB_Update();
+	if(auto=="yes") start();
+	else stop();
+</script>
+</BODY>
+</HTML>

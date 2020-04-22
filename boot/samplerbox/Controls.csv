@@ -72,13 +72,16 @@ UA,Fixed,ArpSustain,Continuous,
 UA,Fixed,EffectsOff,SwitchOff,
 UA,Fixed,Panic,SwitchOff,
 UA,Fixed,AutoChordOff,SwitchOff,
-UA,Scales,C,SwitchOn,# Scale has to defined in scales.csv
-UA,Chords,Min,SwitchOn,# Chord has to be defined in chords.csv
+UA,Scales,<scale name>,SwitchOn,# Scale has to defined in scales.csv
+UA,Chords,<chord name>,SwitchOn,# Chord has to be defined in chords.csv
 UA,Voices,<voice number>,SwitchOn,"# Voice > 0, voice# should be assigned to a sample pattern"
 UA,BackTracks,<backtrack number>,Toggle,"# Backtrack > 0, track# should be assigned to a sample"
-UA,Notemaps,<notemap name>,SwitchOn,# Use “None” or any not existing notemap for no notemapping
+UA,Notemaps,<notemap name>,SwitchOn,# Use None or any not existing notemap for no notemapping
 UA,SMFs,<SMFseq number>,Toggle,"# SMF > 0, seq# should be assigned to a sample"
-UA,Fixed,SMFstart,Toggle,
 UA,Fixed,SMFstop,SwitchOff,
 UA,Fixed,SMFloop,Toggle,
-UA,Fixed,SMFtempo,Continuous,
+UA,Fixed,SMFtempo,Continuous,"# unreliable, use on your own risk"
+UA,Fixed,Menu_Incr,Switch,# The 4-button menu system
+UA,Fixed,Menu_Decr,Switch,
+UA,Fixed,Menu_Sel,Switch,
+UA,Fixed,Menu_Ret,Switch,

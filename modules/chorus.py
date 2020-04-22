@@ -6,21 +6,30 @@
 ###############################################################
 import gv
 
+effects=["Off","On"]
+effect=False
+depth=0.0
+gain=0.0
 def setType(x,*z):
+    global effect
     if x>0:
-        gv.CHOrus=True
+        effect=True
     else:
-        gv.CHOrus=False
+        effect=False
 def toggle(*z):
-    gv.CHOrus=not(gv.CHOrus)
+    global effect
+    effect=not(effect)
 def setdepth(x,*z):  # 2-15
-    gv.CHOdepth=2+13*x/127
+    global depth
+    depth=2+13*x/127
 def setgain(x,*z):  # 0.3-0.8
-    gv.CHOgain=0.3+0.5*x/127.0
+    global gain
+    gain=0.3+0.5*x/127.0
 def reset():
-    gv.CHOrus=False
-    gv.CHOdepth=gv.cp.getfloat(gv.cfg,"CHOdepth".lower())
-    gv.CHOgain=gv.cp.getfloat(gv.cfg,"CHOgain".lower())
+    global effect,depth,gain
+    effect=False
+    depth=gv.cp.getfloat(gv.cfg,"CHOdepth".lower())
+    gain=gv.cp.getfloat(gv.cfg,"CHOgain".lower())
 reset()
 gv.setMC(gv.CHORUS,toggle)
 gv.setMC(gv.CHORUSDEPTH,setdepth)

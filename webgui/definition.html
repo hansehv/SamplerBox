@@ -1,5 +1,5 @@
 <!DOCTYPE html><HTML><HEAD><meta charset="UTF-8">
-	<TITLE>Chorus</TITLE>
+	<TITLE>Set Definition</TITLE>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Script-Type" content="text/javascript">
 <LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
@@ -8,17 +8,20 @@
 </HEAD>
 <BODY>
 
+<FORM ID="elem_SB_Form">
 <TABLE WIDTH="100%"><TR>
 <TD width="125"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Dashboard</BUTTON></TD>
-<TD ALIGN="center"><B>Chorus</B></TD>
-<TD ALIGN="center"><BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON></TD>
+<TD ALIGN="center"><B>definition.txt</B></TD>
+<TD ALIGN="center"><BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON> &nbsp; <span ID="input_SB_RenewMedia">New USB</span></TD>
 </TR></TABLE>
-
-<FORM ID="elem_SB_Form" STYLE="line-height:300%;">
-<B>Chorus</B>: <span ID="input_SB_CHOrus"></span>
+<span ID="input_SB_Preset">Preset: </span>
+ &nbsp; &nbsp; <BUTTON TYPE="submit">Save Text</BUTTON>
 <BR>
-<span ID="input_SB_CHOdepth">Depth &nbsp; &nbsp; &nbsp;:</span>
-<span ID="input_SB_CHOgain" >Gain &nbsp; &nbsp; &nbsp; &nbsp;:</span>
+<span ID="input_SB_Voice">Voice: </span>
+<span ID="elem_SB_Mode"></span><span ID="elem_SB_xvoice"> FX:</span>
+<div STYLE="line-height:150%;"><BR></div>
+<span ID="input_SB_DefinitionTxt"></span>
+<BR><div ID="elem_SB_DefErr">Skipped because of errors: line#  </div>
 </FORM>
 
 <script>SB_Update();</script>

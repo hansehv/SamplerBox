@@ -24,7 +24,7 @@ def readcsv(ifile, numtxt=100, header=True):
                 header=False
             else:
                 # Split on common delimiters for csv after cleaning text and line separators
-                inrow=re.split(',|;|\t',re.sub(' |"|\'|\n|\r', "", line))
+                inrow=re.split(',|;|\t',re.sub('"|\'|\n|\r', "", line))
                 for i in range(len(inrow)):
                     if inrow[i]=="":        # stop after emptycell
                         if i==0:            # is this the first cell?
@@ -35,10 +35,10 @@ def readcsv(ifile, numtxt=100, header=True):
                             i=-1            # then indicate empty row
                         break
                     if i < numtxt:          # Take the textfields as is
-                        row.append(inrow[i])
+                        row.append(inrow[i].strip())
                     else:                   # Convert the rest to integer
                         try:
-                            row.append(int(inrow[i]))
+                            row.append(int(inrow[i].strip()))
                         except:
                             print("%s: Found '%s' when expecting a digit, ignoring rest of line %s" %(ifile, inrow[i], inrow))
                             break
@@ -62,10 +62,8 @@ def readscales(ifile):
     sheet=readcsv(ifile)
     gv.scalechord=[[0,0,0,0,0,0,0,0,0,0,0,0]]  # single notes
     gv.scalename=[""]
-    gv.scalesymbol=[""]
     for i in range(len(sheet)):
         gv.scalename.append(sheet[i][0])
-        gv.scalesymbol.append(re.sub('b','&#9837;',re.sub('#','&#9839;',gv.scalename[i+1])))
         values=[]
         for j in range(1,len(sheet[i])):
             if sheet[i][j]=="0" or sheet[i][j]=="-":
@@ -87,8 +85,8 @@ def readcontrollerCCs(ifile):
     gv.controllerCCs=[[gv.UA,-1,-1]]  # define controller for unassigned controls
     for i in range(len(sheet)):
         if len(sheet[i])>2:     # skip useless lines
-            if gv.getindex(sheet[0],gv.controllerCCs)>-1:
-                print ("%s: Controller %s already defined, ignored %s" %(ifile,sheet[0],sheet[i]))
+            if gv.getindex(sheet[i][0],gv.controllerCCs)>-1:
+                print ("%s: Controller %s already defined, ignored %s" %(ifile,sheet[i][0],sheet[i]))
             else:
                 values=[]
                 for j in range(3):
@@ -174,7 +172,7 @@ def readkeynames(ifile):
             valuesDP=[]
             valuesCC=[]
             if len(sheet[i])>1:     # skip useless lines
-                if gv.getindex(sheet[0],gv.keynames)>-1:
+                if gv.getindex(sheet[i][0],gv.keynames)>-1:
                     print ("%s: Key %s already defined, ignored %s" %(ifile,sheet[i][0],sheet[i]))
                 else:
                     try:
@@ -211,7 +209,7 @@ def readnotemap(ifile):
         sheet=readcsv(ifile,4)
         for i in range(len(sheet)):
             if len(sheet[i])>3:     # skip useless lines
-                values=["",1,0,-1,0,0]
+                values=["",1,0,-1,0,0,0]
                 values[0]=format(sheet[i][0]).title()   # force num to string and normalize upper/lowercase usage
                 if values[0]=="":
                     print ("%s: Sets must have a name, ignored %s" %(ifile, sheet[i]))
@@ -258,6 +256,7 @@ def readnotemap(ifile):
                     try:
                         values[4]=int(sheet[i][4])
                         values[5]=int(sheet[i][5])
+                        values[6]=int(sheet[i][6])
                     except:
                         pass
                 gv.notemap.append(values)
@@ -295,4 +294,43 @@ def readMTchannelmap(ifile):
         gv.voicemap.sort(key=operator.itemgetter(0,1))  # sort on: map->input(midi)channel
     except:
         pass    # this is all optional, default is channel#->voice#
+    return 
+
+def readmenu(ifile):
+    # menu: [Menu, Item, Show as, Spectype, Spec1, Spec2]
+    import UI,menu
+    sheet=readcsv(ifile,100,False)
+    menu.maintxt=sheet[0][0]
+    currmenu=menu.maintxt
+    for i in range(1,len(sheet)):
+        if len(sheet[i])>2:     # skip useless lines
+            values=["","",""]
+            if sheet[i][0]!="-":
+                if currmenu!="": currmenu=sheet[i][0]
+            values[0]=currmenu
+            if sheet[i][1] in UI.procs and UI.procs[sheet[i][1]][0]=="w":
+                values[1]=sheet[i][1]
+                values[2]=values[1] if len(sheet[i])<4 or sheet[i][3]=="" else sheet[i][3]
+                if sheet[i][2].lower()=="boolean": values.append("boolean")
+                elif sheet[i][2] in UI.procs and UI.procs[sheet[i][2]][0]!="w":
+                    values.append(sheet[i][2])
+                else:
+                    if not isinstance(sheet[i][2],str): values=None
+                    else:
+                        spec=sheet[i][2].split('-')
+                        if len(spec)<2: values=None
+                        elif spec[0].isdigit() and spec[1].isdigit():
+                            values.append(int(spec[0]))
+                            values.append(int(spec[1]))
+                            if len(spec)>2 and spec[2].isdigit():values.append(int(spec[2]))
+                            else: values.append(1)
+                        else: values=None
+                if values: menu.definition.append(values)
+                else: print ("%s: Don't understand spec %s, ignored %s" %(ifile,sheet[i][2],sheet[i]))
+            else:
+                print ("%s: Item %s unknown or not writable, ignored %s" %(ifile,sheet[i][1],sheet[i]))
+        else:
+            print ("%s: ignored %s" %(ifile, sheet[i]))
+            gv.ConfigErr=True
+    menu.init()
     return 

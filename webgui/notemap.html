@@ -1,6 +1,4 @@
-<META NAME="Generator" CONTENT="Stone's WebWriter 3.5">
 <!DOCTYPE html><HTML><HEAD><meta charset="UTF-8">
-<!-- Minus AutoDato -->
 	<TITLE>Notemap</TITLE>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Script-Type" content="text/javascript">
@@ -11,42 +9,43 @@
 <BODY>
 
 <TABLE WIDTH="100%"><TR>
-<TD WIDTH="112"><A HREF="index.html"><IMG SRC="SamplerBox.gif" BORDER="0" WIDTH="80" HEIGHT="27" ALIGN="middle" ALT=""></A></TD>
+<TD width="125"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Dashboard</BUTTON></TD>
 <TD ALIGN="center"><B>Notemapping</B></TD>
-<TD ALIGN="center"><BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON></TD>
+<TD ALIGN="right"><BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON></TD>
 </TR></TABLE>
 
-<script>SB_Update();SB_init_FullNotenames();</script>
 <FORM ID="elem_SB_Form">
-<TABLE border="1" cellpadding="5"><TR>
+<script>SB_Update();SB_init_FullNotenames();</script>
+<TABLE border="0" cellpadding="5" style="line-height:100%;"><TR>
 <TD VALIGN="top">
 &nbsp;notemap:<BR>
-<span ID="input_SB_Notemap"></span><BR><BR>
+<span ID="input_SB_Notemap"></span>
+<div ID="input_SB_nm_Q" style="line-height:300%;">&nbsp;Tone interval: </div>
 <HR>
 <B><span ID="input_SB_nm_inote">&nbsp;input key &nbsp;: </span></B>
-<BR>&nbsp;can also be selected via desired row in table
-<DIV style="line-height:300%;"><HR>
+<BR>&nbsp;can also be selected by clicking table row =>
+<DIV style="line-height:300%;">
 <span ID="input_SB_nm_onote" >&nbsp;output note : </span>
-<BR><span ID="input_SB_nm_retune">&nbsp;retune cents: </span>
-<DIV style="line-height:100%;">&nbsp;voice to use :<BR><span ID="input_SB_nm_voice" ></span></DIV>
-<span ID="input_SB_nm_Q"      >&nbsp;Tone interval: </span>
-<BR><CENTER><BUTTON TYPE="submit">Set</BUTTON></CENTER>
-<HR>
-<span ID="input_SB_nm_sav" >&nbsp;Save map ? </span>
-</DIV>
-<DIV style="line-height:100%;">&nbsp;mapname to use (no name => no save !):<BR><span ID="input_SB_nm_map" ></span></DIV>
+<span ID="input_SB_nm_unote" >&nbsp;notate as: </span>
+<BR><span ID="input_SB_nm_retune">&nbsp;retune cents: </span></DIV>
+<DIV style="line-height:100%;">&nbsp;voice to use:<BR><span ID="input_SB_nm_voice" ></span></DIV>
+<DIV style="line-height:300%;">
+<span ID="input_SB_nm_clr" >&nbsp;Clear map ? </span>
+<HR></DIV>
+&nbsp;mapname to use (no name => no save !):<BR><span ID="input_SB_nm_map" ></span></DIV>
+<BR><BR><span ID="input_SB_nm_sav">&nbsp;Save map ? </span>
 <HR>
 <UL>
-<LI>Redundant entries (mapping to same note with default values) will be deleted.
+<LI>Redundant entries (mapping to same <I>midi</I>note with default values) will be deleted.
+<BR>This can be confusing with quarter tones as C4=60 is the only straightforward relation.
 <LI>Saving a map will strip comments in it.
-<LI>The underlying notes do not change when changing the tone mapping interval, so don't mix quarter tone mapping on semi tone samples and vice versa.
-<BR>Changing interval will be ignored on redundant entries
+<LI>The underlying <I>midi</I>notes do not change when changing the tone mapping interval, so don't mix quarter tone mapping on semi tone samples and vice versa.
 </UL>
 </TD><TD VALIGN="top">
 <span ID="elem_SB_Notemap" CLASS="inline valign_top">?</span>
 </TD></TR></TABLE>
 </FORM>
 
-<script>SB_Update();SB_init_FullNotenames();window.onload=SB_notemapselect();</script>
+<script>SB_Update();window.onload=SB_notemapselect();</script>
 </BODY>
 </HTML>

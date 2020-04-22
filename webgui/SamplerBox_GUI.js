@@ -1,6 +1,11 @@
+// -----------------------------------------------------------------
+// Majority of functions below are part of the API, handle with care
+// -----------------------------------------------------------------
+
+// Connection with webgui.py
 function SB_Update(){
 	SB_GetAPI();
-	if (SB_VarVal[0]=='Yes') {		// this is in fact SB_RenewMedia, meaning SB is busy interpreting a sample set
+	if (SB_busy!=0) {		// this means SB is busy interpreting a sample set
 		setTimeout(SB_Refresh, 1000);
 		return;
 	}
@@ -27,7 +32,7 @@ function SB_Update(){
 		}
 	}
 }
-var SB_variables={	// make sure all passed parameters are covered here
+var SB_variables={	// make sure all passed I/O parameters are covered here
 	v_SB_MidiChannel: function(val){SB_MidiChannel=val;},
 	v_SB_SoundVolume: function(val){SB_SoundVolume=val;},
 	v_SB_MidiVolume: function(val){SB_MidiVolume=val;},
@@ -37,8 +42,10 @@ var SB_variables={	// make sure all passed parameters are covered here
 	v_SB_Notemap: function(val){SB_Notemap=val;},
 	v_SB_nm_inote: function(val){SB_nm_inote=val;},
 	v_SB_nm_onote: function(val){SB_nm_onote=val;},
+	v_SB_nm_unote: function(val){SB_nm_unote=val;},
 	v_SB_nm_Q: function(val){SB_nm_Q=val;},
 	v_SB_nm_map: function(val){SB_nm_name=val;},
+	v_SB_nm_clr: function(val){SB_nm_name=val;},
 	v_SB_nm_sav: function(val){SB_nm_name=val;},
 	v_SB_nm_retune: function(val){SB_nm_retune=val;},
 	v_SB_nm_voice: function(val){SB_nm_voice=val;},
@@ -92,10 +99,13 @@ var SB_variables={	// make sure all passed parameters are covered here
 	v_SB_CHOrus: function(val){SB_CHOrus=val;},
 	v_SB_CHOdepth: function(val){SB_CHOdepth=val;},
 	v_SB_CHOgain: function(val){SB_CHOgain=val;},
+	v_SB_Button: function(val){SB_Button=val;},
 	v_SB_RenewMedia: function(val){SB_RenewMedia=val;},
 	v_SB_DefinitionTxt: function(val){SB_DefinitionTxt=val;}
 }
-var SB_input={	// make sure all passed parameters are covered here, be it with a dummy
+
+// I-O Building blocks
+var SB_input={	// make sure all passed I/O parameters are covered here, be it with a dummy
 	input_SB_MidiChannel: function(input_name,name,val,text){
 		return(text+SB_numselect(input_name,name,val,1,16,1,1));
 	},
@@ -103,47 +113,54 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return(text+SB_slider(input_name,name,val,0,12,1)+SB_numselect(input_name,name,val,0,12,1,1));
 	},
 	input_SB_Chord: function(input_name,name,val,text){
-		return(text+SB_listselect(input_name,name,val,SB_Chordname,1,SB_numchords,1));
+		return(text+SB_listselect(input_name,name,val,SB_Chordname,1,SB_Chordname.length,1));
 	},
 	input_SB_Scale: function(input_name,name,val,text){
-		return(text+SB_listselect(input_name,name,val,SB_Scalename,1,SB_numscales,1));
+		return(text+SB_listselect(input_name,name,val,SB_Scalename,1,SB_Scalename.length,1));
 	},
 	input_SB_Preset: function(input_name,name,val,text){
-		if (SB_numvoices==0&&SB_xvoice=='No') m=" Empty!" ;else m="";
-		return(text+SB_listselect(input_name,name,val,SB_Presetlist,2,SB_numpresets,1)+m);
+		if (SB_Voicelist.length==0&&SB_xvoice==0) m=" Empty!" ;else m="";
+		return(text+SB_listselect(input_name,name,val,SB_Presetlist,2,SB_Presetlist.length,1)+m);
 	},
 	input_SB_Voice: function(input_name,name,val,text){
-		return(text+SB_listselect(input_name,name,val,SB_Voicelist,2,SB_numvoices,1));
+		return(text+SB_listselect(input_name,name,val,SB_Voicelist,2,SB_Voicelist.length,1));
 	},
 	input_SB_Notemap: function(input_name,name,val,text){
-		for (i=1;i<SB_numnotemaps;i++){if (SB_Notemaps[i]==SB_Notemap) break;}
-		return(text+SB_listselect(input_name,name,i,SB_Notemaps,1,SB_numnotemaps,1));
+		for (i=1;i<SB_Notemaps.length;i++){if (SB_Notemaps[i]==SB_Notemap) break;}
+		return(text+SB_listselect(input_name,name,i,SB_Notemaps,1,SB_Notemaps.length,1));
 	},
 	input_SB_nm_inote: function(input_name,name,val,text){
-		return(text+SB_listselect(input_name,name,val,SB_KeyNames,2,SB_numkeynames,1));
+		return(text+SB_listselect(input_name,name,val,SB_KeyNames,2,SB_KeyNames.length,1));
 	},
 	input_SB_nm_onote: function(input_name,name,val,text){
-		return(text+SB_listselect(input_name,name,val,SB_FullNotename,2,SB_FullNotename.length,0));
+		return(text+SB_listselect(input_name,name,val,SB_FullNotename,2,SB_FullNotename.length,1));
+	},
+	input_SB_nm_unote: function(input_name,name,val,text){
+		dd=SB_unote_options(SB_nm_onote)
+		return(text+SB_listselect(input_name,name,val,dd,1,dd.length,1));
 	},
 	input_SB_nm_retune: function(input_name,name,val,text){
-		return(text+SB_numselect(input_name,name,val,-50,50,1,0));
+		return(text+SB_numselect(input_name,name,val,-50,50,1,1));
 	},
 	input_SB_nm_voice: function(input_name,name,val,text){
 		//return(text+SB_numselect(input_name,name,val,0,127,1,0));
-		return(text+SB_listselect(input_name,name,val,[[-1,"None"]].concat(SB_Voicelist),2,SB_numvoices+1,2,0));
+		return(text+SB_listselect(input_name,name,val,[[-1,"None"]].concat(SB_Voicelist),2,SB_Voicelist.length+1,1));
 	},
 	input_SB_nm_Q: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val-1,text,SB_qFractions,SB_numqfractions,0));
+		return(SB_radioselect(input_name,name,val-1,text,SB_qFractions,SB_qFractions.length,1));
 	},
 	input_SB_nm_map: function(input_name,name,val,text){
-		return(text+'<INPUT type="text" size="25" name="'+name+'" value="'+val+'"</INPUT>');
+		return(text+'<INPUT type="text" size="25" name="'+name+'" value="'+val+'" onchange=SB_Submit()</INPUT>');
 		//return(text+'<INPUT type="text" size="25" name="'+name+'" value="'+val+'" pattern="[A-Za-z0-9],_\ -" title="Invalid character found"</INPUT>');
 	},
+	input_SB_nm_clr: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,["No",'Yes'],1,1));
+	},
 	input_SB_nm_sav: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["No",'Yes (also does "Set")'],1,1));
+		return(SB_radioselect(input_name,name,val,text,["No",'Yes'],1,1));
 	},
 	input_SB_SoundVolume: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
+		return(text+SB_slider(input_name,name,val,0,100,1)); // left out because of unexact behaviour of logic+alsa:  +SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_MidiVolume: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
@@ -152,7 +169,7 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return(text+SB_slider(input_name,name,val,0,300,5)+SB_numselect(input_name,name,val,0,300,5,1));
 	},
 	input_SB_FVtype: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
+		return(SB_radioselect(input_name,name,val,text,SB_FVtypes,1,1));
 	},
 	input_SB_FVroomsize: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
@@ -221,7 +238,7 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return(text+SB_slider(input_name,name,val,50,150,10)+SB_numselect(input_name,name,val,50,150,10,1));
 	},
 	input_SB_LFtype: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
+		return(SB_radioselect(input_name,name,val,text,SB_LFtypes,1,1));
 	},
 	input_SB_LFresonance: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,38,2)+SB_numselect(input_name,name,val,0,38,2,1));
@@ -266,7 +283,7 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1,1));
 	},
 	input_SB_ARPstep: function(input_name,name,val,text){
-		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
+		return(text+SB_slider(input_name,name,val,10,100,1)+SB_numselect(input_name,name,val,10,100,1,1));
 	},
 	input_SB_ARPsustain: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
@@ -297,13 +314,17 @@ var SB_input={	// make sure all passed parameters are covered here, be it with a
 	input_SB_RenewMedia: function(input_name,name,val,text){
 		return('<LABEL><INPUT type="checkbox" name="'+name+'" class="hidden" value="Yes" onclick="SB_Submit();"><span class="button">'+text+'</span></LABEL>');
 	},
+	input_SB_Button: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val-1,text,SB_Buttons,1,1));
+	},
 	input_SB_DefinitionTxt: function(input_name,name,val,text){
 		if (SB_Samplesdir.charAt(0)=='/') m='';else m=' readonly';
 		return('<DIV STYLE="line-height:100%;text-align:center">'+text+m+'</DIV><TEXTAREA name="'+name+'"'+m+'>'+val+'</TEXTAREA>');
 	}
 }
 
-SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_xvoice","elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote","elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales","elem_SB_Notemap","elem_SB_bTracks"];
+// Read-only building blocks
+SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_xvoice","elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote","elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales","elem_SB_Notemap","elem_SB_bTracks","elem_SB_LCDdisplay"];
 SB_numelems=SB_ElemID.length;
 var SB_element={
 	elem_SB_Form: function(elem_name){
@@ -319,7 +340,7 @@ var SB_element={
 		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+SB_Mode+'</SPAN>';
 	},
 	elem_SB_xvoice: function(elem_name,text) {
-		if (SB_xvoice=="No") j="";else j="CHECKED";
+		if (SB_xvoice==0) j="";else j="CHECKED";
 		document.getElementById(elem_name).innerHTML=text+'<label class="inline alignx"><INPUT type="checkbox" onclick="return false;"'+j+'></label>';
 	},
 	elem_SB_DefErr: function(elem_name,text) {
@@ -331,7 +352,7 @@ var SB_element={
 		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+m+'</SPAN>';
 	},
 	elem_SB_LastMusicNote: function(elem_name){
-		if (SB_LastMusicNote<0) {m="None";} else {m=SB_Notename[SB_LastMusicNote];}
+		if (SB_LastMusicNote<0) {m="None";} else {m=SB_Noteprint(SB_LastMusicNote);}
 		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+m+'</SPAN>';
 	},
 	elem_SB_Scale: function(elem_name){
@@ -341,12 +362,12 @@ var SB_element={
 		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+SB_Chordname[SB_Chord]+'</SPAN>';
 	},
 	elem_SB_Chords: function(elem_name){
-		html='<TABLE BORDER="1"><TR><TH>Chord</TH><TH>Notes for C</TH></TR>';
-		for (i=1;i<SB_numchords;i++){
-			html=html+'<TR VALIGN="top"><TD>'+SB_Chordname[i]+'</TD><TD>';
+		html='<TABLE CLASS="datatable"><TR><TH>Chord</TH><TH>Notes for C</TH></TR>';
+		for (i=1;i<SB_Chordname.length;i++){
+			html=html+'<TR CLASS="datatable"><TD CLASS="datatable" STYLE="text-align:left;">'+SB_Chordname[i]+'&nbsp;</TD><TD CLASS="datatable" STYLE="text-align:left;">&nbsp;';
 			filler="";
 			for (j=0;j<SB_Chordnote[i].length;j++){
-				html=html+filler+SB_Notename[SB_Chordnote[i][j]];
+				html=html+filler+SB_Noteprint(SB_Chordnote[i][j]);
 				filler=", ";
 			}
 			html=html+'</TD></TR>';
@@ -354,9 +375,10 @@ var SB_element={
 		document.getElementById(elem_name).innerHTML=html+'</TABLE>';
 	},
 	elem_SB_Scales: function(elem_name){
-		html='<TABLE BORDER="1"><TR><TH>Scale</TH><TH>Implemented Chords</TH></TR>';
-		for (i=1;i<SB_numscales;i++){
-			html=html+'<TR VALIGN="top"><TD>'+SB_Scalename[i]+'</TD><TD>';
+		html='<TABLE CLASS="datatable"><TR><TH>Scale</TH><TH>Implemented Chords</TH></TR>';
+		for (i=1;i<SB_Scalename.length;i++){
+			//html=html+'<TR VALIGN="top"><TD>'+SB_Scalename[i]+'</TD><TD>';
+			html=html+'<TR CLASS="datatable"><TD CLASS="datatable"  STYLE="text-align:left;">'+SB_Scalename[i]+'&nbsp;</TD><TD CLASS="datatable" STYLE="text-align:left;">&nbsp;';
 			filler="";
 			for (j=0;j<SB_Scalechord[i].length;j++){
 				if (SB_Scalechord[i][j]>0){
@@ -369,45 +391,55 @@ var SB_element={
 		document.getElementById(elem_name).innerHTML=html+'</TABLE>';
 	},
 	elem_SB_Notemap: function(elem_name){
-		html='<TABLE BORDER="1" CELLPADDING="3" ID="TableID_Notemap"><TR><TH style="display:none;"></TH><TH>Q</TH><TH>Key</TH><TH>Plays</TH><TH>Tune</TH><TH>Voice</TH></TR>';
-		for (i=0;i<SB_numnotemapping;i++){
-			inote=SB_NoteMapping[i][0];
-			inotenam=SB_NoteMapping[i][1];
-			retune="";
-			voice="";
-			j=0;k="";
-			for (j=0;i<SB_numkeynames;j++){
+		html='<TABLE CLASS="datatable" ID="TableID_Notemap"><TR><TH style="display:none;"><TH>Key</TH><TH>Plays</TH><TH>Tune</TH><TH>Voice</TH></TR>';
+		for (var i=0;i<SB_NoteMapping.length;i++){
+			var inote=SB_NoteMapping[i][0];
+			var inotenam="%s" %inote;
+			var retune="";
+			var voice="";
+			var j=0;var k="";
+			for (j=0;i<SB_KeyNames.length;j++){
 				if (SB_KeyNames[j][0]==inote){
 					inotenam=SB_KeyNames[j][1];
-					if (inote==SB_nm_inote){k=' style="background-color:Khaki;"'}
+					if (inote==SB_nm_inote){k='CLASS="rowsel"'}
+					else {k='CLASS="datatable"'}
 					break;
 				}
 			}
-			onote=(SB_NoteMapping[i][2]-(SB_NoteMapping[i][1]-1)*12)%(SB_NoteMapping[i][1]*12);
-			onotenam=SB_FullNotename[SB_NoteMapping[i][2]+2][1];
+			var dd=SB_unote_options(SB_NoteMapping[i][2]);
+			onotenam=dd[SB_NoteMapping[i][5]];
 			if (onotenam=="None"){onotenam="";}
 			if (SB_NoteMapping[i][3]!=0){retune=SB_NoteMapping[i][3]}
 			if (SB_NoteMapping[i][4]!=0){voice=SB_NoteMapping[i][4]}
-			html=html+'<TR VALIGN="top"'+k+'><TD style="display:none;">'+j+'</TD><TD ALIGN="center">'+SB_NoteMapping[i][1]+'</TD><TD ALIGN="center">'+inotenam+'</TD><TD ALIGN="center">'+onotenam+'</TD><TD ALIGN="center">'+retune+'</TD><TD ALIGN="center">'+voice+'</TD></TR>';
+			html=html+'<TR '+k+'><TD style="display:none;">'+j+'</TD><TD CLASS="datatable">'+inotenam+'</TD><TD CLASS="datatable">'+onotenam+'</TD><TD CLASS="datatable">'+retune+'</TD><TD CLASS="datatable">'+voice+'</TD></TR>';
 		}
 		document.getElementById(elem_name).innerHTML=html+'</TABLE>';
 	},
 	elem_SB_bTracks: function(elem_name){
-		if (SB_numbtracks==0) {document.getElementById(elem_name).innerHTML='';}
+		if (SB_bTracks.length==0) {document.getElementById(elem_name).innerHTML='';}
 		else {
-			html='<TABLE BORDER="1" CELLPADDING="3"><TR><TD>Knob</TD><TH>Backtrack</TH><TD>Note</TH></TD>';
-			for (i=0;i<SB_numbtracks;i++){
-				html=html+'<TR VALIGN="top"><TD ALIGN="center">'+SB_bTracks[i][0]+'</TD><TD ALIGN="center">'+SB_bTracks[i][1]+'</TD><TD ALIGN="center">'+SB_bTracks[i][2]+'</TD></TR>';
+			html='<TABLE BORDER="1" CLASS="datatable"><TR><TH>Knob</TH><TH>Backtrack</TH><TH>Note</TH></TR>';
+			for (i=0;i<SB_bTracks.length;i++){
+				html=html+'<TR CLASS="datatable"><TD CLASS="datatable"">'+SB_bTracks[i][0]+'</TD><TD CLASS="datatable"">'+SB_bTracks[i][1]+'</TD><TD CLASS="datatable"">'+SB_bTracks[i][2]+'</TD></TR>';
 			}
 			document.getElementById(elem_name).innerHTML=html+'</TABLE><P>';
 		}
+	},
+	elem_SB_LCDdisplay: function(elem_name){
+		html='<TABLE BORDER="2" CELLPADDING="10"  CELLSPACING="5" WIDTH="350" align="center">';
+		for (i=0;i<SB_MenuDisplay.length;i++){
+			html=html+'<TR BORDER="0"><TD align="center" class="value LCD">'+SB_MenuDisplay[i]+'</TD></TR>';
+		}
+		document.getElementById(elem_name).innerHTML=html+'</TABLE><P>';
 	}
 }
 
+// Subroutines
 function SB_notechord(note,chord){
 	if (SB_Chordname[chord]=="Maj") c="";
 	else c=SB_Chordname[chord].toLowerCase();
-	return(SB_Notename[note]+c);
+	var p=SB_Noteprint(note);
+	return(p+c);
 }
 function SB_slider(input_name,name,val,min,max,step){
 	return('<INPUT ID="'+input_name+'_r" name="'+name+'" TYPE="range" VALUE="'+val+'" min="'+min+'" max="'+max+'" step="'+step+'" onchange=SB_slidersync("'+input_name+'_r","'+input_name+'_v",true)>');
@@ -422,8 +454,9 @@ function SB_numselect(input_name,name,val,min,max,step,update){
 	return(html+'</SELECT>');
 }
 function SB_listselect(input_name,name,val,table,dims,size,update){
-	html='<SELECT name="'+name+'" id="select_'+name+'" SIZE="1"';
+	html='<SELECT class="custom-dropdown__select custom-dropdown__select--white" name="'+name+'" id="select_'+name+'" SIZE="1"';
 	if (update==1) {html=html+' onchange=SB_Submit()';}
+	//else {html=html+' onchange=SB_updateval(this)';}
 	html=html+'>';
 	for(var i=0;i<size;i++){
 		j="";
@@ -441,6 +474,28 @@ function SB_notemapselect() {
         };}(rows[i]);
     }
 }
+function SB_unote_options(onote){
+	var d=[];
+	var note=onote+2
+	if (onote<0) {
+		d.push(SB_FullNotename[note][2])
+	}
+	else if (note>=SB_firstnote&&note<=SB_lastnote) {
+		var i;
+		for (i=0; i<SB_FullNotename[note][2].length; i++) {
+			d.push(SB_FullNotename[note][2][i]);
+		};
+		var octave=SB_FullNotename[note][1].slice(-1);
+		for (i=0; i<d.length; i++) {
+			if (d[i]=="Ck") {octave=(Number(octave)+1).toString();};
+			d[i]=d[i]+octave;
+		};
+	}
+	else {
+		d.push((onote).toString());
+	}
+	return(d)
+}
 function SB_slidersync(IDslider, IDvar, sliderchange){
 	if (document.getElementById(IDvar) && document.getElementById(IDslider)){
 		if (sliderchange) document.getElementById(IDvar).value=document.getElementById(IDslider).value;
@@ -448,47 +503,101 @@ function SB_slidersync(IDslider, IDvar, sliderchange){
 	SB_Submit();
 }
 function SB_radioselect(input_name,name,val,text,table,dims,update){
-	html=""
+	html='<div class="switch-field">'
 	for (i=0;i<table.length;i++){
 		j="";
+		id=name+"-id_"+i
 		if (i==val) j="CHECKED"; else j="";
 		if (dims==1){if (i==val) j=" CHECKED";k=table[i];l=table[i];}
 		else {if (table[i][0]==val) j=" CHECKED";k=table[i][1];l=table[i][0];}
-		html=html+' <INPUT type="radio" name="'+name+'" value="'+l+'" '+j;
+		html=html+' <INPUT type="radio" name="'+name+'" id="'+id+'" value="'+l+'" '+j;
 		if (update==1) {html=html+' onclick="SB_Submit()"'};
-		html=html+'>'+k;
+		html=html+'><LABEL for="'+id+'">'+k+'</LABEL>';
 	}
-	return(text+html);
+	return(text+html+'</div>');
 }
 
-var SB_FullNotename=new Array(130);
+var SB_Notename=[["C"],["Cs"],["C&#9839;","D&#9837;"],["Dk"],["D"],["Ds"],["D&#9839;","E&#9837;"],["Ek"],["E"],["Es","Fk"],["F"],["Fs"],["F&#9839;","G&#9837;"],["Gk"],["G"],["Gs"],["G&#9839;","A&#9837;"],["Ak"],["A"],["As"],["A&#9839;","B&#9837;"],["Bk"],["B"],["Bs","Ck"],["FX"]];
+var SB_FullNotename=new Array(130);var SB_firstnote;var SB_lastnote
 function SB_init_FullNotenames(){
-	SB_FullNotename[0]=[-2,"Ctrl"];
-	SB_FullNotename[1]=[-1,"None"];
-	firstnote=127-SB_Stop127+1;
-	lastnote=SB_Stop127;
+	SB_FullNotename[0]=[-2,"Ctrl",["Ctrl"]];
+	SB_FullNotename[1]=[-1,"None",["None"]];
+	SB_firstnote=127-SB_Stop127+1;
+	SB_lastnote=SB_Stop127+1;
 	j=0;k=-1;
 	if (SB_nm_Q==1){
 		for (i=2;i<130;i++){
-			l=i-2
-			if (i<firstnote||i>lastnote) {SB_FullNotename[i]=[l,l];}
-			else {SB_FullNotename[i]=[l,SB_Notename[j]+k];}
+			l=i-2;
+			if (i<SB_firstnote||i>SB_lastnote) {SB_FullNotename[i]=[l,l];}
+			else {SB_FullNotename[i]=[l,SB_Notename[j*2][0]+k,SB_Notename[j*2]];}
 			if (j<11) {j++;} else {j=0;k++;}
 		}
 	} else {
 		j=12;k=1;
 		for (i=2;i<130;i++){
-			l=i-2
-			if (l<firstnote||l>lastnote) {SB_FullNotename[i]=[l,l];}
-			else {SB_FullNotename[i]=[l,SB_qNotename[j]+k];}
+			l=i-2;
+			if (l<SB_firstnote||l>SB_lastnote) {SB_FullNotename[i]=[l,l];}
+			else {SB_FullNotename[i]=[l,SB_Notename[j][0]+k,SB_Notename[j]];}
 			if (j<23) {j++;} else {j=0;k++;}
 		}
 	}
 }
+for (i=0;i<SB_Scalename.length;i++){
+	SB_Scalename[i]=SB_Scalename[i].replace(/#/,"&#9839;").replace(/b/,"&#9837;");
+}
+function SB_Noteprint(note){
+	var n=note*2
+	var p=SB_Notename[n][0];
+	if (SB_Notename[n].length>1) {p=p+"/"+SB_Notename[n][1];}
+	return(p);
+}
 
 function SB_Refresh(){	// gets the page again without resending any form values
-	window.location.assign(window.location.pathname);
+    var qstr="";
+    var sep="?";
+    for (var i=0; i < arguments.length; i+=2) {
+        qstr+=sep+arguments[i]+'='+arguments[i+1];
+        sep="&";
+    }
+    console.log(qstr)
+	window.location.assign(window.location.pathname+qstr);
 }
 function SB_Submit(){
 	document.getElementById("elem_SB_Form").submit();
+}
+
+// -----------------------------------------------------------------
+// Next functions are not part of the API but useful in some screens
+// -----------------------------------------------------------------
+
+function setCookie(cname, cvalue, exhours=4) {
+	var d = new Date();
+	d.setTime(d.getTime() + (exhours*60*60*1000));
+	var expires = "expires="+ d.toUTCString();
+	document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+function getCookie(cname) {
+	var name = cname + "=";
+	var decodedCookie = decodeURIComponent(document.cookie);
+	var ca = decodedCookie.split(';');
+	for(var i = 0; i <ca.length; i++) {
+		var c = ca[i];
+		while (c.charAt(0) == ' ') {
+			c = c.substring(1);
+		}
+		if (c.indexOf(name) == 0) {
+			return c.substring(name.length, c.length);
+		}
+	}
+	return "";
+}
+function getURLparm(name) {
+	name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+	var regexS = "[\\?&]"+name+"=([^&#]*)";
+	var regex = new RegExp( regexS );
+	var results = regex.exec( window.location.href );
+	if( results == null )
+		return "";
+	else
+		return results[1];
 }
