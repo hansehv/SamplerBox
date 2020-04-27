@@ -21,10 +21,10 @@
 AUDIO_DEVICE_ID = -1            ; -1=autodetect, specify ID of your device to override
 AUDIO_DEVICE_NAME = Detect      ; ..or specify (part of) it's name. SB uses the first match of ID or NAME.
 MIXER_CONTROL = Detect          ; Fill this to override autodetection, specify None to disable alsa volume control
-SAMPLERATE = 44100              ; Sets value for wav's and audio device
+SAMPLERATE = 44100              ; Sets value for wav's and audio device (these have to be the same)
 BLOCKSIZE = High                ; Blocksize or "Low"/"High". High may cause latency, low may cause distortion; just try.
 #                                 Valid numbers for blocksize are shown in the console messages when started manually
-USE_48kHz = False               ; Sets audio to 48kHz while keeping wav's on 44100Hz. Try to avoid this...
+USE_48kHz = False               ; Sets audio to 48000Hz while keeping wav's on 44100Hz. Try to avoid this...
 USE_SERIALPORT_MIDI = False     ; Set to True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
 USE_HD44780_16x2_LCD = False    ; Set to True to use a HD44780 based 16x2 LCD
 USE_OLED = False                ; Set to True to use an OLED display !!! Configure below
