@@ -110,35 +110,12 @@ def setScale(x,*z):
         gv.currchord=0      # playing chords excludes scales
         gv.currscale=y
         display("")
-def setVoice(x,iv=0,mididev="",*z):
+def setVoice(x,iv=0,*z):
     if iv==0:       # we got the index of the voice table
         xvoice=int(x)
     else:           # we got the voicenumber
-        voice=x     # let's assume for now, but..
-        if iv==-2:  # ..a multitimbral request may need voicemapping
-            voicemap=""
-            if USE_SMFPLAYER:   # smf files may have specific mapping
-                if smfplayer.issending(mididev):
-                   voicemap=gv.smfseqs[gv.currsmf][4].lower()
-            else:               # fallback to device mapping
-                voicemap=mididev.lower()
-            newvoice=voice #define the var
-            for v in gv.voicemap:
-                if v[0]=="0":   # because of sort always before the names
-                    if v[1]=="0":
-                        newvoice=v[2] # always present and before optionals:
-                    elif v[1]==voice:
-                        newvoice=v[2]
-                if v[0].lower()==voicemap:
-                    if v[1]=="0": newvoice=v[2] # always before optional:
-                    elif v[1]==voice:   # exact match :-)
-                        newvoice=v[2]
-                        break
-            voice=newvoice
-        xvoice=getindex(int(voice),gv.voicelist)
-        if xvoice<0:    # brute force override
-            xvoice=getindex(gv.voicemap[0][2],gv.voicelist)
-    if xvoice <0:   # still no succes, out of options :-(
+        xvoice=getindex(int(x),gv.voicelist)
+    if xvoice <0:   # no option :-(
         print "Undefined voice", x
     else:
         voice=gv.voicelist[xvoice][0]
@@ -161,6 +138,39 @@ def setVoice(x,iv=0,mididev="",*z):
                             gv.CCmap.append(gv.CCmapSet[i])             # else add entry
                 display("")
                 gv.menu_CCdef()
+def setMTvoice(mididev,messagechannel,voice):
+    x=voice
+    voicemap=""
+    if USE_SMFPLAYER:   # smf files may have specific mapping
+        if smfplayer.issending(mididev):
+            voicemap=gv.smfseqs[gv.currsmf][4].lower()
+    else:               # fallback to device mapping
+        voicemap=mididev.lower()
+    newvoice=voice  #define the var
+    xvoice=-1       #define the var
+    fallback=True
+    for v in gv.voicemap:
+        if v[0]=="0" or v[0].lower()==voicemap.lower():   # because of sort generic precedes the names/details
+            if v[1]==0 or v[1]==messagechannel:
+                if v[2]==0 or v[2]==voice:
+                    newvoice=v[3]
+                    if v[0]!="0" or v[1]!=0 or v[2]!=0:
+                        fallback=False
+    if fallback and getindex(voice,gv.voicelist)>-1:
+        newvoice=voice  # the requested voice is in the sample set, so we don't need the full fallback (it can be a "straight" GM map)
+    else:
+        print "Use voice %d for channel %d, programchange %d" %(newvoice,messagechannel,voice)
+    voice=newvoice
+    xvoice=getindex(voice,gv.voicelist)
+    if xvoice <0:   # still no succes, out of options :-(
+        voice=0
+    if voice==0:    # pick first available
+        for m in gv.voicelist:
+            if m[0]>0:
+                print "Voice %d not in MT channelmap and samples, fall back to %d" %(voice,m[0])
+                voice=m[0]
+                break
+    return voice
 def setNotemap(x, *z):
     try:
         y=x-1
@@ -210,19 +220,16 @@ KEYNAMES_DEF = "keynotes.csv"
 MENU_DEF = "menu.csv"
 
 
-##########  read LOCAL CONFIG ==> /boot/samplerbox/configuration.txt
+##########  Read LOCAL CONFIG (==> /boot/samplerbox/configuration.txt) for generic use,
+#           reading LOCAL CONFIG can be done elsewhere as well if it's one-time or local/optional.
 gv.cp=ConfigParser.ConfigParser()
 gv.cp.read(CONFIG_LOC + "configuration.txt")
-USE_SERIALPORT_MIDI = gv.cp.getboolean(gv.cfg,"USE_SERIALPORT_MIDI".lower())
-USE_OLED = gv.cp.getboolean(gv.cfg,"USE_OLED".lower())
-USE_I2C_7SEGMENTDISPLAY = gv.cp.getboolean(gv.cfg,"USE_I2C_7SEGMENTDISPLAY".lower())
-USE_LEDS = gv.cp.getboolean(gv.cfg,"USE_LEDS".lower())
-USE_BUTTONS = gv.cp.getboolean(gv.cfg,"USE_BUTTONS".lower())
 USE_HTTP_GUI = gv.cp.getboolean(gv.cfg,"USE_HTTP_GUI".lower())
 USE_SMFPLAYER=gv.cp.getboolean(gv.cfg,"USE_SMFPLAYER".lower())
-gv.MULTI_TIMBRALS=gv.cp.get(gv.cfg,"MULTI_TIMBRALS".lower()).split(',')
-for i in xrange(len(gv.MULTI_TIMBRALS)):
-     gv.MULTI_TIMBRALS[i]=gv.MULTI_TIMBRALS[i].strip()
+x=gv.cp.get(gv.cfg,"MULTI_TIMBRALS".lower()).split(',')
+gv.MULTI_TIMBRALS={}
+for i in xrange(len(x)):
+     gv.MULTI_TIMBRALS[x[i].strip()]=[0]*16  # init program=voice per channel#
 gv.MIDI_CHANNEL = gv.cp.getint(gv.cfg,"MIDI_CHANNEL".lower())
 DRUMPAD_CHANNEL = gv.cp.getint(gv.cfg,"DRUMPAD_CHANNEL".lower())
 gv.NOTES_CC = gv.cp.getint(gv.cfg,"NOTES_CC".lower())
@@ -278,7 +285,13 @@ try:
             lcd.display(msg,menu1,menu2,menu3)
         display('Start Samplerbox')
 
-    elif USE_OLED:
+    if not (gv.cp.get(gv.cfg,"USE_I2C_LCD".lower())).lower()=='false':
+        import I2C_lcd
+        def display(msg='',msg7seg='',menu1='',menu2='',menu3='',*z):
+            I2C_lcd.display(msg,menu1,menu2,menu3)
+        display('Start Samplerbox')
+
+    elif gv.cp.getboolean(gv.cfg,"USE_OLED".lower()):
         USE_GPIO=True
         import OLED
         oled = OLED.oled()
@@ -286,13 +299,13 @@ try:
             oled.display(msg,menu1,menu2,menu3)
         display('Start Samplerbox')
 
-    elif USE_I2C_7SEGMENTDISPLAY:
+    elif gv.cp.getboolean(gv.cfg,"USE_I2C_7SEGMENTDISPLAY".lower()):
         import I2C_7segment
         def display(msg,msg7seg='',*z):
             I2C_7segment.display(msg7seg)
         display('','----')
 
-    elif USE_LEDS:
+    elif gv.cp.getboolean(gv.cfg,"USE_LEDS".lower()):
         USE_GPIO=True
         import LEDs
         def display(*z):
@@ -826,8 +839,13 @@ def MidiCallback(mididev, message, time_stamp):
         return
     MT_in=False
     if mididev in gv.MULTI_TIMBRALS:
-        if messagetype==8 or messagetype==9:    # we only except note on/off commands from the sequencers and other multitimbrals
-            MT_in=True
+        if messagetype in [8,9,12]: # we only except note on/off and program change commands from the sequencers and other multitimbrals
+            if messagetype==12:
+                gv.MULTI_TIMBRALS[mididev][messagechannel-1]=setMTvoice(mididev,messagechannel,message[1]+1)
+                return
+            if gv.MULTI_TIMBRALS[mididev][messagechannel-1]==0:     # if a channel hasn't sent a programchange, assume voice=channel. This is not uncommon from drumchannel=10
+                gv.MULTI_TIMBRALS[mididev][messagechannel-1]=setMTvoice(mididev,messagechannel,messagechannel)
+            MT_in=gv.MULTI_TIMBRALS[mididev][messagechannel-1]
     elif (messagechannel==gv.MIDI_CHANNEL):
         messagechannel=0
     elif gv.drumpad:  # using less compact coding in favor of performance...
@@ -841,11 +859,9 @@ def MidiCallback(mididev, message, time_stamp):
     # -------------------------------------------------------
     # Then process channel commands if not muted
     # -------------------------------------------------------
-    if ((messagechannel==0) or MT_in) and (gv.midi_mute == False):
-        if len(message) > 1:
-            midinote = message[1]
-            mtchnote = messagechannel*gv.MTCHNOTES+midinote
-        else: midinote=None
+    if ((messagechannel==0) or MT_in) and (gv.midi_mute==False) and len(message)>1:
+        midinote = message[1]
+        mtchnote = messagechannel*gv.MTCHNOTES+midinote
         velocity = message[2] if len(message) > 2 else None
 
         if messagetype==8 or messagetype==9:           # We may have a note on/off
@@ -882,8 +898,9 @@ def MidiCallback(mididev, message, time_stamp):
             if MT_in:               # save voice and some effects, set voice according channel and reset those effects
                 gv.sqsav_chord=gv.currchord
                 gv.sqsav_chorus=chorus.effect
+                chorus.setType(False)
                 gv.sqsav_voice=gv.currvoice
-                setVoice(messagechannel,-2,mididev)
+                setVoice(MT_in,-1)
             if messagetype == 9:    # is a note-off hidden in this note-on ?
                 if mtchnote in gv.playingnotes:     # this can only be if the note is already playing
                     for m in gv.playingnotes[mtchnote]:
@@ -1083,6 +1100,7 @@ def ActuallyLoad():
     gv.samples = {}
     gv.smfseqs = {}
     gv.currsmf = 0
+    gv.smfdrums={}
     fillnotes = {}
     gv.btracklist=[]
     tracknames  = []
@@ -1217,10 +1235,7 @@ def ActuallyLoad():
                     if r'%%voice' in pattern:
                         m = pattern.split(':')[1].strip()
                         v,m=m.split("=")
-                        if int(v)>127:
-                            print "Voicename %m ignored" %m
-                        else:
-                            voicenames.append([int(v),v+" "+m])
+                        voicenames.append([int(v),v+" "+m])
                         continue
                     if r'%%notemap' in pattern:
                         PRENOTEMAP = pattern.split('=')[1].strip().title()
@@ -1278,9 +1293,6 @@ def ActuallyLoad():
                                     continue
                             else:
                                 voice=int(info.get('voice', defaultparams['voice']))
-                            if voice>127:
-                                print "Voice %d ignored" %voice
-                                continue
                             if voice == 0:          # the override / special effects voice cannot fill
                                 fillnote = 'N' # so we ignore whatever the user wants (RTFM)
                             else:
@@ -1391,6 +1403,9 @@ def ActuallyLoad():
         voicenames=[[1,"Default"]]
         gv.voicelist=[[1,'','Keyb','',1]]
 
+    if USE_SMFPLAYER:
+        if len(gv.smfseqs)>0:
+            smfplayer.drumlist()
     initial_keys = set(gv.samples.keys())
     if len(initial_keys) > 0:
         # We have found useful samples, so expanding to full instrument can be done
@@ -1523,7 +1538,7 @@ LoadSamples()
 
 try:
 
-    if USE_BUTTONS:     # applies to hardware GPIO buttons, the button menu is remains available for others
+    if gv.cp.getboolean(gv.cfg,"USE_BUTTONS".lower()):     # applies to hardware GPIO buttons, the button menu is always available for others
         import buttons  # actual availablity of the optional buttons is tested in the module
         if buttons.numbuttons: USE_GPIO=True    # found some :-)
         else: USE_BUTTONS=False
@@ -1531,7 +1546,7 @@ try:
     if USE_HTTP_GUI:
         import http_gui
 
-    if USE_SERIALPORT_MIDI:
+    if gv.cp.getboolean(gv.cfg,"USE_SERIALPORT_MIDI".lower()):
         import serialMIDI
 
 except:
