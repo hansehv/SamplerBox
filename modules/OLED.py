@@ -25,7 +25,7 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
-import UI
+import UI,gv
 
 print("Started OLED display")
 

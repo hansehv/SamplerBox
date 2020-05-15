@@ -23,6 +23,7 @@ msleep = lambda x: time.sleep(x/1000.0)
 client   	= 14
 port    	= 0
 gv.smfseqs	= {}
+gv.smfdrums = {}
 gv.currsmf	= 0
 gv.smftempo	= 240
 streamtempo	= 240
@@ -31,8 +32,8 @@ loopit		= False
 stopit		= False
 seq			= midi.sequencer.SequencerWrite(alsa_sequencer_name='SMFplayer',alsa_port_name="Through %d:%d" %(client,port))
 
-gv.MULTI_TIMBRALS.append("Midi Through:Midi Through Port-%d %d:%d" %(port, client,port))
-gv.MULTI_TIMBRALS.append("Midi Through %d:%d" %(client,port))
+gv.MULTI_TIMBRALS["Midi Through %d:%d" %(client,port)]=[0]*16		# init program=voice per channel#
+gv.MULTI_TIMBRALS["Midi Through:Midi Through Port-%d %d:%d" %(port, client,port)]=[0]*16
 def issending(src):
 	if "Midi Through" in src and "%d:%d" %(client,port) in src and gv.currsmf>0:
 		return(True)
@@ -57,7 +58,7 @@ supported_events={
 	"NoteOnEvent",
 	#"PitchWheelEvent",
 	#"PortEvent",
-	#"ProgramChangeEvent",
+	"ProgramChangeEvent",
 	#"ProgramNameEvent",
 	"SequenceNumberMetaEvent",
 	#"SequencerSpecificEvent",
@@ -74,6 +75,13 @@ supported_events={
 # ----------------------------------------------------------------------
 #		M I D I		S T R E A M S
 # ----------------------------------------------------------------------
+def getvalue(parm,data,comma=True):
+	lookfor="%s="%parm
+	i=data.find(lookfor)+len(lookfor)
+	if not comma:
+		return(data[i:])
+	return(data[i:i+data[i:].find(",")])
+
 def load(line,dirname, fname, smfseq, voicemap):
 	channels={}
 	v=", " if gv.DefinitionErr != "" else ""
@@ -86,50 +94,69 @@ def load(line,dirname, fname, smfseq, voicemap):
 	else:
 		try:
 			events=[]
+			(song,t)=os.path.splitext(fname)
 			stream=midi.read_midifile(os.path.join(dirname, fname))
 			stream.make_ticks_abs()
-			events = []
-			t=""
 			for track in stream:
+				t=""
 				for event in track:
 					msg=re.split('\.|\(',"%s"%event)[1]
 					data=re.split('\.|\(',"%s"%event)[2]
 					if msg=="NoteOnEvent":
-						i=data.find("channel=")+8
-						c=int(data[i:i+data[i:].find(",")])
+						c=int(getvalue("channel",data))
 						if c not in channels:
-							if t=="":
-								channels[c]="Channel %d" %(c+1)
+							channels[c]=["Channel %d"%(c+1),True,[]]
+						else:
+							channels[c][0]=t if t!="" else "Channel %d"%(c+1)
+							channels[c][1]=True
+						if c==9:
+							n=int(getvalue("data",data)[1:])
+							if n in gv.smfdrums:
+								if song not in gv.smfdrums[n]: gv.smfdrums[n].append(song)
 							else:
-								channels[c]=t[1:-1]
+								gv.smfdrums[n]=[song]
+					elif msg=="TrackNameEvent":
+						t=getvalue("text",data)[1:-1]
 					elif msg=="EndOfTrackEvent":
 						t=""
-					elif msg=="TrackNameEvent":
-						i=data.find("text=")+5
-						t=data[i:i+data[i:].find(",")]
-					#elif msg in ["InstrumentNameEvent","ProgramChangeEvent","ProgramNameEvent"]: #debug for future development
+					elif msg=="ProgramChangeEvent":
+						c=int(getvalue("channel",data))
+						p=int(getvalue("data",data,False)[1:-2])+1
+						if c not in channels:
+							channels[c]=["Channel %d"%(c+1),False,[p]]
+						else:
+							channels[c][2].append(p)
+					#elif msg in ["InstrumentNameEvent","ProgramNameEvent"]: #debug for future development
 					#	print msg, data
 					if msg in supported_events:
 						events.append(event)
 					#else: print "%s skipped %s" %(fname,event) #debug
 			events.sort()
+			if voicemap=="": voicemap=song
 			voices=[]	# inventory of used channels and optional descriptions
-			pvoices=""
+			print "SMF=1%d=%s, voicemap=%s sends notes on channels:"%(smfseq,fname,voicemap)
 			for key, value in channels.iteritems():
 				t=[key,value]
 				voices.append(t)
-				pvoices="%s, %d='%s'" %(pvoices,key+1,value)
-			print "Midifile %d:%s%s" %(smfseq,fname, pvoices)
-			if voicemap=="":
-				(voicemap,t)=os.path.splitext(fname)
+				l=""; c=""; s=""
+				if value[1]:
+					for v in value[2]:
+						if c!="":s="s"
+						l="%s%s%d"%(l,c,v)
+						c=','
+					print " - %d='%s' using voice%s %s" %(key+1,value[0],s,l)
 			gv.smfseqs[smfseq]=[fname,stream.resolution,events,voices,voicemap]
 		except:
 			print"SMFplayer: error reading %s in %s" %(fname,dirname)
 
+def drumlist():
+	print "Drum sounds used:"
+	for i in sorted (gv.smfdrums.keys()):
+		print" - %d in %s"%(i,gv.smfdrums[i])
 def seqlist():
 	smflist=[]
 	for key, value in gv.smfseqs.iteritems():
-		smflist.append([key,value[0],value[3],value[4],value[5]])
+		smflist.append([key,value[0],value[3],value[4]])
 	return(smflist)
 
 # ----------------------------------------------------------------------
@@ -137,13 +164,11 @@ def seqlist():
 # ----------------------------------------------------------------------
 
 def play(x,*z):
-	global paused
 	smfseq=int(x)
 	if gv.currsmf==0:
 		if smfseq>0:
 			if smfseq in gv.smfseqs:
 				#print "SMFplay %s, res=%d, %s" %(gv.smfseqs[smfseq][0],gv.smfseqs[smfseq][1],gv.smfseqs[smfseq][3])
-				paused=False
 				gv.currsmf=smfseq
 			else:
 				print "Midi sequence %d not in sample set" %smfseq
@@ -215,7 +240,7 @@ def player():
 						if buf < seq.output_buffer_size*.80: # <==
 							msleep(5) # <==
 							if buf < 1000:
-								print "seq buffer repleted"
+								#print "seq buffer repleted"
 								msleep(500)
 					while event.tick > seq.queue_get_tick_time():
 						if stopit: break
