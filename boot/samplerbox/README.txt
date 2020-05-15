@@ -40,7 +40,7 @@ In this directory:
 - Controls.csv
   This lists all functions available for use in the CCmap, purely for reference.
 
-- CCmap.csv
+- CCmap.csv and Controls.csv
   Here you tell how you want your knobs, buttons, drawbars, pedals to affect
   the available functions in samplerbox
   Basically this is the merge of controllerCC's and Controls.
@@ -55,4 +55,5 @@ In this directory:
 
 - README_CSV.txt
   The syntax and layout explanation of all these csv files
+
   
