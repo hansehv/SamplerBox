@@ -6,6 +6,7 @@ April 2020:
   - button menu can be operated via midi and webgui
   - webgui can handover info to next screen via both cookies and url parameters
   - webgui modernized using more sophisticated style elements
+  - added random samples / played note for "human touch"
   - bugfixes
 Jan-March 2020:
   - Introduced user interface module = make SB-engine a black box with a predictable/documented API

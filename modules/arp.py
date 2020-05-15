@@ -12,7 +12,8 @@
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 ###############################################################
-import random,gv,chorus
+from numpy import random
+import gv,chorus
 active=False
 pressed=False
 noteon=False
@@ -46,7 +47,7 @@ def process():
         xc=cycleticks
         if mode==3:
             if steptick>=xs-1:              # step (note+rest) end reached
-                cycletick=xs*random.randint(0,steps-1)
+                cycletick=xs*random.randint(0,steps)
         else:
             if cycletick>=xc:               # chord / sequence end reached
                 if play2end and not noteon: # in note off stage
