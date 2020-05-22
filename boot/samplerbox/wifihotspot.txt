@@ -3,7 +3,8 @@
 # wpa_passphrase is the wpa-key / password (duh)
 #    make sure it complies with password policies (length etc)
 #    otherwise your mobile device might refuse it before trying
-#
+# This file is actually /etc/wpa-supplicant.conf, so please refer to the
+# related manpages for exact syntax and allowed parameters if needed.
 
 ssid=SamplerBox
 wpa_passphrase=go2samplerbox

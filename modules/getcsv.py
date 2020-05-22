@@ -271,23 +271,25 @@ def readnotemap(ifile):
     return
 
 def readMTchannelmap(ifile):
-    # MTchannelmap: [name of MTdevice/smf/mid/song, channel used in MTdevice/smf, voice to use]
-    # Channels are the "human channels", so range 1-16 making piano=1 and drum=10
-    # SMF files are zero based, so range 0-15 - take care when debugging
+    # MTchannelmap: [name of MTdevice/smf/mid/song, channel used in MTdevice/smf, progchange in that channel, voice to use]
+    # Channels are the "human channels", so range 1-16 making default=1 and drum=10
+    # Similar for the program changes, so piano=1
+    # But internally SMF files are zero based, so range 0-15 - take care when debugging
+    # Zero values used in channel and prog function as wildcards, for voice it means "first available" (usually voice=1).
     gv.voicemap=[]  # name,from,to
     try:
         sheet=readcsv(ifile,1)
         for i in range(len(sheet)):
-            if len(sheet[i])>2:     # skip useless lines
-                if sheet[i][1]>-1 and sheet[i][1]<17 and sheet[i][2]>0 and sheet[i][2]<128:
+            if len(sheet[i])>3:     # skip useless lines
+                if sheet[i][1]>-1 and sheet[i][1]<17 and sheet[i][2]>-1 and sheet[i][2]<128 and sheet[i][3]>-1:
                     ok=True
                     for v in gv.voicemap:
-                        if v[0]==sheet[i][0] and v[1]==sheet[i][1]:
+                        if v[0]==sheet[i][0] and v[1]==sheet[i][1] and v[2]==sheet[i][2]:
                             print ("%s: ignored %s, previously defined" %(ifile, sheet[i]))
                             ok=False
                     if ok: gv.voicemap.append(sheet[i])
                 else:
-                    print ("%s: ignored %s as channel or voice is out of range" %(ifile, sheet[i]))
+                    print ("%s: ignored %s as at least one value is out of range" %(ifile, sheet[i]))
                     gv.ConfigErr=True
             else:
                 print ("%s: ignored %s" %(ifile, sheet[i]))

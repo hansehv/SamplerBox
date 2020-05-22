@@ -2,8 +2,12 @@ This file contains changelog of samplerbox.py
 For changes on samplerbox_audio.pyx, see top of the source file
 For changes on the image, see http://homspace.xs4all.nl/homspace/samplerbox/SBbuild.html
 
+May 2020:
+  - Removed limit of 127 voices
+  - Added I2C-LCD (HD44780, 2x16 and 4x20).
+    Support is theoretical as I can't test this, please feedback results.
 April 2020:
-  - button menu can be operated via midi and webgui
+  - button menu can be operated via MIDI and webgui (simulates display).
   - webgui can handover info to next screen via both cookies and url parameters
   - webgui modernized using more sophisticated style elements
   - added random samples / played note for "human touch"
@@ -11,8 +15,7 @@ April 2020:
 Jan-March 2020:
   - Introduced user interface module = make SB-engine a black box with a predictable/documented API
   - WebGUI adapted for this approach (for giving show&testcase)
-  - added lcd_16x2 & OLED, GPIO buttons with extra menu
-  - above menu can be operated via MIDI controls(buttons)
+  - added button menu for LCD/OLED and GPIO buttons
   - bugfixes
 Oct-Dec 2019:
   - Fixed notemapping GUI screen
