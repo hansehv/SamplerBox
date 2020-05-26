@@ -13,6 +13,16 @@ import UI
 HTTP_PORT=80
 HTTP_ROOT="webgui"
 
+v6msg=""
+if UI.USE_IPv6:
+    # python 2:support ipv6
+    try:
+        import socket,SocketServer
+        SocketServer.TCPServer.address_family=socket.AF_INET6
+        v6msg=" with IPv6 support"
+    except ImportError:
+        print('please find other ways to listen on ipv6 address!')
+
 class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def do_GET(self):
@@ -190,7 +200,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 def HTTP_Server(server_class=BaseHTTPServer.HTTPServer, handler_class=HTTPRequestHandler, port=HTTP_PORT):
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)
-    print 'Starting httpd on port %d' % (port)
+    print 'Starting httpd on port %d%s' % (port,v6msg)
     try:
         httpd.serve_forever()
     except:

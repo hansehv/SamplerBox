@@ -463,7 +463,7 @@ def MidiChannel(val=None):					# 1-16
 		return gv.MIDICHANNEL
 	except: return 1
 def Button(val=None):
-	if True:#try:
+	try:
 		if val!=None:
 			if isinstance(val,int): but=int(val)
 			else: but=gv.getindex(val,butmenu.buttons,True)
@@ -471,7 +471,26 @@ def Button(val=None):
 				butmenu.nav(but,4)
 				return True
 		return False
-	else: return False
+	except: return False
+IPaddress="?.?.?.?"
+def IP(val=None):
+	global IPaddress
+	try:
+		IPs=IPlist()
+		if len(IPs)==0:
+			IPaddress="Not connected"
+		elif val==None:
+			if IPaddress in IPs:
+				val=gv.getindex(IPaddress,IPs,True)
+				if val<0:val=0
+			else: val=0
+		elif not isinstance(val,int):
+			val=gv.getindex(val,IPs,True)
+			if val<0: val=0
+		elif val>=len(IPs) or val<0: val=0
+		IPaddress=IPs[val]
+		return IPaddress
+	except: return "?.?.?.?"
 
 # Readonly variables changing during play
 
@@ -561,7 +580,14 @@ def CHOtypes(*z):					# Effects implemented via Chorus
 	return chorus.effects
 def Buttons(*z):					# Buttons supported by button menu
 	return butmenu.buttons
-
+USE_IPv6 = gv.cp.getboolean(gv.cfg,"USE_IPv6".lower())
+def IPlist(*z):						# SB IP addresses (cable and wireless plus IPv6 if enabled in configuration.txt)
+	x=subprocess.check_output("hostname -I",shell=True).split()
+	if USE_IPv6:
+		return([i for i in x])
+	else:
+		return([i for i in x if i.find('.')>-1])
+print "IP's: %s" %(IPlist())
 
 #                         = = = = =   D I C T I O N A R Y   = = = = =
 
@@ -666,6 +692,7 @@ procs={
 	"CHOgain":["w",CHOgain],				# 30-80
 	"MidiChannel":["w",MidiChannel],		# 1-16
 	"Button":["w",Button],					# index of Buttons, where 0 has no function (no button touched)
+	"IP":["w",IP],							# index of IP addresses found
 
 # Readonly variables changing during play (parameters are ignored)
 
@@ -698,10 +725,11 @@ procs={
 	"LFtypes":["f",LFtypes],				# Moog low pass (just on/off..)
 	"CHOtypes":["f",CHOtypes],				# Chorus (just on/off..)
 	"LFOtypes":["f",LFOtypes],				# Effects implemented via the Low Frequency Oscillator
-	"Buttons":["f",Buttons]					# Buttons supported by button menu
+	"Buttons":["f",Buttons],				# Buttons supported by button menu
+	"IPlist":["f",IPlist]					# SB IP addresses (cable and wireless plus IPv6 if enabled in configuration.txt)
 	}
 
-#             = = = = =   Extra procedures, no directly related to in/output fields   = = = = =
+#             = = = = =   Extra procedures, not (directly) related to in/output fields   = = = = =
 
 # notemap housekeeping
 nm_sync=remap.notes_sync					# Execute before showing results on the display to be in sync with play status
@@ -714,5 +742,5 @@ cfg_bool=lambda x: gv.cp.getboolean(gv.cfg,x.lower())
 # miscellaneous
 getindex=gv.getindex						# index=getindex(searchval,table<,onecol>). "onecol" is optional boolean "has table one column only". Default=False
 display=gv.NoProc							# if the user interface needs to display something on the system display
-USE_ALSA_MIXER=False						# this is (re)set by audio detection
 menu=butmenu.nav							# the buttons menu navigation
+USE_ALSA_MIXER=False						# this is (re)set by audio detection
