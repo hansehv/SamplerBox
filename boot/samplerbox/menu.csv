@@ -9,6 +9,7 @@ General,Preset,Presetlist,,"#: #,name"
 -,Gain,0-300,,
 -,Pitchrange,0-12,,
 -,MidiChannel,1-16,,
+-,IP,IPlist,IP-addresses,
 Reverb,FVtype,FVtypes,On-off,name: name > x
 -,FVroomsize,0-100,Roomsize,
 -,FVdamp,0-100,Damp,
