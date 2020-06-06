@@ -42,6 +42,7 @@ try:
 	I2C_LCD_PORT=int(gv.cp.get(gv.cfg,"I2C_LCD_PORT".lower()),16)
 except:	pass
 
+print "Starting I2C LCD.."
 bus = smbus.SMBus(I2C_LCD_PORT)	 # using I2C
 
 # class variables

@@ -35,9 +35,6 @@ class oled:
         self.s4=''
         self.s5=''
         self.s6=''
-        cmd = "hostname -I | cut -d\' \' -f1"
-        IP = subprocess.check_output(cmd, shell = True )
-        self.IP="IP:"+IP
         # Parse config for display settings
         driver = gv.cp.get(gv.cfg,"OLED_DRIVER".lower())
         RST = gv.cp.getint(gv.cfg,"OLED_RST".lower())
@@ -68,12 +65,12 @@ class oled:
             print("Wrong driver")
         self.canvas = canvas(self.device)
 
-    def display(msg,menu1,menu2,menu3)
+    def display(msg,menu1,menu2,menu3):
         if self.busy: return False
         self.busy=True
         with self.canvas as draw:
             draw.rectangle((0, 0, self.device.width-1, self.device.height-1), outline=0, fill=0)
-           if UI.USE_ALSA_MIXER:
+            if UI.USE_ALSA_MIXER:
                 s1 = "%s | Vol: %d%%" % (UI.Mode(), UI.SoundVolume())
             else:
                 s1 = "Mode: %s" % (gv.sample_mode)
@@ -88,7 +85,7 @@ class oled:
                 self.s4=menu1
                 self.s5=menu2
                 self.s6=menu3
-            s6=self.s6 if self.s6!='' else self.IP
+            s6=self.s6 if self.s6!='' else UI.IP()
             draw.text((self.x, self.top), s1, font=self.font, fill=255)
             draw.rectangle((self.x, self.top+11,self.device.width, 21), outline=255, fill=255)
             draw.text((self.x+2, self.top+12), s2, font=self.font,fill=0)

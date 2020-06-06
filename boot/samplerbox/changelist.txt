@@ -6,6 +6,8 @@ May 2020:
   - Removed limit of 127 voices
   - Added I2C-LCD (HD44780, 2x16 and 4x20).
     Support is theoretical as I can't test this, please feedback results.
+  - Added support for program changes in multitimbrals
+  - Created possibility to show the IP-address(es) on user interfaces
 April 2020:
   - button menu can be operated via MIDI and webgui (simulates display).
   - webgui can handover info to next screen via both cookies and url parameters
