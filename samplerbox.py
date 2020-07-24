@@ -512,8 +512,11 @@ class PlayingSound:
     def playingdampnoise(self):
         return self.sound.dampnoise
     def playing2end(self):
-        self.loop=-1
-        self.end=self.sound.eof
+        if self.loop==-1:
+            self.fadeout()
+        else:
+            self.loop=-1
+            self.end=self.sound.eof
     def fadeout(self,sustain=True):
         self.isfadeout=True
         if sustain==False:      # Damp is fadeout with shorter (=no sustained) release,
