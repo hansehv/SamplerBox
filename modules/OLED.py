@@ -65,7 +65,7 @@ class oled:
             print("Wrong driver")
         self.canvas = canvas(self.device)
 
-    def display(msg,menu1,menu2,menu3):
+    def display(self,msg,menu1,menu2,menu3):
         if self.busy: return False
         self.busy=True
         with self.canvas as draw:

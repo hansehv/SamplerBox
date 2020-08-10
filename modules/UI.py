@@ -31,8 +31,11 @@ def Preset(val=None):						# 0-127
 		if val!=None:
 			if val>=0 and val<=127:
 				if gv.PRESET!=val:
-					gv.PRESET=val
-					gv.LoadSamples()
+					if gv.getindex(val,gv.presetlist)>-1:
+						gv.PRESET=val
+						gv.LoadSamples()
+					else: print ("Preset %d does not exist, ignored" %val)
+				else: print ("Preset %d already loaded" %val)
 			return gv.ActuallyLoading
 		return gv.PRESET
 	except: return 0

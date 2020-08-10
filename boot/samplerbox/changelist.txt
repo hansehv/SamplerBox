@@ -2,6 +2,10 @@ This file contains changelog of samplerbox.py
 For changes on samplerbox_audio.pyx, see top of the source file
 For changes on the image, see http://homspace.xs4all.nl/homspace/samplerbox/SBbuild.html
 
+Jun-Aug 2020:
+  - Fixed bug when midi device selects not-existing preset
+  - Added backtrack stop option
+  - Possibility to fix ip-address on known wifi network(s)
 May 2020:
   - Removed limit of 127 voices
   - Added I2C-LCD (HD44780, 2x16 and 4x20).
