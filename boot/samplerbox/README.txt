@@ -17,6 +17,9 @@ In this directory:
 - wifinetworks.txt
   To define the know networks to connect to via WiFi
   Comments in the file will guide you
+- wifistatips.txt 
+  To define a fixed ip-address in named WiFi networks (advanced use) 
+  Comments in the file will guide you
 - wifihotspot.txt
   To set network (SSID) and password of the webgui via the wifi adapter
   This is the option activated when there is no known network available
