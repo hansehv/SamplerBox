@@ -1520,15 +1520,16 @@ def ActuallyLoad():
 
         #
         # Indicate we're ready and give memory status
+        gv.ActuallyLoading=False
         mem=psutil.virtual_memory()
         print "Loaded '%s', %d%% free memory left" %(gv.basename, 100-mem.percent)
         display("","%04d" % gv.PRESET)
 
     else:
+        gv.ActuallyLoading=False
         print 'Preset empty: ' + str(gv.PRESET)
         gv.basename = "%d Empty preset" %gv.PRESET
         display("","E%03d" % gv.PRESET)
-    gv.ActuallyLoading=False
 
 #########################################
 ##  LOAD FIRST SOUNDBANK
