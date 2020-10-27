@@ -18,20 +18,23 @@ TD:first-of-type {
 TD:last-of-type {
     border-radius: 0 6px 6px 0;}
 </style>
-<TABLE BORDER="1">
-<TR><TD>
+<TABLE BORDER="1"><TR><TD>
 General / miscellaneous
 </TD><TD>elem_SB_bTracks
 <BR>elem_SB_DefErr
 <BR>elem_SB_Form
+<BR>elem_SB_IPlist
+<BR>elem_SB_Wireless
 <BR>elem_SB_LastMidiNote
 <BR>elem_SB_LastMusicNote
+<BR>elem_SB_LCDdisplay
 <BR>elem_SB_Mode
 <BR>elem_SB_Samplesdir
 <BR>elem_SB_xvoice
-<BR>elem_SB_LCDdisplay
 <BR>input_SB_Button
 <BR>input_SB_DefinitionTxt
+<BR>input_SB_IP
+<BR>input_SB_SSID
 <BR>input_SB_MidiChannel
 <BR>input_SB_Pitchrange
 <BR>input_SB_Preset
@@ -42,6 +45,19 @@ Volume
 </TD><TD>input_SB_Gain
 <BR>input_SB_MidiVolume
 <BR>input_SB_SoundVolume
+</TD></TR><TR><TD>
+Notemapping<BR>(redefine keyboard)
+</TD><TD>elem_SB_Notemap
+<BR>input_SB_Notemap
+<BR>input_SB_nm_inote
+<BR>input_SB_nm_onote
+<BR>input_SB_nm_unote
+<BR>input_SB_nm_Q
+<BR>input_SB_nm_retune
+<BR>input_SB_nm_voice
+<BR>input_SB_nm_clr
+<BR>input_SB_nm_map
+<BR>input_SB_nm_sav
 </TD></TR><TR><TD>
 Chords and Scales<BR>for AutoChord
 </TD><TD>elem_SB_Chord
@@ -95,19 +111,6 @@ Low-pass filter using a digital<BR>implementation of Moog ladder,<BR>the classic
 <BR>input_SB_LFresonance
 <BR>input_SB_LFtype
 </TD></TR><TR><TD>
-Notemapping<BR>(redefine keyboard)
-</TD><TD>elem_SB_Notemap
-<BR>input_SB_Notemap
-<BR>input_SB_nm_inote
-<BR>input_SB_nm_onote
-<BR>input_SB_nm_unote
-<BR>input_SB_nm_Q
-<BR>input_SB_nm_retune
-<BR>input_SB_nm_voice
-<BR>input_SB_nm_clr
-<BR>input_SB_nm_map
-<BR>input_SB_nm_sav
-</TD></TR><TR><TD>
 Reverb using freeverb by<BR>Jezar at Dreampoint
 </TD><TD>input_SB_FVdamp
 <BR>input_SB_FVlevel
@@ -125,6 +128,19 @@ Wah effects:<BR>- AutoWah<BR>- LFO Wah<BR>- wah-wah pedal
 <BR>input_SB_AWrelease
 <BR>input_SB_AWspeed
 <BR>input_SB_AWtype
+</TD></TR><TR><TD>
+Overdrive:<BR>Softclip distortion combined<BR>with a low-pass filter
+</TD><TD>input_SB_ODboost
+<BR>input_SB_ODdrive
+<BR>input_SB_ODtone
+<BR>input_SB_ODtype
+<BR>input_SB_ODmix
+</TD></TR><TR><TD>
+Peak limiter:<BR>Avoid distortion caused by<BR>too much input dynamics
+</TD><TD>input_SB_PLattack
+<BR>input_SB_PLrelease
+<BR>input_SB_PLthresh
+<BR>input_SB_PLtype
 </TD></TR></TABLE>
 
 </BODY>

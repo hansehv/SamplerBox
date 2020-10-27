@@ -82,6 +82,15 @@ var SB_variables={	// make sure all passed I/O parameters are covered here
 	v_SB_LFlvl: function(val){SB_LFlvl=val;},
 	v_SB_LFgain: function(val){SB_LFgain=val;},
 	v_SB_LFOtype: function(val){SB_LFOtype=val;},
+	v_SB_ODtype: function(val){SB_ODtype=val;},
+	v_SB_ODboost: function(val){SB_ODboost=val;},
+	v_SB_ODdrive: function(val){SB_ODdrive=val;},
+	v_SB_ODtone: function(val){SB_ODtone=val;},
+	v_SB_ODmix: function(val){SB_ODmix=val;},
+	v_SB_PLtype: function(val){SB_PLtype=val;},
+	v_SB_PLthresh: function(val){SB_PLthresh=val;},
+	v_SB_PLattack: function(val){SB_PLattack=val;},
+	v_SB_PLrelease: function(val){SB_PLrelease=val;},
 	v_SB_VIBRpitch: function(val){SB_VIBRpitch=val;},
 	v_SB_VIBRspeed: function(val){SB_VIBRspeed=val;},
 	v_SB_VIBRtrill: function(val){SB_VIBRtrill=val;},
@@ -101,6 +110,7 @@ var SB_variables={	// make sure all passed I/O parameters are covered here
 	v_SB_CHOgain: function(val){SB_CHOgain=val;},
 	v_SB_Button: function(val){SB_Button=val;},
 	v_SB_IP: function(val){SB_IP=val;},
+	v_SB_SSID: function(val){SB_SSID=val;},
 	v_SB_RenewMedia: function(val){SB_RenewMedia=val;},
 	v_SB_DefinitionTxt: function(val){SB_DefinitionTxt=val;}
 }
@@ -256,6 +266,33 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 	input_SB_LFgain: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,10,110,5)+SB_numselect(input_name,name,val,10,110,5,1));
 	},
+	input_SB_ODtype: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,SB_ODtypes,1,1));
+	},
+	input_SB_ODboost: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,15,65,5)+SB_numselect(input_name,name,val,15,65,5,1));
+	},
+	input_SB_ODdrive: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,1,10,1)+SB_numselect(input_name,name,val,1,11,1,1));
+	},
+	input_SB_ODtone: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,0,95,5)+SB_numselect(input_name,name,val,0,95,5,1));
+	},
+	input_SB_ODmix: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,1,10,1)+SB_numselect(input_name,name,val,1,10,1,1));
+	},
+	input_SB_PLtype: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,SB_PLtypes,1,1));
+	},
+	input_SB_PLthresh: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,70,110,5)+SB_numselect(input_name,name,val,70,110,5,1));
+	},
+	input_SB_PLattack: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,1,11,1)+SB_numselect(input_name,name,val,1,11,1,1));
+	},
+	input_SB_PLrelease: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,5,25,2)+SB_numselect(input_name,name,val,5,25,2,1));
+	},
 	input_SB_LFOtype: function(input_name,name,val,text){
 		return(SB_radioselect(input_name,name,val,text,SB_LFOtypes,1,1));
 	},
@@ -301,7 +338,7 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 	input_SB_ARPfade: function(input_name,name,val,text){
 		j=""
 		if (val<100) j="CHECKED"
-		return(text+'<label class="inline alignx"><INPUT type="checkbox" onclick="return false;"'+j+'></label>'+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1));
+		return(text+'<label class="inline alignx"><INPUT type="checkbox" onclick="return false;"'+j+'></label>'+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_CHOrus: function(input_name,name,val,text){
 		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
@@ -319,7 +356,10 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 		return(SB_radioselect(input_name,name,val-1,text,SB_Buttons,1,1));
 	},
 	input_SB_IP: function(input_name,name,val,text){
-		return("ambiguous");
+		return(text+SB_listselect(input_name,name,val,SB_IPlist,1,SB_IPlist.length,1));
+	},
+	input_SB_SSID: function(input_name,name,val,text){
+		return(text+SB_listselect(input_name,name,val,SB_Wireless,1,SB_Wireless.length,1));
 	},
 	input_SB_DefinitionTxt: function(input_name,name,val,text){
 		if (SB_Samplesdir.charAt(0)=='/') m='';else m=' readonly';
@@ -328,7 +368,7 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 }
 
 // Read-only building blocks
-SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_xvoice","elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote","elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales","elem_SB_Notemap","elem_SB_bTracks","elem_SB_IPlist","elem_SB_LCDdisplay"];
+SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_xvoice","elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote","elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales","elem_SB_Notemap","elem_SB_bTracks","elem_SB_IPlist","elem_SB_Wireless","elem_SB_LCDdisplay"];
 SB_numelems=SB_ElemID.length;
 var SB_element={
 	elem_SB_Form: function(elem_name){
@@ -435,6 +475,16 @@ var SB_element={
 			html='<TABLE BORDER="1" CLASS="datatable"><TR><TH>IP Address(es)</TH></TR>';
 			for (i=0;i<SB_IPlist.length;i++){
 				html=html+'<TR CLASS="datatable"><TD CLASS="datatable"">'+SB_IPlist[i]+'</TD></TR>';
+			}
+			document.getElementById(elem_name).innerHTML=html+'</TABLE><P>';
+		}
+	},
+	elem_SB_Wireless: function(elem_name){
+		if (SB_Wireless.length==0) {document.getElementById(elem_name).innerHTML='';}
+		else {
+			html='<TABLE BORDER="1" CLASS="datatable"><TR><TH>Wireless Connection</TH></TR>';
+			for (i=0;i<SB_Wireless.length;i++){
+				html=html+'<TR CLASS="datatable"><TD CLASS="datatable"">'+SB_Wireless[i]+'</TD></TR>';
 			}
 			document.getElementById(elem_name).innerHTML=html+'</TABLE><P>';
 		}

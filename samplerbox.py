@@ -40,12 +40,18 @@ def GPIOcleanup():
         import RPi.GPIO as GPIO
         GPIO.setmode(GPIO.BCM)
         GPIO.cleanup()
-def getindex(key, table, onecol=False):
+def getindex(key, table, onecol=False, casesens=True):
     for i in range(len(table)):
         if onecol:
-            if key==table[i]:   return i
+            if casesens:
+                if key==table[i]:   return i
+            else:
+                if key.lower()==table[i].lower():   return i
         else:
-            if key==table[i][0]:return i
+            if casesens:
+                if key==table[i][0]:return i
+            else:
+                if key.lower()==table[i][0].lower:  return i
     return -100000
 def parseBoolean(val):
 	if val:
@@ -229,7 +235,7 @@ USE_SMFPLAYER=gv.cp.getboolean(gv.cfg,"USE_SMFPLAYER".lower())
 x=gv.cp.get(gv.cfg,"MULTI_TIMBRALS".lower()).split(',')
 gv.MULTI_TIMBRALS={}
 for i in xrange(len(x)):
-     gv.MULTI_TIMBRALS[x[i].strip()]=[0]*16  # init program=voice per channel#
+    gv.MULTI_TIMBRALS[x[i].strip()]=[0]*16  # init program=voice per channel#
 gv.MIDI_CHANNEL = gv.cp.getint(gv.cfg,"MIDI_CHANNEL".lower())
 DRUMPAD_CHANNEL = gv.cp.getint(gv.cfg,"DRUMPAD_CHANNEL".lower())
 gv.NOTES_CC = gv.cp.getint(gv.cfg,"NOTES_CC".lower())
@@ -334,7 +340,7 @@ UI.USE_ALSA_MIXER=audio.USE_ALSA_MIXER
 #
 import arp
 
-# Reverb, Moogladder, Wah (envelope, lfo and pedal) and Delay (echo and flanger)
+# Reverb, Moogladder, Wah (envelope, lfo and pedal), Delay (echo and flanger) and PeakLimiter
 # Based on changing the audio output which requires heavy processing
 #
 import Cpp
@@ -663,11 +669,13 @@ def ControlChange(CCnum, CCval):
             break
     if not mc and (CCnum==120 or CCnum==123):   # "All sounds off" or "all notes off"
         AllNotesOff()
-def AllNotesOff(x=0,*z):
+def AllNotesOff(scope=-1,*z):
+    # scope: see EffectsOff below
     # stop the robots first
     if USE_SMFPLAYER:
         smfplayer.loopit=False
         smfplayer.stopit=True
+    if scope>-1: scope=-1
     arp.power(False)
     gv.playingbacktracks = 0
     # empty all queues
@@ -675,16 +683,19 @@ def AllNotesOff(x=0,*z):
     gv.playingnotes = {}
     gv.sustainplayingnotes = []
     gv.triggernotes = [128]*128     # fill with unplayable note
-    # reset effects & display
-    EffectsOff()
+    # turn off effects & reset display
+    EffectsOff(scope)
     display("")
-def EffectsOff(*z):
-    Cpp.FVsetType(0)
-    Cpp.AWsetType(0)
-    Cpp.DLYsetType(0)
-    Cpp.LFsetType(0)
-    LFO.setType(0)
-    chorus.setType(0)
+def EffectsOff(scope=-1,*z):
+    # scope:
+    #   -1 = switch off effects without affecting parameters
+    #   -2 = reset effects parameters to system default
+    #   -3 = reset effects parameters to set default
+    #   -4 = reset effects parameters to voice default
+    #   - other values controlled by the subroutines, usually fallback to -1: just turn off
+    Cpp.ResetAll(scope)
+    LFO.reset(scope)
+    chorus.reset(scope)
     #AutoChordOff()
 def ProgramUp(CCval,*z):
     x=gv.getindex(gv.PRESET,gv.presetlist)+1
@@ -710,9 +721,6 @@ def PitchWheel(LSB,MSB=0,*z):   # This allows for single and double precision.
     gv.PITCHBEND=(((128*MSB+LSB)/gv.pitchdiv)-gv.pitchneutral)*gv.pitchnotes
 def PitchSens(CCval,*z):
     gv.pitchnotes = (24*CCval+100)/127
-def ModWheel(CCval,*z):
-    print "Modwheel"
-    pass        # still in idea stage
 sustain=False
 def Sustain(CCval,*z):
     global sustain
@@ -819,7 +827,6 @@ gv.setMC(gv.VOLUME,MidiVolume)
 gv.setMC(gv.AUTOCHORDOFF,AutoChordOff)
 gv.setMC(gv.PITCHWHEEL,PitchWheel)
 gv.setMC(gv.PITCHSENS,PitchSens)
-gv.setMC(gv.MODWHEEL,ModWheel)
 gv.setMC(gv.SUSTAIN,Sustain)
 gv.setMC(gv.DAMP,Damp)
 gv.setMC(gv.DAMPNEW,DampNew)
@@ -1042,7 +1049,6 @@ gv.LoadSamples=LoadSamples              # and announce the procs to modules
 
 def ActuallyLoad():    
     gv.ActuallyLoading=True     # bookkeeping for safety
-    AllNotesOff()
     gv.currbase = gv.basename    
 
     gv.samplesdir = SAMPLES_ONUSB if os.listdir(SAMPLES_ONUSB) else SAMPLES_INBOX      # use builtin folder (containing 0 Saw) if no user media containing samples has been found
@@ -1127,6 +1133,7 @@ def ActuallyLoad():
 
     #print 'Preset loading: %s ' % gv.basename
     display("Loading %s" % gv.basename,"L%03d" % gv.PRESET)
+    AllNotesOff(-3)     # reset to set defaults
     getcsv.readnotemap(os.path.join(dirname, gv.NOTEMAP_DEF))
     gv.CCmapSet=getcsv.readCCmap(os.path.join(dirname, gv.CTRLMAP_DEF), True)
     getcsv.readMTchannelmap(os.path.join(dirname, gv.VOICEMAP_DEF))

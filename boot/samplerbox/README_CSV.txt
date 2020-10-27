@@ -55,7 +55,7 @@ Syntax of keynotes.csv (optional, if omitted, note mapping can only be done via 
 - Key: Desired name of the midisensor (key, snare, pad..)
 - Midinote: note sent by this midisensor
 - Drumpad Midinote: optional, this note on channel 10 will be translated to Midinote on active channel (default 1)
----- ==> keynotes-examples.csv showes some examples
+---- ==> keynotes-examples.csv shows some examples
 -----------------------------------------------------------------------------------
 Syntax of chords.csv:
 - No headings!

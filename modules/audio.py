@@ -40,7 +40,7 @@ def AudioCallback(outdata, frame_count, time_info, status):
     global counting,countdown
     p=len(gv.playingsounds)-MAX_POLYPHONY
     if p>0:
-        print "MAX_POLYPHONY %d exceeded with %d notes" %(MAX_POLYPHONY,p)
+        #print "MAX_POLYPHONY %d exceeded with %d notes" %(MAX_POLYPHONY,p)
         for i in xrange(p+gv.playingbacktracks-1):
             if gv.playingsounds[i].playingstopmode()!=3:    # let the backtracks be
                 del gv.playingsounds[i]     # get it out of the system
@@ -58,10 +58,12 @@ def AudioCallback(outdata, frame_count, time_info, status):
     # volume control and audio effects/filters
     if not counting: LFO.process[LFO.effect]()
     b *= (10**(LFO.TREMvalue*gv.volumeCC)-1)/9     # linear doesn't sound natural, this may be to complicated too though...
+    if Cpp.ODtype>0: Cpp.c_filters.overdrive(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
     if Cpp.LFtype>0: Cpp.c_filters.moog(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
-    if Cpp.AWtype>0: Cpp.c_filters.autowah(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
     if Cpp.DLYtype>0: Cpp.c_filters.delay(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
+    if Cpp.AWtype>0: Cpp.c_filters.autowah(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
     if Cpp.FVtype>0: Cpp.c_filters.reverb(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
+    if Cpp.PLtype>0: Cpp.c_filters.limiter(b.ctypes.data_as(c_float_p), b.ctypes.data_as(c_float_p), frame_count)
     outdata[:] = b.reshape(outdata.shape)
     # Use this module as timer for ledblinks
     if gv.LEDblink and not counting: gv.LEDsblink()

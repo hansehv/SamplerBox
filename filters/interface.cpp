@@ -9,6 +9,9 @@
 //    - autowah by Daniel Zanco extended with LFO and pedal control
 //    - echo and flanger (delay line effects) based on codesnippets by Gabriel Rivas
 //    - moogladder based on model&software of Stefano D'Angelo
+// September 2020:
+//    - peak limiter from the Simple Compressor class by Citizen Chunk
+//    - overdrive inspired by various discussions
 
 #define DLLEXPORT extern "C" 
 
@@ -18,18 +21,25 @@
 #include "autowah.cpp"		// (Auto)Wah module
 #include "delay.cpp"		// Delay line module for echo and flanger
 #include "moogladder.cpp"	// Module for Moog pass filters
+#include "overdrive.cpp"		// Non-linear distortion effects
+#include "SimpleLimit.cpp"	// Peaklimiter
+#include "SimpleEnvelope.cpp"
+//#include "console.cpp"	// Debugger
 
 // Instantiation of classes
-revmodel rv;		// Reverb
-autoWah aw;		// AutoWah
-delay dly;		// Delay
-LadderFilter lf;	// Moog
+revmodel rv;				// Reverb
+autoWah aw;					// Wah (auto, pedal, LFO)
+delay dly;					// Delay + phaser
+LadderFilter lf;			// Moog low-pass
+overdrive od;				// Overdrive
+chunkware_simple::SimpleLimit pl;	// peaklimiter
 
 // General routine
 void SampleRate(int val)
 {
 	aw.setSampleRate(val);
 	lf.SetsampleRate(val);
+	pl.setSampleRate(val);
 }
 DLLEXPORT void setSampleRate(int val) { SampleRate(val); } 
 
@@ -81,3 +91,18 @@ DLLEXPORT void lfsetdry(float val) { lf.SetDry(val); }
 DLLEXPORT void lfsetwet(float val) { lf.SetWet(val); } 
 DLLEXPORT void lfsetgain(float val) { lf.SetGain(val); } 
 DLLEXPORT void moog(float* inp, float* outp, int count) { lf.MoogLadder(inp,outp,count); } 
+
+// Overdrive entrypoints
+DLLEXPORT void odsetboost(float val) { od.set_boost(val); } 
+DLLEXPORT void odsetdrive(float val) { od.set_drive(val); } 
+DLLEXPORT void odsettone(float val) { od.set_tone(val); } 
+DLLEXPORT void odsetwet(float val) { od.set_wet(val); } 
+DLLEXPORT void odsetdry(float val) { od.set_dry(val); } 
+DLLEXPORT void overdrive(float* inp, float* outp, int count) { od.process(inp,outp,count); } 
+
+// Peaklimiter entrypoints
+DLLEXPORT void plsetthresh(float val) { pl.setThresh(val); } 
+DLLEXPORT void plsetattack(float val) { pl.setAttack(val); } 
+DLLEXPORT void plsetrelease(float val) { pl.setRelease(val); } 
+DLLEXPORT void plinit() { pl.initRuntime(); } 
+DLLEXPORT void limiter(float* inp, float* outp, int count) { pl.ProcessChunk(inp,outp,count); } 

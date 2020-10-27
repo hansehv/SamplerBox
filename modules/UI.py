@@ -14,7 +14,7 @@
 
 #import operator,math
 import re,subprocess
-import gv,remap,arp,chorus,Cpp,LFO
+import gv,remap,arp,chorus,Cpp,LFO,network
 import menu as butmenu
 
 # Writable variables
@@ -35,7 +35,7 @@ def Preset(val=None):						# 0-127
 						gv.PRESET=val
 						gv.LoadSamples()
 					else: print ("Preset %d does not exist, ignored" %val)
-				else: print ("Preset %d already loaded" %val)
+				#else: print ("Preset %d already loaded" %val)
 			return gv.ActuallyLoading
 		return gv.PRESET
 	except: return 0
@@ -338,6 +338,69 @@ def LFgain(val=None):						# 10-110, Carefully test before using values above 50
 				Cpp.LFsetGain(1.27*(val-10))
 		return Cpp.LFgain*10
 	except: return 10
+def ODtype(val=None):						# value in ODtypes
+	try:
+		if val!=None:
+			if isinstance(val,int): Cpp.ODsetType(val)
+			else: Cpp.ODsetType(gv.getindex(val,Cpp.ODtypes,True))
+		return Cpp.ODtype
+	except: return 0
+def ODboost(val=None):						# 15-65
+	try:
+		if val!=None:
+			if val>=15 and val<=65:
+				Cpp.ODsetBoost(127*(val-15)/50)
+		return Cpp.ODboost
+	except: return 30
+def ODdrive(val=None):						# 1-11
+	try:
+		if val!=None:
+			if val>=1 and val<=11:
+				Cpp.ODsetDrive((val-1)*12.7)
+		return Cpp.ODdrive
+	except: return 0
+def ODtone(val=None):						# 0-95 (accepts up to 100)
+	try:
+		if val!=None:
+			if val>=0 and val<=100:
+				Cpp.ODsetTone(val*1.27)
+		return Cpp.ODtone
+	except: return 1
+def ODmix(val=None):						# 0-10
+	try:
+		if val!=None:
+			if val>=0 and val<=10:
+				Cpp.ODsetMix(val*12.7)
+		return Cpp.ODmix*10
+	except: return 1
+def PLtype(val=None):						# value in PLtypes
+	try:
+		if val!=None:
+			if isinstance(val,int): Cpp.PLsetType(val)
+			else: Cpp.PLsetType(gv.getindex(val,Cpp.PLtypes,True))
+		return Cpp.PLtype
+	except: return 0
+def PLthresh(val=None):						# 70-110
+	try:
+		if val!=None:
+			if val>=70 and val<=110:
+				Cpp.PLsetThresh(127*(val-70)/40)
+		return Cpp.PLthresh
+	except: return 0
+def PLattack(val=None):						# 1-11
+	try:
+		if val!=None:
+			if val>=1 and val<=11:
+				Cpp.PLsetAttack((val-1)*12.7)
+		return Cpp.PLattack
+	except: return 1
+def PLrelease(val=None):					# 1-11
+	try:
+		if val!=None:
+			if val>=5 and val<=25:
+				Cpp.PLsetRelease((val-5)*6.35)
+		return Cpp.PLrelease
+	except: return 8
 def LFOtype(val=None):						# value in LFOtypes
 	try:
 		if val!=None:
@@ -475,25 +538,6 @@ def Button(val=None):
 				return True
 		return False
 	except: return False
-IPaddress="?.?.?.?"
-def IP(val=None):
-	global IPaddress
-	try:
-		IPs=IPlist()
-		if len(IPs)==0:
-			IPaddress="Not connected"
-		elif val==None:
-			if IPaddress in IPs:
-				val=gv.getindex(IPaddress,IPs,True)
-				if val<0:val=0
-			else: val=0
-		elif not isinstance(val,int):
-			val=gv.getindex(val,IPs,True)
-			if val<0: val=0
-		elif val>=len(IPs) or val<0: val=0
-		IPaddress=IPs[val]
-		return IPaddress
-	except: return "?.?.?.?"
 
 # Readonly variables changing during play
 
@@ -540,6 +584,15 @@ def NoteMapping(*z):				# [[keybnote,qfraction,soundnote,retune,voice]...]
 def MenuDisplay(*z):				# [line1,line2, ..] lines of the characterdisplay of the (button) menu
 	try: return [butmenu.line1(),butmenu.line2(),butmenu.line3()]
 	except: return ["No menu defined",""]
+IP=network.IP
+IPlist=network.IPlist
+def Wireless(*z):
+	try:
+		return network.wireless()
+	except:
+		return ["Network error"]
+def SSID(*z):
+	return Wireless()[0]
 
 # Readonly variables from configuration and mapping files
 
@@ -573,8 +626,14 @@ def AWtypes(*z):					# Wah types implemented via the AutoWah filter
 def DLYtypes(*z):					# Effects implemented via the echo/faser filter
 	try: return Cpp.DLYtypes
 	except: return ["Off"]
-def LFtypes(*z):					# Effects implemented via the Moog low-pass filetsr
+def LFtypes(*z):					# Effects implemented via the Moog low-pass filter
 	try: return Cpp.LFtypes
+	except: return ["Off"]
+def ODtypes(*z):					# Effects implemented via Overdrive effect
+	try: return Cpp.ODtypes
+	except: return ["Off"]
+def PLtypes(*z):					# Effects implemented via Peak limiter
+	try: return Cpp.PLtypes
 	except: return ["Off"]
 def LFOtypes(*z):					# Effects implemented via the Low Frequency Oscillator
 	try: return LFO.effects
@@ -583,14 +642,6 @@ def CHOtypes(*z):					# Effects implemented via Chorus
 	return chorus.effects
 def Buttons(*z):					# Buttons supported by button menu
 	return butmenu.buttons
-USE_IPv6 = gv.cp.getboolean(gv.cfg,"USE_IPv6".lower())
-def IPlist(*z):						# SB IP addresses (cable and wireless plus IPv6 if enabled in configuration.txt)
-	x=subprocess.check_output("hostname -I",shell=True).split()
-	if USE_IPv6:
-		return([i for i in x])
-	else:
-		return([i for i in x if i.find('.')>-1])
-print "IP's: %s" %(IPlist())
 
 #                         = = = = =   D I C T I O N A R Y   = = = = =
 
@@ -675,6 +726,15 @@ procs={
 	"LFdrive":["w",LFdrive],				# 1-20
 	"LFlvl":["w",LFlvl],					# 0-100
 	"LFgain":["w",LFgain],					# 10-110, Carefully test before using values above 50
+	"ODtype":["w",ODtype],					# (integer) index or (string) of value in ODtypes
+	"ODboost":["w",ODboost],				# 15-65
+	"ODdrive":["w",ODdrive],				# 1-11
+	"ODtone":["w",ODtone],					# 0-95 (accepts up to 100)
+	"ODmix":["w",ODmix],					# 0-10 (10=100% wet)
+	"PLtype":["w",PLtype],					# (integer) index or (string) of value in PLtypes
+	"PLthresh":["w",PLthresh],				# 70-110
+	"PLattack":["w",PLattack],				# 1-11
+	"PLrelease":["w",PLrelease],			# 1-11
 	"LFOtype":["w",LFOtype],				# (integer) index or (string) of value in LFOtypes
 	"VIBRpitch":["w",VIBRpitch],			# 1-64
 	"VIBRspeed":["w",VIBRspeed],			# 1-32	
@@ -695,7 +755,6 @@ procs={
 	"CHOgain":["w",CHOgain],				# 30-80
 	"MidiChannel":["w",MidiChannel],		# 1-16
 	"Button":["w",Button],					# index of Buttons, where 0 has no function (no button touched)
-	"IP":["w",IP],							# index of IP addresses found
 
 # Readonly variables changing during play (parameters are ignored)
 
@@ -710,6 +769,10 @@ procs={
 	"Notemaps":["v",Notemaps],				# Available notemaps (names)
 	"NoteMapping":["v",NoteMapping],		# [[keybnote,qfraction,soundnote,retune,voice]...]	
 	"MenuDisplay":["v",MenuDisplay],		# [line1,line2, ..] lines of the characterdisplay of the (button) menu
+	"IP":["w",IP],							# index of IP addresses found (it's classified "w" to force into the button menu)
+	"IPlist":["v",IPlist],					# SB IP addresses (cable and wireless plus IPv6 if enabled in configuration.txt)
+	"Wireless":["v",Wireless],				# Wireless network info
+	"SSID":["w",SSID],						# Wireless network (it's classified "w" to force into the button menu)
 
 # Readonly variables from configuration and mapping files (parameters are ignored)
 
@@ -726,10 +789,11 @@ procs={
 	"AWtypes":["f",AWtypes],				# Wah types implemented via the AutoWah filter
 	"FVtypes":["f",FVtypes],				# Reverb/Freeverb types (just on/off..)
 	"LFtypes":["f",LFtypes],				# Moog low pass (just on/off..)
+	"ODtypes":["f",ODtypes],				# Overdrive effect (just on/off..)
+	"PLtypes":["f",PLtypes],				# Peak limiter (just on/off..)
 	"CHOtypes":["f",CHOtypes],				# Chorus (just on/off..)
 	"LFOtypes":["f",LFOtypes],				# Effects implemented via the Low Frequency Oscillator
-	"Buttons":["f",Buttons],				# Buttons supported by button menu
-	"IPlist":["f",IPlist]					# SB IP addresses (cable and wireless plus IPv6 if enabled in configuration.txt)
+	"Buttons":["f",Buttons]					# Buttons supported by button menu
 	}
 
 #             = = = = =   Extra procedures, not (directly) related to in/output fields   = = = = =
@@ -747,3 +811,4 @@ getindex=gv.getindex						# index=getindex(searchval,table<,onecol>). "onecol" i
 display=gv.NoProc							# if the user interface needs to display something on the system display
 menu=butmenu.nav							# the buttons menu navigation
 USE_ALSA_MIXER=False						# this is (re)set by audio detection
+USE_IPv6=gv.USE_IPv6						# set by network module

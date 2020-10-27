@@ -48,7 +48,7 @@ BOXSAMPLE_MODE = Keyb	        ; we need a default: original samplerbox
 #		Loop	- recognize loop markers, note-off by 127-note ("just play the loop with option to stop")
 #		Loo2	- recognize loop markers, note-off by same note ("just play the loop with option to stop")
 BOXVELOCITY_LEVELS = 1          ; Granularity of velocity samples/levels (127 is original samplerbox)
-BOXVELOCITY_MODE = Accurate     ; Accurate: calculated in 127 steps, Sample: determinde by wavs/level (original samplerbox)
+BOXVELOCITY_MODE = Accurate     ; Accurate: calculated in 127 steps, Sample: determined by wavs/level (original samplerbox)
 #		Sample	- velocity equals sampled value, requires multiple samples to get differentation
 #		Accurate- velocity as played, allows for multiple (normalized!) samples for timbre
 BOXSTOP127 = 109                ; Value of "Right side", "Left side" has some notes slack
@@ -104,8 +104,8 @@ LCD_D6=18                       ; Data6 <== reprogram/rewire if using HiFiberry 
 LCD_D7=4                        ; Data7
 #
 #     -- USE_I2C_LCD -- HD44780 (I2C connection), either 16x2 or 20x4
-I2C_LCD_ADDR=0x3f
-I2C_LCD_PORT=1
+I2C_LCD_ADDR=0x3f               ; Adapt to your I2C chip (e.g. PCF8574A(T) uses 0x27, whereas PCF8574(T) uses 0x27).
+I2C_LCD_PORT=1                  ; Similar remark here :-)
 #
 #     -- USE_OLED -- OLED connection and device settings (SPI connection)
 OLED_DRIVER = SH1106            ; Set to the correct OLED driver chip, one of: SH1106 (more to come)
@@ -119,11 +119,13 @@ OLED_PADDING=-2                 ; padding around the display content, important 
 #
 ########  Default filter values ########
 #         R E V E R B
+Reverb=Off                      ; Default state of the reverb (On/Off)
 FVroomsize=0.5                  ; Roomsize (0-1), package default 0.5
 FVdamp=0.4                      ; Damp (0-1), package default 0.4
 FVlevel=0.4                     ; Wet (0-1), implicit dry: package default 1/3 and 0
 FVwidth=1.0                     ; Width (0-1), package default 1
 #         (auto) W A H
+Wah=Off                         ; Default state of the reverb (Off/EnvelopeWah/LFOwah/ManualWah)
 AWqfactor=0.25                  ; Qfactor 0.25-25
 AWmixing=0.9			; Wet (0-1), implicit dry
 AWminfreq=20                    ; range bottom 20-500
@@ -132,7 +134,9 @@ AWattack=0.04                   ; Envelope: begin detection 0.5-0.005
 AWrelease=0.002                 ; Envelope: end detection 0.05-0.0005
 AWspeed=500                     ; LFO: speed of the the oscillator 100-1100
 AWlvlrange=90                   ; LFO+Pedal: sensitivity (0-100, 0 = filter without wah)
+AWpedal=0                       ; Position of the wah-wah pedal
 #         D E L A Y  /  F L A N G E R
+Delay=Off                       ; Default state of the delay (Off/Echo/Flanger)
 DLYfb=0.7                       ; Feedback (0-1), amount passed to loop ("next bucket")
 DLYwet=0.7                      ; effectvolume (0-1)
 DLYdry=1.0                      ; source volume (0-1). Echo only; flanger sets dry via wet.
@@ -141,14 +145,27 @@ DLYsteep=1                      ; gradient (1-11), steepness of the flangersweep
 DLYsteplen=1000.0               ; steplen/time (300-3300) of the flanger delay
 DLYmin=10.0                     ; minimum delay (5-25) of the flanger
 DLYmax=80.0                     ; maximum delay (50-150) of the flanger
-#         M O O G L A D D E R  (=lowpass)
+#         M O O G L A D D E R  (lowpass filter)
 #         Out-of-range values can have serious implications
+Moog=Off                        ; Default state of the moog ladder filter (On/Off)
 LFresonance=0.4                 ; resonance: 0-3.8. Exceeding 3.8 may cause crashes
 LFcutoff=10000.0                ; cutoff frequency, 1000-11000
 LFdrive=1.0                     ; filter inputlevel, 1-21
 LFlvl=0.5                       ; wetlevel, 0-1: dry=1-wet
 LFgain=4.0                      ; filtergain, 1-11. Depends on sound, keep default value <5!
+#         O V E R D R I V E  (softclip with harmonics filtering)
+Overdrive=Off                   ; Default state of the limiter (On/Off)
+ODboost=30.0                    ; target volume: 15-65
+ODdrive=5.0                     ; level of distortion: 1-11
+ODtone=30.0                     ; tone = level of low pass filtering: 0-95
+ODlvl=1.0                       ; wetlevel, 0-1: dry=1-wet
+#         P E A K   L I M I T E R
+Limiter=Off                     ; Default state of the limiter (On/Off)
+PLthresh=90.0                   ; threshold: 70-110
+PLattack=1.0                    ; attack time: 1-11
+PLrelease=11.0                  ; release time: 5-25
 #         M O D U L A T E
+LFOeffect=Off                   ; default state of the LFO=Modulator (Off/Vibrato/Tremolo/Panning/Rotate)
 VIBRpitch=0.5                   ; Vibrato note variation
 VIBRspeed=15                    ; 14 ==> 10Hz on saw & block, 5Hz on triangle
 VIBRtrill=False                 ; a vibratotrill is a kind of yodeling
@@ -158,5 +175,6 @@ TREMtrill=False                 ; a tremolotrill is a goatlike sound (country si
 PANwidth=1                      ; maximum panning width
 PANspeed=1                      ; See VIBRspeed
 #         C H O R U S
+Chorus=Off                      ; Default state of chorus (On/Off)
 CHOdepth=4                      ; 2-15, level of "unsync/untune" of the voices
 CHOgain=0.4                     ; 0.3-0.8, volume of the separate voices

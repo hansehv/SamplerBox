@@ -4,6 +4,9 @@
 #   Using C++ is necessary to enable CPU intensive effects.
 #   Their impact still remains visible, see percentages below.
 #
+#   Functions are written to communicate with MIDI controllers,
+#   either toggles, switches or variable inputs ranging 0-127.
+#
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 ###############################################################
 #
@@ -11,12 +14,21 @@ import gv
 import ctypes
 from ctypes import *
 c_float_p = ctypes.POINTER(ctypes.c_float)
+c_double_p = ctypes.POINTER(ctypes.c_double)
 c_short_p = ctypes.POINTER(ctypes.c_short)
 c_filters = cdll.LoadLibrary('./filters/interface.so')
 
+def ResetAll(scope=1):
+    FVreset(scope)
+    AWreset(scope)
+    DLYreset(scope)
+    LFreset(scope)
+    ODreset(scope)
+    PLreset(scope)
+
 #
 # Reverb based on Freeverb by Jezar at Dreampoint
-# Reverb is about 11% on PI3
+# Reverb takes about 11% on PI3
 #
 c_filters.fvsetroomsize.argtypes = [c_float]
 c_filters.fvsetdamp.argtypes = [c_float]
@@ -54,13 +66,21 @@ def FVsetwidth(x,*z):
     global FVwidth
     FVwidth=1.0*x/127.0
     c_filters.fvsetwidth(FVwidth)
-def FVreset():
-    FVsetType(0)
-    FVsetroomsize(gv.cp.getfloat(gv.cfg,"FVroomsize".lower())*127)
-    FVsetdamp(gv.cp.getfloat(gv.cfg,"FVdamp".lower())*127)
-    FVsetlevel(gv.cp.getfloat(gv.cfg,"FVlevel".lower())*127)
-    FVsetwidth(gv.cp.getfloat(gv.cfg,"FVwidth".lower())*127)
-FVreset()
+def FVreset(scope=-1):
+    FVtype = 0      # -1 turns of the effect, undefined values cover midi controller turn off
+    if scope in [-2, -3, -4]:       # also reset values
+        FVtype = gv.getindex( gv.cp.get(gv.cfg,"Reverb".lower()), FVtypes, True, False )
+        if FVtype < 0 :
+            FVtype = 0
+        #if scope == -3:         # load sample set default
+        #    load sample set default
+        #else:                   # system default
+        FVsetroomsize(gv.cp.getfloat(gv.cfg,"FVroomsize".lower())*127)
+        FVsetdamp(gv.cp.getfloat(gv.cfg,"FVdamp".lower())*127)
+        FVsetlevel(gv.cp.getfloat(gv.cfg,"FVlevel".lower())*127)
+        FVsetwidth(gv.cp.getfloat(gv.cfg,"FVwidth".lower())*127)
+    FVsetType(FVtype)
+FVreset(-2)
 gv.setMC(gv.REVERB,FVsetReverb)      # announce to CCmap
 gv.setMC(gv.REVERBLVL,FVsetlevel)
 gv.setMC(gv.REVERBROOM,FVsetroomsize)
@@ -70,7 +90,7 @@ gv.setMC(gv.REVERBWIDTH,FVsetwidth)
 #
 # AutoWah (envelope & LFO) and Wah-Wah (pedal) based on
 # autowah by Daniel Zanco: https://github.com/dangpzanco/autowah
-# Reverb is about 6% on PI3
+# Autowah takes about 6% on PI3
 #
 c_filters.awsetMinMaxFreq.argtypes = [c_float, c_float]
 c_filters.awsetQualityFactor.argtypes = [c_float]
@@ -150,18 +170,26 @@ def AWsetLVLrange(x,*z):           # 0-100
     global AWlvlrange
     AWlvlrange=100.0*x/127.0
     c_filters.awsetLVLrange(AWlvlrange)
-def AWreset():
-    AWsetType(0)
-    AWsetCCval(0)   # pedal back to base
-    AWsetQualityFactor(gv.cp.getfloat(gv.cfg,"AWqfactor".lower())/25*127)
-    AWsetMixing(gv.cp.getfloat(gv.cfg,"AWmixing".lower())*127)
-    AWsetMinFreq(gv.cp.getfloat(gv.cfg,"AWminfreq".lower())/500*127)
-    AWsetMaxFreq(gv.cp.getfloat(gv.cfg,"AWmaxfreq".lower())/10000*127)
-    AWsetAttack(gv.cp.getfloat(gv.cfg,"AWattack".lower())/0.5*127)
-    AWsetRelease(gv.cp.getfloat(gv.cfg,"AWrelease".lower())/0.05*127)
-    AWsetSpeed((gv.cp.getfloat(gv.cfg,"AWspeed".lower())-100)/1000*127)
-    AWsetLVLrange(gv.cp.getfloat(gv.cfg,"AWlvlrange".lower())/100*127)
-AWreset()
+def AWreset(scope=-1):
+    AWtype = 0      # -1 turns of the effect, undefined values cover midi controller turn off
+    if scope in [-2, -3, -4]:       # also reset values
+        AWtype = gv.getindex( gv.cp.get(gv.cfg,"Wah".lower()), AWtypes, True, False )
+        if AWtype < 0 :
+            AWtype = 0
+        #if scope == -3:         # load sample set default
+        #    load sample set default
+        #else:                   # system default
+        AWsetQualityFactor(gv.cp.getfloat(gv.cfg,"AWqfactor".lower())/25*127)
+        AWsetMixing(gv.cp.getfloat(gv.cfg,"AWmixing".lower())*127)
+        AWsetMinFreq(gv.cp.getfloat(gv.cfg,"AWminfreq".lower())/500*127)
+        AWsetMaxFreq(gv.cp.getfloat(gv.cfg,"AWmaxfreq".lower())/10000*127)
+        AWsetAttack(gv.cp.getfloat(gv.cfg,"AWattack".lower())/0.5*127)
+        AWsetRelease(gv.cp.getfloat(gv.cfg,"AWrelease".lower())/0.05*127)
+        AWsetSpeed((gv.cp.getfloat(gv.cfg,"AWspeed".lower())-100)/1000*127)
+        AWsetLVLrange(gv.cp.getfloat(gv.cfg,"AWlvlrange".lower())/100*127)
+    AWsetType(AWtype)       
+    AWsetCCval(0)   # pedal always back to base
+AWreset(-2)
 gv.setMC(gv.AUTOWAHENV,AWsetENV)     # announce to CCmap
 gv.setMC(gv.AUTOWAHLFO,AWsetLFO)
 gv.setMC(gv.AUTOWAHMAN,AWsetMAN)
@@ -244,17 +272,25 @@ def DLYsetmax(x,*z):   # 50-150 for flanger
     global DLYmax
     DLYmax=50.0+x/1.27
     c_filters.dlysetrange(DLYmin,DLYmax)
-def DLYreset():
-    DLYsetType(0)
-    DLYsetfb(gv.cp.getfloat(gv.cfg,"DLYfb".lower())*127)
-    DLYsetwet(gv.cp.getfloat(gv.cfg,"DLYwet".lower())*127)
-    DLYsetdry(gv.cp.getfloat(gv.cfg,"DLYdry".lower())*127)
-    DLYsettime((gv.cp.getfloat(gv.cfg,"DLYtime".lower())-1000)/60000*127)
-    DLYsetsteep((gv.cp.getfloat(gv.cfg,"DLYsteep".lower())-1)/10*127)
-    DLYsetsteplen((gv.cp.getfloat(gv.cfg,"DLYsteplen".lower())-300)/3000*127)
-    DLYsetmin((gv.cp.getfloat(gv.cfg,"DLYmin".lower())-5)/20*127)
-    DLYsetmax((gv.cp.getfloat(gv.cfg,"DLYmax".lower())-50)/100*127)
-DLYreset()
+def DLYreset(scope=-1):
+    DLYtype = 0  # -1 turns of the effect, undefined values cover midi controller turn off
+    if scope in [-2, -3, -4]:       # also reset values
+        DLYtype = gv.getindex( gv.cp.get(gv.cfg,"Delay".lower()), DLYtypes, True, False )
+        if DLYtype < 0 :
+            DLYtype = 0
+        #if scope == -3:         # load sample set default
+        #    load sample set default
+        #else:                   # system default
+        DLYsetfb(gv.cp.getfloat(gv.cfg,"DLYfb".lower())*127)
+        DLYsetwet(gv.cp.getfloat(gv.cfg,"DLYwet".lower())*127)
+        DLYsetdry(gv.cp.getfloat(gv.cfg,"DLYdry".lower())*127)
+        DLYsettime((gv.cp.getfloat(gv.cfg,"DLYtime".lower())-1000)/60000*127)
+        DLYsetsteep((gv.cp.getfloat(gv.cfg,"DLYsteep".lower())-1)/10*127)
+        DLYsetsteplen((gv.cp.getfloat(gv.cfg,"DLYsteplen".lower())-300)/3000*127)
+        DLYsetmin((gv.cp.getfloat(gv.cfg,"DLYmin".lower())-5)/20*127)
+        DLYsetmax((gv.cp.getfloat(gv.cfg,"DLYmax".lower())-50)/100*127)
+    DLYsetType(DLYtype)
+DLYreset(-2)
 gv.setMC(gv.ECHO,DLYsetEcho)     # announce to CCmap
 gv.setMC(gv.FLANGER,DLYsetFlanger)
 gv.setMC(gv.DELAYFB,DLYsetfb)
@@ -268,7 +304,8 @@ gv.setMC(gv.DELAYMAX,DLYsetmax)
 
 #
 # Moog lowpass ladderfilter based on algorithm developed by Stefano D'Angelo and Vesa Valimaki
-# They take about 9% on PI3
+# Code obtained via Dimitri Diakopoulos, https://github.com/ddiakopoulos/MoogLadders
+# Filter takes about 9% on PI3
 #
 c_filters.lfsetresonance.argtypes = [c_float]
 c_filters.lfsetcutoff.argtypes = [c_float]
@@ -313,17 +350,140 @@ def LFsetGain(x,*z):            # 1 - 11
     global LFgain
     LFgain=1.0+x*0.0787      # =10/127
     c_filters.lfsetgain(LFgain)
-def LFreset():
-    LFsetType(0)
-    LFsetResonance((gv.cp.getfloat(gv.cfg,"LFresonance".lower())/3.8)*127)
-    LFsetCutoff((gv.cp.getfloat(gv.cfg,"LFcutoff".lower())-1000)/10000*127)
-    LFsetDrive((gv.cp.getfloat(gv.cfg,"LFdrive".lower())-1)/20*127)
-    LFsetLvl(gv.cp.getfloat(gv.cfg,"LFlvl".lower())*127)
-    LFsetGain((gv.cp.getfloat(gv.cfg,"LFgain".lower())-1)/10*127)
-LFreset()
+def LFreset(scope=-1):
+    LFtype = 0
+      # -1 turns of the effect, undefined values cover midi controller turn off
+    if scope in [-2, -3, -4]:       # also reset values
+        LFtype = gv.getindex( gv.cp.get(gv.cfg,"Moog".lower()), LFtypes, True, False )
+        if LFtype < 0 :
+            LFtype = 0
+        #if scope == -3:         # load sample set default
+        #    load sample set default
+        #else:                   # system default
+        LFsetResonance((gv.cp.getfloat(gv.cfg,"LFresonance".lower())/3.8)*127)
+        LFsetCutoff((gv.cp.getfloat(gv.cfg,"LFcutoff".lower())-1000)/10000*127)
+        LFsetDrive((gv.cp.getfloat(gv.cfg,"LFdrive".lower())-1)/20*127)
+        LFsetLvl(gv.cp.getfloat(gv.cfg,"LFlvl".lower())*127)
+        LFsetGain((gv.cp.getfloat(gv.cfg,"LFgain".lower())-1)/10*127)
+    LFsetType(LFtype)
+LFreset(-2)
 gv.setMC(gv.LADDER,LFsetLadder)      # announce to CCmap
 gv.setMC(gv.LADDERRES,LFsetResonance)
 gv.setMC(gv.LADDERLVL,LFsetLvl)
 gv.setMC(gv.LADDERCUTOFF,LFsetCutoff)
 gv.setMC(gv.LADDERDRIVE,LFsetDrive)
 gv.setMC(gv.LADDERGAIN,LFsetGain)
+
+#
+# Overdrive effect inspired by various discussions
+# Overdrive takes about 3.5% on PI3
+#
+c_filters.odsetboost.argtypes = [c_float]
+c_filters.odsetdrive.argtypes = [c_float]
+c_filters.odsettone.argtypes = [c_float]
+c_filters.odsetwet.argtypes = [c_float]
+c_filters.odsetdry.argtypes = [c_float]
+ODtypes=["Off","On"]
+ODtype=1
+def ODsetType(x,*z):
+    global ODtype
+    ODtype=x
+def ODsetOverdrive(*z):
+    global ODtype
+    if ODtype==1: ODtype=0
+    else: ODsetType(1)
+ODboost=3000
+def ODsetBoost(x,*z):               # 15 - 65
+    global ODboost
+    ODboost=15.0+x*50/127
+    c_filters.odsetboost(ODboost)
+ODdrive=3.0
+def ODsetDrive(x,*z):               # 1 - 11
+    global ODdrive
+    ODdrive=1.0+round(x*0.0787)     # =10/127
+    c_filters.odsetdrive(ODdrive)
+ODtone=0.3
+def ODsetTone(x,*z):                # 0 - 100 (actually 0-95)
+    global ODtone
+    ODtone=x*1.0/1.27
+    if ODtone>95.0: ODtone=95.0
+    c_filters.odsettone(ODtone/100)
+ODmix=1.0
+def ODsetMix(x,*z):                 # 0 - 1
+    global ODmix
+    ODmix=x*1.0/127
+    c_filters.odsetwet(ODmix*0.5)   # hardcoded correction of wet, make this adaptable too?
+    c_filters.odsetdry(1-ODmix)
+def ODreset(scope=-1):
+    ODtype =0       # -1 turns of the effect, undefined values cover midi controller turn off
+    if scope in [-2, -3, -4]:       # also reset values
+        ODtype = gv.getindex( gv.cp.get(gv.cfg,"Overdrive".lower()), ODtypes, True, False )
+        if ODtype < 0 :
+            ODtype = 0
+        #if scope == -3:         # load sample set default
+        #    load sample set default
+        #else:                   # system default
+        ODsetBoost((gv.cp.getfloat(gv.cfg,"ODboost".lower())-15)/50*127)
+        ODsetDrive((gv.cp.getfloat(gv.cfg,"ODdrive".lower())-1)/10*127)
+        ODsetTone((gv.cp.getfloat(gv.cfg,"ODtone".lower()))*1.27)
+        ODsetMix(gv.cp.getfloat(gv.cfg,"ODlvl".lower())*127)
+    ODsetType(ODtype)
+ODreset(-2)
+gv.setMC(gv.OVERDRIVE,ODsetOverdrive)      # announce to CCmap
+gv.setMC(gv.ODRVBOOST,ODsetBoost)
+gv.setMC(gv.ODRVDRIVE,ODsetDrive)
+gv.setMC(gv.ODRVTONE,ODsetTone)
+gv.setMC(gv.ODRVMIX,ODsetMix)
+
+#
+# Peaklimiter based on Simple Compressor class by Citizen Chunk
+# https://www.musicdsp.org/en/latest/Effects/204-simple-compressor-class-c.html
+# Limiter takes about 4% on PI3
+#
+c_filters.plsetthresh.argtypes = [c_float]
+c_filters.plsetattack.argtypes = [c_float]
+c_filters.plsetrelease.argtypes = [c_float]
+PLtypes=["Off","On"]
+PLtype=0
+def PLsetType(x,*z):
+    global PLtype
+    c_filters.plinit()
+    PLtype=x
+def LFsetLimiter(*z):
+    global PLtype
+    if PLtype==1: PLtype=0
+    else: PLsetType(1)
+PLthresh=90.0
+def PLsetThresh(x,*z):              # 70 - 110
+    global PLthresh
+    PLthresh=70+round(x*0.31496)    # =40/127
+    c_filters.plsetthresh(PLthresh)
+PLattack=1.0
+def PLsetAttack(x,*z):              # 1 - 11
+    global PLattack
+    PLattack=1.0+round(x*0.0787)    # =10/127
+    c_filters.plsetattack(PLattack)
+PLrelease=8.0
+def PLsetRelease(x,*z):             # 5 - 25
+    global PLrelease
+    PLrelease=5.0+round(x*0.1575)   # =20/127
+    c_filters.plsetrelease(PLrelease)
+def PLreset(scope=-1):
+    c_filters.plinit()
+    PLtype =0       # -1 turns of the effect, undefined values cover midi controller turn off
+    if scope in [-2, -3, -4]:       # also reset values
+        PLtype = gv.getindex( gv.cp.get(gv.cfg,"Limiter".lower()), PLtypes, True, False )
+        if PLtype < 0 :
+            PLtype = 0
+        #if scope == -3:         # load sample set default
+        #    load sample set default
+        #else:                   # system default
+        PLsetThresh((gv.cp.getfloat(gv.cfg,"PLthresh".lower())-70)/40*127)
+        PLsetAttack((gv.cp.getfloat(gv.cfg,"PLattack".lower())-1)/10*127)
+        PLsetRelease((gv.cp.getfloat(gv.cfg,"PLrelease".lower())-5)/20*127)
+    PLsetType(PLtype)
+PLreset(-2)
+gv.setMC(gv.LIMITER,LFsetLimiter)      # announce to CCmap
+gv.setMC(gv.LIMITTHRESH,PLsetThresh)
+gv.setMC(gv.LIMITATTACK,PLsetAttack)
+gv.setMC(gv.LIMITRELEASE,PLsetRelease)

@@ -3,7 +3,6 @@ UA,Fixed,ProgramUp,Switch,# Not needed when standard Program up button present
 UA,Fixed,ProgramDown,Switch,# Not needed when standard Program down button present
 UA,Fixed,PitchWheel,Continuous,# Not needed when standard pitchwheel present
 UA,Fixed,PitchSens,Continuous,
-UA,Fixed,ModWheel,Continuous,
 UA,Fixed,Volume,Continuous,
 UA,Fixed,Sustain,Continuous,"# Pedal: Sustain. Pedal functions are complex to mix, so preferably use only one"
 UA,Fixed,Damp,Continuous,# Pedal: Damp all (conventional damp)
@@ -58,6 +57,15 @@ UA,Fixed,MoogResonance,Continuous,
 UA,Fixed,MoogCutoff,Continuous,
 UA,Fixed,MoogDrive,Continuous,
 UA,Fixed,MoogGain,Continuous,
+UA,Fixed,Overdrive,Toggle,
+UA,Fixed,OverdriveBoost,Continuous,
+UA,Fixed,OverdriveDrive,Continuous,
+UA,Fixed,OverdriveTone,Continuous,
+UA,Fixed,OverdriveLvl,Continuous,
+UA,Fixed,Limiter,Toggle,
+UA,Fixed,LimitThreshold,Continuous,
+UA,Fixed,LimitAttack,Continuous,
+UA,Fixed,LimitRelease,Continuous,
 UA,Fixed,Arpeggiator,Toggle,
 UA,Fixed,ArpUp,SwitchOn,#Can be set with ArpUpDown
 UA,Fixed,ArpDown,SwitchOn,#Can be set with ArpUpDown
