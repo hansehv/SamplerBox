@@ -340,7 +340,7 @@ UI.USE_ALSA_MIXER=audio.USE_ALSA_MIXER
 #
 import arp
 
-# Reverb, Moogladder, Wah (envelope, lfo and pedal), Delay (echo and flanger) and PeakLimiter
+# Reverb, Moogladder, Wah (envelope, lfo, pedal), Delay (echo, flanger), Overdrive and PeakLimiter
 # Based on changing the audio output which requires heavy processing
 #
 import Cpp
