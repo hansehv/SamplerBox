@@ -2,14 +2,14 @@ This file contains changelog of samplerbox.py
 For changes on samplerbox_audio.pyx, see top of the source file
 For changes on the image, see http://homspace.xs4all.nl/homspace/samplerbox/SBbuild.html
 
-Sept-Oct 2020:
+Sept-Nov 2020:
   - Extended midimon.py to support serial midi
   - Fixed bug for LED's (red blinking when all is OK)
   - Show WiFi strength to console, GUI and displays
   - Added peak limiter
   - Made initial state of the filters/effects configurable in configuration.txt
-  - changed order of effects (delay before wah)
   - Added overdrive distortion
+  - Prepared for making filter order configurable
   - cleanups
 Jun-Aug 2020:
   - Fixed bug when midi device selects not-existing preset

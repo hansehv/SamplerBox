@@ -11,14 +11,24 @@
 ###############################################################
 #
 import gv
-import ctypes
+import ctypes,operator
 from ctypes import *
 c_float_p = ctypes.POINTER(ctypes.c_float)
 c_double_p = ctypes.POINTER(ctypes.c_double)
 c_short_p = ctypes.POINTER(ctypes.c_short)
 c_filters = cdll.LoadLibrary('./filters/interface.so')
 
-def ResetAll(scope=1):
+#
+#   O V E R A L L    R O U T I N E S
+#
+REVERB = "Reverb"
+WAH = "Wah"
+DELAY = "Delay"
+MOOG = "Moog"
+OVERDRIVE = "Overdrive"
+LIMITER = "Limiter"
+
+def ResetAll(scope=-1):
     FVreset(scope)
     AWreset(scope)
     DLYreset(scope)
@@ -26,6 +36,48 @@ def ResetAll(scope=1):
     ODreset(scope)
     PLreset(scope)
 
+def newprocess():
+    global active
+    tmp = []
+    for m in effects:
+        if effects[m][1]:
+            tmp.append([effects[m][0],effects[m][2]])
+    tmp.sort(key=operator.itemgetter(0))
+    active = tmp
+    print "active ==>", active
+
+def process(inS, frame_count):
+    i=0
+    while True:
+        if i >= len(active):     # test in advance for safeguard
+            break
+        active[i][1](inS.ctypes.data_as(c_float_p), inS.ctypes.data_as(c_float_p), frame_count)
+        i += 1
+
+def seteffect(effect, state):
+    global effects
+    oldstate = effects[effect][1]
+    effects[effect][1] = state
+    if ( (state and not oldstate) or
+         (oldstate and not state) ):
+        newprocess()
+
+def setprio (effect, newprio):
+    if effects[effect][0] != newprio and newprio in range(1,len(effects)+1):
+        oldprio = effects[effect][0]
+        if oldprio < newprio:
+            for m in effects:
+                if  effects[m][0] > oldprio and effects[m][0] <= newprio:
+                    effects[m][0] -= 1
+        else:
+            for m in effects:
+                if  effects[m][0] < oldprio and effects[m][0] >= newprio:
+                    effects[m][0] += 1
+        effects[effect][0] = newprio
+        newprocess()
+
+#
+#   = = =   R E V E R B   = = =
 #
 # Reverb based on Freeverb by Jezar at Dreampoint
 # Reverb takes about 11% on PI3
@@ -41,6 +93,7 @@ def FVsetType(x,*z):
     global FVtype
     c_filters.fvmute()
     FVtype=x
+    seteffect(REVERB, x)
 def FVsetReverb(*z):
     global FVtype
     if FVtype==1: FVtype=0
@@ -80,13 +133,14 @@ def FVreset(scope=-1):
         FVsetlevel(gv.cp.getfloat(gv.cfg,"FVlevel".lower())*127)
         FVsetwidth(gv.cp.getfloat(gv.cfg,"FVwidth".lower())*127)
     FVsetType(FVtype)
-FVreset(-2)
 gv.setMC(gv.REVERB,FVsetReverb)      # announce to CCmap
 gv.setMC(gv.REVERBLVL,FVsetlevel)
 gv.setMC(gv.REVERBROOM,FVsetroomsize)
 gv.setMC(gv.REVERBDAMP,FVsetdamp)
 gv.setMC(gv.REVERBWIDTH,FVsetwidth)
 
+#
+#   = = =   W A H   = = =
 #
 # AutoWah (envelope & LFO) and Wah-Wah (pedal) based on
 # autowah by Daniel Zanco: https://github.com/dangpzanco/autowah
@@ -132,6 +186,7 @@ def AWsetType(x,*z):         # 0,1,2,3 = off,envelope,LFO,CC
     c_filters.awmute()
     c_filters.awsetWahType(x)
     AWtype=x
+    seteffect(WAH, x)
 def AWtoggle(x):
     global AWtype
     if AWtype==x: AWtype=0
@@ -189,7 +244,6 @@ def AWreset(scope=-1):
         AWsetLVLrange(gv.cp.getfloat(gv.cfg,"AWlvlrange".lower())/100*127)
     AWsetType(AWtype)       
     AWsetCCval(0)   # pedal always back to base
-AWreset(-2)
 gv.setMC(gv.AUTOWAHENV,AWsetENV)     # announce to CCmap
 gv.setMC(gv.AUTOWAHLFO,AWsetLFO)
 gv.setMC(gv.AUTOWAHMAN,AWsetMAN)
@@ -203,6 +257,8 @@ gv.setMC(gv.AUTOWAHSPEED,AWsetSpeed)
 gv.setMC(gv.AUTOWAHPEDAL,AWsetCCval)
 gv.setMC(gv.AUTOWAHLVLRNGE,AWsetLVLrange)
 
+#
+#   = = =   D E L A Y   = = =
 #
 # Echo and flanger (delay line effects) based on codesnippets by
 # Gabriel Rivas: https://www.dsprelated.com/code.php?submittedby=56840
@@ -227,6 +283,7 @@ def DLYsetType(x,*z):
     if x==1: c_filters.dlysetmix(DLYdry)
     if x==2: c_filters.dlysetmix(1-DLYwet)
     DLYtype=x
+    seteffect(DELAY, x)
 def DLYsetEcho(*z):      # in Hz, should be same as audiovalue
     global DLYtype
     if DLYtype==1: DLYtype=0
@@ -290,7 +347,6 @@ def DLYreset(scope=-1):
         DLYsetmin((gv.cp.getfloat(gv.cfg,"DLYmin".lower())-5)/20*127)
         DLYsetmax((gv.cp.getfloat(gv.cfg,"DLYmax".lower())-50)/100*127)
     DLYsetType(DLYtype)
-DLYreset(-2)
 gv.setMC(gv.ECHO,DLYsetEcho)     # announce to CCmap
 gv.setMC(gv.FLANGER,DLYsetFlanger)
 gv.setMC(gv.DELAYFB,DLYsetfb)
@@ -302,6 +358,8 @@ gv.setMC(gv.DELAYSTEPLEN,DLYsetsteplen)
 gv.setMC(gv.DELAYMIN,DLYsetmin)
 gv.setMC(gv.DELAYMAX,DLYsetmax)
 
+#
+#   = = =   M O O G   L A D D E R F I L T E R   = = =
 #
 # Moog lowpass ladderfilter based on algorithm developed by Stefano D'Angelo and Vesa Valimaki
 # Code obtained via Dimitri Diakopoulos, https://github.com/ddiakopoulos/MoogLadders
@@ -319,6 +377,7 @@ def LFsetType(x,*z):
     global LFtype
     c_filters.lfmute()
     LFtype=x
+    seteffect(MOOG, x)
 def LFsetLadder(*z):
     global LFtype
     if LFtype==1: LFtype=0
@@ -366,7 +425,6 @@ def LFreset(scope=-1):
         LFsetLvl(gv.cp.getfloat(gv.cfg,"LFlvl".lower())*127)
         LFsetGain((gv.cp.getfloat(gv.cfg,"LFgain".lower())-1)/10*127)
     LFsetType(LFtype)
-LFreset(-2)
 gv.setMC(gv.LADDER,LFsetLadder)      # announce to CCmap
 gv.setMC(gv.LADDERRES,LFsetResonance)
 gv.setMC(gv.LADDERLVL,LFsetLvl)
@@ -374,6 +432,8 @@ gv.setMC(gv.LADDERCUTOFF,LFsetCutoff)
 gv.setMC(gv.LADDERDRIVE,LFsetDrive)
 gv.setMC(gv.LADDERGAIN,LFsetGain)
 
+#
+#   = = =   O V E R D R I V E   = = =
 #
 # Overdrive effect inspired by various discussions
 # Overdrive takes about 3.5% on PI3
@@ -388,6 +448,7 @@ ODtype=1
 def ODsetType(x,*z):
     global ODtype
     ODtype=x
+    seteffect(OVERDRIVE, x)
 def ODsetOverdrive(*z):
     global ODtype
     if ODtype==1: ODtype=0
@@ -428,13 +489,14 @@ def ODreset(scope=-1):
         ODsetTone((gv.cp.getfloat(gv.cfg,"ODtone".lower()))*1.27)
         ODsetMix(gv.cp.getfloat(gv.cfg,"ODlvl".lower())*127)
     ODsetType(ODtype)
-ODreset(-2)
 gv.setMC(gv.OVERDRIVE,ODsetOverdrive)      # announce to CCmap
 gv.setMC(gv.ODRVBOOST,ODsetBoost)
 gv.setMC(gv.ODRVDRIVE,ODsetDrive)
 gv.setMC(gv.ODRVTONE,ODsetTone)
 gv.setMC(gv.ODRVMIX,ODsetMix)
 
+#
+#   = = =   L I M I T E R   = = =
 #
 # Peaklimiter based on Simple Compressor class by Citizen Chunk
 # https://www.musicdsp.org/en/latest/Effects/204-simple-compressor-class-c.html
@@ -449,6 +511,7 @@ def PLsetType(x,*z):
     global PLtype
     c_filters.plinit()
     PLtype=x
+    seteffect(LIMITER, x)
 def LFsetLimiter(*z):
     global PLtype
     if PLtype==1: PLtype=0
@@ -482,8 +545,22 @@ def PLreset(scope=-1):
         PLsetAttack((gv.cp.getfloat(gv.cfg,"PLattack".lower())-1)/10*127)
         PLsetRelease((gv.cp.getfloat(gv.cfg,"PLrelease".lower())-5)/20*127)
     PLsetType(PLtype)
-PLreset(-2)
 gv.setMC(gv.LIMITER,LFsetLimiter)      # announce to CCmap
 gv.setMC(gv.LIMITTHRESH,PLsetThresh)
 gv.setMC(gv.LIMITATTACK,PLsetAttack)
 gv.setMC(gv.LIMITRELEASE,PLsetRelease)
+
+#
+#   = = =   I N I T I A L I Z E   = = =
+#
+effects = { REVERB: [5, 0, c_filters.reverb, FVsetType],
+            WAH: [3 , 0, c_filters.autowah, PLsetType],
+            DELAY: [4 , 0, c_filters.delay, DLYsetType],
+            MOOG: [2 , 0, c_filters.moog, LFsetType],
+            OVERDRIVE: [1 , 0, c_filters.overdrive, ODsetType],
+            LIMITER: [6 , 0, c_filters.limiter, PLsetType]
+        }
+active = []
+
+ResetAll(-2)
+newprocess()
