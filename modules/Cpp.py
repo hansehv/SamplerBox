@@ -44,7 +44,6 @@ def newprocess():
             tmp.append([effects[m][0],effects[m][2]])
     tmp.sort(key=operator.itemgetter(0))
     active = tmp
-    print "active ==>", active
 
 def process(inS, frame_count):
     i=0
