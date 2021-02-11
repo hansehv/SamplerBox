@@ -8,8 +8,9 @@ General,Preset,Presetlist,,"#: #,name"
 -,MidiVolume,0-100,,
 -,Gain,0-300,,
 -,Pitchrange,0-12,,
--,MidiChannel,1-16,,
 -,IP,IPlist,IP-addresses,
+-,SSID,Wireless,WlessNetw,
+-,MidiChannel,1-16,,
 Reverb,FVtype,FVtypes,On-off,name: name > x
 -,FVroomsize,0-100,Roomsize,
 -,FVdamp,0-100,Damp,
@@ -51,6 +52,15 @@ Moog low pass,LFtype,LFtypes,On-off,name: name > x
 -,LFdrive,1-20,Drive,
 -,LFlvl,0-100-10,WetDry,
 -,LFgain,10-110-5,Gain(care!),# Carefully test before using values above 50
+Overdrive,ODtype,ODtypes,On-off,name: name > x
+-,ODboost,15-65-5,Gain,
+-,ODdrive,1-11,Distortion,
+-,ODtone,0-95-5,Low pass,
+-,ODmix,1-10,WetDry,
+Peak limiter,PLtype,PLtypes,On-off,name: name > x
+-,PLthresh,70-110-5,Threshold,
+-,PLattack,1-11,Attack,
+-,PLrelease,1-11,Release,
 Arpeggiator,ARPord,ARPordlist,Order,name: name > x
 -,ARPstep,10-100,StepLength,
 -,ARPsustain,0-100,NoteLength,

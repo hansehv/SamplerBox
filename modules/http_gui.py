@@ -123,7 +123,7 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def get_UI_parm(self,nam,proc):
         parm=proc()
         if isinstance(parm,(int,long,float)):
-            jsparm="%i" %int(parm)
+            jsparm="%i" %int(parm+.1)
         elif isinstance(parm,basestring):
             if nam=="DefinitionTxt":
                 jsparm="'%s'" %parm.replace('\n','&#10;').replace('\r','&#13;')

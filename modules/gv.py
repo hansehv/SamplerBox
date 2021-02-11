@@ -28,7 +28,6 @@ MENU_RET="Menu_Ret"
 CHORDS="Chords"
 SCALES="Scales"
 PITCHWHEEL="PitchWheel"
-MODWHEEL="ModWheel"
 PROGUP="ProgramUp"
 PROGDN="ProgramDown"
 VOLUME="Volume"
@@ -69,6 +68,15 @@ LADDERRES="MoogResonance"
 LADDERCUTOFF="MoogCutoff"
 LADDERDRIVE="MoogDrive"
 LADDERGAIN="MoogGain"
+OVERDRIVE="Overdrive"
+ODRVBOOST="OverdriveBoost"
+ODRVDRIVE="OverdriveDrive"
+ODRVTONE="OverdriveTone"
+ODRVMIX="OverdriveLvl"
+LIMITER="Limiter"
+LIMITTHRESH="LimitThreshold"
+LIMITATTACK="LimitAttack"
+LIMITRELEASE="LimitRelease"
 PITCHSENS="PitchSens"
 VIBRATO="Vibrato"
 TREMOLO="Tremolo"
@@ -162,7 +170,6 @@ MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch)
 [PROGDN,1,safeguard],
 [PITCHWHEEL,0,safeguard],
 [PITCHSENS,0,safeguard],
-[MODWHEEL,0,safeguard],
 [VOLUME,0,safeguard],
 [SUSTAIN,3,safeguard],
 [DAMP,3,safeguard],
@@ -217,6 +224,15 @@ MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch)
 [LADDERCUTOFF,0,safeguard],
 [LADDERDRIVE,0,safeguard],
 [LADDERGAIN,0,safeguard],
+[OVERDRIVE,1,safeguard],
+[ODRVBOOST,0,safeguard],
+[ODRVDRIVE,0,safeguard],
+[ODRVTONE,0,safeguard],
+[ODRVMIX,0,safeguard],
+[LIMITER,1,safeguard],
+[LIMITTHRESH,0,safeguard],
+[LIMITATTACK,0,safeguard],
+[LIMITRELEASE,0,safeguard],
 [ARP,1,safeguard],
 [ARPUP,1,safeguard],
 [ARPDOWN,1,safeguard],

@@ -1,5 +1,5 @@
 <!DOCTYPE html><HTML><HEAD><meta charset="UTF-8">
-	<TITLE>Arpeggiator</TITLE>
+	<TITLE>Overdrive</TITLE>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Script-Type" content="text/javascript">
 <LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
@@ -10,24 +10,18 @@
 
 <TABLE WIDTH="100%"><TR>
 <TD width="125"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Dashboard</BUTTON></TD>
-<TD ALIGN="center"><B>Arpeggiator</B></TD>
+<TD ALIGN="center"><B>Overdrive</B></TD>
 <TD ALIGN="center"><BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON></TD>
 </TR></TABLE>
 
 <FORM ID="elem_SB_Form">
-<span ID="input_SB_ARPord">&nbsp; &nbsp; &nbsp;</span>
+<span ID="input_SB_ODtype">&nbsp; &nbsp; &nbsp;</span>
 <BR>
-<span ID="input_SB_Scale">Scale/Chord: </span>
-<span ID="input_SB_Chord">/ </span>
-<BR>
-<span ID="input_SB_ARPstep">Cycle time &nbsp; :&nbsp;</span>
-<span ID="input_SB_ARPsustain">Notelength &nbsp;:&nbsp;</span>
-<span ID="input_SB_ARPfade">Fadeout :&nbsp;</span>
-<BR>
-<span ID="input_SB_ARPloop">Loop:</span>
- &nbsp; &nbsp; &nbsp; &nbsp; <span ID="input_SB_ARP2end">Play to end:</span>
+<span ID="input_SB_ODboost">Boost :&nbsp;</span>
+<span ID="input_SB_ODdrive">Drive :&nbsp;</span>
+<span ID="input_SB_ODtone" >Tone &nbsp;:&nbsp;</span>
+<span ID="input_SB_ODmix"  >Level :&nbsp;</span>
 </FORM>
-
 <script>SB_Update();</script>
 </BODY>
 </HTML>
