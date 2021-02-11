@@ -114,6 +114,9 @@ def OpenDevice(f):
     print ( 'Opened audio device #%i %s\n  samplerate %iHz, blocksize=%d, LFOcycle=%d\n  valid blocksizes: %s' %(AUDIO_DEVICE_ID,AUDIO_DEVICE_NAME,f,BLOCKSIZE,countdown+1,BLOCKSIZES) )
     Cpp.c_filters.setSampleRate(f)   # align the filters
 
+"""
+	I N I T     L O G I C
+"""
 try:
     f=SAMPLERATE
     if USE_48kHz:

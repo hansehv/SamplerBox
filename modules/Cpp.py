@@ -95,7 +95,7 @@ def FVsetType(x,*z):
     seteffect(REVERB, x)
 def FVsetReverb(*z):
     global FVtype
-    if FVtype==1: FVsetType(0)
+    if FVtype==1: FVtype=0
     else: FVsetType(1)
 FVroomsize=0.2
 def FVsetroomsize(x,*z):
@@ -188,7 +188,7 @@ def AWsetType(x,*z):         # 0,1,2,3 = off,envelope,LFO,CC
     seteffect(WAH, x)
 def AWtoggle(x):
     global AWtype
-    if AWtype==x: AWsetType(0)
+    if AWtype==x: AWtype=0
     else: AWsetType(x)
 def AWsetENV(*z):
     AWtoggle(1)
@@ -285,11 +285,11 @@ def DLYsetType(x,*z):
     seteffect(DELAY, x)
 def DLYsetEcho(*z):      # in Hz, should be same as audiovalue
     global DLYtype
-    if DLYtype==1: DLYsetType(0)
+    if DLYtype==1: DLYtype=0
     else: DLYsetType(1)
 def DLYsetFlanger(*z):
     global DLYtype
-    if DLYtype==2: DLYsetType(0)
+    if DLYtype==2: DLYtype=0
     else: DLYsetType(2)
 DLYfb=0.5
 def DLYsetfb(x,*z):     # 0-1
@@ -379,7 +379,7 @@ def LFsetType(x,*z):
     seteffect(MOOG, x)
 def LFsetLadder(*z):
     global LFtype
-    if LFtype==1: LFsetType(0)
+    if LFtype==1: LFtype=0
     else: LFsetType(1)
 LFresonance=1.5
 def LFsetResonance(x,*z):       # 0 - 3.8
@@ -450,7 +450,7 @@ def ODsetType(x,*z):
     seteffect(OVERDRIVE, x)
 def ODsetOverdrive(*z):
     global ODtype
-    if ODtype==1: ODsetType(0)
+    if ODtype==1: ODtype=0
     else: ODsetType(1)
 ODboost=3000
 def ODsetBoost(x,*z):               # 15 - 65
@@ -513,7 +513,7 @@ def PLsetType(x,*z):
     seteffect(LIMITER, x)
 def LFsetLimiter(*z):
     global PLtype
-    if PLtype==1: PLsetType(0)
+    if PLtype==1: PLtype=0
     else: PLsetType(1)
 PLthresh=90.0
 def PLsetThresh(x,*z):              # 70 - 110

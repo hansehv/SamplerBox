@@ -4,30 +4,30 @@
 #
 #  It uses Luma.OLED which has drivers for: SSD1306, SSD1309,
 #  SSD1322, SSD1325, SSD1327, SSD1331, SSD1351, SH1106.
-#  Current code only supports SH1106.
+#  Current code only supports SSD1306 and SH1106.
 #  Please contact me (Hans) if you have or need additions !
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 ###############################################################
 # -*- coding:utf-8 -*-
 
-from luma.core.interface.serial import i2c, spi
-from luma.core.render import canvas
-from luma.core import lib
-
-from luma.oled.device import sh1106
 import RPi.GPIO as GPIO
-
 import time
 import subprocess
 
+from luma.core.interface.serial import i2c, spi
+from luma.core.render import canvas
+from luma.core import lib
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
 import UI,gv
-
-print("Started OLED display")
+driver = gv.cp.get(gv.cfg,"OLED_DRIVER".lower())
+if driver=="SH1106":
+    from luma.oled.device import sh1106
+if driver=="SSD1306":
+    from luma.oled.device import ssd1306
 
 class oled:
     def __init__(self):
@@ -36,11 +36,11 @@ class oled:
         self.s5=''
         self.s6=''
         # Parse config for display settings
-        driver = gv.cp.get(gv.cfg,"OLED_DRIVER".lower())
         RST = gv.cp.getint(gv.cfg,"OLED_RST".lower())
         CS = gv.cp.getint(gv.cfg,"OLED_CS".lower())
         DC = gv.cp.getint(gv.cfg,"OLED_DC".lower())
         port = gv.cp.getint(gv.cfg,"OLED_PORT".lower())
+        print( "Starting OLED %s, using SPI port %d and GPIO RST=%d, CS=%d, DC=%d" %(driver, port, RST, CS, DC) )
         # Load default font.
         self.font = ImageFont.load_default()
         
@@ -61,6 +61,8 @@ class oled:
         
         if driver=="SH1106":
             self.device = sh1106(serial, rotate=2)
+        elif driver=="SSD1306":
+            self.device = ssd1306(serial, rotate=2)
         else:
             print("Wrong driver")
         self.canvas = canvas(self.device)

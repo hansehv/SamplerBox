@@ -273,7 +273,7 @@ getcsv.readscales(CONFIG_LOC + SCALES_DEF)
 # Midi controllers and keyboard definition
 getcsv.readcontrollerCCs(CONFIG_LOC + CTRLCCS_DEF)
 getcsv.readkeynames(CONFIG_LOC + KEYNAMES_DEF)
-gv.CCmapBox=getcsv.readCCmap(CONFIG_LOC + gv.CTRLMAP_DEF)
+gv.CCmapBox = getcsv.readCCmap(CONFIG_LOC + gv.CTRLMAP_DEF)
 gv.CCmap = list(gv.CCmapBox)
 getcsv.readmenu(CONFIG_LOC + MENU_DEF)
 

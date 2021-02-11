@@ -2,6 +2,8 @@ This file contains changelog of samplerbox.py
 For changes on samplerbox_audio.pyx, see top of the source file
 For changes on the image, see http://homspace.xs4all.nl/homspace/samplerbox/SBbuild.html
 
+Feb 2021:
+  - Added OLED SSD1306 support
 Sept-Nov 2020:
   - Extended midimon.py to support serial midi
   - Fixed bug for LED's (red blinking when all is OK)

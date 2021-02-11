@@ -1,14 +1,30 @@
 # Define the existing wifi network you want to connect to if available.
+# Choose the block with the applicable protocol.
 # If you need multiple networks, just add more "network={..}" blocks.
-# This file is actually /etc/wpa-supplicant.conf, so please refer to the
+# This file is actually /etc/wpa_supplicant.conf, so please refer to the
 # related manpages for exact syntax and allowed parameters if needed.
 
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
 
+# Example using wpa protocol with pre shared key (most common)
 network={
 	ssid="ssid-name"
 	psk="password/key"
 	key_mgmt=WPA-PSK
+}
+
+# Example using wep protocol
+network={
+	ssid="ssid-name"
+	key_mgmt=NONE
+	wep_key0="password/key"  # or 13 characters, or a hexkey starting with 0x
+	wep_tx_keyidx=0
+}
+
+# Example using plaintext (open network):
+network={
+	ssid="ssid-name"
+	key_mgmt=NONE
 }
 
