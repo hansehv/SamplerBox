@@ -23,7 +23,6 @@ msleep = lambda x: time.sleep(x/1000.0)
 client   	= 14
 port    	= 0
 gv.smfseqs	= {}
-gv.smfdrums = {}
 gv.currsmf	= 0
 gv.smftempo	= 240
 streamtempo	= 240
@@ -95,6 +94,7 @@ def load(line,dirname, fname, smfseq, voicemap):
 		try:
 			events=[]
 			(song,t)=os.path.splitext(fname)
+			drums=[]
 			stream=midi.read_midifile(os.path.join(dirname, fname))
 			stream.make_ticks_abs()
 			for track in stream:
@@ -111,10 +111,8 @@ def load(line,dirname, fname, smfseq, voicemap):
 							channels[c][1]=True
 						if c==9:
 							n=int(getvalue("data",data)[1:])
-							if n in gv.smfdrums:
-								if song not in gv.smfdrums[n]: gv.smfdrums[n].append(song)
-							else:
-								gv.smfdrums[n]=[song]
+							if n not in drums:
+								drums.append(n)
 					elif msg=="TrackNameEvent":
 						t=getvalue("text",data)[1:-1]
 					elif msg=="EndOfTrackEvent":
@@ -134,29 +132,52 @@ def load(line,dirname, fname, smfseq, voicemap):
 			events.sort()
 			if voicemap=="": voicemap=song
 			voices=[]	# inventory of used channels and optional descriptions
-			print "SMF=1%d=%s, voicemap=%s sends notes on channels:"%(smfseq,fname,voicemap)
+			print "SMF_1%d=%s, voicemap=%s sends notes on channels:"%(smfseq,fname,voicemap)
 			for key, value in channels.iteritems():
 				t=[key,value]
 				voices.append(t)
-				l=""; c=""; s=""
+				l=""; c=""; s=""; d=""
 				if value[1]:
+					p=""
 					for v in value[2]:
+						p=" using program"
 						if c!="":s="s"
 						l="%s%s%d"%(l,c,v)
-						c=','
-					print " - %d='%s' using voice%s %s" %(key+1,value[0],s,l)
-			gv.smfseqs[smfseq]=[fname,stream.resolution,events,voices,voicemap]
+						c=', '
+					if l!="":
+						l="[%s]" %l
+					if key == 9:
+						d="%swith instruments %s" %(c,sorted(drums))
+					print " - %d='%s'%s%s %s%s" %(key+1,value[0],p,s,l,d)
+			gv.smfseqs[smfseq]=[fname,stream.resolution,events,voices,voicemap,sorted(drums)]
 		except:
 			print"SMFplayer: error reading %s in %s" %(fname,dirname)
 
 def drumlist():
-	print "Drum sounds used:"
-	for i in sorted (gv.smfdrums.keys()):
-		print" - %d in %s"%(i,gv.smfdrums[i])
+	drums={}
+	for key, value in gv.smfseqs.iteritems():
+		(song,t)=os.path.splitext(value[0])
+		for i in xrange(len(value[5])):
+			n=value[5][i]
+			if n in drums:
+				drums[n].append(song)
+			else:
+				drums[n]=[song]
+	print "Drum sounds used by voicemaps:"
+	for i in sorted (drums.keys()):
+		print" - %d in %s" %(i,drums[i])
+
 def seqlist():
+	# returns [smfseq#, songname, voicemap, [channel#, channelname, [used_voices]], [used percussionsounds] ]
 	smflist=[]
 	for key, value in gv.smfseqs.iteritems():
-		smflist.append([key,value[0],value[3],value[4]])
+		(song,t)=os.path.splitext(value[0])
+		i=0
+		used=[]
+		for i in xrange(len(value[3])):
+			if value[3][i][1][1]:
+				used.append([ value[3][i][0]+1, value[3][i][1][0], value[3][i][1][2] ])
+		smflist.append([key, song, value[4], used, value[5] ])
 	return(smflist)
 
 # ----------------------------------------------------------------------
