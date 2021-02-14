@@ -5,6 +5,7 @@ For changes on the image, see http://homspace.xs4all.nl/homspace/samplerbox/SBbu
 Feb 2021:
   - Added OLED SSD1306 support
   - Made console log of smfplayer more informative
+  - Show connected midi devices in the GUI and LCD/OLED display
 Sept-Nov 2020:
   - Extended midimon.py to support serial midi
   - Fixed bug for LED's (red blinking when all is OK)

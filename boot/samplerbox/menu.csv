@@ -8,9 +8,10 @@ General,Preset,Presetlist,,"#: #,name"
 -,MidiVolume,0-100,,
 -,Gain,0-300,,
 -,Pitchrange,0-12,,
+-,MidiChannel,1-16,,
+-,MIDIdev,MIDIdevs,MIDI devices,
 -,IP,IPlist,IP-addresses,
 -,SSID,Wireless,WlessNetw,
--,MidiChannel,1-16,,
 Reverb,FVtype,FVtypes,On-off,name: name > x
 -,FVroomsize,0-100,Roomsize,
 -,FVdamp,0-100,Damp,

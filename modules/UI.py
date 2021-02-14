@@ -593,6 +593,27 @@ def Wireless(*z):
 		return ["Network error"]
 def SSID(*z):
 	return Wireless()[0]
+mididevs=[]
+mididev=""
+def MIDIdevs(*z):					# Current opened mididevices except internal=smfplayer
+	return mididevs
+def MIDIdev(val=None):				# Pseudo update to serve the button menu system
+	global mididev
+	try:
+		devs=MIDIdevs()
+		if len(devs)==0:
+			mididev="None"
+		elif val==None:
+			val=gv.getindex(mididev,devs,True)
+			if val<0:val=0
+		elif not isinstance(val,int):
+			val=gv.getindex(val,mididevs,True)
+			if val<0: val=0
+		elif val>=len(mididevs) or val<0:
+			val=0
+		mididev=mididevs[val]
+		return mididev
+	except: return "Error"
 
 # Readonly variables from configuration and mapping files
 
@@ -773,6 +794,8 @@ procs={
 	"IPlist":["v",IPlist],					# SB IP addresses (cable and wireless plus IPv6 if enabled in configuration.txt)
 	"Wireless":["v",Wireless],				# Wireless network info
 	"SSID":["w",SSID],						# Wireless network (it's classified "w" to force into the button menu)
+	"MIDIdevs":["v",MIDIdevs],				# Current opened mididevices except internal=smfplayer
+	"MIDIdev":["w",MIDIdev],				# Opened MIDIdevice (it's classified "w" to force into the button menu)
 
 # Readonly variables from configuration and mapping files (parameters are ignored)
 
