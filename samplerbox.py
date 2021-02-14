@@ -839,8 +839,8 @@ gv.setMC(gv.BACKTRACKS,playBackTrack)
 def MidiCallback(mididev, message, time_stamp):
     keyboardarea=True
     messagetype = message[0] >> 4
-    messagechannel = (message[0]&0xF) + 1   # make channel# human..
-    #print '%s -> %s = Channel %d, message %d' % (mididev, message, messagechannel , messagetype)
+    #messagechannel = (message[0]&0xF) + 1   # make channel# human..
+    print '%s -> %s = Channel %d, message %d' % (mididev, message, messagechannel , messagetype)
     # ---------------------------------------------------------------------------------
     # System commands, multitimbrals identification and "hardware remap" of the drumpad
     # ---------------------------------------------------------------------------------
@@ -871,6 +871,7 @@ def MidiCallback(mididev, message, time_stamp):
     # Then process channel commands if not muted
     # -------------------------------------------------------
     if ((messagechannel==0) or MT_in) and (gv.midi_mute==False) and len(message)>1:
+        print (messagechannel, gv.MIDI_CHANNEL, DRUMPAD_CHANNEL, MT_in)
         midinote = message[1]
         mtchnote = messagechannel*gv.MTCHNOTES+midinote
         velocity = message[2] if len(message) > 2 else None

@@ -525,8 +525,8 @@ def MidiChannel(val=None):					# 1-16
 	try:
 		if val!=None:
 			if val>0 and val<17:
-				gv.MIDICHANNEL=val
-		return gv.MIDICHANNEL
+				gv.MIDI_CHANNEL=val
+		return gv.MIDI_CHANNEL
 	except: return 1
 def Button(val=None):
 	try:
