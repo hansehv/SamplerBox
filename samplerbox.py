@@ -661,7 +661,8 @@ def ControlChange(CCnum, CCval):
     mc=False
     for m in gv.CCmap:    # look for mapped controllers
         j=m[0]
-        if gv.controllerCCs[j][1]==CCnum and (gv.controllerCCs[j][2]==-1 or gv.controllerCCs[j][2]==CCval or gv.MC[m[1]][1]==3):
+        if (gv.controllerCCs[j][1]==CCnum
+        and (gv.controllerCCs[j][2]==-1 or gv.controllerCCs[j][2]==CCval or gv.MC[m[1]][1]==3)):
             if m[2]!=None: CCval=m[2]
             #print "Recognized %d:%d<=>%s related to %s" %(CCnum, CCval, gv.controllerCCs[j][0], gv.MC[m[1]][0])
             gv.MC[m[1]][2](CCval,gv.MC[m[1]][0])
@@ -1585,11 +1586,14 @@ try:
     if (len(prev_inports) != len(curr_inports)):
         midi_in.close_ports()
         prev_ports = []
+        UI.mididevs = []
         i=0
         for port in curr_inports:
             if 'Midi Through' in port and not USE_SMFPLAYER: continue
             print 'Opened "%s" as MIDI IN %d ' %(port,i)  #(port.split(":",1)[1],i) #(port.split(":",1)[0].strip(),i)
             midi_in.open_ports(port)
+            if 'Midi Through' not in port and 'SMFplayer' not in port:
+                UI.mididevs.append(str(port))   # skip internal / automatically added devices
             i+=1
         curr_inports = rtmidi2.get_in_ports()   # we do this indirect to catch
         prev_inports = curr_inports             # auto opened virtual ports

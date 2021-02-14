@@ -111,6 +111,7 @@ var SB_variables={	// make sure all passed I/O parameters are covered here
 	v_SB_Button: function(val){SB_Button=val;},
 	v_SB_IP: function(val){SB_IP=val;},
 	v_SB_SSID: function(val){SB_SSID=val;},
+	v_SB_MIDIdev: function(val){SB_MIDIdev=val;},
 	v_SB_RenewMedia: function(val){SB_RenewMedia=val;},
 	v_SB_DefinitionTxt: function(val){SB_DefinitionTxt=val;}
 }
@@ -361,6 +362,9 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 	input_SB_SSID: function(input_name,name,val,text){
 		return(text+SB_listselect(input_name,name,val,SB_Wireless,1,SB_Wireless.length,1));
 	},
+	input_SB_MIDIdev: function(input_name,name,val,text){
+		return(text+SB_listselect(input_name,name,val,SB_Wireless,1,SB_MIDIdevs.length,1));
+	},
 	input_SB_DefinitionTxt: function(input_name,name,val,text){
 		if (SB_Samplesdir.charAt(0)=='/') m='';else m=' readonly';
 		return('<DIV STYLE="line-height:100%;text-align:center">'+text+m+'</DIV><TEXTAREA name="'+name+'"'+m+'>'+val+'</TEXTAREA>');
@@ -368,7 +372,7 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 }
 
 // Read-only building blocks
-SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_xvoice","elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote","elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales","elem_SB_Notemap","elem_SB_bTracks","elem_SB_IPlist","elem_SB_Wireless","elem_SB_LCDdisplay"];
+SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_xvoice","elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote","elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales","elem_SB_Notemap","elem_SB_bTracks","elem_SB_IPlist","elem_SB_Wireless","elem_SB_MIDIdevs","elem_SB_LCDdisplay"];
 SB_numelems=SB_ElemID.length;
 var SB_element={
 	elem_SB_Form: function(elem_name){
@@ -485,6 +489,16 @@ var SB_element={
 			html='<TABLE BORDER="1" CLASS="datatable"><TR><TH>Wireless Connection</TH></TR>';
 			for (i=0;i<SB_Wireless.length;i++){
 				html=html+'<TR CLASS="datatable"><TD CLASS="datatable"">'+SB_Wireless[i]+'</TD></TR>';
+			}
+			document.getElementById(elem_name).innerHTML=html+'</TABLE><P>';
+		}
+	},
+	elem_SB_MIDIdevs: function(elem_name){
+		if (SB_MIDIdevs.length==0) {document.getElementById(elem_name).innerHTML='';}
+		else {
+			html='<TABLE BORDER="1" CLASS="datatable"><TR><TH>Connected MIDI devices</TH></TR>';
+			for (i=0;i<SB_MIDIdevs.length;i++){
+				html=html+'<TR CLASS="datatable"><TD CLASS="datatable"">'+SB_MIDIdevs[i]+'</TD></TR>';
 			}
 			document.getElementById(elem_name).innerHTML=html+'</TABLE><P>';
 		}
