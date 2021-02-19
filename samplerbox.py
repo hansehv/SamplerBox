@@ -18,6 +18,13 @@
 ##  Miscellaneous generic procs (too small to split off), published via gv
 ##########################################################################
 
+########  Have some debugging help  ########
+try:
+    with open('/boot/z_distbox.txt') as f:
+        print ( f.readline() )
+except:
+    print ( "Not running from distribution image" )
+
 import wave,rtmidi2
 from chunk import Chunk
 import time,psutil,numpy,struct
@@ -27,7 +34,7 @@ import ConfigParser
 import samplerbox_audio   # audio-module (cython)
 import gv,getcsv
 gv.rootprefix='/home/pi/samplerbox'
-#gv.rootprefix='/home/hans/samplerbox'
+#gv.rootprefix='/home/pi/samplerbox/root/SamplerBox'
 if not os.path.isdir(gv.rootprefix):
     gv.rootprefix=""
 sys.path.append('./modules')
