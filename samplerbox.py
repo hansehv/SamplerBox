@@ -8,8 +8,8 @@
 #  samplerbox.py: Main file
 #
 #  SamplerBox extended by HansEhv (https://github.com/hansehv)
-#   see docs  at http://homspace.xs4all.nl/homspace/samplerbox
-#   changelog in /boot/samplerbox/changelist.txt
+#  see docs at https://homspace.nl/samplerbox
+#  changelog in /boot/samplerbox/changelist.txt
 #
 
 ##########################################################################
@@ -19,11 +19,15 @@
 ##########################################################################
 
 ########  Have some debugging help  ########
+print ( "=" *42 )
+print ( "  https://github.com/hansehv/SamplerBox" )
 try:
     with open('/boot/z_distbox.txt') as f:
-        print ( f.readline() )
+        print ( f.read().strip() )
 except:
-    print ( "Not running from distribution image" )
+    print ( "   Not running from distribution image" )
+print ( "no track of local changes, that's for you!" )
+print ( "=" *42 )
 
 import wave,rtmidi2
 from chunk import Chunk
@@ -1389,9 +1393,15 @@ def ActuallyLoad():
                             xfadein = int(info.get('xfadein', defaultparams['xfadein']))
                             if (xfadein>127): xfadein=127
                             xfadevol = abs(float(info.get('xfadevol', defaultparams['xfadevol'])))
+                            #
+                            # Replace inconsistent/impossible combinations with something workable
+                            #
                             if (GetStopmode(mode)<-1) or (GetStopmode(mode)==127 and midinote>(127-gv.stop127)):
                                 print "invalid mode '%s' or note %d out of range, set to keyboard mode." % (mode, midinote)
                                 mode=PLAYLIVE
+                            if ( mutegroup>0 and retrigger=="Y" ):
+                                retrigger = 'N'
+                                print ( "%s: Mutegroup and retrigger are mutually exclusive, set to retrigger=N" %fname )
                             try:
                                 if backtrack>-1:    # Backtracks are intended for start/stop via controller, so we can use unplayable notes
                                     if (gv.BTNOTES+backtrack, velocity, voice) in gv.samples:

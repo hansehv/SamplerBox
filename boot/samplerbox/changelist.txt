@@ -9,6 +9,10 @@ Feb 2021:
   - Changing midichannel via buttons & GUI did not work anymore, fixed
     Placed changing midichannel in main dashboard
   - Show distribution image info in consolelog if applicable
+  - Changed /samples partition on image to NTFS
+    - it can be accessed from windows
+    - changed remount procedure for updating set configuration files, placed this in 
+    - new general procedure module (other subs will be moved there later)
 Sept-Nov 2020:
   - Extended midimon.py to support serial midi
   - Fixed bug for LED's (red blinking when all is OK)
