@@ -3,7 +3,7 @@
 #  most variables are defined by the respective procedures
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
-#   see docs at  http://homspace.xs4all.nl/homspace/samplerbox
+#   see docs at https://homspace.nl/samplerbox
 #   changelog in changelist.txt
 #
 

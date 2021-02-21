@@ -7,14 +7,14 @@
 #   control functions needing no user interaction.
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
-#   see docs at  http://homspace.xs4all.nl/homspace/samplerbox
+#   see docs at https://homspace.nl/samplerbox
 #   changelog in changelist.txt
 #
 ###############################################################
 
 #import operator,math
-import re,subprocess
-import gv,remap,arp,chorus,Cpp,LFO,network
+import re
+import gv,gp,remap,arp,chorus,Cpp,LFO,network
 import menu as butmenu
 
 # Writable variables
@@ -45,9 +45,9 @@ def DefinitionTxt(val=None):				# contains definition.txt
 			if gv.DefinitionTxt != val:
 				gv.DefinitionTxt = val
 				fname=gv.samplesdir+gv.presetlist[gv.getindex(gv.PRESET,gv.presetlist)][1]+"/"+gv.SAMPLESDEF
-				if gv.rootprefix=="": subprocess.call(['mount', '-vo', 'remount,rw', gv.samplesdir])
+				gp.samples2write()
 				with open(fname,'w') as definitionfile: definitionfile.write(gv.DefinitionTxt)
-				if gv.rootprefix=="": subprocess.call(['mount', '-vo', 'remount,ro', gv.samplesdir])
+				gp.samples2read()
 				gv.basename="None"         	# do a renew to sync the update
 				gv.LoadSamples()
 			return gv.ActuallyLoading
