@@ -2,7 +2,7 @@ This file contains changelog of samplerbox.py
 For changes on samplerbox_audio.pyx, see top of the source file
 For changes on the image, see http://homspace.xs4all.nl/homspace/samplerbox/SBbuild.html
 
-Feb 2021:
+Feb-Mar 2021:
   - Added OLED SSD1306 support
   - Made console log of smfplayer more informative
   - Show connected midi devices in the GUI and LCD/OLED display
@@ -13,6 +13,8 @@ Feb 2021:
     - it can be accessed from windows
     - changed remount procedure for updating set configuration files, placed this in 
     - new general procedure module (other subs will be moved there later)
+  - Extra examples in wifistatips (also contains example for fixed wired address)
+  - Bugfix mode=once: subsequent keypress now restarts again as intended/documented
 Sept-Nov 2020:
   - Extended midimon.py to support serial midi
   - Fixed bug for LED's (red blinking when all is OK)
