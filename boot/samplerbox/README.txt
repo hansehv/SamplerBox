@@ -1,5 +1,5 @@
 Samplerbox can be configured via files found on this partition.
-Background information on http://homspace.nl/samplerbox
+Background information on https://homspace.nl/samplerbox
 ..or in the webgui if you have the box already up & running.
 
 In the root:
