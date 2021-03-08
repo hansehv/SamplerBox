@@ -12,9 +12,14 @@ Feb-Mar 2021:
   - Changed /samples partition on image to NTFS
     - it can be accessed from windows
     - changed remount procedure for updating set configuration files, placed this in 
-    - new general procedure module (other subs will be moved there later)
+    - new general procedure module gp.py (other subs will be moved there later)
+    - improved test on running from SD image (on SD readonly is assumed, thus requiring remounts)
   - Extra examples in wifistatips (also contains example for fixed wired address)
   - Bugfix mode=once: subsequent keypress now restarts again as intended/documented
+  - If a USB storage device contains no potential samplesets, the internal SD space will be used.
+    - valid for microcontrollers using USB both for programming and MIDI, e.g. Pi Pico.
+    - potential samplesets are recognized by name starting with digits followed by a space.
+    - yes, this is mutually exclusive and not 100% fool proof. Consider serial midi...
 Sept-Nov 2020:
   - Extended midimon.py to support serial midi
   - Fixed bug for LED's (red blinking when all is OK)

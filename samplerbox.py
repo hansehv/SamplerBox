@@ -18,17 +18,24 @@
 ##  Miscellaneous generic procs (too small to split off), published via gv
 ##########################################################################
 
-########  Have some debugging help  ########
+import sys
+sys.path.append('./modules')
+import gv
+
+########  Have some debugging help first  ########
 print ( "=" *42 )
 print ( "  https://github.com/hansehv/SamplerBox" )
 try:
     with open('/boot/z_distbox.txt') as f:
         print ( f.read().strip() )
+        gv.RUN_FROM_IMAGE = True
 except:
     print ( "   Not running from distribution image" )
+    gv.RUN_FROM_IMAGE = False
 print ( "no track of local changes, that's for you!" )
 print ( "=" *42 )
 
+########  continue importing  ########
 import wave,rtmidi2
 from chunk import Chunk
 import time,psutil,numpy,struct
@@ -36,12 +43,11 @@ import sys,os,re,operator,threading
 from numpy import random
 import ConfigParser
 import samplerbox_audio   # audio-module (cython)
-import gv,getcsv
+import getcsv
 gv.rootprefix='/home/pi/samplerbox'
 #gv.rootprefix='/home/pi/samplerbox/root/SamplerBox'
 if not os.path.isdir(gv.rootprefix):
     gv.rootprefix=""
-sys.path.append('./modules')
 
 ########  Define local general functions ########
 usleep = lambda x: time.sleep(x/1000000.0)
@@ -227,8 +233,8 @@ BACKTRACK = "Back"                      # recognize loop markers, loop-off by sa
 VELSAMPLE = "Sample"                    # velocity equals sampled value, requires multiple samples to get differentation
 VELACCURATE = "Accurate"                # velocity as played, allows for multiple (normalized!) samples for timbre
 VELOSTEPS = [127,64,32,16,8,4,2,1]      # accepted numer of velocity layers
-SAMPLES_INBOX = gv.rootprefix+"/samples/"  # Builtin directory containing the sample-sets.
-SAMPLES_ONUSB = gv.rootprefix+"/media/"    # USB-Mount directory containing the sample-sets.
+gv.SAMPLES_INBOX = gv.rootprefix+"/samples/"  # Builtin directory containing the sample-sets.
+gv.SAMPLES_ONUSB = gv.rootprefix+"/media/"    # USB-Mount directory containing the sample-sets.
 CONFIG_LOC = gv.rootprefix+"/boot/samplerbox/"
 CHORDS_DEF = "chords.csv"
 SCALES_DEF = "scales.csv"
@@ -270,7 +276,7 @@ gv.volumeCC = gv.cp.getfloat(gv.cfg,"volumeCC".lower())
 ########## Initialize other internal globals
 
 USE_GPIO=False
-gv.samplesdir = SAMPLES_INBOX
+gv.samplesdir = gv.SAMPLES_INBOX
 gv.stop127 = BOXSTOP127
 gv.sample_mode = BOXSAMPLE_MODE
 display=gv.NoProc       # set display to dummy
@@ -1063,8 +1069,19 @@ def ActuallyLoad():
     gv.ActuallyLoading=True     # bookkeeping for safety
     gv.currbase = gv.basename    
 
-    gv.samplesdir = SAMPLES_ONUSB if os.listdir(SAMPLES_ONUSB) else SAMPLES_INBOX      # use builtin folder (containing 0 Saw) if no user media containing samples has been found
-    #gv.basename = next((f for f in os.listdir(gv.samplesdir) if f.startswith("%d " % gv.PRESET)), None)      # or next(glob.iglob("blah*"), None)
+    gv.samplesdir = gv.SAMPLES_INBOX
+    try:
+        if os.listdir(gv.SAMPLES_ONUSB):
+            for f in os.listdir(gv.SAMPLES_ONUSB):
+                if re.match(r'[0-9]* .*', f):
+                    if os.path.isdir(os.path.join(gv.SAMPLES_ONUSB,f)):
+                        gv.samplesdir = gv.SAMPLES_ONUSB
+                        break
+            if gv.samplesdir == gv.SAMPLES_INBOX:
+                print ("USB device on %s has no samplesets, using SD space on %s" %(gv.SAMPLES_ONUSB, gv.SAMPLES_INBOX) )
+    except:
+        print ("Error reading USB device mounted on %s" %gv.SAMPLES_ONUSB)
+
     presetlist=[]
     try:
         for f in os.listdir(gv.samplesdir):

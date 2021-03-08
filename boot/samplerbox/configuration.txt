@@ -27,6 +27,7 @@ BLOCKSIZE = High                ; Blocksize or "Low"/"High". High may cause late
 USE_48kHz = False               ; Sets audio to 48000Hz while keeping wav's on 44100Hz. Try to avoid this...
 USE_SERIALPORT_MIDI = False     ; Set to True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
 USE_HD44780_16x2_LCD = False    ; Set to True to use a 16x2 direct connected/wired HD44780 LCD
+#                                 If you use an I2C-HD44780, above option should be false !!!
 USE_I2C_LCD = False             ; Set to True or 16x2 (=True) or 20x4 to use a 16x2 or 20x4 I2C connected HD44780 LCD
 USE_OLED = False                ; Set to True to use an OLED display !!! Configure below
 USE_I2C_7SEGMENTDISPLAY = False ; Set to True to use a 7-segment display via I2C
