@@ -8,14 +8,20 @@
 import gv, subprocess
 
 def samples2write():
-	if gv.rootprefix=="":
-		print ( "Remount samplesdir as RW" )
-		subprocess.call( ['umount', gv.samplesdir] )
-		subprocess.call( ['mount', '/dev/mmcblk0p3', gv.samplesdir] )
+	if gv.RUN_FROM_IMAGE:
+		print ( "Remount %s as RW" %gv.samplesdir)
+		if ( gv.samplesdir == gv.SAMPLES_ONUSB ):
+			subprocess.call( ['mount', '-vo', 'remount,rw', gv.samplesdir] )
+		else:
+			subprocess.call( ['umount', gv.samplesdir] )
+			subprocess.call( ['mount', '-v', '/dev/mmcblk0p3', gv.samplesdir] )
 	else:
 		print ("Not running dedicated, so no remount as we're most likely already R/W")
 def samples2read():
-	if gv.rootprefix=="":
-		print ( "Remount samplesdir as RO" )
-		subprocess.call( ['umount', gv.samplesdir] )
-		subprocess.call( ['mount', '-r', '/dev/mmcblk0p3', gv.samplesdir] )
+	if gv.RUN_FROM_IMAGE:
+		print ( "Remount %s as RO" %gv.samplesdir )
+		if ( gv.samplesdir == gv.SAMPLES_ONUSB ):
+			subprocess.call(['mount', '-vo', 'remount,ro', gv.samplesdir])
+		else:
+			subprocess.call( ['umount', gv.samplesdir] )
+			subprocess.call( ['mount', '-vr', '/dev/mmcblk0p3', gv.samplesdir] )
