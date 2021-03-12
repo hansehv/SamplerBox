@@ -308,7 +308,7 @@ try:
             lcd.display(msg,menu1,menu2,menu3)
         display('Start Samplerbox')
 
-    if not (gv.cp.get(gv.cfg,"USE_I2C_LCD".lower())).lower()=='false':
+    elif gv.cp.getboolean(gv.cfg,"USE_I2C_LCD".lower()):
         import I2C_lcd
         def display(msg='',msg7seg='',menu1='',menu2='',menu3='',*z):
             I2C_lcd.display(msg,menu1,menu2,menu3)
