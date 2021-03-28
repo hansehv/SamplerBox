@@ -1,15 +1,13 @@
-#
-#  SamplerBox 
-#
-#  author:    Joseph Ernest (twitter: @JosephErnest, mail: contact@samplerbox.org)
-#  url:       http://www.samplerbox.org/
-#  license:   Creative Commons ShareAlike 3.0 (http://creativecommons.org/licenses/by-sa/3.0/)
-#
 #  samplerbox.py: Main file
 #
 #  SamplerBox extended by HansEhv (https://github.com/hansehv)
 #  see docs at https://homspace.nl/samplerbox
 #  changelog in /boot/samplerbox/changelist.txt
+#
+#  Original SamplerBox :
+#  author:    Joseph Ernest (twitter: @JosephErnest, mail: contact@samplerbox.org)
+#  url:       http://www.samplerbox.org/
+#  license:   Creative Commons ShareAlike 3.0 (http://creativecommons.org/licenses/by-sa/3.0/)
 #
 
 ##########################################################################
