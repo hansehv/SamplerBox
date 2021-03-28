@@ -2,7 +2,7 @@
 #  SamplerBox local configuration
 #
 #  SamplerBox extended by HansEhv (https://github.com/hansehv)
-#  see docs at  http://homspace.xs4all.nl/homspace/samplerbox
+#  see docs at  https://homspace.nl/homspace
 #  license: Creative Commons ShareAlike 3.0 (http://creativecommons.org/licenses/by-sa/3.0/)
 #
 ###################################################################################
@@ -109,7 +109,7 @@ I2C_LCD_ADDR=0x3f               ; Adapt to your I2C chip (e.g. PCF8574A(T) uses 
 I2C_LCD_PORT=1                  ; Similar remark here :-)
 #
 #     -- USE_OLED -- OLED connection and device settings (SPI connection)
-OLED_DRIVER = SH1106            ; Set to the correct OLED driver chip, one of: SH1106 (more to come)
+OLED_DRIVER = SH1106            ; Set to the correct OLED driver chip, one of: SH1106 or SSD1306 (more to come)
 OLED_RST=25                     ; Reset pin
 OLED_CS=8                       ; Chips select pin
 OLED_DC=24                      ; data/command pin
