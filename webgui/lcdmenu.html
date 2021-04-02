@@ -1,5 +1,5 @@
 <!DOCTYPE html><HTML><HEAD><meta charset="UTF-8">
-	<TITLE>LCD Display</TITLE>
+	<TITLE>LCD Menu</TITLE>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Script-Type" content="text/javascript">
 <LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
@@ -43,11 +43,10 @@ function change(){
 
 <TABLE WIDTH="100%"><TR>
 <TD width="125"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Dashboard</BUTTON></TD>
-<TD ALIGN="center"><B>LCD Display with Buttons</B></TD>
+<TD ALIGN="center"><B>LCD Menu</B></TD>
 <TD ALIGN="center"><BUTTON TYPE="button" onclick="refreshWithURLparms();">Refresh</BUTTON></TD>
 </TR></TABLE>
 
-<BR><BR>
 <div ID="elem_SB_LCDdisplay"></div>
 <BR><div STYLE="text-align:center;">
 <span ID="playbutton" STYLE="text-align:center;"></span>
@@ -63,13 +62,14 @@ function change(){
 	 </script>
  </SELECT>
 </div>
-<BR><BR>
+<BR>
 <FORM ID="elem_SB_Form">
 <div ID="input_SB_Button" STYLE="text-align:center;"></div>
 </FORM>
-<BR><BR>
+<BR>
 <TABLE width="100%"><TR><TD ID="elem_SB_IPlist" align="center"></TD></TR></TABLE>
 <TABLE width="100%"><TR><TD ID="elem_SB_Wireless" align="center"></TD></TR></TABLE>
+<TABLE width="100%"><TR><TD ID="elem_SB_MIDIdevs" align="center"></TD></TR></TABLE>
 
 <script>
 	SB_Update();

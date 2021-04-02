@@ -1,15 +1,13 @@
-#
-#  SamplerBox 
-#
-#  author:    Joseph Ernest (twitter: @JosephErnest, mail: contact@samplerbox.org)
-#  url:       http://www.samplerbox.org/
-#  license:   Creative Commons ShareAlike 3.0 (http://creativecommons.org/licenses/by-sa/3.0/)
-#
 #  samplerbox.py: Main file
 #
 #  SamplerBox extended by HansEhv (https://github.com/hansehv)
-#   see docs  at http://homspace.xs4all.nl/homspace/samplerbox
-#   changelog in /boot/samplerbox/changelist.txt
+#  see docs at https://homspace.nl/samplerbox
+#  changelog in /boot/samplerbox/changelist.txt
+#
+#  Original SamplerBox :
+#  author:    Joseph Ernest (twitter: @JosephErnest, mail: contact@samplerbox.org)
+#  url:       http://www.samplerbox.org/
+#  license:   Creative Commons ShareAlike 3.0 (http://creativecommons.org/licenses/by-sa/3.0/)
 #
 
 ##########################################################################
@@ -18,6 +16,24 @@
 ##  Miscellaneous generic procs (too small to split off), published via gv
 ##########################################################################
 
+import sys
+sys.path.append('./modules')
+import gv
+
+########  Have some debugging help first  ########
+print ( "=" *42 )
+print ( "  https://github.com/hansehv/SamplerBox" )
+try:
+    with open('/boot/z_distbox.txt') as f:
+        print ( f.read().strip() )
+        gv.RUN_FROM_IMAGE = True
+except:
+    print ( "   Not running from distribution image" )
+    gv.RUN_FROM_IMAGE = False
+print ( "no track of local changes, that's for you!" )
+print ( "=" *42 )
+
+########  continue importing  ########
 import wave,rtmidi2
 from chunk import Chunk
 import time,psutil,numpy,struct
@@ -25,12 +41,11 @@ import sys,os,re,operator,threading
 from numpy import random
 import ConfigParser
 import samplerbox_audio   # audio-module (cython)
-import gv,getcsv
+import getcsv
 gv.rootprefix='/home/pi/samplerbox'
-#gv.rootprefix='/home/hans/samplerbox'
+#gv.rootprefix='/home/pi/samplerbox/root/SamplerBox'
 if not os.path.isdir(gv.rootprefix):
     gv.rootprefix=""
-sys.path.append('./modules')
 
 ########  Define local general functions ########
 usleep = lambda x: time.sleep(x/1000000.0)
@@ -216,8 +231,8 @@ BACKTRACK = "Back"                      # recognize loop markers, loop-off by sa
 VELSAMPLE = "Sample"                    # velocity equals sampled value, requires multiple samples to get differentation
 VELACCURATE = "Accurate"                # velocity as played, allows for multiple (normalized!) samples for timbre
 VELOSTEPS = [127,64,32,16,8,4,2,1]      # accepted numer of velocity layers
-SAMPLES_INBOX = gv.rootprefix+"/samples/"  # Builtin directory containing the sample-sets.
-SAMPLES_ONUSB = gv.rootprefix+"/media/"    # USB-Mount directory containing the sample-sets.
+gv.SAMPLES_INBOX = gv.rootprefix+"/samples/"  # Builtin directory containing the sample-sets.
+gv.SAMPLES_ONUSB = gv.rootprefix+"/media/"    # USB-Mount directory containing the sample-sets.
 CONFIG_LOC = gv.rootprefix+"/boot/samplerbox/"
 CHORDS_DEF = "chords.csv"
 SCALES_DEF = "scales.csv"
@@ -259,7 +274,7 @@ gv.volumeCC = gv.cp.getfloat(gv.cfg,"volumeCC".lower())
 ########## Initialize other internal globals
 
 USE_GPIO=False
-gv.samplesdir = SAMPLES_INBOX
+gv.samplesdir = gv.SAMPLES_INBOX
 gv.stop127 = BOXSTOP127
 gv.sample_mode = BOXSAMPLE_MODE
 display=gv.NoProc       # set display to dummy
@@ -273,7 +288,7 @@ getcsv.readscales(CONFIG_LOC + SCALES_DEF)
 # Midi controllers and keyboard definition
 getcsv.readcontrollerCCs(CONFIG_LOC + CTRLCCS_DEF)
 getcsv.readkeynames(CONFIG_LOC + KEYNAMES_DEF)
-gv.CCmapBox=getcsv.readCCmap(CONFIG_LOC + gv.CTRLMAP_DEF)
+gv.CCmapBox = getcsv.readCCmap(CONFIG_LOC + gv.CTRLMAP_DEF)
 gv.CCmap = list(gv.CCmapBox)
 getcsv.readmenu(CONFIG_LOC + MENU_DEF)
 
@@ -291,7 +306,7 @@ try:
             lcd.display(msg,menu1,menu2,menu3)
         display('Start Samplerbox')
 
-    if not (gv.cp.get(gv.cfg,"USE_I2C_LCD".lower())).lower()=='false':
+    elif gv.cp.getboolean(gv.cfg,"USE_I2C_LCD".lower()):
         import I2C_lcd
         def display(msg='',msg7seg='',menu1='',menu2='',menu3='',*z):
             I2C_lcd.display(msg,menu1,menu2,menu3)
@@ -661,7 +676,8 @@ def ControlChange(CCnum, CCval):
     mc=False
     for m in gv.CCmap:    # look for mapped controllers
         j=m[0]
-        if gv.controllerCCs[j][1]==CCnum and (gv.controllerCCs[j][2]==-1 or gv.controllerCCs[j][2]==CCval or gv.MC[m[1]][1]==3):
+        if (gv.controllerCCs[j][1]==CCnum
+        and (gv.controllerCCs[j][2]==-1 or gv.controllerCCs[j][2]==CCval or gv.MC[m[1]][1]==3)):
             if m[2]!=None: CCval=m[2]
             #print "Recognized %d:%d<=>%s related to %s" %(CCnum, CCval, gv.controllerCCs[j][0], gv.MC[m[1]][0])
             gv.MC[m[1]][2](CCval,gv.MC[m[1]][0])
@@ -1051,8 +1067,19 @@ def ActuallyLoad():
     gv.ActuallyLoading=True     # bookkeeping for safety
     gv.currbase = gv.basename    
 
-    gv.samplesdir = SAMPLES_ONUSB if os.listdir(SAMPLES_ONUSB) else SAMPLES_INBOX      # use builtin folder (containing 0 Saw) if no user media containing samples has been found
-    #gv.basename = next((f for f in os.listdir(gv.samplesdir) if f.startswith("%d " % gv.PRESET)), None)      # or next(glob.iglob("blah*"), None)
+    gv.samplesdir = gv.SAMPLES_INBOX
+    try:
+        if os.listdir(gv.SAMPLES_ONUSB):
+            for f in os.listdir(gv.SAMPLES_ONUSB):
+                if re.match(r'[0-9]* .*', f):
+                    if os.path.isdir(os.path.join(gv.SAMPLES_ONUSB,f)):
+                        gv.samplesdir = gv.SAMPLES_ONUSB
+                        break
+            if gv.samplesdir == gv.SAMPLES_INBOX:
+                print ("USB device on %s has no samplesets, using SD space on %s" %(gv.SAMPLES_ONUSB, gv.SAMPLES_INBOX) )
+    except:
+        print ("Error reading USB device mounted on %s" %gv.SAMPLES_ONUSB)
+
     presetlist=[]
     try:
         for f in os.listdir(gv.samplesdir):
@@ -1381,9 +1408,15 @@ def ActuallyLoad():
                             xfadein = int(info.get('xfadein', defaultparams['xfadein']))
                             if (xfadein>127): xfadein=127
                             xfadevol = abs(float(info.get('xfadevol', defaultparams['xfadevol'])))
+                            #
+                            # Replace inconsistent/impossible combinations with something workable
+                            #
                             if (GetStopmode(mode)<-1) or (GetStopmode(mode)==127 and midinote>(127-gv.stop127)):
                                 print "invalid mode '%s' or note %d out of range, set to keyboard mode." % (mode, midinote)
                                 mode=PLAYLIVE
+                            if ( mutegroup>0 and retrigger=="Y" ):
+                                retrigger = 'N'
+                                print ( "%s: Mutegroup and retrigger are mutually exclusive, set to retrigger=N" %fname )
                             try:
                                 if backtrack>-1:    # Backtracks are intended for start/stop via controller, so we can use unplayable notes
                                     if (gv.BTNOTES+backtrack, velocity, voice) in gv.samples:
@@ -1585,11 +1618,14 @@ try:
     if (len(prev_inports) != len(curr_inports)):
         midi_in.close_ports()
         prev_ports = []
+        UI.mididevs = []
         i=0
         for port in curr_inports:
             if 'Midi Through' in port and not USE_SMFPLAYER: continue
             print 'Opened "%s" as MIDI IN %d ' %(port,i)  #(port.split(":",1)[1],i) #(port.split(":",1)[0].strip(),i)
             midi_in.open_ports(port)
+            if 'Midi Through' not in port and 'SMFplayer' not in port:
+                UI.mididevs.append(str(port))   # skip internal / automatically added devices
             i+=1
         curr_inports = rtmidi2.get_in_ports()   # we do this indirect to catch
         prev_inports = curr_inports             # auto opened virtual ports

@@ -30,6 +30,16 @@ interface wlan0
     static ip_address=192.168.178.201/24
     static routers=192.168.178.1
 
+# ------------------------------------------------
+#
+# Wired example entry, free to adapt
+# All lines commented as default is dynamic
+#
+
+#interface eth0
+#    static ip_address=192.168.178.201/24
+#    static routers=192.168.178.1
+
 #
 # ------------------------------------------------
 

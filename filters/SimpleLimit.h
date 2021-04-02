@@ -26,6 +26,9 @@
  *	FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  *	DEALINGS IN THE SOFTWARE.
  *
+ *	Downloaded from:
+ *	https://www.musicdsp.org/en/latest/Effects/204-simple-compressor-class-c.html
+ *
  *	Adapted for samplerbox by HansEhv, https://github.com/hansehv/SamplerBox
  */
 

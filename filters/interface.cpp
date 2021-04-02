@@ -1,4 +1,4 @@
-// Samplerbox filter modules by hansehv, http://homspace.xs4all.nl/homspace/samplerbox
+// Samplerbox filter modules by hansehv, https://homspace.nl/samplerbox
 
 // Februari 2018:
 //  - DLLEXPORT based on full sources inspired by Erik Nieuwlands (www.nickyspride.nl/sb2/)

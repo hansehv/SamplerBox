@@ -6,8 +6,9 @@
 #    ...if you do so, please share your implementation, thanks!
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
+#   see docs at https://homspace.nl/samplerbox
 ###############################################################
-import gv,subprocess
+import gv,gp
 
 ##########  G e n e r i c   p r o c s   ##########
 
@@ -177,8 +178,7 @@ def notes_sav(val=None):						# boolean, but as read variable it's always 0=no/f
 					gv.notemaps.append(m[0])
 			if nm_map not in gv.notemaps:
 				nm_map=""
-			if gv.rootprefix=="": subprocess.call(['mount', '-vo', 'remount,rw', gv.samplesdir])
-			else: print "Not running dedicated, so no remount as we're most likely already R/W"
+			gp.samples2write()
 			fname=gv.samplesdir+gv.presetlist[gv.getindex(gv.PRESET,gv.presetlist)][1]+"/"+gv.NOTEMAP_DEF
 			with open(fname, 'w') as mapfile:
 				mapfile.write("Set,Fractions,Key,Note,Retune,Playvoice,unote\n")
@@ -188,7 +188,7 @@ def notes_sav(val=None):						# boolean, but as read variable it's always 0=no/f
 					j=gv.getindex("%d"%key,gv.keynames)
 					if j>0: key=gv.keynames[j][1]
 					mapfile.write('%s,%s,%s,%s,%s,%s,%s\n' %(newnotemap[i][0],newnotemap[i][1],key,note,newnotemap[i][4],newnotemap[i][5],newnotemap[i][6]))
-			if gv.rootprefix=="": subprocess.call(['mount', '-vo', 'remount,ro', gv.samplesdir])
+			gp.samples2read()
 	return 0
 def notes_newmaplines():
 	global newnotemap

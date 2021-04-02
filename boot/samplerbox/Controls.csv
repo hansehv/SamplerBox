@@ -1,4 +1,7 @@
 Controller,Type,Sets,Mode,#TAKE CARE: most keywords are case sensitive
+#  ###########################,,,,
+#  DO NOT EDIT THIS TABLE !!!!,,,,
+#  ###########################,,,,
 UA,Fixed,ProgramUp,Switch,# Not needed when standard Program up button present
 UA,Fixed,ProgramDown,Switch,# Not needed when standard Program down button present
 UA,Fixed,PitchWheel,Continuous,# Not needed when standard pitchwheel present
