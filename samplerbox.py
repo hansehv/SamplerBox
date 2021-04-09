@@ -1159,8 +1159,8 @@ def ActuallyLoad():
         return
 
     #print 'Preset loading: %s ' % gv.basename
-    display("Loading %s" % gv.basename,"L%03d" % gv.PRESET)
     AllNotesOff(-3)     # reset to set defaults
+    display("Loading %s" % gv.basename,"L%03d" % gv.PRESET)
     getcsv.readnotemap(os.path.join(dirname, gv.NOTEMAP_DEF))
     gv.CCmapSet=getcsv.readCCmap(os.path.join(dirname, gv.CTRLMAP_DEF), True)
     getcsv.readMTchannelmap(os.path.join(dirname, gv.VOICEMAP_DEF))
