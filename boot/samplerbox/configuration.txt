@@ -37,6 +37,8 @@ USE_HTTP_GUI = True             ; should webgui server be started?
 USE_IPv6 = False                ; Enables IPv6 on http_gui and shows the IPv6 addresses on displays
 USE_SMFPLAYER = True            ; Should internal "sequencer" be started? If True, it will be added to the multi-timbrals
 MULTI_TIMBRALS =                ; Multi timbral devices, comma separated. Exactly as in the midi open message, but without quotes!
+MIDI_THRU =                     ; Devices to receive SB's input, either "All" without quotes or
+#                                  comma separated values, use regular expressions for patterns (see docs on MIDI-THRU)
 MAX_POLYPHONY = 80              ; This can be set higher, but 80 is a safe value
 MAX_MEMLOAD = 90                ; Used memory percentage at which loading of samples stops
 MIDI_CHANNEL = 1                ; midi channel
