@@ -320,6 +320,14 @@ try:
             oled.display(msg,menu1,menu2,menu3)
         display('Start Samplerbox')
 
+    elif gv.cp.getboolean(gv.cfg,"USE_PIMORONI_LCD".lower()):
+        USE_GPIO=True
+        import PIM_LCD
+        pimlcd = PIM_LCD.pim_lcd()
+        def display(msg='',msg7seg='',menu1='',menu2='',menu3='',*z):
+            pimlcd.display(msg,menu1,menu2,menu3)
+        display('Start Samplerbox')
+
     elif gv.cp.getboolean(gv.cfg,"USE_I2C_7SEGMENTDISPLAY".lower()):
         import I2C_7segment
         def display(msg,msg7seg='',*z):

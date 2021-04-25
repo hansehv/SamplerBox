@@ -5,7 +5,7 @@ max_usb_current=1
 disable_splash=1
 disable_audio_dither=1
 #
-# for enabling SPI interface (like used by OLED) uncomment next parm
+# for enabling SPI interface (like used by OLED or PIM_LCD) uncomment next parm
 #dtparam=spi=on
 #
 # for enabling the serial midi port (DIY 5-pole DIN) uncomment:
@@ -21,3 +21,5 @@ dtparam=audio=on
 #dtoverlay=hifiberry-dacplus
 #dtoverlay=hifiberry-digi
 #dtoverlay=hifiberry-amp
+# for Pimoroni PirateAudio uncomment the following
+# pio=25=op,dh
