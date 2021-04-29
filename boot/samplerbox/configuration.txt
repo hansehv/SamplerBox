@@ -30,6 +30,7 @@ USE_HD44780_16x2_LCD = False    ; Set to True to use a 16x2 direct connected/wir
 #                                 If you use an I2C-HD44780, above option should be false !!!
 USE_I2C_LCD = False             ; Set to True or 16x2 (=True) or 20x4 to use a 16x2 or 20x4 I2C connected HD44780 LCD
 USE_OLED = False                ; Set to True to use an OLED display !!! Configure below
+USE_PIMORONI_LCD = False         ; Set True to use a 16x2Pimoroni PirateAudio hat !!! Configure below
 USE_I2C_7SEGMENTDISPLAY = False ; Set to True to use a 7-segment display via I2C
 USE_BUTTONS = False             ; Set to True to use the GPIO buttons
 USE_LEDS = False                ; Set to True to use LED's connected to RaspberryPi's GPIO pins
@@ -84,8 +85,8 @@ PITCHBITS = 7                   ; pitchwheel resolution, 0=disable, max=14 (=163
 #     -- EEPROM      : 0,1
 #     -- Serial Port : 14,15
 #     -- I2C         : 2,3
-#     -- HiFiBerry   : 2,3,18,19,20,21      
-#
+#     -- HiFiBerry   : 2,3,18,19,20,21     
+#     -- PirateAudio Hat :  5 (Button A), 6 (Button B), 16 (Button X), 24 (Button Y)
 #     -- USE_BUTTONS --		; A valid GPIO value will activate the button
 BUT_incr=05                     ; Increase button, increases value/proceeds to next menu choice
 BUT_decr=13                     ; Decrease button, opposite of above. In 3-button setup it will return from submenu
@@ -118,6 +119,15 @@ OLED_WIDTH=128                  ; width of the display in pixels
 OLED_HEIGHT=64                  ; height of the display in pixels
 OLED_PADDING=-2                 ; padding around the display content, important for readability
 #
+#     -- USE_PIMORONI_LCD -- LCD connection and device settings (SPI connection)
+PIM_LCD_DRIVER = ST7789         ; Set to the correct Lcd driver chip, one of: SH1106 or SSD1306 (more to come)
+PIM_LCD_BL=13                   ; Backlight pin
+PIM_LCD_CS=1                    ; Chips select pin
+PIM_LCD_DC=9                    ; data/command pin
+PIM_LCD_PORT=0                  ; LCD device port, default should be fine
+PIM_LCD_WIDTH=240               ; width of the display in pixels
+PIM_LCD_HEIGHT=240              ; height of the display in pixels
+PIM_LCD_PADDING=-2              ; padding around the display content, important for readability
 ########  Default filter values ########
 #         R E V E R B
 Reverb=Off                      ; Default state of the reverb (On/Off)
