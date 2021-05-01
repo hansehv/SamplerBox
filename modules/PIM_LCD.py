@@ -39,7 +39,7 @@ class pim_lcd:
 
         # Load default font.
         #self.font = ImageFont.load_default()
-        self.font = ImageFont.truetype("/root/SamplerBox/modules/DejaVuSans.ttf",28)
+        self.font = ImageFont.truetype("modules/res/DejaVuSans.ttf",28)
         # Create blank image for drawing.
         # Make sure to create image with mode '1' for 1-bit color.
         self.width = gv.cp.getint(gv.cfg, "PIM_LCD_WIDTH".lower())
