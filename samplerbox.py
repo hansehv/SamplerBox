@@ -41,7 +41,7 @@ import sys,os,re,operator,threading
 from numpy import random
 import ConfigParser
 import samplerbox_audio   # audio-module (cython)
-import getcsv
+import gp,getcsv
 gv.rootprefix='/home/pi/samplerbox'
 #gv.rootprefix='/home/pi/samplerbox/root/SamplerBox'
 if not os.path.isdir(gv.rootprefix):
@@ -50,11 +50,6 @@ if not os.path.isdir(gv.rootprefix):
 ########  Define local general functions ########
 usleep = lambda x: time.sleep(x/1000000.0)
 msleep = lambda x: time.sleep(x/1000.0)
-def GPIOcleanup():
-    if USE_GPIO:
-        import RPi.GPIO as GPIO
-        GPIO.setmode(GPIO.BCM)
-        GPIO.cleanup()
 def getindex(key, table, onecol=False, casesens=True):
     for i in range(len(table)):
         if onecol:
@@ -162,7 +157,7 @@ def setVoice(x,iv=0,*z):
 def setMTvoice(mididev,messagechannel,voice):
     x=voice
     voicemap=""
-    if USE_SMFPLAYER:   # smf files may have specific mapping
+    if gv.USE_SMFPLAYER:   # smf files may have specific mapping
         if smfplayer.issending(mididev):
             voicemap=gv.smfseqs[gv.currsmf][4].lower()
     else:               # fallback to device mapping
@@ -209,8 +204,7 @@ def setNotemap(x, *z):
         gv.notemapping=[]
     display("")
 
-gv.GPIOcleanup=GPIOcleanup              # and announce the procs to modules
-gv.getindex=getindex
+gv.getindex=getindex                    # and announce the procs to modules
 gv.parseBoolean=parseBoolean
 gv.notename2midinote=notename2midinote
 gv.midinote2notename=midinote2notename
@@ -246,7 +240,7 @@ MENU_DEF = "menu.csv"
 gv.cp=ConfigParser.ConfigParser()
 gv.cp.read(CONFIG_LOC + "configuration.txt")
 USE_HTTP_GUI = gv.cp.getboolean(gv.cfg,"USE_HTTP_GUI".lower())
-USE_SMFPLAYER=gv.cp.getboolean(gv.cfg,"USE_SMFPLAYER".lower())
+gv.USE_SMFPLAYER=gv.cp.getboolean(gv.cfg,"USE_SMFPLAYER".lower())
 x=gv.cp.get(gv.cfg,"MULTI_TIMBRALS".lower()).split(',')
 gv.MULTI_TIMBRALS={}
 for i in xrange(len(x)):
@@ -273,7 +267,7 @@ gv.volumeCC = gv.cp.getfloat(gv.cfg,"volumeCC".lower())
 
 ########## Initialize other internal globals
 
-USE_GPIO=False
+gv.GPIO=False
 gv.samplesdir = gv.SAMPLES_INBOX
 gv.stop127 = BOXSTOP127
 gv.sample_mode = BOXSAMPLE_MODE
@@ -299,7 +293,7 @@ import UI
 try:
 
     if gv.cp.getboolean(gv.cfg,"USE_HD44780_16x2_LCD".lower()):
-        USE_GPIO=True
+        gv.GPIO=True
         import lcd_16x2
         lcd = lcd_16x2.HD44780()
         def display(msg='',msg7seg='',menu1='',menu2='',menu3='',*z):
@@ -313,7 +307,7 @@ try:
         display('Start Samplerbox')
 
     elif gv.cp.getboolean(gv.cfg,"USE_OLED".lower()):
-        USE_GPIO=True
+        gv.GPIO=True
         import OLED
         oled = OLED.oled()
         def display(msg='',msg7seg='',menu1='',menu2='',menu3='',*z):
@@ -321,7 +315,7 @@ try:
         display('Start Samplerbox')
 
     elif gv.cp.getboolean(gv.cfg,"USE_PIMORONI_LCD".lower()):
-        USE_GPIO=True
+        gv.GPIO=True
         import PIM_LCD
         pimlcd = PIM_LCD.pim_lcd()
         def display(msg='',msg7seg='',menu1='',menu2='',menu3='',*z):
@@ -335,7 +329,7 @@ try:
         display('','----')
 
     elif gv.cp.getboolean(gv.cfg,"USE_LEDS".lower()):
-        USE_GPIO=True
+        gv.GPIO=True
         import LEDs
         def display(*z):
             LEDs.signal()
@@ -344,7 +338,7 @@ try:
 
 except:
     print "Error activating requested display routine"
-    GPIOcleanup()
+    gp.GPIOcleanup()
 gv.display=display      # announce resulting proc to modules
 UI.display=display
 
@@ -381,7 +375,7 @@ import chorus   # take notice: part of process in midi callback and ARP
 # Plays standard MIDI files ("play part" of a sequencer)
 # Parallel process of sending midinotes to samplerbox midi-in channels
 #
-if USE_SMFPLAYER:
+if gv.USE_SMFPLAYER:
     import smfplayer
 
 #########################################
@@ -696,7 +690,7 @@ def ControlChange(CCnum, CCval):
 def AllNotesOff(scope=-1,*z):
     # scope: see EffectsOff below
     # stop the robots first
-    if USE_SMFPLAYER:
+    if gv.USE_SMFPLAYER:
         smfplayer.loopit=False
         smfplayer.stopit=True
     if scope>-1: scope=-1
@@ -860,26 +854,38 @@ gv.PlaySample=PlaySample
 gv.setMC(gv.BACKTRACKS,playBackTrack)
 
 def MidiCallback(mididev, message, time_stamp):
-    keyboardarea=True
-    messagetype = message[0] >> 4
-    messagechannel = (message[0]&0xF) + 1   # make channel# human..
+    # -------------------------------------------------------
+    # Deal with the midi-thru before anything else
+    # -------------------------------------------------------
     #print '%s -> %s = Channel %d, message %d' % (mididev, message, messagechannel , messagetype)
-    # ---------------------------------------------------------------------------------
-    # System commands, multitimbrals identification and "hardware remap" of the drumpad
-    # ---------------------------------------------------------------------------------
-    if messagetype==15:         # System messages apply to all channels, channel position contains commands
-        if messagechannel==16:  # "realtime" reset has to reset all activity & settings
-            AllNotesOff()       # (..other realtime expects everything to stay intact..)
+    for outport in gv.outports:
+        if mididev != gv.outports[outport][0]:  # don't return to sender
+            #print ( " ... forwarding to '%s'" %( gv.outports[outport][0]) )
+            gv.outports[outport][1].send_raw(*message)
+    # -------------------------------------------------------
+    # Filter on current supported messages and do some inits
+    # -------------------------------------------------------
+    messagetype = message[0] >> 4
+    if messagetype==0xFF:       # "realtime" reset has to reset all activity & settings
+        AllNotesOff()           # (..other realtime will be ignored below..)
         return
+    if messagetype not in [8,9,11,12,14]:
+        return
+    messagechannel = (message[0]&0xF) + 1   # make channel# human..
+    keyboardarea=True
+    # ----------------------------------------------------------------
+    # Multitimbrals identification and "hardware remap" of the drumpad
+    # ----------------------------------------------------------------
     MT_in=False
     if mididev in gv.MULTI_TIMBRALS:
         if messagetype in [8,9,12]: # we only except note on/off and program change commands from the sequencers and other multitimbrals
+            MIDIchannel=messagechannel-1
             if messagetype==12:
-                gv.MULTI_TIMBRALS[mididev][messagechannel-1]=setMTvoice(mididev,messagechannel,message[1]+1)
+                gv.MULTI_TIMBRALS[mididev][MIDIchannel]=setMTvoice(mididev,messagechannel,message[1]+1)
                 return
-            if gv.MULTI_TIMBRALS[mididev][messagechannel-1]==0:     # if a channel hasn't sent a programchange, assume voice=channel. This is not uncommon from drumchannel=10
-                gv.MULTI_TIMBRALS[mididev][messagechannel-1]=setMTvoice(mididev,messagechannel,messagechannel)
-            MT_in=gv.MULTI_TIMBRALS[mididev][messagechannel-1]
+            if gv.MULTI_TIMBRALS[mididev][MIDIchannel]==0:     # if a channel hasn't sent a programchange, assume voice=channel. This is not uncommon from drumchannel=10
+                gv.MULTI_TIMBRALS[mididev][MIDIchannel]=setMTvoice(mididev,messagechannel,messagechannel)
+            MT_in=gv.MULTI_TIMBRALS[mididev][MIDIchannel]
     elif (messagechannel==gv.MIDI_CHANNEL):
         messagechannel=0
     elif gv.drumpad:  # using less compact coding in favor of performance...
@@ -1046,8 +1052,6 @@ def MidiCallback(mididev, message, time_stamp):
         elif messagetype == 11: # control change (CC = Continuous Controllers)
             ControlChange(midinote,velocity)
 
-gv.MidiCallback=MidiCallback
-
 #########################################
 ##  LOAD SAMPLES
 #########################################
@@ -1167,8 +1171,8 @@ def ActuallyLoad():
         return
 
     #print 'Preset loading: %s ' % gv.basename
-    display("Loading %s" % gv.basename,"L%03d" % gv.PRESET)
     AllNotesOff(-3)     # reset to set defaults
+    display("Loading %s" % gv.basename,"L%03d" % gv.PRESET)
     getcsv.readnotemap(os.path.join(dirname, gv.NOTEMAP_DEF))
     gv.CCmapSet=getcsv.readCCmap(os.path.join(dirname, gv.CTRLMAP_DEF), True)
     getcsv.readMTchannelmap(os.path.join(dirname, gv.VOICEMAP_DEF))
@@ -1314,7 +1318,7 @@ def ActuallyLoad():
                                 continue
                             info = m.groupdict()
                             if os.path.splitext(fname)[1].lower()=='.mid':
-                                if USE_SMFPLAYER:
+                                if gv.USE_SMFPLAYER:
                                     smfseq=int(info.get('smfseq', defaultparams['smfseq']))
                                     voicemap=info.get('voicemap', defaultparams['voicemap']).strip().title()
                                     smfplayer.load(i+1,dirname,fname,int(info.get('smfseq', defaultparams['smfseq'])),info.get('voicemap', defaultparams['voicemap']).strip().title())
@@ -1458,7 +1462,7 @@ def ActuallyLoad():
         voicenames=[[1,"Default"]]
         gv.voicelist=[[1,'','Keyb','',1]]
 
-    if USE_SMFPLAYER:
+    if gv.USE_SMFPLAYER:
         if len(gv.smfseqs)>0:
             smfplayer.drumlist()
     initial_keys = set(gv.samples.keys())
@@ -1596,7 +1600,7 @@ try:
 
     if gv.cp.getboolean(gv.cfg,"USE_BUTTONS".lower()):     # applies to hardware GPIO buttons, the button menu is always available for others
         import buttons  # actual availablity of the optional buttons is tested in the module
-        if buttons.numbuttons: USE_GPIO=True    # found some :-)
+        if buttons.numbuttons: gv.GPIO=True    # found some :-)
         else: USE_BUTTONS=False
 
     if USE_HTTP_GUI:
@@ -1608,16 +1612,55 @@ try:
 except:
     print "Error loading optionals (either buttons, http-gui or serial-midi)"
     time.sleep(0.5)
-    GPIOcleanup()
+    gp.GPIOcleanup()
     exit(1)
 
 #########################################
 ##  MIDI DEVICES DETECTION
-##  MAIN LOOP
+##  and MAIN LOOP
 #########################################
+
+x=gv.cp.get(gv.cfg,"MIDI_THRU".lower()).split(',')
+thru_ports = []
+for i in xrange(len(x)):
+    v = x[i].strip()
+    if ( v.title() == "All" ):
+        thru_ports = ["All"]
+        break
+    elif v!='' and v not in thru_ports:
+	    thru_ports.append(v)
+
+gv.outports = {}
+if (len(thru_ports) > 0):
+    i=1
+    allvalid = "All" in thru_ports
+    for port in rtmidi2.get_out_ports():
+        if ('Midi Through' not in port
+	    and 'rtmidi' not in port.lower()):  # just a precaution
+            valid = allvalid
+            for v in thru_ports:
+                if valid:
+                    break
+                valid = re.search( v, port )
+                # Examples showing it's use:
+                #  "MIDI_THRU = ^MIDI4x4.*3$" matches "MIDI4x4 28:3"
+                #   which is helpful as device number (28 here) may vary
+                #  For all MIDI4x4 output ports: "MIDI_THRU = ^MIDI4x4.*"
+            if valid:
+                outport = "MIDI_OUT_%d" %i
+                gv.outports[outport] = [port, None]
+                try:
+                    gv.outports[outport][1] = rtmidi2.MidiOut()
+                    gv.outports[outport][1].open_port(port)
+                    print 'Opened "%s" as %s ' % (port,outport)
+                    i += 1
+                except:
+                    print 'No active device on "%s"' % (port)
+                    del gv.outports[outport]
 
 midi_in = rtmidi2.MidiInMulti()
 midi_in.callback = MidiCallback
+
 curr_inports = []
 prev_inports = []
 try:
@@ -1627,11 +1670,16 @@ try:
         midi_in.close_ports()
         prev_ports = []
         UI.mididevs = []
-        i=0
+        i=1
         for port in curr_inports:
-            if 'Midi Through' in port and not USE_SMFPLAYER: continue
-            print 'Opened "%s" as MIDI IN %d ' %(port,i)  #(port.split(":",1)[1],i) #(port.split(":",1)[0].strip(),i)
+            if ('rtmidi' in port.lower()
+            or 'smfplayer' in port.lower()
+            or ('Midi Through' in port
+                and not gv.USE_SMFPLAYER)
+                ): continue
+            v = port if 'Midi Through' not in port else "SMFplayer => %s" %port
             midi_in.open_ports(port)
+            print 'Opened "%s" as MIDI_IN_%d ' %(v,i)  #(port.split(":",1)[1],i) #(port.split(":",1)[0].strip(),i)
             if 'Midi Through' not in port and 'SMFplayer' not in port:
                 UI.mididevs.append(str(port))   # skip internal / automatically added devices
             i+=1
@@ -1643,7 +1691,7 @@ except KeyboardInterrupt:
 except:
     print "\nstopped by unexpected error"
 finally:
-    display('Stopped')
+    gv.display('Stopped')
     time.sleep(0.5)
-    GPIOcleanup()
+    gp.GPIOcleanup()
     exit(0)

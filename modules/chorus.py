@@ -28,7 +28,7 @@ def setgain(x,*z):  # 0.3-0.8
 def reset(scope=-1):
     global effect,depth,gain
     effect=False      # -1 turns of the effect, undefined values cover midi controller turn off
-    if scope in [-2, -4]:       # also reset values
+    if scope in [-2, -3, -4]:       # also reset values
         #if scope == -3:         # load sample set default
         #    load sample set default
         #else:                   # system default
