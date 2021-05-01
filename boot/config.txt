@@ -17,9 +17,10 @@ disable_audio_dither=1
 dtparam=audio=on
 #
 # for hifiberry (compatible) dacs uncomment appropriate parm:
+# (this example list is not complete)
 #dtoverlay=hifiberry-dac
 #dtoverlay=hifiberry-dacplus
 #dtoverlay=hifiberry-digi
 #dtoverlay=hifiberry-amp
 # for Pimoroni PirateAudio uncomment the following
-# pio=25=op,dh
+#pio=25=op,dh
