@@ -1,7 +1,7 @@
 This file contains changelog of samplerbox.py
 For changes on samplerbox_audio.pyx, see top of the source file
 
-Feb-Apr 2021:
+Feb-May 2021:
   - Added OLED SSD1306 support
   - Made console log of smfplayer more informative
   - Show connected midi devices in the GUI and LCD/OLED display
@@ -24,6 +24,7 @@ Feb-Apr 2021:
     - yes, this is mutually exclusive and not 100% fool proof. Consider serial midi...
   - Limited midi-through, see docs (configuration & usage)
   - Added support for Pimaroni Audio Pirate HAT w LCD
+  - Rewritten serial midi logic to comply with MIDI standards (and get proper midi-thru)
   - Code cleanups
 Sept-Nov 2020:
   - Extended midimon.py to support serial midi

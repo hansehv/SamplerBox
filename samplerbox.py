@@ -1606,8 +1606,11 @@ try:
     if USE_HTTP_GUI:
         import http_gui
 
+    serialout=False
     if gv.cp.getboolean(gv.cfg,"USE_SERIALPORT_MIDI".lower()):
         import serialMIDI
+        midiserial = serialMIDI.IO(midicallback=MidiCallback)
+        serialout = midiserial.out
 
 except:
     print "Error loading optionals (either buttons, http-gui or serial-midi)"
@@ -1622,18 +1625,35 @@ except:
 
 x=gv.cp.get(gv.cfg,"MIDI_THRU".lower()).split(',')
 thru_ports = []
+embedded = "EMBEDDED"
 for i in xrange(len(x)):
-    v = x[i].strip()
-    if ( v.title() == "All" ):
-        thru_ports = ["All"]
-        break
+    v = x[i].lower().strip()
+    if ( v == "all" ):
+        thru_ports.append("All")
+    if re.search( v, "embedded" ):
+        thru_ports.append(embedded)
     elif v!='' and v not in thru_ports:
 	    thru_ports.append(v)
 
-gv.outports = {}
 if (len(thru_ports) > 0):
     i=1
     allvalid = "All" in thru_ports
+    
+    if serialout:
+        dev = ' '
+        if embedded in thru_ports:
+            gv.outports[embedded] = [midiserial.uart, midiserial]
+            dev = ' as %s' %embedded
+        elif allvalid:
+            gv.outports[midiserial.uart] = [midiserial.uart, midiserial]
+        else:
+            for v in thru_ports:
+                if re.search ( v.lower(), midiserial.uart.lower()):
+                    gv.outports[midiserial.uart] = [midiserial.uart, midiserial]
+                    break
+        if dev:
+            print ( 'Opened output "%s"%s' %(midiserial.uart, dev) )
+
     for port in rtmidi2.get_out_ports():
         if ('Midi Through' not in port
 	    and 'rtmidi' not in port.lower()):  # just a precaution
@@ -1641,7 +1661,7 @@ if (len(thru_ports) > 0):
             for v in thru_ports:
                 if valid:
                     break
-                valid = re.search( v, port )
+                valid = re.search( v.lower(), port.lower() )
                 # Examples showing it's use:
                 #  "MIDI_THRU = ^MIDI4x4.*3$" matches "MIDI4x4 28:3"
                 #   which is helpful as device number (28 here) may vary
@@ -1652,12 +1672,11 @@ if (len(thru_ports) > 0):
                 try:
                     gv.outports[outport][1] = rtmidi2.MidiOut()
                     gv.outports[outport][1].open_port(port)
-                    print 'Opened "%s" as %s ' % (port,outport)
+                    print ( 'Opened output "%s"' % (port) )
                     i += 1
                 except:
-                    print 'No active device on "%s"' % (port)
+                    print ( 'No active device on "%s"' % (port) )
                     del gv.outports[outport]
-
 midi_in = rtmidi2.MidiInMulti()
 midi_in.callback = MidiCallback
 
@@ -1677,15 +1696,16 @@ try:
             or ('Midi Through' in port
                 and not gv.USE_SMFPLAYER)
                 ): continue
-            v = port if 'Midi Through' not in port else "SMFplayer => %s" %port
+            v = '"%s"'%port if 'Midi Through' not in port else '"%s" as SMFplayer' %port
             midi_in.open_ports(port)
-            print 'Opened "%s" as MIDI_IN_%d ' %(v,i)  #(port.split(":",1)[1],i) #(port.split(":",1)[0].strip(),i)
+            print ( 'Opened input %s' %(v) )
             if 'Midi Through' not in port and 'SMFplayer' not in port:
                 UI.mididevs.append(str(port))   # skip internal / automatically added devices
             i+=1
         curr_inports = rtmidi2.get_in_ports()   # we do this indirect to catch
         prev_inports = curr_inports             # auto opened virtual ports
     time.sleep(2)
+
 except KeyboardInterrupt:
     print "\nstopped by user via ctrl-c\n"
 except:
