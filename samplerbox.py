@@ -959,7 +959,7 @@ def MidiCallback(mididev, message, time_stamp):
                                         if midinote==m.playingstopnote():   # and has it mirrored stop?
                                             messagetype = 8
 
-            if messagetype == 9:    # Note on 
+            if messagetype == 9:    # Note on
                 try:
                     gv.last_midinote=midinote      # save original midinote for the webgui
                     if keyboardarea and not MT_in:
@@ -972,6 +972,10 @@ def MidiCallback(mididev, message, time_stamp):
                         playchord=0       # no chords outside keyboardrange / in effects channel.
                     for n in range (len(gv.chordnote[playchord])):
                         playnote=midinote+gv.chordnote[playchord][n]
+                        if sustain:   # don't pile up sustain
+                            for n in gv.sustainplayingnotes:
+                                if n.playingnote() == playnote:
+                                    n.fadeout(True)         # gracefully drop it
                         if gv.triggernotes[playnote]<128 and not MT_in: # cleanup in case of retrigger
                             if playnote in gv.playingnotes: # occurs in once/loops modes and chords
                                 for m in gv.playingnotes[playnote]:
