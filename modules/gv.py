@@ -111,6 +111,7 @@ ARP2END="ArpPlay2end"
 UA="UA"
 
 # Internal vars
+outports = {}
 ConfigErr=False
 LEDblink=False
 USE_ALSA_MIXER=False
