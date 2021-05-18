@@ -25,6 +25,7 @@ Feb-May 2021:
   - Limited midi-through, see docs (configuration & usage)
   - Added support for Pimaroni Audio Pirate HAT w LCD
   - Rewritten serial midi logic to comply with MIDI standards (and get proper midi-thru)
+  - Fixed piling/accumulating of same sustaining notes
   - Code cleanups
 Sept-Nov 2020:
   - Extended midimon.py to support serial midi
