@@ -25,12 +25,15 @@ maintxt=""		# ready by getcsv
 menus=[]		# can't use a dictionary as they're unsorted in python 2.7
 procs=[]
 level=0			# start at main menu level
+mainmenu=""
 menu=[-1,0]
 
 def init():
-	global menus
+	global menus, mainmenu
 	for m in definition:
 		if m[0] not in menus: menus.append(m[0])
+		if mainmenu=="":
+			mainmenu=m[0]
 
 def menu_next(val=1):
 	if level==0:
@@ -44,14 +47,15 @@ def menu_next(val=1):
 def menu_prev():
 	menu_next(-1)
 
-def select():
+def select(init=False):
 	global level,procs
+	currmenu=mainmenu if init else menus[menu[0]]
 	level+=1
 	if level==1:
 		menu[1]=0
 		procs=[]
 		for m in definition:
-			if m[0]==menus[menu[0]]:
+			if m[0]==currmenu:
 				procs.append(m)
 def selret():
 	global level
@@ -110,8 +114,9 @@ def nav(button, numbut):
 	if button in butfunc:
 		if menu[0]==-1:
 			if numbut<3:
-				level=1
-				select()	# cover your back for multiple buttons (eg GPIO & midi)
+				level=0
+				select(True)	# cover your back for multiple buttons (eg GPIO & midi)
+				level=2
 			menu[0]=0
 		if button==2 and numbut==3 and level==1: button=4
 		butfunc[button][level]()

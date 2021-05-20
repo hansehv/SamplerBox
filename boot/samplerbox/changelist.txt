@@ -1,7 +1,7 @@
 This file contains changelog of samplerbox.py
 For changes on samplerbox_audio.pyx, see top of the source file
 
-Feb-Mar 2021:
+Feb-May 2021:
   - Added OLED SSD1306 support
   - Made console log of smfplayer more informative
   - Show connected midi devices in the GUI and LCD/OLED display
@@ -14,11 +14,19 @@ Feb-Mar 2021:
     - new general procedure module gp.py (other subs will be moved there later)
     - improved test on running from SD image (on SD readonly is assumed, thus requiring remounts)
   - Extra examples in wifistatips (also contains example for fixed wired address)
-  - Bugfix mode=once: subsequent keypress now restarts again as intended/documented
+  - Bugfixes
+    - mode=once: subsequent keypress now restarts again as intended/documented
+    - using less than 3 buttons didn't function and made the menu system crash
+    - the "loading sampleset" message on the displays was wiped immediately
   - If a USB storage device contains no potential samplesets, the internal SD space will be used.
     - valid for microcontrollers using USB both for programming and MIDI, e.g. Pi Pico.
     - potential samplesets are recognized by name starting with digits followed by a space.
     - yes, this is mutually exclusive and not 100% fool proof. Consider serial midi...
+  - Limited midi-through, see docs (configuration & usage)
+  - Added support for Pimaroni Audio Pirate HAT w LCD
+  - Rewritten serial midi logic to comply with MIDI standards (and get proper midi-thru)
+  - Fixed piling/accumulating of same sustaining notes
+  - Code cleanups
 Sept-Nov 2020:
   - Extended midimon.py to support serial midi
   - Fixed bug for LED's (red blinking when all is OK)

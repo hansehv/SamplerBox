@@ -25,3 +25,9 @@ def samples2read():
 		else:
 			subprocess.call( ['umount', gv.samplesdir] )
 			subprocess.call( ['mount', '-vr', '/dev/mmcblk0p3', gv.samplesdir] )
+
+def GPIOcleanup():
+    if gv.GPIO:
+        import RPi.GPIO as GPIO
+        GPIO.setmode(GPIO.BCM)
+        GPIO.cleanup()
