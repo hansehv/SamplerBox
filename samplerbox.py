@@ -328,6 +328,12 @@ try:
             I2C_7segment.display(msg7seg)
         display('','----')
 
+    elif gv.cp.getboolean(gv.cfg,"USE_I2C_7SEGMENTDISPLAY_HT16K33".lower()):
+        import I2C_7segment_HT16K33
+        def display(msg,msg7seg='',*z):
+            I2C_7segment_HT16K33.display(msg7seg)
+        display('','----')
+        
     elif gv.cp.getboolean(gv.cfg,"USE_LEDS".lower()):
         gv.GPIO=True
         import LEDs

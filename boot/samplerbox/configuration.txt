@@ -18,65 +18,66 @@
 
 ######  General values ######
 #
-AUDIO_DEVICE_ID = -1            ; -1=autodetect, specify ID of your device to override
-AUDIO_DEVICE_NAME = Detect      ; ..or specify (part of) it's name. SB uses the first match of ID or NAME.
-MIXER_CONTROL = Detect          ; Fill this to override autodetection, specify None to disable alsa volume control
-SAMPLERATE = 44100              ; Sets value for wav's and audio device (these have to be the same)
-BLOCKSIZE = High                ; Blocksize or "Low"/"High". High may cause latency, low may cause distortion; just try.
-#                                 Valid numbers for blocksize are shown in the console messages when started manually
-USE_48kHz = False               ; Sets audio to 48000Hz while keeping wav's on 44100Hz. Try to avoid this...
-USE_SERIALPORT_MIDI = False     ; Set to True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
-USE_HD44780_16x2_LCD = False    ; Set to True to use a 16x2 direct connected/wired HD44780 LCD
-#                                 If you use an I2C-HD44780, above option should be false !!!
-USE_I2C_LCD = False             ; Set True or 16x2 (=True) or 20x4 to use a 16x2 or 20x4 I2C connected HD44780 LCD
-USE_OLED = False                ; Set True to use an OLED display via SPI. Configure below
-USE_PIMORONI_LCD = False        ; Set True to use LCD of Pimoroni PirateAudio hat. Configure below
-USE_I2C_7SEGMENTDISPLAY = False ; Set True to use a 7-segment display via I2C
-USE_BUTTONS = False             ; Set True to use the GPIO buttons
-USE_LEDS = False                ; Set True to use LED's connected to RaspberryPi's GPIO pins
-USE_HTTP_GUI = True             ; should webgui server be started?
-USE_IPv6 = False                ; Enables IPv6 on http_gui and shows the IPv6 addresses on displays
-USE_SMFPLAYER = True            ; Should internal "sequencer" be started? If True, it will be added to the multi-timbrals
-MULTI_TIMBRALS =                ; Multi timbral devices, comma separated. Exactly as in the midi open message, but without quotes!
-MIDI_THRU =                     ; Devices to receive SB's input, either "All" without quotes or
-#                                  comma separated values, use regular expressions for patterns (see docs on MIDI-THRU)
-MAX_POLYPHONY = 80              ; This can be set higher, but 80 is a safe value
-MAX_MEMLOAD = 90                ; Used memory percentage at which loading of samples stops
-MIDI_CHANNEL = 1                ; midi channel
-DRUMPAD_CHANNEL = 10            ; midi channel of the drumpads (if applicable)
-NOTES_CC = 119                  ; Controlnumber used when using music notes for controls (=as CC).
-BOXSAMPLE_MODE = Keyb	        ; we need a default: original samplerbox
+AUDIO_DEVICE_ID = -1			; -1=autodetect, specify ID of your device to override
+AUDIO_DEVICE_NAME = Detect      	; ..or specify (part of) it's name. SB uses the first match of ID or NAME.
+MIXER_CONTROL = Detect          	; Fill this to override autodetection, specify None to disable alsa volume control
+SAMPLERATE = 44100              	; Sets value for wav's and audio device (these have to be the same)
+BLOCKSIZE = High                	; Blocksize or "Low"/"High". High may cause latency, low may cause distortion; just try.
+#                               	  Valid numbers for blocksize are shown in the console messages when started manually
+USE_48kHz = False               	; Sets audio to 48000Hz while keeping wav's on 44100Hz. Try to avoid this...
+USE_SERIALPORT_MIDI = False     	; Set to True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
+USE_HD44780_16x2_LCD = False    	; Set to True to use a 16x2 direct connected/wired HD44780 LCD
+#                               	  If you use an I2C-HD44780, above option should be false !!!
+USE_I2C_LCD = False             	; Set True or 16x2 (=True) or 20x4 to use a 16x2 or 20x4 I2C connected HD44780 LCD
+USE_OLED = False                	; Set True to use an OLED display via SPI. Configure below
+USE_PIMORONI_LCD = False        	; Set True to use LCD of Pimoroni PirateAudio hat. Configure below
+USE_I2C_7SEGMENTDISPLAY = False 	; Set True to use a Sparkfun ATMega328 controlled 7-segment display via I2C
+USE_I2C_7SEGMENTDISPLAY_HT16K33 = False ; Set True to use a HT16K33 based 7-segment display via I2C
+USE_BUTTONS = False               	; Set True to use the GPIO buttons
+USE_LEDS = False                	; Set True to use LED's connected to RaspberryPi's GPIO pins
+USE_HTTP_GUI = True             	; should webgui server be started?
+USE_IPv6 = False                	; Enables IPv6 on http_gui and shows the IPv6 addresses on displays
+USE_SMFPLAYER = True            	; Should internal "sequencer" be started? If True, it will be added to the multi-timbrals
+MULTI_TIMBRALS =                	; Multi timbral devices, comma separated. Exactly as in the midi open message, but without quotes!
+MIDI_THRU =                     	; Devices to receive SB's input, either "All" without quotes or
+#                               	  comma separated values, use regular expressions for patterns (see docs on MIDI-THRU)
+MAX_POLYPHONY = 80              	; This can be set higher, but 80 is a safe value
+MAX_MEMLOAD = 90                	; Used memory percentage at which loading of samples stops
+MIDI_CHANNEL = 1                	; midi channel
+DRUMPAD_CHANNEL = 10            	; midi channel of the drumpads (if applicable)
+NOTES_CC = 119                  	; Controlnumber used when using music notes for controls (=as CC).
+BOXSAMPLE_MODE = Keyb	        	; we need a default: original samplerbox
 #		Keyb	- reacts on "keyboard" interaction
 #		Once	- ignores loop markers ("just play the sample with option to stop")
 #		Onc2	- ignores loop markers with note-off by same note ("just play the sample with option to stop")
 #		Loop	- recognize loop markers, note-off by 127-note ("just play the loop with option to stop")
 #		Loo2	- recognize loop markers, note-off by same note ("just play the loop with option to stop")
-BOXVELOCITY_LEVELS = 1          ; Granularity of velocity samples/levels (127 is original samplerbox)
-BOXVELOCITY_MODE = Accurate     ; Accurate: calculated in 127 steps, Sample: determined by wavs/level (original samplerbox)
+BOXVELOCITY_LEVELS = 1              	; Granularity of velocity samples/levels (127 is original samplerbox)
+BOXVELOCITY_MODE = Accurate     	; Accurate: calculated in 127 steps, Sample: determined by wavs/level (original samplerbox)
 #		Sample	- velocity equals sampled value, requires multiple samples to get differentation
 #		Accurate- velocity as played, allows for multiple (normalized!) samples for timbre
-BOXSTOP127 = 109                ; Value of "Right side", "Left side" has some notes slack
+BOXSTOP127 = 109                      	; Value of "Right side", "Left side" has some notes slack
 #		88-key:	- 108=C8
 #		77-key:	- 103=G7
 #		61-key:	- 96=C7
-volume = 87                     ; the startup (alsa=output) volume (0-100)
-volumeCC = 1.0                  ; assumed value of the volumeknob controller before first use, max=1.0 (the knob can only decrease).
-BOXRELEASE = 30                 ; 30 results in the samplerbox default (FADEOUTLENGTH=30000)
-BOXDAMP = 10                    ; the "release value for damp": how quick do sounds die on damp pedal and retrigger
-BOXDAMPNOISE = False            ; play release sample when damp is used (for damper noise or rattling snares etc)
-BOXRETRIGGER = R                ; action on retriggered still playing notes (occurs in once/loop modes and chords):
+volume = 87				; the startup (alsa=output) volume (0-100)
+volumeCC = 1.0                  	; assumed value of the volumeknob controller before first use, max=1.0 (the knob can only decrease).
+BOXRELEASE = 30                 	; 30 results in the samplerbox default (FADEOUTLENGTH=30000)
+BOXDAMP = 10                    	; the "release value for damp": how quick do sounds die on damp pedal and retrigger
+BOXDAMPNOISE = False            	; play release sample when damp is used (for damper noise or rattling snares etc)
+BOXRETRIGGER = R                	; action on retriggered still playing notes (occurs in once/loop modes and chords):
 #               R:      - Noteoff and fadeout according release value
 #               D:      - Noteoff and fadeout according damp value
 #               Y:      - Yes, retrigger is allowed, keep the playing sound
-BOXRELSAMPLE = N                ; release samples: N=none, E=Embedded, S=Separate
-BOXXFADEOUT = 10                ; crossfade glues the sample to the release sample
-BOXXFADEIN = 1                  ; crossfade glues the sample to the release sample
-BOXXFADEVOL = 1.0               ; crossfade glues the sample to the release sample
-PRESETBASE = 0                  ; Does the programchange / sample set start at 0 (MIDI style) or 1 (human style)
-PRESET = 0                      ; the default patch to load
-PITCHRANGE = 12                 ; default range of the pitchwheel in semitones (max=12 is een octave up&down)
-PITCHBITS = 7                   ; pitchwheel resolution, 0=disable, max=14 (=16384 steps)
-#                               ; values below 7 will produce bad results
+BOXRELSAMPLE = N                	; release samples: N=none, E=Embedded, S=Separate
+BOXXFADEOUT = 10                	; crossfade glues the sample to the release sample
+BOXXFADEIN = 1                  	; crossfade glues the sample to the release sample
+BOXXFADEVOL = 1.0               	; crossfade glues the sample to the release sample
+PRESETBASE = 0                  	; Does the programchange / sample set start at 0 (MIDI style) or 1 (human style)
+PRESET = 0                      	; the default patch to load
+PITCHRANGE = 12                 	; default range of the pitchwheel in semitones (max=12 is een octave up&down)
+PITCHBITS = 7                   	; pitchwheel resolution, 0=disable, max=14 (=16384 steps)
+#                               	; values below 7 will produce bad results
 #
 ######  Mapping of GPIO_pins: adapt to your hardware wiring/setup  #####
 # GPIO modules in this build use mode=BCM. Modes cannot be mixed.
