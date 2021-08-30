@@ -1467,7 +1467,7 @@ def ActuallyLoad():
             file = os.path.join(dirname, "%d.wav" % midinote)
             #print "Trying " + file
             if os.path.isfile(file):
-                gv.samples[midinote,1,1] = [Sound(file, 1, midinote, 1, PREVELOLEVS, VELACCURATE, gv.sample_mode, PRERELEASE, PREDAMP, PREDAMPNOISE, PRERETRIGGER, gv.globalgain, PREMUTEGROUP, BOXRELSAMPLE, PREXFADEOUT, PREXFADEIN, PREXFADEVOL, PREFRACTIONS)]
+                gv.samples[midinote,1,1] = [Sound(file, 1, midinote, 1, PREVELOLEVS, PREVELMODE, gv.sample_mode, PRERELEASE, PREDAMP, PREDAMPNOISE, PRERETRIGGER, gv.globalgain, PREMUTEGROUP, BOXRELSAMPLE, PREXFADEOUT, PREXFADEIN, PREXFADEVOL, PREFRACTIONS)]
                 fillnotes[midinote,1] = PREFILLNOTE
         voicenames=[[1,"Default"]]
         gv.voicelist=[[1,'','Keyb','',1]]
