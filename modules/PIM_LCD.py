@@ -71,16 +71,17 @@ class pim_lcd:
         self.busy = True
         # #########START DRAWING##########################
         self.draw.rectangle((0, 0, self.device.width-1, self.device.height-1), fill=(0,0,0))
-        if UI.USE_ALSA_MIXER:
-            s1 = "%s | Vol: %d%%" % (UI.Mode(), UI.SoundVolume())
-        else:
-            s1 = "Mode: %s" % (gv.sample_mode)
-        s2 = msg
-        if s2 == '':
-            if UI.Voice() > 1:
-                s2 = str(UI.Voice()) + ":"
+        s1 = msg
+        s2 = ''
+        if s1 == '':
             if UI.Presetlist() != []:
-                s2 += UI.Presetlist()[UI.getindex(UI.Preset(), UI.Presetlist())][1]
+                s1 = UI.Presetlist()[UI.getindex(UI.Preset(), UI.Presetlist())][1]
+                preset_str = s1.split(" ",1)
+                preset_num = preset_str[0]
+                s1 = preset_str[1]
+                s2 = preset_num # put preset number and voice number on line 2
+            if UI.Voice() > 1:
+                s2 += ' voice:'+ str(UI.Voice())
 
         s3a = "Scale:%s" % (UI.Scalename()[UI.Scale()])
         s3b = "Chord:%s" % (UI.Chordname()[UI.Chord()])
@@ -90,14 +91,23 @@ class pim_lcd:
             self.s5 = menu2
             self.s6 = menu3
         s6 = self.s6 if self.s6 != '' else UI.IP()
+        if UI.USE_ALSA_MIXER:
+            s7 = "%s | Vol: %d%%" % (UI.Mode(), UI.SoundVolume())
+        else:
+            s7 = "Mode: %s" % (gv.sample_mode)
         self.draw.text((self.x, self.top), s1, font=self.font, fill=(128,255,0))
-        self.draw.rectangle((self.x, self.top + 28, self.device.width, self.top + 30), fill=(255,255,255))
-        self.draw.text((self.x+2, self.top+32), s2, font=self.font, fill=(255,255,255))
-        self.draw.text((self.x, self.top+60), s3a, font=self.font, fill=(255,255,255))
-        self.draw.text((self.x, self.top+84), s3b, font=self.font, fill=(255,255,255))
+        # self.draw.rectangle((self.x, self.top + 28, self.device.width, self.top + 30), fill=(255,255,255))
+        self.draw.text((self.x+2, self.top+32), s2, font=self.font, fill=(64,128,0))
+        self.draw.text((self.x, self.top+60), s3a, font=self.font, fill=(127,127,127))
+        self.draw.text((self.x, self.top+84), s3b, font=self.font, fill=(127,127,127))
         self.draw.text((self.x, self.top+112), self.s4, font=self.font, fill=(255,128,0))
-        self.draw.text((self.x, self.top+140), self.s5, font=self.font, fill=(255,128,0))
+        if len(menu3) > 0:  # display menu item in yellow if you can scroll values
+            self.draw.text((self.x, self.top+140), self.s5, font=self.font, fill=(255,255,0)) 
+        else:
+            self.draw.text((self.x, self.top+140), self.s5, font=self.font, fill=(255,128,0))
         self.draw.text((self.x, self.top+168), s6, font=self.font, fill=(0,128,255))
+        self.draw.text((self.x, self.top+198), s7, font=self.font, fill=(0,64,128))
+
         self.device.display(self.image)
         # #########END DRAWING##########################
         self.busy = False
