@@ -1,0 +1,28 @@
+# Adapt to your preference:
+# ssid is the wireless networkname. Don't conflict with existing ones !
+# wpa_passphrase is the wpa-key / password (duh)
+#    make sure it complies with password policies (length etc)
+#    otherwise your mobile device might refuse it before trying
+# This file is actually /etc/hostapd/hostapd.conf, so please refer to the
+# related manpages for exact syntax and allowed parameters if needed.
+
+ssid=SamplerBox
+wpa_passphrase=go2samplerbox
+
+#------------------------------------#
+# Values for PI with builtin adapter #
+#------------------------------------#
+
+interface=wlan0
+driver=nl80211
+hw_mode=g
+channel=6
+wmm_enabled=1
+ieee80211n=1
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP

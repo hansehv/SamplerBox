@@ -29,5 +29,5 @@ def samples2read():
 def GPIOcleanup():
     if gv.GPIO:
         import RPi.GPIO as GPIO
-        GPIO.setmode(GPIO.BCM)
+        GPIO.setmode( GPIO.BCM )
         GPIO.cleanup()

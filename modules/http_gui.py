@@ -6,27 +6,28 @@
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 ###############################################################
 import threading
-import BaseHTTPServer,urllib, mimetypes
-from urlparse import urlparse,parse_qs
+import http.server,urllib.request,urllib.parse,urllib.error,mimetypes
+from urllib.parse import urlparse,parse_qs
 import os,shutil,subprocess,re
 import UI
 HTTP_PORT=80
 HTTP_ROOT="webgui"
+left=""
 
 v6msg=""
 if UI.USE_IPv6:
-    # python 2:support ipv6
     try:
-        import socket,SocketServer
-        SocketServer.TCPServer.address_family=socket.AF_INET6
+        import socket,socketserver
+        socketserver.TCPServer.address_family=socket.AF_INET6
         v6msg=" with IPv6 support"
+        left="::"
     except ImportError:
         print('please find other ways to listen on ipv6 address!')
 
-class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
-        path = urlparse(urllib.unquote(self.path)).path
+        path = urlparse(urllib.parse.unquote(self.path)).path
         if path=="/SamplerBox.API":
             self.send_API()
         else:
@@ -51,12 +52,12 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.end_headers()
             shutil.copyfileobj(f, self.wfile)
             f.close()
-        
+
     def do_HEAD(self):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        
+ 
     def set_UI_parm(self,nam,val):
         parm=UI.procs[nam][1]()     # check procedure type, not all types are covered as they are not used yet.
         if isinstance(parm,int):
@@ -71,9 +72,9 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         UI.procs[nam][1](val)    # catch-all for the strings, arrays and dicts
 
     def do_POST(self):
-        length = int(self.headers.getheader('content-length'))
+        length = int(self.headers.get('content-length'))
         field_data = self.rfile.read(length)
-        fields=parse_qs(field_data)
+        fields=parse_qs(field_data.decode())
         display=True
         #----------------------------------------------#
         # Process fields with special logic first      #
@@ -92,11 +93,10 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             if loading:
                 self.do_GET()   # answer the browser
                 return
-        voicechange=False
-        if "SB_Voice" in fields: voicechange=UI.Voice(int(fields["SB_Voice"][0]))
-        notemapchange=False
-        if "SB_Notemap" in fields and not voicechange: UI.Notemap(int(fields["SB_Notemap"][0]))
-        if not (voicechange or notemapchange):
+        voice_or_mapchange=False
+        if "SB_Voice" in fields: voice_or_mapchange=UI.Voice(int(fields["SB_Voice"][0]))
+        if "SB_Notemap" in fields and not voice_or_mapchange: voice_or_mapchange=UI.Notemap(int(fields["SB_Notemap"][0]))
+        if not (voice_or_mapchange):
             if "SB_nm_inote"  in fields:    # inote is used as a signal: remapping requires it and html page sends it regardless of it being changed
                 if UI.nm_inote(int(fields["SB_nm_inote"][0])):   # so now we know something has changed on a screen containing remapping fields
                     if "SB_nm_Q" in fields: UI.nm_Q(int(fields["SB_nm_Q"][0]))    # needs to be before onote to get proper name2note translation
@@ -122,9 +122,9 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def get_UI_parm(self,nam,proc):
         parm=proc()
-        if isinstance(parm,(int,long,float)):
+        if isinstance(parm,(int,float)):
             jsparm="%i" %int(parm+.1)
-        elif isinstance(parm,basestring):
+        elif isinstance(parm,str):
             if nam=="DefinitionTxt":
                 jsparm="'%s'" %parm.replace('\n','&#10;').replace('\r','&#13;')
             else:
@@ -133,78 +133,81 @@ class HTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             jsparm="%s" %parm
         return jsparm
 
+    def wfilewrite(self, txt):
+        self.wfile.write(txt.encode())
+
     def write_heading(self, txt):
         hr="\n// %s\n" %''.join([char*(len(txt)+3) for char in '-'])
-        self.wfile.write("\n%s" %hr)
-        self.wfile.write("// %s  :" %txt)
-        self.wfile.write("%s" %hr)
-        
+        self.wfilewrite("\n%s" %hr)
+        self.wfilewrite("// %s  :" %txt)
+        self.wfilewrite("%s" %hr)
+
     def send_API(self):
         self.send_response(200)
         self.send_header("Content-type", 'application/javascript')
         self.send_header("Cache-Control", 'no-cache, must-revalidate')
         self.end_headers()
 
-        self.wfile.write("// SamplerBox API, interface for interacting via standard HTTP")
+        self.wfilewrite("// SamplerBox API, interface for interacting via standard HTTP")
 
         self.write_heading("Variables that can be updated and submitted to samplerbox")
         i=0
         for n in UI.procs:
             m=UI.procs[n]
             if m[0]=="w":
-                if (i%5)==0: self.wfile.write("\n")
-                self.wfile.write("var %s;" %("SB_%s" %n) )
+                if (i%5)==0: self.wfilewrite("\n")
+                self.wfilewrite("var %s;" %("SB_%s" %n) )
                 i+=1
 
         self.write_heading("Informational (read-only) variables")
-        self.wfile.write("\nvar SB_busy;SB_numvars=%d;var SB_VarVal;SB_VarName=[" %i)
+        self.wfilewrite("\nvar SB_busy;SB_numvars=%d;var SB_VarVal;SB_VarName=[" %i)
         i=""
         for n in UI.procs:
             m=UI.procs[n]
             if m[0]=="w":
-                self.wfile.write("%s'%s'" %(i,"SB_%s" %n) )
+                self.wfilewrite("%s'%s'" %(i,"SB_%s" %n) )
                 i=","
-        self.wfile.write("];")
+        self.wfilewrite("];")
         i=0
         for n in UI.procs:
             m=UI.procs[n]
             if m[0]=="v":
-                if (i%5)==0: self.wfile.write("\n")
-                self.wfile.write("var %s;" %("SB_%s" %n) )
+                if (i%5)==0: self.wfilewrite("\n")
+                self.wfilewrite("var %s;" %("SB_%s" %n) )
                 i+=1
 
         self.write_heading("Static variables & tables")
         for n in UI.procs:
             m=UI.procs[n]
             if m[0]=="f":
-                self.wfile.write("\n%s=%s;" %("SB_%s" %n,self.get_UI_parm(n,m[1])))
+                self.wfilewrite("\n%s=%s;" %("SB_%s" %n,self.get_UI_parm(n,m[1])))
 
         self.write_heading("Function for (re)filling all above variables with actual values from SamplerBox")
-        self.wfile.write("\nfunction SB_GetAPI() {")
+        self.wfilewrite("\nfunction SB_GetAPI() {")
         UI.nm_sync()
-        self.wfile.write("\n\tSB_busy=%i;SB_nm_onote=%s;\n\tSB_VarVal=[" %(UI.RenewMedia(),self.get_UI_parm("nm_onote",UI.procs["nm_onote"][1])) )
+        self.wfilewrite("\n\tSB_busy=%i;SB_nm_onote=%s;\n\tSB_VarVal=[" %(UI.RenewMedia(),self.get_UI_parm("nm_onote",UI.procs["nm_onote"][1])) )
         i=""
         for n in UI.procs:
             m=UI.procs[n]
             if m[0]=="w":
-                self.wfile.write("%s%s" %(i,self.get_UI_parm(n,m[1])))
+                self.wfilewrite("%s%s" %(i,self.get_UI_parm(n,m[1])))
                 i=","
-        self.wfile.write("];")
+        self.wfilewrite("];")
 
         for n in UI.procs:
             m=UI.procs[n]
             if m[0]=="v":
-                self.wfile.write("\n\t%s=%s;" %("SB_%s" %n,self.get_UI_parm(n,m[1])))
-        self.wfile.write("\n};")
+                self.wfilewrite("\n\t%s=%s;" %("SB_%s" %n,self.get_UI_parm(n,m[1])))
+        self.wfilewrite("\n};")
 
-def HTTP_Server(server_class=BaseHTTPServer.HTTPServer, handler_class=HTTPRequestHandler, port=HTTP_PORT):
-    server_address = ('', port)
+def HTTP_Server(server_class=http.server.HTTPServer, handler_class=HTTPRequestHandler, port=HTTP_PORT):
+    server_address = (left, port)
     httpd = server_class(server_address, handler_class)
-    print 'Starting httpd on port %d%s' % (port,v6msg)
+    print('Starting httpd on port %d%s' % (port,v6msg))
     try:
         httpd.serve_forever()
     except:
-        print 'Starting httpd failed'
+        print('Starting httpd failed')
 
 HTTPThread = threading.Thread(target = HTTP_Server)
 HTTPThread.daemon = True
