@@ -40,7 +40,7 @@ def readcsv(ifile, numtxt=100, header=True):
                         try:
                             row.append(int(inrow[i].strip()))
                         except:
-                            print("%s: Found '%s' when expecting a digit, ignoring rest of line %s" %(ifile, inrow[i], inrow))
+                            print ("%s: Found '%s' when expecting a digit, ignoring rest of line %s" %(ifile, inrow[i], inrow))
                             break
                 if i > -1:                  # just return filled row
                     rows.append(row)
@@ -125,7 +125,7 @@ def readCCmap(ifile, override=False):
                             print("%s: ignored %s" %(ifile, str(sheet[i])))
                             gv.ConfigErr=True
                             continue
-                        for j in xrange(len(CCmap)):
+                        for j in range(len(CCmap)):
                             if CCmap[j][0]==x and CCmap[j][3]==voice:
                                 print ("%s: Controller '%s' already mapped, ignored %s" %(ifile,gv.controllerCCs[x][0],sheet[i]))
                                 gv.ConfigErr=True
@@ -153,7 +153,7 @@ def readCCmap(ifile, override=False):
                                 gv.ConfigErr=True
     except:
         if not override:
-            print "%s: No default controller mapping found" %(ifile)
+            print("%s: No default controller mapping found" %(ifile))
     return CCmap
 
 keynames=[]
@@ -193,7 +193,7 @@ def readkeynames(ifile):
                     except:
                         print ("%s: %s contains errors, partly processed" %(ifile, sheet[i]))
             else:
-                print ("%s: ignored %s" %(ifile, sheet[i]))
+                print(("%s: ignored %s" %(ifile, sheet[i])))
                 gv.ConfigErr=True
         if len(gv.drumpadmap)>0: gv.drumpad=True
     except:
@@ -227,7 +227,7 @@ def readnotemap(ifile):
                     ucas=sheet[i][2].upper()
                     x=gv.getindex(ucas,keynames)
                     if x<0:
-                        print ("%s: keyname '%s' not defined, ignored %s" %(ifile, sheet[i][2], sheet[i]))
+                        print(("%s: keyname '%s' not defined, ignored %s" %(ifile, sheet[i][2], sheet[i])))
                         continue
                     else:
                         values[2]=int(gv.keynames[x+1][0])
@@ -330,7 +330,7 @@ def readmenu(ifile):
                 if values: menu.definition.append(values)
                 else: print ("%s: Don't understand spec %s, ignored %s" %(ifile,sheet[i][2],sheet[i]))
             else:
-                print ("%s: Item %s unknown or not writable, ignored %s" %(ifile,sheet[i][1],sheet[i]))
+                print("%s: Item %s unknown or not writable, ignored %s" %(ifile,sheet[i][1],sheet[i]))
         else:
             print ("%s: ignored %s" %(ifile, sheet[i]))
             gv.ConfigErr=True

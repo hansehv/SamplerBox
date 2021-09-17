@@ -34,7 +34,7 @@ def Preset(val=None):						# 0-127
 					if gv.getindex(val,gv.presetlist)>-1:
 						gv.PRESET=val
 						gv.LoadSamples()
-					else: print ("Preset %d does not exist, ignored" %val)
+					#else: print ("Preset %d does not exist, ignored" %val)
 				#else: print ("Preset %d already loaded" %val)
 			return gv.ActuallyLoading
 		return gv.PRESET
@@ -57,7 +57,7 @@ def Voice(val=None):						# index of Voicelist (or actual "voice#" if not numeri
 	try:
 		currvoice=gv.currvoice
 		if val!=None:
-			if isinstance(val,(int,long)):
+			if isinstance(val,int):
 				for voice in gv.voicelist:      	# count effects track and release samples
 					if voice[0]<1: val+=1
 				gv.setVoice(gv.voicelist[val][0],1)

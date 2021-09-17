@@ -14,7 +14,7 @@
 ###############################################################
 
 import sys,os,gv,time,threading,re
-if gv.rootprefix!="":sys.path.append('%s/root/python-midi/build/lib.linux-armv7l-2.7/' %gv.rootprefix)
+#if gv.rootprefix!="":sys.path.append('%s/root/python-midi/build/lib.linux-armv7l-2.7/' %gv.rootprefix)
 import midi
 import midi.sequencer as sequencer
 usleep = lambda x: time.sleep(x/1000000.0)
@@ -85,10 +85,10 @@ def load(line,dirname, fname, smfseq, voicemap):
 	channels={}
 	v=", " if gv.DefinitionErr != "" else ""
 	if smfseq<1 or smfseq>127:
-		print "Skipped midifile %d:%s, out boundaries (1-127)" %(smfseq,fname)
+		print("Skipped midifile %d:%s, out boundaries (1-127)" %(smfseq,fname))
 		gv.DefinitionErr="%s%s%d" %(gv.DefinitionErr,v,line)
 	elif smfseq in gv.smfseqs:
-		print "Skipped midifile %d:%s, already defined via %d:%s" %(smfseq,fname,smfseq,gv.smfseqs[smfseq][0])
+		print("Skipped midifile %d:%s, already defined via %d:%s" %(smfseq,fname,smfseq,gv.smfseqs[smfseq][0]))
 		gv.DefinitionErr="%s%s%d" %(gv.DefinitionErr,v,line)
 	else:
 		try:
@@ -132,8 +132,8 @@ def load(line,dirname, fname, smfseq, voicemap):
 			events.sort()
 			if voicemap=="": voicemap=song
 			voices=[]	# inventory of used channels and optional descriptions
-			print "SMF_1%d=%s, voicemap=%s sends notes on channels:"%(smfseq,fname,voicemap)
-			for key, value in channels.iteritems():
+			print("SMF_1%d=%s, voicemap=%s sends notes on channels:"%(smfseq,fname,voicemap))
+			for key, value in channels.items():
 				t=[key,value]
 				voices.append(t)
 				l=""; c=""; s=""; d=""
@@ -148,29 +148,29 @@ def load(line,dirname, fname, smfseq, voicemap):
 						l="[%s]" %l
 					if key == 9:
 						d="%swith instruments %s" %(c,sorted(drums))
-					print " - %d='%s'%s%s %s%s" %(key+1,value[0],p,s,l,d)
+					print (" - %d='%s'%s%s %s%s" %(key+1,value[0],p,s,l,d))
 			gv.smfseqs[smfseq]=[fname,stream.resolution,events,voices,voicemap,sorted(drums)]
 		except:
-			print"SMFplayer: error reading %s in %s" %(fname,dirname)
+			print("SMFplayer: error reading %s in %s" %(fname,dirname))
 
 def drumlist():
 	drums={}
-	for key, value in gv.smfseqs.iteritems():
+	for key, value in gv.smfseqs.items():
 		(song,t)=os.path.splitext(value[0])
-		for i in xrange(len(value[5])):
+		for i in range(len(value[5])):
 			n=value[5][i]
 			if n in drums:
 				drums[n].append(song)
 			else:
 				drums[n]=[song]
-	print "Drum sounds used by voicemaps:"
+	print ("Drum sounds used by voicemaps:")
 	for i in sorted (drums.keys()):
-		print" - %d in %s" %(i,drums[i])
+		print (" - %d in %s" %(i,drums[i]))
 
 def seqlist():
 	# returns [smfseq#, songname, voicemap, [channel#, channelname, [used_voices]], [used percussionsounds] ]
 	smflist=[]
-	for key, value in gv.smfseqs.iteritems():
+	for key, value in gv.smfseqs.items():
 		(song,t)=os.path.splitext(value[0])
 		i=0
 		used=[]
@@ -192,7 +192,7 @@ def play(x,*z):
 				#print "SMFplay %s, res=%d, %s" %(gv.smfseqs[smfseq][0],gv.smfseqs[smfseq][1],gv.smfseqs[smfseq][3])
 				gv.currsmf=smfseq
 			else:
-				print "Midi sequence %d not in sample set" %smfseq
+				print("Midi sequence %d not in sample set" %smfseq)
 	else:
 		if smfseq==gv.currsmf:
 			stop()
@@ -211,11 +211,11 @@ def stop(*z):
 		stopit=True
 		while gv.currsmf>0:
 			time.sleep(.01)
-        for i in gv.playingnotes:			# What's playing at stop time ?
-            if i<gv.MTCHNOTES: continue		# Skip main controller/keyboard
-            for m in gv.playingnotes[i]:	# But remove our notes, as
-				m.fadeout()					# the player may have had
-				gv.playingnotes[i]=[]		# note-off's pending...
+	for i in gv.playingnotes:			# What's playing at stop time ?
+		if i<gv.MTCHNOTES: continue		# Skip main controller/keyboard
+		for m in gv.playingnotes[i]:		# But remove our notes, as
+			m.fadeout()			# the player may have had
+			gv.playingnotes[i]=[]		# note-off's pending...
 
 def tempo(x,*z):
 	global streamtempo
@@ -237,7 +237,7 @@ def player():
 	seq.subscribe_port(client, port)
 	while True:
 		if gv.currsmf>0:
-			print "SMFplay %s, res=%d, %s" %(gv.smfseqs[gv.currsmf][0],gv.smfseqs[gv.currsmf][1],gv.smfseqs[gv.currsmf][3])
+			print("SMFplay %s, res=%d, %s" %(gv.smfseqs[gv.currsmf][0],gv.smfseqs[gv.currsmf][1],gv.smfseqs[gv.currsmf][3]))
 			streamtempo=120		# default in sequencer, don't see use making this a parameter
 			gv.smftempo=streamtempo
 			seq.init_tempo(gv.smfseqs[gv.currsmf][1])
@@ -272,7 +272,10 @@ def player():
 				seq.stop_sequencer()
 				if not loopit:
 					break
-			print "SMFplay finished %s" %gv.smfseqs[gv.currsmf][0]
+			try:
+				print("SMFplay finished %s" %gv.smfseqs[gv.currsmf][0])
+			except:	# info was killed (e.g. by sample set change)
+				pass
 			# ===> reset voicemap, either default or none
 			gv.currsmf=0
 		msleep(30)

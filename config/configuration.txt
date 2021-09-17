@@ -1,0 +1,333 @@
+#
+#  SamplerBox local configuration
+#
+#  SamplerBox extended by HansEhv (https://github.com/hansehv)
+#  see docs at  http://homspace.xs4all.nl/homspace/samplerbox
+#  license: Creative Commons ShareAlike 3.0 (http://creativecommons.org/licenses/by-sa/3.0/)
+#
+###################################################################################
+##  Adapt to your setup !
+##  Don't delete value definitions, program expects them all (no internal defaults)
+##    - exception to this rule: GPIO definitions of unused devices
+##  Values are used 'as is' with hardly any error checking, some friendly warnings:
+##    - read the comment ... and do it right, because:
+##    - out of range filter values can really hurt an audio system
+##    - other errors may just lead to malfunctioning in unexpected ways.
+###################################################################################
+[config]
+
+######  General values ######
+
+USB_MOUNTPOINT = /media/usb0/
+
+# -1=autodetect, specify ID of your device to override
+AUDIO_DEVICE_ID = -1
+# ..or specify (part of) it's name. SB uses the first match of ID or NAME.
+AUDIO_DEVICE_NAME = Detect
+# Fill this to override autodetection, specify None to disable alsa volume control
+MIXER_CONTROL = Detect
+
+# Sets value for wav's and audio device (these have to be the same)
+SAMPLERATE = 44100
+
+# Blocksize or "Low"/"High". High may cause latency, low may cause distortion# just try.
+# Valid numbers for blocksize are shown in the console messages when started manually
+BLOCKSIZE = High                
+
+# Sets audio to 48000Hz while keeping wav's on 44100Hz. Try to avoid this...
+USE_48kHz = False
+
+# Set True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
+USE_SERIALPORT_MIDI = False
+
+# Set True to use a 16x2 direct connected/wired HD44780 LCD, configure below
+USE_HD44780_16x2_LCD = False
+# If you use an I2C-HD44780, above option should be false !!!
+# Set True or 16x2 (=True) or 20x4 to use a 16x2 or 20x4 I2C connected HD44780 LCD
+USE_I2C_LCD = False
+
+# Set True to use an OLED display, configure below
+USE_OLED = False
+
+# Set True to use LCD of Pimoroni PirateAudio hat. Configure below
+USE_PIMORONI_LCD = False
+
+# Set True to use a 7-segment display via I2C
+# Two versions: original sparkfun display and cheap HT16K33 based ebay version
+USE_I2C_7SEGMENTDISPLAY = False
+USE_i2c_7SEGMENTDISPLAY_HT16K33 = False
+
+# Set True to use the GPIO buttons, configure below
+USE_BUTTONS = False
+
+# Set True to use LED's connected to RaspberryPi's GPIO pins, configure below
+USE_LEDS = False
+
+# should webgui server be started?
+USE_HTTP_GUI = True
+
+# Enables IPv6 on http_gui and shows the IPv6 addresses on displays
+USE_IPv6 = False
+
+# This can be set higher, but 80 is a safe value
+MAX_POLYPHONY = 80
+
+# Used memory percentage at which loading of samples stops
+MAX_MEMLOAD = 90
+
+# Midi channel and midi channel of the drumpads (if applicable)
+# Start internal "sequencer"? If so, it's automatically added to the multi-timbrals
+# Multi timbral devices, comma separated. Exactly as in the midi open message, but without quotes!
+# Devices to receive SB's input, either "All" without quotes or comma separated values,
+#  use regular expressions for patterns (see docs on MIDI-THRU)
+MIDI_CHANNEL = 1
+DRUMPAD_CHANNEL = 10
+USE_SMFPLAYER = True
+MULTI_TIMBRALS =
+MIDI_THRU =
+
+# Controlnumber used when using music notes for controls (=as CC).
+NOTES_CC = 119
+
+# Sample mode is how the samples are played, Keyb is standard MIDI behaviour.
+#		Keyb	- reacts on "keyboard" interaction
+#		Once	- ignores loop markers ("just play the sample with option to stop")
+#		Onc2	- ignores loop markers with note-off by same note ("just play the sample with option to stop")
+#		Loop	- recognize loop markers, note-off by same note ("just play the loop with option to stop")
+#		Loos	- recognize loop markers, note-off by 127-note ("just play the loop with option to stop")
+BOXSAMPLE_MODE = Keyb
+
+# Granularity of velocity samples/levels (127 is original samplerbox)
+# and velocity mode (the reaction on the keypress/volume)
+#		Sample	- velocity equals sampled value, requires multiple samples to get differentation
+#		Accurate- velocity as played, allows for multiple (normalized!) samples for timbre
+BOXVELOCITY_LEVELS = 1
+BOXVELOCITY_MODE = Accurate
+
+# Value of "Right side", "Left side" has some notes slack
+#		88-key:	- 108=C8
+#		77-key:	- 103=G7
+#		61-key:	- 96=C7
+BOXSTOP127 = 109
+
+# the startup (alsa=output) volume (0-100)
+# assumed value of the volumeknob controller before first use, max=1.0 (the knob can only decrease).
+volume = 87
+volumeCC = 1.0
+
+# default gain when switching presets. See parameter reference %gain
+# Possible values: "2", "1.5", "0.25", ".5" etcetera, without quotes ofcourse.
+BOXGAIN = 1.0
+
+# 30 results in the samplerbox default (FADEOUTLENGTH=30000)
+BOXRELEASE = 30
+
+# the "release value for damp": how quick do sounds die on damp pedal and retrigger
+# (do not) play release sample when damp is used (for damper noise or rattling snares etc)
+BOXDAMP = 10
+BOXDAMPNOISE = False
+
+# action on retriggered still playing notes (occurs in once/loop modes and chords):
+#               R:      - Noteoff and fadeout according release value
+#               D:      - Noteoff and fadeout according damp value
+#               Y:      - Yes, retrigger is allowed, keep the playing sound
+BOXRETRIGGER = R
+
+# release samples: N=none, E=Embedded, S=Separate
+# crossfade glues the main sample to the release sample
+BOXRELSAMPLE = N
+BOXXFADEOUT = 10
+BOXXFADEIN = 1
+BOXXFADEVOL = 1.0
+
+# Presetbase: does the programchange / sample set start at 0 (MIDI style) or 1 (human style)
+# Preset: the default patch to load
+PRESETBASE = 0
+PRESET = 0
+
+# Pitchrange: default range of the pitchwheel in semitones (max=12 is een octave up&down)
+# Pitchbits: pitchwheel resolution, 0=disable, max=14 (=16384 steps)
+#            values below 7 will produce bad results
+PITCHRANGE = 12
+PITCHBITS = 7
+
+######  Mapping of GPIO_pins: adapt to your hardware wiring/setup  #####
+# GPIO modules in this build use mode=BCM. Modes cannot be mixed.
+# Make sure used devices do not overlap in their pin usage (except power/gnd ofcourse),
+# but for unused devices it is safe to keep or delete the definitions here as you like.
+# In example below buttons 18&27 overlap# I use a box with buttons&LCD and one with HiFiBerry&Leds.
+# Some devices require no mapping here, but do use pins:
+#     -- EEPROM      : 0,1
+#     -- Serial Port : 14,15
+#     -- I2C         : 2,3
+#     -- HiFiBerry   : 2,3,18,19,20,21      
+#     -- PirateAudio Hat :  5 (Button A), 6 (Button B), 16 (Button X), 24 (Button Y)
+
+#     -- USE_BUTTONS --		# A valid GPIO value will activate the button
+# Increase, increases value/proceeds to next menu choice
+# Decrease, opposite of above. In 3-button setup it will return from submenu
+# Select, either selects menu choice or returns to menu from value set
+# Return, if this button is available, it returns to menu and the decr-button is consistent
+BUT_incr=05
+BUT_decr=13
+BUT_sel=26
+BUT_ret=xx
+
+#     -- USE_LEDS --
+LED_red=27
+LED_green=22
+
+#     -- USE_HD44780_16x2_LCD -- 4 bits operation
+# E=Enable, RS=RegisterSelect, Dx are data lines
+# in below setup D6=18 needs rewiring if HiFiBerry is used
+LCD_RS=7
+LCD_E=8
+LCD_D4=27
+LCD_D5=17
+LCD_D6=18
+LCD_D7=4
+
+#     -- USE_I2C_LCD -- HD44780 (I2C connection), either 16x2 or 20x4
+# Adapt to your I2C chip (e.g. PCF8574A(T) uses 0x3f, whereas PCF8574(T) uses 0x27).
+I2C_LCD_ADDR=0x3f
+I2C_LCD_PORT=1
+
+#     -- USE_OLED -- OLED connection and device settings (SPI connection)
+# Set to the correct OLED driver chip, one of: SH1106 or SSD1306 (more to come)
+# RSt=Reset, CS=ChipsSelect, DC=data/command
+OLED_DRIVER = SH1106
+OLED_RST=25
+OLED_CS=8
+OLED_DC=24
+OLED_PORT=0
+OLED_WIDTH=128
+OLED_HEIGHT=64
+OLED_PADDING=-2
+
+#     -- USE_PIMORONI_LCD -- LCD connection and device settings (SPI connection)
+# BL=Backlight pin, CS=Chips select pin, DC=data/command pin
+# PORT=LCD device port, default should be fine
+PIM_LCD_DRIVER = ST7789
+PIM_LCD_BL=13
+PIM_LCD_CS=1
+PIM_LCD_DC=9
+PIM_LCD_PORT=0
+PIM_LCD_WIDTH=240
+PIM_LCD_HEIGHT=240
+PIM_LCD_PADDING=-2
+# padding around the display content, important for readability
+
+######## - - - Default filter values - - - ########
+# Unless explicitely specified, states can be On/Off
+
+#         R E V E R B
+# Roomsize (0-1), package default 0.5
+# Damp (0-1), package default 0.4
+# Wet (0-1), implicit dry: package default 1/3 and 0
+# Width (0-1), package default 1
+Reverb=Off
+FVroomsize=0.5
+FVdamp=0.4
+FVlevel=0.4
+FVwidth=1.0
+
+#         (auto) W A H
+# State of the Wah: Off/EnvelopeWah/LFOwah/ManualWah
+# Qfactor 0.25-25
+# Wet (0-1), implicit dry
+# Minfreq: range bottom 20-500
+# Maxfreq: range top 1000-10000
+# Attack, for envelopewah: begin detection 0.5-0.005
+# Release, for envelopewah: end detection 0.05-0.0005
+# Speed, for LFOwah: speed of the the oscillator 100-1100
+# Lvlrange, for LFO+Manualwah: sensitivity (0-100, 0 = filter without wah)
+# Pedal, for manualwah: start position of the wah-wah pedal
+Wah=Off
+AWqfactor=0.25
+AWmixing=0.9
+AWminfreq=20
+AWmaxfreq=3000
+AWattack=0.04
+AWrelease=0.002
+AWspeed=500
+AWlvlrange=90
+AWpedal=0
+
+#         D E L A Y  /  F L A N G E R
+# State of the delay: Off/Echo/Flanger
+# Feedback (0-1), amount passed to loop ("next bucket")
+# Wet = effectvolume (0-1)
+# Dry= source volume (0-1). Echo only as flanger sets dry via wet.
+# delay time (1000-61000) for echo
+# gradient (1-11), steepness of the flangersweep
+# steplen/time (300-3300) of the flanger delay
+# minimum delay (5-25) of the flanger
+# maximum delay (50-150) of the flangerDelay=Off
+Delay=Off
+DLYfb=0.7
+DLYwet=0.7
+DLYdry=1.0
+DLYtime=10000.0
+DLYsteep=1
+DLYsteplen=1000.0
+DLYmin=10.0
+DLYmax=80.0
+
+#         M O O G L A D D E R  (lowpass filter)
+#         Out-of-range values can have serious implications
+# resonance: 0-3.8. Exceeding 3.8 may cause crashes
+# cutoff frequency, 1000-11000
+# drive: filter inputlevel, 1-21
+# Lvl: wetlevel, 0-1: dry=1-wet
+# filtergain, 1-11. Depends on sound, keep default value <5!
+Moog=Off
+LFresonance=0.4
+LFcutoff=10000.0
+LFdrive=1.0
+LFlvl=0.5
+LFgain=4.0
+
+#         O V E R D R I V E  (softclip with harmonics filtering)
+# boost: target volume: 15-65
+# drive: level of distortion: 1-11
+# tone: level of low pass filtering: 0-95
+# lvl: wetlevel, 0-1: dry=1-wet
+Overdrive=Off
+ODboost=30.0
+ODdrive=5.0
+ODtone=30.0
+ODlvl=1.0
+
+#         P E A K   L I M I T E R
+# threshold: 70-110
+# attack time: 1-11
+# release time: 5-25
+Limiter=Off
+PLthresh=90.0
+PLattack=1.0
+PLrelease=11.0
+
+#         M O D U L A T E
+# State of the LFO=Modulator: Off/Vibrato/Tremolo/Panning/Rotate
+# Pitch: Vibrato note variation
+# Speed: 14 ==> 10Hz on saw & block, 5Hz on triangle
+# Trill: variations are not smooth but in blockform
+#        with vibrato a kind of yodeling, with tremolo a goatlike sound
+# amplitude variation 0-1, resulting volume is between full=1 and full-TREMampl
+# maximum panning width: 0-1
+LFOeffect=Off
+VIBRpitch=0.5
+VIBRspeed=15
+VIBRtrill=False
+TREMampl=.18
+TREMspeed=3
+TREMtrill=False
+PANwidth=1
+PANspeed=1
+
+#         C H O R U S
+# Depth: 2-15, level of "unsync/untune" of the voices
+# Gain: 0.3-0.8, volume of the separate voices
+Chorus=Off
+CHOdepth=4
+CHOgain=0.4

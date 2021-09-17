@@ -366,8 +366,7 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 		return(text+SB_listselect(input_name,name,val,SB_Wireless,1,SB_MIDIdevs.length,1));
 	},
 	input_SB_DefinitionTxt: function(input_name,name,val,text){
-		if (SB_Samplesdir.charAt(0)=='/') m='';else m=' readonly';
-		return('<DIV STYLE="line-height:100%;text-align:center">'+text+m+'</DIV><TEXTAREA name="'+name+'"'+m+'>'+val+'</TEXTAREA>');
+		return('<DIV STYLE="line-height:100%;text-align:center">'+text+'</DIV><TEXTAREA name="'+name+'">'+val+'</TEXTAREA>');
 	}
 }
 

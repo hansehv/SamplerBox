@@ -3,7 +3,7 @@
 #  most variables are defined by the respective procedures
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
-#   see docs at https://homspace.nl/samplerbox
+#   see docs at  https://homspace.nl/samplerbox
 #   changelog in changelist.txt
 #
 
@@ -111,7 +111,6 @@ ARP2END="ArpPlay2end"
 UA="UA"
 
 # Internal vars
-outports = {}
 ConfigErr=False
 LEDblink=False
 USE_ALSA_MIXER=False
@@ -161,7 +160,7 @@ def safeguard (*vals):  # dedicated proc for debugging MC-table
     arr=[]
     for val in vals :
         arr.append(val)
-    print "gv.Safeguard: call to unset procedure for %s:%s" %(arr[1],arr[0])
+    print("gv.Safeguard: call to unset procedure for %s:%s" %(arr[1],arr[0]))
 def setMC(mc,proc):
     x=getindex(mc,MC)
     MC[x][2]=proc

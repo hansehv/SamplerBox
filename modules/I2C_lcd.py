@@ -42,7 +42,7 @@ try:
 	I2C_LCD_PORT=int(gv.cp.get(gv.cfg,"I2C_LCD_PORT".lower()),16)
 except:	pass
 
-print "Starting I2C LCD.."
+print("Starting I2C LCD..")
 bus = smbus.SMBus(I2C_LCD_PORT)	 # using I2C
 
 # class variables
@@ -131,7 +131,7 @@ def display(msg='',menu1='',menu2='',menu3='',*z):
 			s[3]=prevs[3]
 
 	# ---   display the result
-	for i in xrange(I2C_DISPLAY_LCD_LINES):
+	for i in range(I2C_DISPLAY_LCD_LINES):
 		if not s[i]==prevs[i]:
 			lcd_string(i,s[i])
 			prevs[i]=s[i]

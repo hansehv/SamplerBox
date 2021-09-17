@@ -1,0 +1,49 @@
+# Here you can define static network information for specific SSID's
+#  - if the network you connect to has no DHCP
+#  - if you have other reason to force a specific ip
+#    (e.g. a stage setup can be static because of equipment requirements)
+#
+# In fact this file is the /etc/dhcpcd.conf
+# Leave most options as is ....
+
+hostname samplerbox
+clientid
+persistent
+option rapid_commit
+option domain_name_servers, domain_name, domain_search, host_name
+option classless_static_routes
+# Most distributions have NTP support, but samplerbox doesn't
+#option ntp_servers
+require dhcp_server_identifier
+slaac private
+nohook lookup-hostname
+noarp
+
+# ------------------------------------------------
+#
+# One SSID example entry, free to adapt
+# More can be added under this wlan0 definition
+#
+
+interface wlan0
+    # network static IP info for SSID=myssid
+    ssid myssid
+    static ip_address=192.168.178.201/24
+    static routers=192.168.178.1
+
+# ------------------------------------------------
+#
+# Wired example entry, free to adapt
+# All lines commented as default is dynamic
+#
+
+#interface eth0
+#    static ip_address=192.168.178.201/24
+#    static routers=192.168.178.1
+
+#
+# ------------------------------------------------
+
+# disable wpa supplicant for WIFI-client_AP script
+nohook wpa_supplicant
+

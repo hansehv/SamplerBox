@@ -27,6 +27,9 @@ def setgain(x,*z):  # 0.3-0.8
     gain=0.3+0.5*x/127.0
 def reset(scope=-1):
     global effect,depth,gain
+    effect=False
+    depth=gv.cp.getfloat(gv.cfg,"CHOdepth".lower())
+    gain=gv.cp.getfloat(gv.cfg,"CHOgain".lower())
     effect=False      # -1 turns of the effect, undefined values cover midi controller turn off
     if scope in [-2, -3, -4]:       # also reset values
         #if scope == -3:         # load sample set default

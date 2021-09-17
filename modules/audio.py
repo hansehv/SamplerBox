@@ -6,7 +6,7 @@
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 ###############################################################
 
-import time,numpy,re,sounddevice,ConfigParser
+import time,numpy,re,sounddevice,configparser
 import samplerbox_audio,gv,Cpp,arp,LFO
 
 AUDIO_DEVICE_ID = gv.cp.getint(gv.cfg,"AUDIO_DEVICE_ID".lower())
@@ -41,7 +41,7 @@ def AudioCallback(outdata, frame_count, time_info, status):
     p=len(gv.playingsounds)-MAX_POLYPHONY
     if p>0:
         #print ( "MAX_POLYPHONY %d exceeded with %d notes" %(MAX_POLYPHONY,p) )
-        for i in xrange(p+gv.playingbacktracks-1):
+        for i in range(p+gv.playingbacktracks-1):
             if gv.playingsounds[i].playingstopmode()!=3:    # let the backtracks be
                 del gv.playingsounds[i]     # get it out of the system
     # Handle arpeggiator before soundgen to reduce timing issues at chord/sequence changes
@@ -79,7 +79,7 @@ def OpenDevice(f):
     blocksize_min=16        # just a value (org/24) as long as it's a divider of blocksize_org=max
     devprops=sounddevice.query_devices(AUDIO_DEVICE_ID)
     blocksize_low=int( blocksize_org * devprops["default_low_output_latency"] / latency_org)
-    for i in range(1, 1 + blocksize_org/blocksize_min):
+    for i in range(1, 1 + int(blocksize_org/blocksize_min) ):
         if i*blocksize_min >= blocksize_low:
             blocksize_low = i * blocksize_min
             break
@@ -175,8 +175,10 @@ except:
 device_found=False
 if mixer_control.title()!="None":
     import alsaaudio
-    mixer_card_index = re.search('\(hw:(.*),', AUDIO_DEVICE_NAME) # get x from (hw:x,y) in device name
-    mixer_card_index = int(mixer_card_index.group(1))
+    try:
+        mixer_card_index = re.search('\(hw:(.*),', AUDIO_DEVICE_NAME) # get x from (hw:x,y) in device name
+        mixer_card_index = int(mixer_card_index.group(1))
+    except: mixer_card_index =  AUDIO_DEVICE_ID
     mixer_controls = alsaaudio.mixers(mixer_card_index)
     #print ( "Available mixer controls: %s" %mixer_controls )
     mixer_controls.insert(0,mixer_control)

@@ -17,8 +17,8 @@ CHARACTER_MAP = {
     0x36 : 0x7D, # 6
     0x37 : 0x07, # 7
     0x38 : 0x7F, # 8
-    0x39 : 0x67,  # 9
-    0x45 : 0x79, # E 
+    0x39 : 0x67, # 9
+    0x45 : 0x79, # E
     0x4C : 0x38, # L
 }
 
@@ -48,6 +48,6 @@ def display(s7=""):
         for k in s7:
             try:
                 bus.write_byte_data(0x70, DIGIT_ADDRESS[index % len(DIGIT_ADDRESS)], CHARACTER_MAP[ord(k)] % 0x100)
-		index += 1
+                index += 1
             except Exception as e:
                 pass
