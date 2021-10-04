@@ -125,6 +125,8 @@ def setScale(x,*z):
         gv.currscale=y
         display("")
 def setVoice(x,iv=0,*z):
+    if not isinstance(iv,int):
+        iv=1
     if iv==0:       # we got the index of the voice table
         xvoice=int(x)
     else:           # we got the voicenumber
@@ -247,6 +249,11 @@ for i in range(len(x)):
     gv.MULTI_TIMBRALS[x[i].strip()]=[0]*16  # init program=voice per channel#
 gv.MIDI_CHANNEL = gv.cp.getint(gv.cfg,"MIDI_CHANNEL".lower())
 DRUMPAD_CHANNEL = gv.cp.getint(gv.cfg,"DRUMPAD_CHANNEL".lower())
+DRUMPAD_MESSAGES = [8,9]
+if (gv.cp.getboolean(gv.cfg,"DRUMPAD_CONTROLCHANGE".lower())):
+    DRUMPAD_MESSAGES.append(11)
+if (gv.cp.getboolean(gv.cfg,"DRUMPAD_PROGRAMCHANGE".lower())):
+    DRUMPAD_MESSAGES.append(12)
 gv.NOTES_CC = gv.cp.getint(gv.cfg,"NOTES_CC".lower())
 gv.PRESET = gv.cp.getint(gv.cfg,"PRESET".lower())
 gv.PRESETBASE = gv.cp.getint(gv.cfg,"PRESETBASE".lower())
@@ -688,7 +695,7 @@ def ControlChange(CCnum, CCval):
         if (gv.controllerCCs[j][1]==CCnum
         and (gv.controllerCCs[j][2]==-1 or gv.controllerCCs[j][2]==CCval or gv.MC[m[1]][1]==3)):
             if m[2]!=None: CCval=m[2]
-            #print "Recognized %d:%d<=>%s related to %s" %(CCnum, CCval, gv.controllerCCs[j][0], gv.MC[m[1]][0])
+            #print ("Recognized %d:%d<=>%s related to %s" %(CCnum, CCval, gv.controllerCCs[j][0], gv.MC[m[1]][0]) )
             gv.MC[m[1]][2](CCval,gv.MC[m[1]][0])
             mc=True
             break
@@ -864,7 +871,7 @@ def MidiCallback(mididev, message, time_stamp):
     # -------------------------------------------------------
     # Deal with the midi-thru before anything else
     # -------------------------------------------------------
-    #print '%s -> %s = Channel %d, message %d' % (mididev, message, messagechannel , messagetype)
+    #print ( '%s -> %s = Channel %d, message %d' % (mididev, message, (message[0]&0xF)+1 , message[0]>>4) )
     for outport in gv.outports:
         if mididev != gv.outports[outport][0]:  # don't return to sender
             #print ( " ... forwarding to '%s'" %( gv.outports[outport][0]) )
@@ -885,7 +892,7 @@ def MidiCallback(mididev, message, time_stamp):
     # ----------------------------------------------------------------
     MT_in=False
     if mididev in gv.MULTI_TIMBRALS:
-        if messagetype in [8,9,12]: # we only except note on/off and program change commands from the sequencers and other multitimbrals
+        if messagetype in [8,9,12]: # we only accept note on/off and program change commands from the sequencers and other multitimbrals
             MIDIchannel=messagechannel-1
             if messagetype==12:
                 gv.MULTI_TIMBRALS[mididev][MIDIchannel]=setMTvoice(mididev,messagechannel,message[1]+1)
@@ -895,13 +902,13 @@ def MidiCallback(mididev, message, time_stamp):
             MT_in=gv.MULTI_TIMBRALS[mididev][MIDIchannel]
     elif (messagechannel==gv.MIDI_CHANNEL):
         messagechannel=0
-    elif gv.drumpad:  # using less compact coding in favor of performance...
-        if messagechannel==DRUMPAD_CHANNEL:
-            if messagetype==8 or messagetype==9:        # We only remap notes
+    elif messagechannel==DRUMPAD_CHANNEL:
+        if messagetype in DRUMPAD_MESSAGES:
+            messagechannel=0
+            if messagetype==8 or messagetype==9:        # Remap notes if neccesaary
                 for i in range(len(gv.drumpadmap)):
                     if gv.drumpadmap[i][0]==message[1]:
                         message[1]=gv.drumpadmap[i][1]
-                        messagechannel=0
                         break       # found it, stop wasting time
     # -------------------------------------------------------
     # Then process channel commands if not muted

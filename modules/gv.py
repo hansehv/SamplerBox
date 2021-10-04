@@ -148,7 +148,6 @@ CCmapSet=[]
 CCmapBox=[]
 keynames=[]
 drumpadmap=[]
-drumpad=False
 notemap=[]
 notemaps=[]
 currnotemap=""

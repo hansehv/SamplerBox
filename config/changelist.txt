@@ -1,6 +1,10 @@
 This file contains changelog of samplerbox.py
 For changes on samplerbox_audio.pyx, see top of the source file
 
+Oct 2021:
+  - Changed and added configuration parameters for the drumpad
+    This enables the drumpad to sent programchanges and/or CC-messages.
+  - Fixed bug in setting voice via midi controller
 ...-Sept 2021:
   - Image built from scratch, changes not to be mentioned here
   - Converted to python 3, lots of changes, most impact:
@@ -11,6 +15,7 @@ For changes on samplerbox_audio.pyx, see top of the source file
 Sbox20210521.zip is last original samplerbox based image with python 2.7
 Github updates after that date:
   - Added support for cheap ebay HT16K33 I2C 7-segment displays
+  - Updated look of the Pimoroni display
   - Fixed bug(s)
 Feb-May 2021:
   - Added OLED SSD1306 support
