@@ -75,15 +75,23 @@ MAX_POLYPHONY = 80
 # Used memory percentage at which loading of samples stops
 MAX_MEMLOAD = 90
 
-# Midi channel and midi channel of the drumpads (if applicable)
-# Start internal "sequencer"? If so, it's automatically added to the multi-timbrals
-# Multi timbral devices, comma separated. Exactly as in the midi open message, but without quotes!
-# Devices to receive SB's input, either "All" without quotes or comma separated values,
-#  use regular expressions for patterns (see docs on MIDI-THRU)
+# Master midi channel and midi channel of the drumpads (if applicable,
+#     see "Keyboards with drumpads" in MoreInfo in the docs for usage)
+# If drumpad channel=0, it's disabled (fyi: drumchannel is usually 10)
+# If 1-16 (except master channel, then note-on/off will be recognized,
+#     with processing of program/controlchange messages as defined below.
 MIDI_CHANNEL = 1
-DRUMPAD_CHANNEL = 10
+DRUMPAD_CHANNEL = 0
+DRUMPAD_PROGRAMCHANGE = False
+DRUMPAD_CONTROLCHANGE = False
+
+# Start internal smfplayer="sequencer"? If so, it's automatically added to the multi-timbrals
+# Multi timbral devices, comma separated. Exactly as in the midi open message, but without quotes!
 USE_SMFPLAYER = True
 MULTI_TIMBRALS =
+
+# Devices to receive SB's input, either "All" without quotes or comma separated values,
+#  use regular expressions for patterns (see docs on MIDI-THRU)
 MIDI_THRU =
 
 # Controlnumber used when using music notes for controls (=as CC).
