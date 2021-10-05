@@ -1,5 +1,6 @@
-This directory contains the sources of the  C++ effect module
-It's based on freeverb of by Jezar at Dreampoint, but other CPU intensive filters can be combined in here to reduce the Python - C++ overhead.
+This directory contains the sources of the C++ effect modules.
+
+CPU intensive filters can be combined in here via a DLL construction to reduce the Python - C++ overhead.
 
 It needs compilation to an .so module before usage, so make sure before first usage:
  - the / partition is opened R/W ("mount -o remount,rw /"
