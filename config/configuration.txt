@@ -67,6 +67,8 @@ USE_LEDS = False
 USE_HTTP_GUI = True
 
 # Enables IPv6 on http_gui and shows the IPv6 addresses on displays
+# If the /boot/cmdline.txt contains "ipv6.disable=1" (samplerbox setting),
+#     this has to be removed or set to 0. You will hardly ever need it...
 USE_IPv6 = False
 
 # This can be set higher, but 80 is a safe value
@@ -78,7 +80,7 @@ MAX_MEMLOAD = 90
 # Master midi channel and midi channel of the drumpads (if applicable,
 #     see "Keyboards with drumpads" in MoreInfo in the docs for usage)
 # If drumpad channel=0, it's disabled (fyi: drumchannel is usually 10)
-# If 1-16 (except master channel, then note-on/off will be recognized,
+# If 1-16 (except master channel), then note-on/off will be recognized,
 #     with processing of program/controlchange messages as defined below.
 MIDI_CHANNEL = 1
 DRUMPAD_CHANNEL = 0
