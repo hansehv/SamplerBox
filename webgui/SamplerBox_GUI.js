@@ -99,6 +99,7 @@ var SB_variables={	// make sure all passed I/O parameters are covered here
 	v_SB_TREMtrill: function(val){SB_TREMtrill=val;},
 	v_SB_PANwidth: function(val){SB_PANwidth=val;},
 	v_SB_PANspeed: function(val){SB_PANspeed=val;},
+	v_SB_ARPeggiator: function(val){SB_ARPeggiator=val;},
 	v_SB_ARPstep: function(val){SB_ARPstep=val;},
 	v_SB_ARPsustain: function(val){SB_ARPsustain=val;},
 	v_SB_ARPloop: function(val){SB_ARPloop=val;},
@@ -117,6 +118,7 @@ var SB_variables={	// make sure all passed I/O parameters are covered here
 }
 
 // I-O Building blocks
+var OffOn = ["Off", "On"];
 var SB_input={	// make sure all passed I/O parameters are covered here, be it with a dummy
 	input_SB_MidiChannel: function(input_name,name,val,text){
 		return(text+SB_numselect(input_name,name,val,1,16,1,1));
@@ -304,7 +306,7 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1,1));
 	},
 	input_SB_VIBRtrill: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
+		return(SB_radioselect(input_name,name,val,text,OffOn,1,1));
 	},
 	input_SB_TREMampl: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,1,100,1)+SB_numselect(input_name,name,val,1,100,1,1));
@@ -313,13 +315,16 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1,1));
 	},
 	input_SB_TREMtrill: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
+		return(SB_radioselect(input_name,name,val,text,OffOn,1,1));
 	},
 	input_SB_PANwidth: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,2,20,2)+SB_numselect(input_name,name,val,2,20,2,1));
 	},
 	input_SB_PANspeed: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1,1));
+	},
+	input_SB_ARPeggiator: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,OffOn,1,1));
 	},
 	input_SB_ARPstep: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,10,100,1)+SB_numselect(input_name,name,val,10,100,1,1));
@@ -328,10 +333,10 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_ARPloop: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
+		return(SB_radioselect(input_name,name,val,text,OffOn,1,1));
 	},
 	input_SB_ARP2end: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
+		return(SB_radioselect(input_name,name,val,text,OffOn,1,1));
 	},
 	input_SB_ARPord: function(input_name,name,val,text){
 		return(SB_radioselect(input_name,name,val,text,SB_ARPordlist,1,1));
@@ -342,7 +347,7 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 		return(text+'<label class="inline alignx"><INPUT type="checkbox" onclick="return false;"'+j+'></label>'+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_CHOrus: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
+		return(SB_radioselect(input_name,name,val,text,OffOn,1,1));
 	},
 	input_SB_CHOdepth: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,2,15,1)+SB_numselect(input_name,name,val,2,15,1,1));

@@ -138,7 +138,7 @@ class IO:
             for i in message:
                 omsg = "%s%s" %( omsg, chr(i) )
         try:
-            self.ser.write(omsg)
+            self.ser.write(omsg.encode())
         except:
             print ("Write time out on %s, closed as MIDI OUT" %self.uart)
             self.out = False

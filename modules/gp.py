@@ -31,3 +31,8 @@ def GPIOcleanup():
         import RPi.GPIO as GPIO
         GPIO.setmode( GPIO.BCM )
         GPIO.cleanup()
+
+def setFXpresets(FXset, *z):
+    if FXset != "":
+        for effect in gv.FXpresets[FXset]:
+            gv.procs_alias[ effect ]( gv.FXpresets[FXset][effect] )
