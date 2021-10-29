@@ -9,10 +9,10 @@
 #  Line end characters        : linux and windows style
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
-#   see docs at  http://homspace.xs4all.nl/homspace/samplerbox
+#   see docs at  http://homspace.nl/samplerbox
 #   changelog in changelist.txt
 #
-import re,operator,gv   #, copy
+import re, operator, copy, gv
 sheet={}
 
 def readcsv(ifile, numtxt=100, header=True):
@@ -333,4 +333,42 @@ def readmenu(ifile):
             print ("%s: ignored %s" %(ifile, sheet[i]))
             gv.ConfigErr=True
     menu.init()
+    return 
+
+FXpresets_box = {}
+gv.FXpresets = {}
+def readFXpresets(ifile, override=False):
+    # menu: [Presetname, Parameter, Value]
+    global FXpresets_box
+    if override:
+        gv.FXpresets = copy.deepcopy( FXpresets_box )
+    try:
+        sheet = readcsv( ifile, 100 )
+        for i in range( len(sheet) ):
+            if len(sheet[i]) > 2:     # skip useless lines
+                preset = sheet[i][0]
+                if preset.lower() in ["box", "set"]:
+                    if ((preset.lower() == "box" and override)
+                    or (preset.lower() == "set" and not override)):
+                        print ("%s: ignored %s because %s default cannot be set now" %(ifile, sheet[i], preset))
+                        gv.ConfigErr=True
+                        continue
+                    preset = "Default"
+                if sheet[i][1] not in gv.procs_alias:
+                    print ("%s: ignored %s because %s is not a valid FX parameter" %(ifile, sheet[i], sheet[i][1]))
+                    gv.ConfigErr=True
+                    continue
+                val = sheet[i][2]
+                if sheet[i][2].isdigit():
+                    val = int(val)
+                if preset in gv.FXpresets:
+                    gv.FXpresets[preset].update( {sheet[i][1]: val} )
+                else:
+                    gv.FXpresets.update({ preset: {sheet[i][1]: val} })
+            else:
+                print ("%s: ignored %s" %(ifile, sheet[i]))
+    except:
+        pass    # this is all optional, defaults are hardcoded
+    if not override:
+        FXpresets_box = copy.deepcopy( gv.FXpresets )
     return 

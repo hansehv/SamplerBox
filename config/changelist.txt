@@ -10,6 +10,9 @@ Oct 2021:
   - Converted to python 3, lots of changes, most impact:
     - configuration.txt layout changed, real extreme make-over
     - folder structure adapted, ao to ease setting up without orginal image
+  - Added effects presets on set+voice level
+    For this effects presets are taken configuration.txt, now FXpresets.csv
+  - Bugfixes, cleanups and split off more functions to modules
 
 #----- python 2.7 train stops here to focus on new image with python 3 -----#
 Sbox20210521.zip is last original samplerbox based image with python 2.7

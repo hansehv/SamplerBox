@@ -94,7 +94,10 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
                 self.do_GET()   # answer the browser
                 return
         voice_or_mapchange=False
-        if "SB_Voice" in fields: voice_or_mapchange=UI.Voice(int(fields["SB_Voice"][0]))
+        if "SB_Voice" in fields:
+            if ( UI.Voice(int(fields["SB_Voice"][0])) ):
+                self.do_GET()   # answer the browser
+                return
         if "SB_Notemap" in fields and not voice_or_mapchange: voice_or_mapchange=UI.Notemap(int(fields["SB_Notemap"][0]))
         if not (voice_or_mapchange):
             if "SB_nm_inote"  in fields:    # inote is used as a signal: remapping requires it and html page sends it regardless of it being changed
@@ -116,7 +119,6 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             nam=n[3:]
             if nam not in ["RenewMedia","Preset","DefinitionTxt","Voice","Notemap","nm_inote","nm_Q","nm_onote","nm_retune","nm_voice","Scale","Chord","Button"]:    #"nm_map","nm_sav",
                 self.set_UI_parm(nam,fields[n][0])
-
         if display: UI.display("") # show it on the box if not done already
         self.do_GET()       # as well as on the gui
 

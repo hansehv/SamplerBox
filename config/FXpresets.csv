@@ -1,0 +1,100 @@
+Presetname,Parameter,Value,Comment
+,####      Text parameters are case sensitive !!!!,,
+,,,
+Box,PitchSens,12,#  pitchwheel range in semitones (max=12 is een octave up&down)
+,,,
+,# -------------------------------------------------------------------------------------,,
+,#         R E V E R B,,
+,# -------------------------------------------------------------------------------------,,
+Box,Reverb,Off,
+Box,ReverbLvl,40,"# Wet (0-100), implicit dry: package default 33 and 0"
+Box,ReverbRoom,50,"# Roomsize (0-100), package default 50"
+Box,ReverbDamp,40,"# Damp (0-1), package default 40"
+Box,ReverbWidth,100,"# Width (0-100), package default 100"
+,,,
+,# -------------------------------------------------------------------------------------,,
+,#         W A H  -  W A H,,
+,# -------------------------------------------------------------------------------------,,
+Box,WahType,Off,# State of the Wah: Off/EnvelopeWah/LFOwah/ManualWah
+Box,WahQ,1,# Qfactor 1-100
+Box,WahLvl,90,"# Wet (0-100), implicit dry"
+Box,WahMin,20,# Minfreq: range bottom 20-500
+Box,WahMax,3000,# Maxfreq: range top 1000-10000
+Box,WahAttack,40,"# Attack (5-500), for envelopewah: begin detection 0.005-0.5"
+Box,WahRelease,20,"# Release (5-500), for envelopewah: end detection 0.0005-0.05"
+Box,WahSpeed,500,"# Speed, for LFOwah: speed of the the oscillator 100-1100"
+Box,WahLvlRange,90,"# Lvlrange, for LFO+Manualwah: sensitivity (0-100, 0 = filter without wah)"
+,,,
+,# -------------------------------------------------------------------------------------,,
+,#         D E L A Y  /  F L A N G E R,,
+,# -------------------------------------------------------------------------------------,,
+Box,DelayType,Off,# State of the delay: Off/Echo/Flanger
+Box,DelayFeedbackVol,70,"# Feedback (0-100), amount passed to loop (""next bucket"")"
+Box,DelayWet,70,# Wet = effectvolume (0-100)
+Box,DelayDry,100,# Dry= source volume (0-100). Echo only as flanger sets dry via wet.
+Box,DelayTime,10000,# delay time (1000-61000) for echo
+Box,DelaySteep,1,"# gradient (1-11), steepness of the flangersweep"
+Box,DelaySteplen,1000,# steplen/time (300-3300) of the flanger delay
+Box,DelayMin,10,# minimum delay (5-25) of the flanger
+Box,DelayMax,80,# maximum delay (50-150) of the flangerDelay=Off
+,,,
+,# -------------------------------------------------------------------------------------,,
+,#         M O O G L A D D E R  (lowpass filter),,
+,# -------------------------------------------------------------------------------------,,
+,#         Out-of-range values can have serious implications,,
+Box,Moog,Off,# State of the filter: Off/On
+Box,MoogLvl,50,"# Lvl: wetlevel, 0-100: dry=1-wet"
+Box,MoogResonance,4,# resonance: 0-38. Exceeding 38 may cause crashes
+Box,MoogCutoff,10000,"# cutoff frequency, 1000-11000"
+Box,MoogDrive,1,"# drive: filter inputlevel, 1-20"
+Box,MoogGain,40,"# filtergain, 10-110. Depends on sound, keep default value <50!"
+,,,
+,# -------------------------------------------------------------------------------------,,
+,#         O V E R D R I V E  (softclip with harmonics filtering),,
+,# -------------------------------------------------------------------------------------,,
+Box,Overdrive,Off,# State of the filter: Off/On
+Box,OverdriveBoost,30,# boost: target volume: 15-65
+Box,OverdriveDrive,5,# drive: level of distortion: 1-11
+Box,OverdriveTone,30,# tone: level of low pass filtering: 0-95
+Box,OverdriveLvl,1,"# lvl: wetlevel, 0-1: dry=1-wet"
+,,,
+,# -------------------------------------------------------------------------------------,,
+,#         P E A K   L I M I T E R,,
+,# -------------------------------------------------------------------------------------,,
+Box,Limiter,Off,# State of the filter: Off/On
+Box,LimitThreshold,90,# threshold: 70-110
+Box,LimitAttack,1,# attack time: 1-11
+Box,LimitRelease,11,# release time: 5-25
+,,,
+,# -------------------------------------------------------------------------------------,,
+,#         M O D U L A T E,,"Vibrato, Tremolo, Panning and Rotate"
+,# -------------------------------------------------------------------------------------,,
+Box,LFOtype,Off,# State of the LFO=Modulator: Off/Vibrato/Tremolo/Panning/Rotate
+Box,VibrDepth,8,# Vibrato note variation (1-32) in 1/32 notes
+Box,VibrSpeed,15,"# Speed (1-32) : 14 ==> 10Hz on saw & block, 5Hz on triangle"
+Box,VibrTrill,Offf,"# Trill (Off/On): variations are not smooth but in blockform, a kind of yodeling"
+Box,TremDepth,18,"# amplitude variation 0-100, resulting volume is between full=100 and full-TremDepth"
+Box,TremSpeed,3,# Speed (1-32) : 14 ==> 10Hz
+Box,TremTrill,Off,"# Trill (Off/On): variations are not smooth but in blockform, a goatlike sound"
+Box,PanWidth,20,# maximum panning width (2-20)
+Box,PanSpeed,1,# Speed (1-32) : 14 ==> 10Hz
+,,,
+,# -------------------------------------------------------------------------------------,,
+,#         C H O R U S,,
+,# -------------------------------------------------------------------------------------,,
+Box,Chorus,Off,# State of the filter: Off/On
+Box,ChorusDepth ,4,"# Depth: 2-15, level of ""unsync/untune"" of the voices"
+Box,ChorusGain,40,"# Gain: 30-80, volume of the separate voices"
+,,,
+,# -------------------------------------------------------------------------------------,,
+,"#         C H O R D S  ,     S C A L E S",,Do not define both a chord and a scale !
+,#         and    A R P E G G I A T O R,,Arpeggiator uses the defined chord/scale
+,# -------------------------------------------------------------------------------------,,
+Box,Chords,Note,# Chordname as defined in chords.csv or (single) Note
+Box,Scales,Note,# Scalename as defined in scales.csv or (single) Note
+Box,Arpeggiator,Off,# Mode of the arpeggiator: Off/Up/Down/Random
+Box,ArpTime,20,# 10-100
+Box,ArpSustain,10,# 0-100
+Box,ArpFadeout,100,"# 0-100 (100 means ""no fadeout"")"
+Box,ArpLoop,On,
+Box,ArpPlay2end,Off,

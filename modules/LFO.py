@@ -222,21 +222,12 @@ gv.setMC(gv.ROTATE,Rotate)
 def reset(scope=-1):
     global VIBRpitch,VIBRspeed,VIBRtrill,TREMampl,BOXTREMspeed,TREMspeed,TREMtrill,PANwidth,PANspeed
     effect=0
-    if scope in [-2, -3, -4]:       # also reset values
-        effect = gv.getindex( gv.cp.get(gv.cfg,"LFOeffect".lower()), effects, True, False )
-        if effect < 0 :
-            effect = 0
+    #if scope in [-2, -3, -4]:       # also reset values
+    #    effect = gv.getindex( gv.cp.get(gv.cfg,"LFOeffect".lower()), effects, True, False )
+    #    if effect < 0 :
+    #        effect = 0
         #if scope == -3:         # load sample set default
         #    load sample set default
         #else:                   # system default
-        VIBRpitch=gv.cp.getfloat(gv.cfg,"VIBRpitch".lower())
-        VIBRspeed=gv.cp.getint(gv.cfg,"VIBRspeed".lower())
-        VIBRtrill=gv.cp.getboolean(gv.cfg,"VIBRtrill".lower())
-        TREMampl=gv.cp.getfloat(gv.cfg,"TREMampl".lower())
-        BOXTREMspeed=gv.cp.getint(gv.cfg,"TREMspeed".lower())
-        TREMspeed=BOXTREMspeed
-        TREMtrill=gv.cp.getboolean(gv.cfg,"TREMtrill".lower())
-        PANwidth=gv.cp.getfloat(gv.cfg,"PANwidth".lower())
-        PANspeed=gv.cp.getint(gv.cfg,"PANspeed".lower())
     setType(effect)
 reset(-2)

@@ -44,7 +44,6 @@ try:
                 thru_ports = ["All"]
             else:
                 thru_ports = []
-            break
         elif arg == "-e":
             e = True
         elif arg == "-v":
@@ -53,7 +52,7 @@ try:
             realtime = True
         elif arg == "-s":
             sysex = True
-        else:
+        elif arg == "-t":
             thru_ports.append(val)
     if e:
         thru_ports.append("EMBEDDED")
@@ -336,7 +335,7 @@ class IO:
             for i in message:
                 omsg = "%s%s" %( omsg, chr(i) )
             try:
-                self.ser.write(omsg)
+                self.ser.write( omsg.encode() )
             except:
                 print ("Write time out on %s, closed as MIDI OUT" %self.uart)
                 self.out = False

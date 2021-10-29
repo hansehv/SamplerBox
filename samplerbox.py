@@ -2,7 +2,7 @@
 #
 #  SamplerBox extended by HansEhv (https://github.com/hansehv)
 #  see docs at https://homspace.nl/samplerbox
-#  changelog in /boot/samplerbox/changelist.txt
+#  changelog in changelist.txt
 #
 #  Original SamplerBox :
 #  author:    Joseph Ernest (twitter: @JosephErnest, mail: contact@samplerbox.org)
@@ -69,61 +69,6 @@ def parseBoolean(val):
 			if str(val)[0:2].title()=="Of" or str(val)[0].upper()=="N" or str(val)[0].upper()=="F":
 				return False
 	return val
-notenames=["C","Cs","C#","Dk","D","Ds","D#","Ek","E","Es","F","Fs","F#","Gk","G","Gs","G#","Ak","A","As","A#","Bk","B","Bs"]
-def notename2midinote(notename,fractions):
-    notename=notename.title()
-    if notename=="Ctrl": midinote=-2
-    elif notename=="None": midinote=-1
-    else:
-        if notename[:2]=="Ck":  # normalize synonyms
-            notename="Bs%d" %(int(notename[-1])-1) # Octave number switches between B and C
-        elif notename[:2]=="Fk":
-            notename="Es%s"%notename[-1]
-        try:
-            x=notenames.index(format(notename[:len(notename)-1]))
-            if fractions==1:    # we have undivided semi-tones = 12-tone scale
-                x,y=divmod(x,2) # so our range is half of what's tested
-                if y!=0:        # and we can't process any found q's.
-                    print("Ignored quartertone %s as we are in 12-tone mode" %notename)
-                    midinote=-1
-                # next statements places note C4 on 60
-                else:            # 12 note logic
-                    midinote = x + (int(notename[-1])+1) * 12
-            else:               # 24 note logic
-                midinote = x + (int(notename[-1])-2) * 24 +12
-        except:
-            print("Ignored unrecognized notename '%s'" %notename)
-            midinote=-128
-    return midinote
-def midinote2notename(midinote,fractions):
-    notename=None
-    octave=None
-    note=None
-    if   midinote==-2: notename="Ctrl"
-    elif midinote==-1: notename="None"
-    else:
-        if midinote<gv.stop127 and midinote>(127-gv.stop127):
-            if fractions==1:
-                octave,note=divmod(midinote,12)
-                octave-=1
-                note*=2
-            else:
-                octave,note=divmod(midinote+36,24)
-            notename="%s%d" %(notenames[note],octave)
-        else: notename="%d" %(midinote)
-    return notename
-def setChord(x,*z):
-    y=getindex(x,gv.chordname,True)
-    if y>-1:                # ignore if undefined
-        gv.currscale=0      # playing chords excludes scales
-        gv.currchord=y
-        display("")
-def setScale(x,*z):
-    y=getindex(x,gv.scalename,True)
-    if y>-1:                # ignore if undefined
-        gv.currchord=0      # playing chords excludes scales
-        gv.currscale=y
-        display("")
 def setVoice(x,iv=0,*z):
     if not isinstance(iv,int):
         iv=1
@@ -139,7 +84,8 @@ def setVoice(x,iv=0,*z):
             gv.currvoice=voice
             gv.sample_mode=gv.voicelist[xvoice][2]
             if iv>-1:   # -1 means map or multitimbral voice change: mappings should not be changed by voice def!
-                setNotemap(gv.voicelist[xvoice][3])
+                gv.setNotemap(gv.voicelist[xvoice][3])
+                gp.setFXpresets(gv.voicelist[xvoice][5])
                 gv.CCmap = list(gv.CCmapBox)            # construct this voice's CC setup
                 for i in range(len(gv.CCmapSet)):
                     found=False
@@ -187,33 +133,10 @@ def setMTvoice(mididev,messagechannel,voice):
                 voice=m[0]
                 break
     return voice
-def setNotemap(x, *z):
-    try:
-        y=x-1
-    except:
-        y=getindex(x,gv.notemaps,True)
-    if y>-1:
-        if gv.notemaps[y]!=gv.currnotemap:
-            gv.currnotemap=gv.notemaps[y]
-            gv.notemapping=[]
-            for notemap in gv.notemap:       # do we have note mapping ?
-                if notemap[0]==gv.currnotemap:
-                    gv.notemapping.append([notemap[2],notemap[1],notemap[3],notemap[4],notemap[5],notemap[6]])
-    else:
-        gv.currnotemap=""
-        gv.notemapping=[]
-    display("")
 
 gv.getindex=getindex                    # and announce the procs to modules
 gv.parseBoolean=parseBoolean
-gv.notename2midinote=notename2midinote
-gv.midinote2notename=midinote2notename
 gv.setVoice=setVoice
-gv.setNotemap=setNotemap
-gv.setMC(gv.CHORDS,setChord)
-gv.setMC(gv.SCALES,setScale)
-gv.setMC(gv.VOICES,setVoice)
-gv.setMC(gv.NOTEMAPS,setNotemap)
 
 ########  LITERALS used in the main module only ########
 PLAYLIVE = "Keyb"                       # reacts on "keyboard" interaction
@@ -227,18 +150,16 @@ BACKTRACK = "Back"                      # recognize loop markers, loop-off by sa
 VELSAMPLE = "Sample"                    # velocity equals sampled value, requires multiple samples to get differentation
 VELACCURATE = "Accurate"                # velocity as played, allows for multiple (normalized!) samples for timbre
 VELOSTEPS = [127,64,32,16,8,4,2,1]      # accepted numer of velocity layers
-CONFIG_LOC = "config/"                  # links to /boot/samplerbox/ on distribution image
-CHORDS_DEF = "chords.csv"
-SCALES_DEF = "scales.csv"
 CTRLCCS_DEF = "controllerCCs.csv"
 KEYNAMES_DEF = "keynotes.csv"
 MENU_DEF = "menu.csv"
+FXPRESETS_DEF = "FXpresets.csv"
 
 
 ##########  Read LOCAL CONFIG (==> /boot/samplerbox/configuration.txt) for generic use,
 #           reading LOCAL CONFIG can be done elsewhere as well if it's one-time or local/optional.
 gv.cp=configparser.ConfigParser()
-gv.cp.read(CONFIG_LOC + "configuration.txt")
+gv.cp.read(gv.CONFIG_LOC + "configuration.txt")
 gv.SAMPLES_ONUSB = gv.cp.get(gv.cfg,"USB_MOUNTPOINT".lower())
 gv.SAMPLES_INBOX = "samples/"
 USE_HTTP_GUI = gv.cp.getboolean(gv.cfg,"USE_HTTP_GUI".lower())
@@ -284,15 +205,14 @@ display=gv.NoProc       # set display to dummy
 ########## read CONFIGURABLE TABLES from config dir
 
 # Definition of notes, chords and scales
-getcsv.readchords(CONFIG_LOC + CHORDS_DEF)
-getcsv.readscales(CONFIG_LOC + SCALES_DEF)
+import NotesChordsScales
+NotesChordsScales.getdefs()
 
 # Midi controllers and keyboard definition
-getcsv.readcontrollerCCs(CONFIG_LOC + CTRLCCS_DEF)
-getcsv.readkeynames(CONFIG_LOC + KEYNAMES_DEF)
-gv.CCmapBox = getcsv.readCCmap(CONFIG_LOC + gv.CTRLMAP_DEF)
-gv.CCmap = list(gv.CCmapBox)
-getcsv.readmenu(CONFIG_LOC + MENU_DEF)
+getcsv.readcontrollerCCs(gv.CONFIG_LOC + CTRLCCS_DEF)
+getcsv.readkeynames(gv.CONFIG_LOC + KEYNAMES_DEF)
+gv.CCmapBox = getcsv.readCCmap(gv.CONFIG_LOC + gv.CTRLMAP_DEF)
+getcsv.readmenu(gv.CONFIG_LOC + MENU_DEF)
 
 #########################################
 # Setup display routine  (if any..)
@@ -357,14 +277,8 @@ gv.display=display      # announce resulting proc to modules
 UI.display=display
 
 ##################################################################################
-# Audio, Effects/Filters/SMFplayer
+# Audio including Effects/Filters/SMFplayer
 ##################################################################################
-
-# Sounddevice setup (detect/determine/check soundcard etc) & callback routine (the actual sound generator)
-# Alsamixer setup for volume control (optional)
-#
-import audio
-UI.USE_ALSA_MIXER=audio.USE_ALSA_MIXER
 
 # Arpeggiator (play chordnotes sequentially, ie open chords)
 # Process replaces the note-on/off logic, so rather cheap
@@ -391,6 +305,14 @@ import chorus   # take notice: part of process in midi callback and ARP
 #
 if gv.USE_SMFPLAYER:
     import smfplayer
+
+# Sounddevice setup (detect/determine/check soundcard etc) & callback routine (the actual sound generator)
+# Alsamixer setup for volume control (optional)
+#
+import audio
+UI.USE_ALSA_MIXER=audio.USE_ALSA_MIXER
+
+getcsv.readFXpresets(gv.CONFIG_LOC + FXPRESETS_DEF)
 
 #########################################
 ##  SLIGHT MODIFICATION OF PYTHON'S WAVE MODULE
@@ -1150,6 +1072,7 @@ def ActuallyLoad():
     gv.currvoice = 0
     gv.currnotemap=""
     gv.notemapping=[]
+    gv.CCmap = list(gv.CCmapBox)
     gv.sample_mode=BOXSAMPLE_MODE   # fallback to the samplerbox default
     PREVELMODE=BOXVELMODE           # fallback to the samplerbox default
     gv.stop127=BOXSTOP127           # fallback to the samplerbox default
@@ -1166,6 +1089,7 @@ def ActuallyLoad():
     PREFRACTIONS=1                  # 1 midinote for 1 semitone for note filling; fractions=2 fills Q-notes = the octave having 24 notes in equal intervals
     PREQNOTE="N"                    # The midinotes mapping the quarternotes (No/Yes/Even/Odd)
     PRENOTEMAP=""
+    PREFXPRESET=""
     PRERELSAMPLE=BOXRELSAMPLE
     PRETRANSPOSE=0
     PREMUTEGROUP=0
@@ -1179,7 +1103,7 @@ def ActuallyLoad():
     tracknames  = []
     for backtrack in range(128):
         tracknames.append([False, "", ""])
-    gv.voicelist =[]        # voicenumber, description, mode, notemap, velocitylevels
+    gv.voicelist =[]        # voicenumber, description, mode, notemap, velocitylevels, fxpreset
     voicenames  = []
     gv.DefinitionTxt = ''
     gv.DefinitionErr = ''
@@ -1197,6 +1121,9 @@ def ActuallyLoad():
     getcsv.readnotemap(os.path.join(dirname, gv.NOTEMAP_DEF))
     gv.CCmapSet=getcsv.readCCmap(os.path.join(dirname, gv.CTRLMAP_DEF), True)
     getcsv.readMTchannelmap(os.path.join(dirname, gv.VOICEMAP_DEF))
+    getcsv.readFXpresets(os.path.join(dirname, FXPRESETS_DEF), True)
+    gp.setFXpresets("Default")
+
     definitionfname = os.path.join(dirname, gv.SAMPLESDEF)
     if os.path.isfile(definitionfname):
         if USE_HTTP_GUI:
@@ -1315,17 +1242,26 @@ def ActuallyLoad():
                     if r'%%notemap' in pattern:
                         PRENOTEMAP = pattern.split('=')[1].strip().title()
                         continue
-                    defaultparams = { 'midinote':'-128', 'velocity':'-1', 'gain':'1', 'notename':'', 'voice':'1', 'velolevs':PREVELOLEVS, 'mode':gv.sample_mode, 'velmode':PREVELMODE, 'transpose':PRETRANSPOSE, 'release':PRERELEASE, 'damp':PREDAMP, 'dampnoise':PREDAMPNOISE, 'retrigger':PRERETRIGGER,\
-                                      'mutegroup':PREMUTEGROUP, 'relsample':PRERELSAMPLE, 'xfadeout':PREXFADEOUT, 'xfadein':PREXFADEIN, 'xfadevol':PREXFADEVOL, 'qnote':PREQNOTE, 'notemap':PRENOTEMAP, 'fillnote':PREFILLNOTE, 'rnds':'1', 'smfseq':'1', 'voicemap':"", 'backtrack':'-1'}
+                    if r'%%fxpreset' in pattern:
+                        PREFXPRESET = pattern.split('=')[1].strip().title()
+                        continue
+                    defaultparams = { 'midinote':'-128', 'velocity':'-1', 'gain':'1', 'notename':'', 'voice':'1', 'velolevs':PREVELOLEVS, 'mode':gv.sample_mode, 'velmode':PREVELMODE,\
+                                      'transpose':PRETRANSPOSE, 'release':PRERELEASE, 'damp':PREDAMP, 'dampnoise':PREDAMPNOISE, 'retrigger':PRERETRIGGER, 'mutegroup':PREMUTEGROUP,\
+                                      'relsample':PRERELSAMPLE, 'xfadeout':PREXFADEOUT, 'xfadein':PREXFADEIN, 'xfadevol':PREXFADEVOL, 'qnote':PREQNOTE, 'notemap':PRENOTEMAP,\
+                                      'fxpreset':PREFXPRESET, 'fillnote':PREFILLNOTE, 'rnds':'1', 'smfseq':'1', 'voicemap':"", 'backtrack':'-1'}
                     if len(pattern.split(',')) > 1:
                         defaultparams.update(dict([item.split('=') for item in pattern.split(',', 1)[1].replace(' ','').replace('%', '').split(',')]))
                     pattern = pattern.split(',')[0]
                     pattern = re.escape(pattern.strip())
-                    pattern = pattern.replace(r"%midinote", r"(?P<midinote>\d+)").replace(r"%velocity", r"(?P<velocity>\d+)").replace(r"%gain", r"(?P<gain>[-+]?\d*\.?\d+)").replace(r"%voice", r"(?P<voice>\d+)").replace(r"%velolevs", r"(?P<velolevs>\d+)").replace(r"%mutegroup", r"(?P<mutegroup>\d+)")\
-                                     .replace(r"%fillnote", r"(?P<fillnote>[YNFynf])").replace(r"%mode", r"(?P<mode>[A-Za-z0-9])").replace(r"%velmode", r"(?P<velmode>[A-Za-z])").replace(r"%transpose", r"(?P<transpose>\d+)").replace(r"%release", r"(?P<release>\d+)").replace(r"%damp", r"(?P<damp>\d+)")\
-                                     .replace(r"%dampnoise", r"(?P<dampnoise>\[YNyn])").replace(r"%retrigger", r"(?P<retrigger>[YyRrDd])").replace(r"%relsample", r"(?P<relsample>[NnSsEe])").replace(r"%xfadeout", r"(?P<xfadeout>\d+)").replace(r"%xfadein", r"(?P<xfadein>\d+)").replace(r"%xfadevol", r"(?P<xfadevol>\d+)")\
-                                     .replace(r"%rnds", r"(?P<rnds>[1-9])").replace(r"%qnote", r"(?P<qnote>[YyNnOoEe])").replace(r"%notemap", r"(?P<notemap>[A-Za-z0-9]\_\-\&)").replace(r"%smfseq", r"(?P<smfseq>\d+)").replace(r"%voicemap", r"(?P<voicemap>[A-Za-z0-9]\_\-\&)")\
-                                     .replace(r"%backtrack", r"(?P<backtrack>\d+)").replace(r"%notename", r"(?P<notename>[A-Ga-g][#ks]?[0-9])").replace(r"\*", r".*?").strip()    # .*? => non greedy
+                    pattern = pattern.replace(r"%midinote", r"(?P<midinote>\d+)").replace(r"%velocity", r"(?P<velocity>\d+)").replace(r"%gain", r"(?P<gain>[-+]?\d*\.?\d+)")\
+                                    .replace(r"%voice", r"(?P<voice>\d+)").replace(r"%velolevs", r"(?P<velolevs>\d+)").replace(r"%mutegroup", r"(?P<mutegroup>\d+)")\
+                                    .replace(r"%fillnote", r"(?P<fillnote>[YNFynf])").replace(r"%mode", r"(?P<mode>[A-Za-z0-9])").replace(r"%velmode", r"(?P<velmode>[A-Za-z])")\
+                                    .replace(r"%transpose", r"(?P<transpose>\d+)").replace(r"%release", r"(?P<release>\d+)").replace(r"%damp", r"(?P<damp>\d+)")\
+                                    .replace(r"%dampnoise", r"(?P<dampnoise>\[YNyn])").replace(r"%retrigger", r"(?P<retrigger>[YyRrDd])").replace(r"%relsample", r"(?P<relsample>[NnSsEe])")\
+                                    .replace(r"%xfadeout", r"(?P<xfadeout>\d+)").replace(r"%xfadein", r"(?P<xfadein>\d+)").replace(r"%xfadevol", r"(?P<xfadevol>\d+)")\
+                                    .replace(r"%rnds", r"(?P<rnds>[1-9])").replace(r"%qnote", r"(?P<qnote>[YyNnOoEe])").replace(r"%notemap", r"(?P<notemap>[A-Za-z0-9]\_\-\&)")\
+                                    .replace(r"%fxpreset", r"(?P<fxpreset>[A-Za-z0-9]\_\-\&)").replace(r"%smfseq", r"(?P<smfseq>\d+)").replace(r"%voicemap", r"(?P<voicemap>[A-Za-z0-9]\_\-\&)")\
+                                    .replace(r"%backtrack", r"(?P<backtrack>\d+)").replace(r"%notename", r"(?P<notename>[A-Ga-g][#ks]?[0-9])").replace(r"\*", r".*?").strip()    # .*? => non greedy
                     for fname in os.listdir(dirname):
                         if LoadingInterrupt:
                             print('Loading % s interrupted...' % dirname)
@@ -1374,7 +1310,7 @@ def ActuallyLoad():
                                 fillnote = (info.get('fillnote', defaultparams['fillnote'])).title().rstrip()
                             voicex=getindex(voice,gv.voicelist)
                             if voicex<0:
-                                gv.voicelist.append([voice,"","","",PREVELOLEVS])
+                                gv.voicelist.append([voice,"","","",PREVELOLEVS,PREFXPRESET])
                                 voicex=len(gv.voicelist)-1
                             qnote = info.get('qnote', defaultparams['qnote']).title()[0][:1]
                             if qnote == 'Y': qnote = 'O'    # the default for qnotes is on odd midi notes (60=C).
@@ -1383,8 +1319,9 @@ def ActuallyLoad():
                                 if fractions == 1:          # condition needed in future
                                     fractions=2             # for now always true
                             gv.voicelist[voicex][3] = info.get('notemap', defaultparams['notemap']).strip().title().rstrip()   # pick the latest; we can't check everything, RTFM :-)
+                            gv.voicelist[voicex][5] = info.get('fxpreset', defaultparams['fxpreset']).strip().title().rstrip()   # pick the latest; we can't check everything, RTFM :-)
                             if notename:
-                                midinote=notename2midinote(notename,fractions)
+                                midinote=gv.notename2midinote(notename,fractions)
                             transpose = int(info.get('transpose', defaultparams['transpose']))
                             if voice != 0:          # the override / special effects voice cannot transpose
                                 midinote-=transpose
@@ -1485,7 +1422,7 @@ def ActuallyLoad():
                 gv.samples[midinote,1,1] = [Sound(file, 1, midinote, 1, PREVELOLEVS, PREVELMODE, gv.sample_mode, PRERELEASE, PREDAMP, PREDAMPNOISE, PRERETRIGGER, gv.globalgain, PREMUTEGROUP, BOXRELSAMPLE, PREXFADEOUT, PREXFADEIN, PREXFADEVOL, PREFRACTIONS)]
                 fillnotes[midinote,1] = PREFILLNOTE
         voicenames=[[1,"Default"]]
-        gv.voicelist=[[1,'','Keyb','',1]]
+        gv.voicelist=[[1,'','Keyb','',1,'']]
 
     if gv.USE_SMFPLAYER:
         if len(gv.smfseqs)>0:
