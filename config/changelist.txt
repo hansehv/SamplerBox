@@ -11,7 +11,7 @@ Oct 2021:
     - configuration.txt layout changed, real extreme make-over
     - folder structure adapted, ao to ease setting up without orginal image
   - Added effects presets on set+voice level
-    For this effects presets are taken configuration.txt, now FXpresets.csv
+    For this effects presets are moved from configuration.txt to FXpresets.csv
   - Bugfixes, cleanups and split off more functions to modules
 
 #----- python 2.7 train stops here to focus on new image with python 3 -----#

@@ -39,6 +39,7 @@ var SB_variables={	// make sure all passed I/O parameters are covered here
 	v_SB_Preset: function(val){SB_Preset=val;},
 	v_SB_Gain: function(val){SB_Gain=val;},
 	v_SB_Pitchrange: function(val){SB_Pitchrange=val;},
+	v_SB_FXpreset: function(val){SB_FXpreset=val;},
 	v_SB_Notemap: function(val){SB_Notemap=val;},
 	v_SB_nm_inote: function(val){SB_nm_inote=val;},
 	v_SB_nm_onote: function(val){SB_nm_onote=val;},
@@ -138,6 +139,10 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 	},
 	input_SB_Voice: function(input_name,name,val,text){
 		return(text+SB_listselect(input_name,name,val,SB_Voicelist,2,SB_Voicelist.length,1));
+	},
+	input_SB_FXpreset: function(input_name,name,val,text){
+		for (i=1;i<SB_FXpresets.length;i++){if (SB_FXpresets[i]==SB_FXpreset) break;}
+		return(text+SB_listselect(input_name,name,i,SB_FXpresets,1,SB_FXpresets.length,1));
 	},
 	input_SB_Notemap: function(input_name,name,val,text){
 		for (i=1;i<SB_Notemaps.length;i++){if (SB_Notemaps[i]==SB_Notemap) break;}

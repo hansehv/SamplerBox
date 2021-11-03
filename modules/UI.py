@@ -66,6 +66,12 @@ def Voice(val=None):						# index of Voicelist (or actual "voice#" if not numeri
 			return currvoice!=gv.currvoice
 		return gv.currvoice
 	except: return 0
+def FXpreset(val=None):						# active effects preset, name in FXpresets
+	try:
+		if val!=None:
+			gp.setFXpresets(val)
+		return gv.FXpreset_last
+	except: return "None"
 def Notemap(val=None):						# active notemap, either index in notemap or "notemap name"
 	try:
 		if val!=None:
@@ -647,6 +653,8 @@ def qFractions(*z):					# Tone resolution
 	return remap.fractions
 def KeyNames(*z):					# Keynames used in csv files
 	return gv.keynames
+def FXpresets(*z):					# Defined effects presetlist for the current sample set
+	return gv.FXpresetnames
 def Chordname(*z):					# Chordnames as defined in chord.csv
 	return gv.chordname
 def Chordnote(*z):					# Chordnotes as defined in chord.csv
@@ -725,6 +733,7 @@ procs={
 	"DefinitionTxt":["w",DefinitionTxt],	# contains definition.txt, either returns definition.txt or renewmedia
 	"Preset":["w",Preset],					# 0-127, returns either preset or renewmedia
 	"Voice":["w",Voice],					# (integer) index of Voicelist or (string) actual voice, returns either voice or voicechange
+	"FXpreset":["w",FXpreset],				# (string) Name to be activated FXpresets, returns either "None" or the newly activated FXpreset
 	"Notemap":["w",Notemap],				# (string) Notemap or (integer) index in notemap of active notemap, returns either notemap or notemapchange
 	"nm_inote":["w",nm_inote],				# (string) Keyname or (integer) index in KeyNames for keyboardnote
 
@@ -829,6 +838,7 @@ procs={
 	"Stop127":["f",Stop127],				# First note at right/high side of keyboard area
 	"qFractions":["f",qFractions],			# [[1, 'Semi'], [2, 'Quarter']]
 	"KeyNames":["f",KeyNames],				# Notenames as defined in keynotes.csv
+	"FXpresets":["f",FXpresets],			# Effect presetnames available in current set (merged box en set presets)
 	"Chordname":["f",Chordname],			# Chordnames as defined in chord.csv
 	"Chordnote":["f",Chordnote],			# Chordnotes as defined in chord.csv
 	"Scalename":["f",Scalename],			# Scalenames as defined in scales.csv
