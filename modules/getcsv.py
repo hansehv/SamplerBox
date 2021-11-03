@@ -347,10 +347,14 @@ def readFXpresets(ifile, override=False):
         for i in range( len(sheet) ):
             if len(sheet[i]) > 2:     # skip useless lines
                 preset = sheet[i][0]
-                if preset.lower() in ["box", "set"]:
-                    if ((preset.lower() == "box" and override)
-                    or (preset.lower() == "set" and not override)):
-                        print ("%s: ignored %s because %s default cannot be set now" %(ifile, sheet[i], preset))
+                presetl = preset.lower()
+                if presetl in ["none", "box", "set"]:
+                    if ( presetl == "none"
+                    or   (  (presetl == "box" and override)
+                         or (presetl == "set" and not override)
+                         )
+                       ):
+                        print ("%s: ignored %s because %s this cannot be set (now)" %(ifile, sheet[i], preset))
                         gv.ConfigErr=True
                         continue
                     preset = "Default"
@@ -369,6 +373,10 @@ def readFXpresets(ifile, override=False):
                 print ("%s: ignored %s" %(ifile, sheet[i]))
     except:
         pass    # this is all optional, defaults are hardcoded
+    gv.FXpresetnames = ["None"]
+    for key in gv.FXpresets.keys():
+        gv.FXpresetnames.append(key)
     if not override:
         FXpresets_box = copy.deepcopy( gv.FXpresets )
+        gv.FXpreset_last="None"
     return 

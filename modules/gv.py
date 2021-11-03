@@ -17,6 +17,7 @@ VOICEMAP_DEF="MTchannelmap.csv"
 FIXED="Fixed"
 VOICES="Voices"
 NOTEMAPS="Notemaps"
+FXPRESETS="FXpresets"
 BACKTRACKS="BackTracks"
 SMFS="SMFs"
 SMFTEMPO="SMFtempo"
@@ -164,9 +165,14 @@ def safeguard (*vals):  # dedicated proc for debugging MC-table
     for val in vals :
         arr.append(val)
     print("gv.Safeguard: call to unset procedure for %s:%s" %(arr[1],arr[0]))
-def setMC(mc,proc):
-    x=getindex(mc,MC)
-    MC[x][2]=proc
+def setMC( mc, proc ):
+    for x in range( len(MC) ):
+        if mc == MC[x][0]:
+            break
+    if x < len(MC):
+        MC[x][2] = proc
+    else:
+        print("gv.setMC: Can't set %s" %mc)
     return x
 MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch),procedure)
 [PROGUP,1,safeguard],
@@ -262,5 +268,6 @@ MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch)
 [MENU_DECR,1,safeguard],
 [MENU_SEL,1,safeguard],
 [MENU_RET,1,safeguard],
-[NOTEMAPS,2,safeguard]
+[NOTEMAPS,2,safeguard],
+[FXPRESETS,2,safeguard]
 ]

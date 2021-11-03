@@ -48,19 +48,6 @@ import gp, getcsv
 ########  Define local general functions ########
 usleep = lambda x: time.sleep(x/1000000.0)
 msleep = lambda x: time.sleep(x/1000.0)
-def getindex(key, table, onecol=False, casesens=True):
-    for i in range(len(table)):
-        if onecol:
-            if casesens:
-                if key==table[i]:   return i
-            else:
-                if key.lower()==table[i].lower():   return i
-        else:
-            if casesens:
-                if key==table[i][0]:return i
-            else:
-                if key.lower()==table[i][0].lower:  return i
-    return -100000
 def parseBoolean(val):
 	if val:
 		try:
@@ -75,7 +62,7 @@ def setVoice(x,iv=0,*z):
     if iv==0:       # we got the index of the voice table
         xvoice=int(x)
     else:           # we got the voicenumber
-        xvoice=getindex(int(x),gv.voicelist)
+        xvoice=gp.getindex(int(x),gv.voicelist)
     if xvoice <0:   # no option :-(
         print("Undefined voice", x)
     else:
@@ -85,8 +72,10 @@ def setVoice(x,iv=0,*z):
             gv.sample_mode=gv.voicelist[xvoice][2]
             if iv>-1:   # -1 means map or multitimbral voice change: mappings should not be changed by voice def!
                 gv.setNotemap(gv.voicelist[xvoice][3])
-                gp.setFXpresets(gv.voicelist[xvoice][5])
-                gv.CCmap = list(gv.CCmapBox)            # construct this voice's CC setup
+                FXset = gv.voicelist[xvoice][5]
+                FXset = gp.setFXpresets(FXset)      # when FXset doesn't exist, result will be "None"
+                gv.FXpreset_last = FXset            # force showing of the FX preset
+                gv.CCmap = list(gv.CCmapBox)        # construct this voice's CC setup
                 for i in range(len(gv.CCmapSet)):
                     found=False
                     if gv.CCmapSet[i][3]==0 or gv.CCmapSet[i][3]==voice:# voice applies
@@ -118,12 +107,12 @@ def setMTvoice(mididev,messagechannel,voice):
                     newvoice=v[3]
                     if v[0]!="0" or v[1]!=0 or v[2]!=0:
                         fallback=False
-    if fallback and getindex(voice,gv.voicelist)>-1:
+    if fallback and gp.getindex(voice,gv.voicelist)>-1:
         newvoice=voice  # the requested voice is in the sample set, so we don't need the full fallback (it can be a "straight" GM map)
     else:
         print("Use voice %d for channel %d, programchange %d" %(newvoice,messagechannel,voice))
     voice=newvoice
-    xvoice=getindex(voice,gv.voicelist)
+    xvoice=gp.getindex(voice,gv.voicelist)
     if xvoice <0:   # still no succes, out of options :-(
         voice=0
     if voice==0:    # pick first available
@@ -134,9 +123,9 @@ def setMTvoice(mididev,messagechannel,voice):
                 break
     return voice
 
-gv.getindex=getindex                    # and announce the procs to modules
-gv.parseBoolean=parseBoolean
+gv.parseBoolean=parseBoolean            # and announce the procs to modules
 gv.setVoice=setVoice
+gv.setMC(gv.VOICES,setVoice)
 
 ########  LITERALS used in the main module only ########
 PLAYLIVE = "Keyb"                       # reacts on "keyboard" interaction
@@ -652,12 +641,12 @@ def EffectsOff(scope=-1,*z):
     chorus.reset(scope)
     #AutoChordOff()
 def ProgramUp(CCval,*z):
-    x=gv.getindex(gv.PRESET,gv.presetlist)+1
+    x=gp.getindex(gv.PRESET,gv.presetlist)+1
     if x>=len(gv.presetlist): x=0
     gv.PRESET=gv.presetlist[x][0]
     gv.LoadSamples()
 def ProgramDown(CCval,*z):
-    x=gv.getindex(gv.PRESET,gv.presetlist)-1
+    x=gp.getindex(gv.PRESET,gv.presetlist)-1
     if x<0: x=len(gv.presetlist)-1
     gv.PRESET=gv.presetlist[x][0]
     gv.LoadSamples()
@@ -736,7 +725,7 @@ def PlayRelSample(relsample,voice,playnote,velocity,retune,channel=0,play_as_is=
 lastrnds = {}
 def PlaySample(midinote,playnote,voice,velocity,startparm,retune,channel=0,play_as_is=False):
     global lastrnds
-    velolevs=gv.voicelist[getindex(voice,gv.voicelist)][4]
+    velolevs=gv.voicelist[gp.getindex(voice,gv.voicelist)][4]
     velidx=int(1.0*(velocity*velolevs)/128+.9999)   # roundup without math
     if startparm==-1:
         sample=lastrnds[playnote][0][lastrnds[playnote][1]]      # use the same sample for the release sample
@@ -843,7 +832,7 @@ def MidiCallback(mididev, message, time_stamp):
         if messagetype==8 or messagetype==9:           # We may have a note on/off
             retune=0
             if not MT_in:
-                i=getindex(midinote,gv.notemapping)
+                i=gp.getindex(midinote,gv.notemapping)
                 if i>-1:        # do we have a mapped note ?
                     if gv.notemapping[i][2]==-2:      # This key is actually a CC = control change
                         if velocity==0 or messagetype==8: midinote=0
@@ -1308,7 +1297,7 @@ def ActuallyLoad():
                                 fillnote = 'N' # so we ignore whatever the user wants (RTFM)
                             else:
                                 fillnote = (info.get('fillnote', defaultparams['fillnote'])).title().rstrip()
-                            voicex=getindex(voice,gv.voicelist)
+                            voicex=gp.getindex(voice,gv.voicelist)
                             if voicex<0:
                                 gv.voicelist.append([voice,"","","",PREVELOLEVS,PREFXPRESET])
                                 voicex=len(gv.voicelist)-1
@@ -1436,13 +1425,13 @@ def ActuallyLoad():
         for m in gv.samples:
             if gv.samples[m][0].relsample=="S" and gv.samples[m][0].voice>0:
                 xd="&dampnoise" if gv.samples[m][0].dampnoise else ""
-                voice=getindex(-gv.samples[m][0].voice,gv.voicelist)
+                voice=gp.getindex(-gv.samples[m][0].voice,gv.voicelist)
                 if voice<0:
                     gv.samples[m][0].relsample="N"
                     print("Release%s of voice %d set to normal as voice %d was not found" %(xd,gv.samples[m][0].voice,-gv.samples[m][0].voice))
                 elif fillnotes[gv.samples[m][0].midinote, gv.samples[m][0].voice] == 'N' and gv.samples[m][0].voice>0:
                     y=False
-                    velolevs=gv.voicelist[getindex(gv.samples[m][0].voice,gv.voicelist)][4]
+                    velolevs=gv.voicelist[gp.getindex(gv.samples[m][0].voice,gv.voicelist)][4]
                     for velocity in range(1,velolevs+1):
                         try:
                             x=gv.samples[gv.samples[m][0].midinote, velocity, -gv.samples[m][0].voice]
@@ -1459,7 +1448,7 @@ def ActuallyLoad():
         # Complete all voices plus related notes
         for voicex in range(len(gv.voicelist)):
             voice=gv.voicelist[voicex][0]
-            v=getindex(voice, voicenames)
+            v=gp.getindex(voice, voicenames)
             if v<0: gv.voicelist[voicex][1]=str(voice)
             else:   gv.voicelist[voicex][1]=voicenames[v][1]
             if gv.currvoice==0 and voice>0:
@@ -1516,7 +1505,7 @@ def ActuallyLoad():
                             gv.samples[midinote, velocity, voice].midinote=midinote     # so fool the audiomodule...
         #
         # Fill overrides in the voices prepare above
-        if getindex(0,gv.voicelist)>-1:             # do we have the override / special effects voice ?
+        if gp.getindex(0,gv.voicelist)>-1:             # do we have the override / special effects voice ?
             for midinote in range(128):
                 if (midinote, 0) in fillnotes:
                     for voicex in range(len(gv.voicelist)):
@@ -1530,7 +1519,7 @@ def ActuallyLoad():
         for track in range(128):
             if tracknames[track][0]:
                 gv.btracklist.append([track, tracknames[track][1], tracknames[track][2]])
-        if gv.currvoice!=0: gv.sample_mode=gv.voicelist[getindex(gv.currvoice,gv.voicelist)][2]
+        if gv.currvoice!=0: gv.sample_mode=gv.voicelist[gp.getindex(gv.currvoice,gv.voicelist)][2]
 
         #
         # Indicate we're ready and give memory status

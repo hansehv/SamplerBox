@@ -11,8 +11,7 @@
 ##    - exception to this rule: GPIO definitions of unused devices
 ##  Values are used 'as is' with hardly any error checking, some friendly warnings:
 ##    - read the comment ... and do it right, because:
-##    - out of range filter values can really hurt an audio system
-##    - other errors may just lead to malfunctioning in unexpected ways.
+##    - errors may lead to malfunctioning in unexpected ways.
 ###################################################################################
 [config]
 

@@ -93,13 +93,18 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             if loading:
                 self.do_GET()   # answer the browser
                 return
-        voice_or_mapchange=False
         if "SB_Voice" in fields:
             if ( UI.Voice(int(fields["SB_Voice"][0])) ):
                 self.do_GET()   # answer the browser
                 return
-        if "SB_Notemap" in fields and not voice_or_mapchange: voice_or_mapchange=UI.Notemap(int(fields["SB_Notemap"][0]))
-        if not (voice_or_mapchange):
+        if "SB_FXpreset" in fields:
+            if ( UI.FXpreset(int(fields["SB_FXpreset"][0])) != "None" ):
+                self.do_GET()   # answer the browser
+                return
+        mapchange=False
+        if "SB_Notemap" in fields and not mapchange:
+            mapchange=UI.Notemap(int(fields["SB_Notemap"][0]))
+        if not (mapchange):
             if "SB_nm_inote"  in fields:    # inote is used as a signal: remapping requires it and html page sends it regardless of it being changed
                 if UI.nm_inote(int(fields["SB_nm_inote"][0])):   # so now we know something has changed on a screen containing remapping fields
                     if "SB_nm_Q" in fields: UI.nm_Q(int(fields["SB_nm_Q"][0]))    # needs to be before onote to get proper name2note translation
