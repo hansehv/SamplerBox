@@ -137,11 +137,11 @@ class IO:
             omsg = ""
             for i in message:
                 omsg = "%s%s" %( omsg, chr(i) )
-        try:
-            self.ser.write(omsg.encode())
-        except:
-            print ("Write time out on %s, closed as MIDI OUT" %self.uart)
-            self.out = False
+            try:
+                self.ser.write(omsg.encode())
+            except:
+                print ("Write time out on %s, closed as MIDI OUT" %self.uart)
+                self.out = False
 
     def close_port(self):	# procedure name compliant with rtmidi API
         self.ser.close()

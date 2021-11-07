@@ -38,6 +38,9 @@ USE_48kHz = False
 
 # Set True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
 USE_SERIALPORT_MIDI = False
+SERIALPORT_TIMEOUT = 0.02
+SERIALPORT_REALTIME = False
+SERIALPORT_SYSEX = False
 
 # Set True to use a 16x2 direct connected/wired HD44780 LCD, configure below
 USE_HD44780_16x2_LCD = False

@@ -1562,7 +1562,10 @@ try:
     serialout=False
     if gv.cp.getboolean(gv.cfg,"USE_SERIALPORT_MIDI".lower()):
         import serialMIDI
-        midiserial = serialMIDI.IO(midicallback=MidiCallback)
+        midiserial = serialMIDI.IO(midicallback=MidiCallback,
+                                realtime=gv.cp.getboolean(gv.cfg,"SERIALPORT_REALTIME".lower()),
+                                sysex=gv.cp.getboolean(gv.cfg,"SERIALPORT_SYSEX".lower()),
+                                timeout=gv.cp.getfloat(gv.cfg,"SERIALPORT_TIMEOUT".lower()))
         serialout = midiserial.out
 
 except:
@@ -1594,19 +1597,21 @@ if (len(thru_ports) > 0):
     allvalid = "All" in thru_ports
 
     if serialout:
-        dev = ' '
+        dev = ''
         if embedded in thru_ports:
             gv.outports[embedded] = [midiserial.uart, midiserial]
-            dev = ' as %s' %embedded
+            dev = '" as %s' %embedded
         elif allvalid:
             gv.outports[midiserial.uart] = [midiserial.uart, midiserial]
+            dev = '"'
         else:
             for v in thru_ports:
                 if re.search ( v.lower(), midiserial.uart.lower()):
                     gv.outports[midiserial.uart] = [midiserial.uart, midiserial]
+                    dev = '"'
                     break
         if dev:
-            print ( 'Opened output "%s"%s' %(midiserial.uart, dev) )
+            print ( 'Opened output "%s%s' %(midiserial.uart, dev) )
 
     for port in rtmidi2.get_out_ports():
         if ('Midi Through' not in port
