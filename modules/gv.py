@@ -23,6 +23,9 @@ SMFS="SMFs"
 SMFTEMPO="SMFtempo"
 SMFLOOP="SMFloop"
 SMFSTOP="SMFstop"
+SMFRECSTART="SMFrecstart"
+SMFRECABORT="SMFreccancel"
+SMFRECSTOP="SMFrecsave"
 MENU_INCR="Menu_Incr"
 MENU_DECR="Menu_Decr"
 MENU_SEL="Menu_Sel"
@@ -157,9 +160,9 @@ notemap=[]
 notemaps=[]
 currnotemap=""
 notemapping=[]
+MidiRecorder=False
+MidiRecordedSong="recorded"
 
-def NoProc(*vals):      # Dummy
-    pass
 def safeguard (*vals):  # dedicated proc for debugging MC-table
     arr=[]
     for val in vals :
@@ -264,6 +267,9 @@ MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch)
 [SMFLOOP,1,safeguard],
 [SMFSTOP,1,safeguard],
 [SMFTEMPO,0,safeguard],
+[SMFRECSTART,1,safeguard],
+[SMFRECABORT,1,safeguard],
+[SMFRECSTOP,1,safeguard],
 [MENU_INCR,1,safeguard],
 [MENU_DECR,1,safeguard],
 [MENU_SEL,1,safeguard],
