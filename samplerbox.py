@@ -89,7 +89,7 @@ def setVoice(x,iv=0,*z):
                             gv.CCmap.append(gv.CCmapSet[i])             # else add entry
                 display("")
                 gv.menu_CCdef()
-def setMTvoice(mididev,messagechannel,voice):
+def setMTvoice(mididev,MIDIchannel,voice):
     x=voice
     voicemap=""
     if gv.USE_SMFPLAYER:   # smf files may have specific mapping
@@ -102,7 +102,7 @@ def setMTvoice(mididev,messagechannel,voice):
     fallback=True
     for v in gv.voicemap:
         if v[0]=="0" or v[0].lower()==voicemap.lower():   # because of sort generic precedes the names/details
-            if v[1]==0 or v[1]==messagechannel:
+            if v[1]==0 or v[1]==MIDIchannel:
                 if v[2]==0 or v[2]==voice:
                     newvoice=v[3]
                     if v[0]!="0" or v[1]!=0 or v[2]!=0:
@@ -110,7 +110,7 @@ def setMTvoice(mididev,messagechannel,voice):
     if fallback and gp.getindex(voice,gv.voicelist)>-1:
         newvoice=voice  # the requested voice is in the sample set, so we don't need the full fallback (it can be a "straight" GM map)
     else:
-        print("Use voice %d for channel %d, programchange %d" %(newvoice,messagechannel,voice))
+        print("Use voice %d for channel %d, programchange %d" %(newvoice,MIDIchannel,voice))
     voice=newvoice
     xvoice=gp.getindex(voice,gv.voicelist)
     if xvoice <0:   # still no succes, out of options :-(
@@ -780,7 +780,7 @@ gv.setMC(gv.BACKTRACKS,playBackTrack)
 
 def MidiCallback(mididev, message, time_stamp):
     # -------------------------------------------------------
-    # Deal with the midi-thru before anything else
+    # Deal with the midi-thru and recording before anything else
     # -------------------------------------------------------
     #print ( '%s -> %s = Channel %d, message %d' % (mididev, message, (message[0]&0xF)+1 , message[0]>>4) )
     for outport in gv.outports:
@@ -795,8 +795,11 @@ def MidiCallback(mididev, message, time_stamp):
         AllNotesOff()           # (..other realtime will be ignored below..)
         return
     if messagetype not in [8,9,11,12,14]:
-        return
-    messagechannel = (message[0]&0xF) + 1   # make channel# human..
+        return                  # skip things we can't deal with anyway
+    messagechannel = (message[0]&0xF)   # get channel#
+    if gv.MidiRecorder:         # Record remaining interesting stuff if needed
+        gv.MidiRecorder(mididev,messagechannel,messagetype,message)
+    MIDIchannel = messagechannel + 1    # make channel# human..
     keyboardarea=True
     # ----------------------------------------------------------------
     # Multitimbrals identification and "hardware remap" of the drumpad
@@ -804,18 +807,17 @@ def MidiCallback(mididev, message, time_stamp):
     MT_in=False
     if mididev in gv.MULTI_TIMBRALS:
         if messagetype in [8,9,12]: # we only accept note on/off and program change commands from the sequencers and other multitimbrals
-            MIDIchannel=messagechannel-1
             if messagetype==12:
-                gv.MULTI_TIMBRALS[mididev][MIDIchannel]=setMTvoice(mididev,messagechannel,message[1]+1)
+                gv.MULTI_TIMBRALS[mididev][messagechannel]=setMTvoice(mididev,MIDIchannel,message[1]+1)
                 return
-            if gv.MULTI_TIMBRALS[mididev][MIDIchannel]==0:     # if a channel hasn't sent a programchange, assume voice=channel. This is not uncommon from drumchannel=10
-                gv.MULTI_TIMBRALS[mididev][MIDIchannel]=setMTvoice(mididev,messagechannel,messagechannel)
-            MT_in=gv.MULTI_TIMBRALS[mididev][MIDIchannel]
-    elif (messagechannel==gv.MIDI_CHANNEL):
-        messagechannel=0
-    elif messagechannel==DRUMPAD_CHANNEL:
+            if gv.MULTI_TIMBRALS[mididev][messagechannel]==0:     # if a channel hasn't sent a programchange, assume voice=channel. This is not uncommon from drumchannel=10
+                gv.MULTI_TIMBRALS[mididev][messagechannel]=setMTvoice(mididev,MIDIchannel,MIDIchannel)
+            MT_in=gv.MULTI_TIMBRALS[mididev][messagechannel]
+    elif (MIDIchannel==gv.MIDI_CHANNEL):
+        MIDIchannel=0
+    elif MIDIchannel==DRUMPAD_CHANNEL:
         if messagetype in DRUMPAD_MESSAGES:
-            messagechannel=0
+            MIDIchannel=0
             if messagetype==8 or messagetype==9:        # Remap notes if neccesaary
                 for i in range(len(gv.drumpadmap)):
                     if gv.drumpadmap[i][0]==message[1]:
@@ -824,9 +826,9 @@ def MidiCallback(mididev, message, time_stamp):
     # -------------------------------------------------------
     # Then process channel commands if not muted
     # -------------------------------------------------------
-    if ((messagechannel==0) or MT_in) and (gv.midi_mute==False) and len(message)>1:
+    if ((MIDIchannel==0) or MT_in) and (gv.midi_mute==False) and len(message)>1:
         midinote = message[1]
-        mtchnote = messagechannel*gv.MTCHNOTES+midinote
+        mtchnote = MIDIchannel*gv.MTCHNOTES+midinote
         velocity = message[2] if len(message) > 2 else None
 
         if messagetype==8 or messagetype==9:           # We may have a note on/off
@@ -912,11 +914,11 @@ def MidiCallback(mididev, message, time_stamp):
                                     #gv.playingnotes[playnote]=[]   # housekeeping, unnecessary as we will refill it immediately..
                         #print "start playingnotes playnote %d, velocity %d, gv.currvoice %d, retune %d" %(playnote, velocity, gv.currvoice, retune)
                         if chorus.effect:
-                            PlaySample(midinote,playnote,gv.currvoice,velocity*chorus.gain,0,retune,messagechannel)
-                            PlaySample(midinote,playnote,gv.currvoice,velocity*chorus.gain,2,retune-(chorus.depth/2+1),messagechannel)
-                            PlaySample(midinote,playnote,gv.currvoice,velocity*chorus.gain,5,retune+chorus.depth,messagechannel)
+                            PlaySample(midinote,playnote,gv.currvoice,velocity*chorus.gain,0,retune,MIDIchannel)
+                            PlaySample(midinote,playnote,gv.currvoice,velocity*chorus.gain,2,retune-(chorus.depth/2+1),MIDIchannel)
+                            PlaySample(midinote,playnote,gv.currvoice,velocity*chorus.gain,5,retune+chorus.depth,MIDIchannel)
                         else:
-                            PlaySample(midinote,playnote,gv.currvoice,velocity,0,retune,messagechannel)
+                            PlaySample(midinote,playnote,gv.currvoice,velocity,0,retune,MIDIchannel)
                         if not MT_in:
                             for m in gv.playingnotes[playnote]:
                                 stopmode = m.playingstopmode()
@@ -980,6 +982,8 @@ def MidiCallback(mididev, message, time_stamp):
 
         elif messagetype == 11: # control change (CC = Continuous Controllers)
             ControlChange(midinote,velocity)
+
+gv.MidiCallback = MidiCallback
 
 #########################################
 ##  LOAD SAMPLES

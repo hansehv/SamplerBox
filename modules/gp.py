@@ -7,6 +7,10 @@
 #
 import gv, subprocess
 
+def NoProc(*vals):      # Dummy
+    pass
+gv.NoProc=NoProc        # temporary till all modules are adapted..
+
 def samples2write():
     if gv.RUN_FROM_IMAGE:
         print ( "Remount %s as RW" %gv.samplesdir)
@@ -25,6 +29,8 @@ def samples2read():
         else:
             subprocess.call( ['umount', gv.samplesdir] )
             subprocess.call( ['mount', '-vr', '/dev/mmcblk0p3', gv.samplesdir] )
+def presetdir():
+    return gv.samplesdir+gv.presetlist[getindex(gv.PRESET,gv.presetlist)][1]+"/"
 
 def GPIOcleanup():
     if gv.GPIO:

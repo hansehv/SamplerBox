@@ -1,10 +1,11 @@
 This file contains changelog of samplerbox.py
 For changes on samplerbox_audio.pyx, see top of the source file
 
-Oct 2021:
+Oct-Nov 2021:
   - Changed and added configuration parameters for the drumpad
     This enables the drumpad to sent programchanges and/or CC-messages.
   - Fixed bug in setting voice via midi controller
+  - Added experimental support for midi recording
 ...-Sept 2021:
   - Image built from scratch, changes not to be mentioned here
   - Converted to python 3, lots of changes, most impact:
