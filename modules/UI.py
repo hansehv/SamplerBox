@@ -738,19 +738,19 @@ procs={
 	"nm_inote":["w",nm_inote],				# (string) Keyname or (integer) index in KeyNames for keyboardnote
 
 		# next procedures always return the value of the respective parameter
-	"nm_Q":["w",nm_Q],						# (integer) index of qFractions or (string) tones, so currently either "Semi" or "Quarter"
-	"nm_unote":["w",nm_unote],  			# index of an interface defined table/note to present the output note (when user prefers Bb above A# etcetera)
-	"nm_onote":["w",nm_onote],				# (integer) -2 to 127 with -2=Ctrl, -1=None and 0-127=midinotes or (string) notename + None/Ctrl
-	"nm_retune":["w",nm_retune],			# -50 - +50, retune in cents (0 is neutral)
-	"nm_voice":["w",nm_voice],     			# index of Voicelist to switch to, so you can only define switches to know voices in this preset
-	"nm_map":["w",nm_map],					# name of map to save
-	"nm_clr":["w",nm_clr],					# boolean, requesting clear notemap if True
-	"nm_sav":["w",nm_sav],					# boolean, requesting save notemap if True
-	"Scale":["w",Scale,gv.SCALES],			# index of ScaleName (& ScaleChord)
-	"Chord":["w",Chord,gv.CHORDS],			# index of Chordname
-	"SoundVolume":["w",SoundVolume],		# 0-100
-	"MidiVolume":["w",MidiVolume],			# 0-100
-	"Gain":["w",Gain],						# 0-300 (100 is neutral
+	"nm_Q":["w",nm_Q],								# (integer) index of qFractions or (string) tones, so currently either "Semi" or "Quarter"
+	"nm_unote":["w",nm_unote],						# index of an interface defined table/note to present the output note (when user prefers Bb above A# etcetera)
+	"nm_onote":["w",nm_onote],						# (integer) -2 to 127 with -2=Ctrl, -1=None and 0-127=midinotes or (string) notename + None/Ctrl
+	"nm_retune":["w",nm_retune],					# -50 - +50, retune in cents (0 is neutral)
+	"nm_voice":["w",nm_voice],		     			# index of Voicelist to switch to, so you can only define switches to know voices in this preset
+	"nm_map":["w",nm_map],							# name of map to save
+	"nm_clr":["w",nm_clr],							# boolean, requesting clear notemap if True
+	"nm_sav":["w",nm_sav],							# boolean, requesting save notemap if True
+	"Scale":["w",Scale,gv.SCALES],					# index of ScaleName (& ScaleChord)
+	"Chord":["w",Chord,gv.CHORDS],					# index of Chordname
+	"SoundVolume":["w",SoundVolume],				# 0-100
+	"MidiVolume":["w",MidiVolume],					# 0-100
+	"Gain":["w",Gain],								# 0-300 (100 is neutral
 	"Pitchrange":["w",Pitchrange,gv.PITCHSENS],		# 0-12 (so max 1 octave up & down)
 	"FVtype":["w",FVtype,gv.REVERB],				# (integer) index or (string) of value in FVtypes
 	"FVroomsize":["w",FVroomsize,gv.REVERBROOM],	# 0-100
@@ -809,8 +809,8 @@ procs={
 	"CHOrus":["w",CHOrus,gv.CHORUS],				# (integer) index or (string) of value in CHOeffects
 	"CHOdepth":["w",CHOdepth,gv.CHORUSDEPTH],		# 2-15
 	"CHOgain":["w",CHOgain,gv.CHORUSGAIN],			# 30-80
-	"MidiChannel":["w",MidiChannel],		# 1-16
-	"Button":["w",Button],					# index of Buttons, where 0 has no function (no button touched)
+	"MidiChannel":["w",MidiChannel],				# 1-16
+	"Button":["w",Button],							# index of Buttons, where 0 has no function (no button touched)
 
 # Readonly variables changing during play (parameters are ignored)
 
@@ -852,7 +852,7 @@ procs={
 	"PLtypes":["f",PLtypes],				# Peak limiter (just on/off..)
 	"CHOtypes":["f",CHOtypes],				# Chorus (just on/off..)
 	"LFOtypes":["f",LFOtypes],				# Effects implemented via the Low Frequency Oscillator
-	"Buttons":["f",Buttons]					# Buttons supported by button menu
+	"Buttons":["f",Buttons]				# Buttons supported by button menu
 	}
 
 gv.procs_alias = {}

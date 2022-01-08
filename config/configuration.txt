@@ -37,29 +37,33 @@ BLOCKSIZE = High
 USE_48kHz = False
 
 # Set True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
-USE_SERIALPORT_MIDI = True
+USE_SERIALPORT_MIDI = False
 SERIALPORT_TIMEOUT = 0.01
 SERIALPORT_REALTIME = False
 SERIALPORT_SYSEX = False
 
-# Set True to use a 16x2 direct connected/wired HD44780 LCD, configure below
+# --- next display definitions are mutually exclusive = you can have only one
+#
+# Set True to use a 16x2 direct connected/wired HD44780 LCD, configure GPIO pins below
 USE_HD44780_16x2_LCD = False
 # If you use an I2C-HD44780, above option should be false !!!
 # Set True or 16x2 (=True) or 20x4 to use a 16x2 or 20x4 I2C connected HD44780 LCD
 USE_I2C_LCD = False
-
-# Set True to use an OLED display, configure below
+#
+# Set True to use an OLED display, configure GPIO pins below
 USE_OLED = False
-
-# Set True to use LCD of Pimoroni PirateAudio hat. Configure below
+#
+# Set True to use LCD of Pimoroni PirateAudio hat. Configure GPIO pins below
 USE_PIMORONI_LCD = False
-
+#
 # Set True to use a 7-segment display via I2C
 # Two versions: original sparkfun display and cheap HT16K33 based ebay version
 USE_I2C_7SEGMENTDISPLAY = False
 USE_i2c_7SEGMENTDISPLAY_HT16K33 = False
+#
+# --- above display definitions are mutually exclusive = you can have only one
 
-# Set True to use the GPIO buttons, configure below
+# Set True to use the GPIO buttons, configure GPIO pins below
 USE_BUTTONS = False
 
 # Set True to use LED's connected to RaspberryPi's GPIO pins, configure below
@@ -68,11 +72,8 @@ USE_LEDS = False
 # should webgui server be started?
 USE_HTTP_GUI = True
 
-# Enables IPv6 on http_gui and shows the IPv6 addresses on displays
-# If the /boot/cmdline.txt contains "ipv6.disable=1" (samplerbox setting),
-#     this has to be removed or set to 0. You will hardly ever need it...
-# ===> At this moment this doesn't work (anymore) so leave it to False
-USE_IPv6 = False
+# Builtin  StandardMidiFile player
+USE_SMFPLAYER = True
 
 # This can be set higher, but 80 is a safe value
 MAX_POLYPHONY = 80
@@ -90,14 +91,16 @@ DRUMPAD_CHANNEL = 0
 DRUMPAD_PROGRAMCHANGE = False
 DRUMPAD_CONTROLCHANGE = False
 
-# Start internal smfplayer="sequencer"? If so, it's automatically added to the multi-timbrals
-# Multi timbral devices, comma separated. Exactly as in the midi open message, but without quotes!
-USE_SMFPLAYER = True
+# Multi timbral devices, comma separated.
+# Exactly as in the midi open message, but without quotes!
+# A real multitibral has all it's channels remapped/separated
+# For MULTI_WITHMASTER the channel=MIDI_CHANNEL will behave as master
 MULTI_TIMBRALS =
+MULTI_WITHMASTER =
 
 # Devices to receive SB's input, either "All" without quotes or comma separated values,
 #  use regular expressions for patterns (see docs on MIDI-THRU)
-MIDI_THRU = "All"
+MIDI_THRU =
 
 # Controlnumber used when using music notes for controls (=as CC).
 NOTES_CC = 119
@@ -176,7 +179,8 @@ PITCHBITS = 7
 #     -- HiFiBerry   : 2,3,18,19,20,21      
 #     -- PirateAudio Hat :  5 (Button A), 6 (Button B), 16 (Button X), 24 (Button Y)
 
-#     -- USE_BUTTONS --		# A valid GPIO value will activate the button
+#     -- USE_BUTTONS --
+# A valid GPIO value will activate the button
 # Increase, increases value/proceeds to next menu choice
 # Decrease, opposite of above. In 3-button setup it will return from submenu
 # Select, either selects menu choice or returns to menu from value set
@@ -230,3 +234,9 @@ PIM_LCD_HEIGHT=240
 PIM_LCD_PADDING=-2
 # padding around the display content, important for readability
 
+# ********* Currently unused, kept for future use
+# Enables IPv6 on http_gui and shows the IPv6 addresses on displays
+# If the /boot/cmdline.txt contains "ipv6.disable=1" (samplerbox setting),
+#     this has to be removed or set to 0. You will hardly ever need it...
+# ===> At this moment this doesn't work (anymore) so leave it to False
+USE_IPv6 = False

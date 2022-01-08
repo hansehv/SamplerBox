@@ -1,14 +1,16 @@
 ###############################################################
 #  Read and route midifiles to samplerbox via midi through
+#  Record in 1-track format=1 midifiles
 #
 #  The sequencer part is served by Alsa's built-in sequencer.
 #
-#  Conversion of midifile info into events for alsa is done via
-#  an adapted version of python midi, you can find this on:
-#  https://github.com/hansehv/python-midi/tree/Adapt-for-SamplerBox
-#  Original: https://github.com/vishnubob/python-midi/
+#  Conversion of midifile info into events for alsa as well as
+#  writing of midifiles is done via an adapted python midi:
+#            https://github.com/hansehv/python-midi
+#  Original: https://github.com/vishnubob/python-midi
 #
-#  This module selects the files and fires them on request.
+#  This module selects the files and fires them on request
+#  and records events + saves files on request.
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 ###############################################################
@@ -33,11 +35,17 @@ loopit		= False
 stopit		= False
 
 # recorder globals
+recordedSong	= "recorded"
 recorder		= None
 resolution		= 240
 bpm				= 120
 tickusecs		= None
 lastevent		= None
+record_controls = [ \
+		gp.getindex(gv.SMFRECSTART,gv.MC), \
+		gp.getindex(gv.SMFRECABORT,gv.MC), \
+		gp.getindex(gv.SMFRECSAVE,gv.MC) \
+		]
 
 # instantiate classes for both the playing and the file writing
 seq			= midi.sequencer.SequencerWrite(alsa_sequencer_name='SMFplayer',alsa_port_name="Through %d:%d" %(client,port))
@@ -46,7 +54,7 @@ seq			= midi.sequencer.SequencerWrite(alsa_sequencer_name='SMFplayer',alsa_port_
 gv.MULTI_TIMBRALS["Midi Through %d:%d" %(client,port)]=[0]*16		# init program=voice per channel#
 gv.MULTI_TIMBRALS["Midi Through:Midi Through Port-%d %d:%d" %(port, client,port)]=[0]*16
 def issending(src):
-	if "Midi Through" in src and "%d:%d" %(client,port) in src and gv.currsmf>0:
+	if "Midi Through" in src and "%d:%d" %(client,port) in src:
 		return(True)
 	return (False)
 
@@ -121,6 +129,7 @@ def stop(*z):
 	if loopit:	loopit=False
 	else:
 		stopit=True
+		gv.CallbackActive = False		# Callback doesn't care about housekeeping
 		while gv.currsmf>0:
 			time.sleep(.01)
 	for i in gv.playingnotes:			# What's playing at stop time ?
@@ -150,12 +159,19 @@ def cancel_record(*z):
 	gv.MidiRecorder = False
 	print ("MIDI recording canceled")
 
+def songname (name, *z):
+	global recordedSong
+	# some testing..?
+	recordedSong = name
+
 def save_record(*z):
-	global resolution, lastevent
+	global resolution, recordedSong
 	if gv.MidiRecorder:
 		gv.MidiRecorder = False
-		fname = gp.presetdir() + gv.MidiRecordedSong + ".mid"
+		gp.samples2write()
+		fname = gp.presetdir() + recordedSong + ".mid"
 		midi.buffered_write_finish( recorder, resolution, "%s" %fname )
+		gp.samples2read()
 		print ( "MIDI recording saved %s" %fname )
 
 gv.setMC(gv.SMFS,play)
@@ -164,7 +180,7 @@ gv.setMC(gv.SMFSTOP,stop)
 gv.setMC(gv.SMFTEMPO,tempo)
 gv.setMC(gv.SMFRECSTART,start_record)
 gv.setMC(gv.SMFRECABORT,cancel_record)
-gv.setMC(gv.SMFRECSTOP,save_record)
+gv.setMC(gv.SMFRECSAVE,save_record)
 
 # ----------------------------------------------------------------------
 #		M I D I		S T R E A M S
@@ -181,7 +197,7 @@ def getvalue(parm,data,single=True):
 		return num
 	return(data[i:i+data[i:].find(",")])
 
-def load(line,dirname, fname, smfseq, voicemap):
+def load(line,dirname, fname, smfseq, gain, voicemap):
 	channels={}
 	v=", " if gv.DefinitionErr != "" else ""
 	if smfseq<1 or smfseq>127:
@@ -228,14 +244,19 @@ def load(line,dirname, fname, smfseq, voicemap):
 								channels[c]=[ "%s"%tn, (m not in player_exceptions), [] ]
 							else:
 								channels[c][1]=True		# just to be sure
-							if msg=="NoteOnEvent" and c==9:
-								n=int(getvalue("data",data)[1:])
-								if n not in drums:
-									drums.append(n)
+							if msg=="NoteOnEvent":
+								d[1] = int( d[1]*gain +0.5 )
+								if d[1]>127:
+									d[1]=127
+								if c==9:	# make drum mapping for channel 10
+									#n=int(getvalue("data",data)[1:])
+									if d[0] not in drums:
+										drums.append(d[0])
 						if m not in player_exceptions:
 							events.append([t,m,c,d])
 			events.sort()	# sort on ticks (vishnubob's example sorts on msg (?!?) )
-			if voicemap=="": voicemap=song
+			if voicemap=="":
+				voicemap=song
 			voices=[]	# inventory of used channels and optional descriptions
 			print("SMF_1%d=%s, voicemap=%s sends notes on channels:"%(smfseq,fname,voicemap))
 			for key, value in channels.items():
@@ -268,7 +289,7 @@ def drumlist():
 				drums[n].append(song)
 			else:
 				drums[n]=[song]
-	print ("Drum sounds used by voicemaps:")
+	print ("Drum sounds used by SMF's:")
 	for i in sorted (drums.keys()):
 		print (" - %d in %s" %(i,drums[i]))
 
@@ -294,10 +315,9 @@ def player():
 	seq.subscribe_port(client, port)
 	while True:
 		if gv.currsmf > 0:
-			print("SMFplay %s, res=%d, %s" \
-				%(gv.smfseqs[gv.currsmf][0],
-				gv.smfseqs[gv.currsmf][1],
-				gv.smfseqs[gv.currsmf][3]))
+			print( "SMFplay %s, res=%d" % \
+				( gv.smfseqs[gv.currsmf][0], gv.smfseqs[gv.currsmf][1]
+				))
 			streamtempo=120		# default in sequencer, don't see use making this a parameter
 			gv.smftempo=streamtempo
 			seq.init_tempo(gv.smfseqs[gv.currsmf][1])
@@ -345,7 +365,7 @@ def player():
 				pass
 			# ===> reset voicemap, either default or none
 			gv.currsmf=0
-		msleep(30)
+		msleep(15)
 
 SMFplayThread = threading.Thread(target=player)
 SMFplayThread.daemon = True
@@ -354,14 +374,6 @@ SMFplayThread.start()
 # ----------------------------------------------------------------------
 #		R E C O R D E R
 # ----------------------------------------------------------------------
-
-def get_record_controls():
-	return [ \
-		gp.getindex(gv.SMFRECSTART,gv.MC), \
-		gp.getindex(gv.SMFRECABORT,gv.MC), \
-		gp.getindex(gv.SMFRECSTOP,gv.MC) \
-		]
-record_controls = get_record_controls()
 
 def ignore_record_control(messagetype, message, first_time=False):
 	global record_controls
@@ -382,7 +394,7 @@ def ignore_record_control(messagetype, message, first_time=False):
 
 	return False
 
-def record_event(mididev, messagechannel, messagetype, message):
+def record_event(mididev, multitimbral, messagechannel, messagetype, message):
 	global recorder, lastevent, tickusecs
 
 	if messagetype in supported_msgs:

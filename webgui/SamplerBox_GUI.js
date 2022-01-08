@@ -120,6 +120,7 @@ var SB_variables={	// make sure all passed I/O parameters are covered here
 
 // I-O Building blocks
 var OffOn = ["Off", "On"];
+var NoYes = ["No", "Yes"];
 var SB_input={	// make sure all passed I/O parameters are covered here, be it with a dummy
 	input_SB_MidiChannel: function(input_name,name,val,text){
 		return(text+SB_numselect(input_name,name,val,1,16,1,1));
@@ -173,10 +174,10 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 		//return(text+'<INPUT type="text" size="25" name="'+name+'" value="'+val+'" pattern="[A-Za-z0-9],_\ -" title="Invalid character found"</INPUT>');
 	},
 	input_SB_nm_clr: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["No",'Yes'],1,1));
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
 	},
 	input_SB_nm_sav: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["No",'Yes'],1,1));
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
 	},
 	input_SB_SoundVolume: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,100,1)); // left out because of unexact behaviour of logic+alsa:  +SB_numselect(input_name,name,val,0,100,1,1));
