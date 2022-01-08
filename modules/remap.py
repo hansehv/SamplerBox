@@ -41,7 +41,7 @@ def notes_sync():
 	nm_voice=0
 	nm_unote=2
 	if nm_inote>-1:
-		i=gv.getindex(nm_inote,gv.notemapping)
+		i=gp.getindex(nm_inote,gv.notemapping)
 		if i>-1:
 			nm_Q=gv.notemapping[i][1]
 			nm_onote=gv.notemapping[i][2]
@@ -179,13 +179,13 @@ def notes_sav(val=None):						# boolean, but as read variable it's always 0=no/f
 			if nm_map not in gv.notemaps:
 				nm_map=""
 			gp.samples2write()
-			fname=gv.samplesdir+gv.presetlist[gv.getindex(gv.PRESET,gv.presetlist)][1]+"/"+gv.NOTEMAP_DEF
+			fname=gp.presetdir() + gv.NOTEMAP_DEF
 			with open(fname, 'w') as mapfile:
 				mapfile.write("Set,Fractions,Key,Note,Retune,Playvoice,unote\n")
 				for i in range(len(newnotemap)):
 					note=gv.midinote2notename(newnotemap[i][3],newnotemap[i][1])
 					key=newnotemap[i][2]
-					j=gv.getindex("%d"%key,gv.keynames)
+					j=gp.getindex("%d"%key,gv.keynames)
 					if j>0: key=gv.keynames[j][1]
 					mapfile.write('%s,%s,%s,%s,%s,%s,%s\n' %(newnotemap[i][0],newnotemap[i][1],key,note,newnotemap[i][4],newnotemap[i][5],newnotemap[i][6]))
 			gp.samples2read()

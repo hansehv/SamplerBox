@@ -42,9 +42,12 @@ function change(){
 <BODY>
 
 <TABLE WIDTH="100%"><TR>
-<TD width="125"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Dashboard</BUTTON></TD>
+<TD width="1"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Home</BUTTON></TD>
 <TD ALIGN="center"><B>LCD Menu</B></TD>
-<TD ALIGN="center"><BUTTON TYPE="button" onclick="refreshWithURLparms();">Refresh</BUTTON></TD>
+<TD width="250">
+	<BUTTON TYPE="button" onclick="refreshWithURLparms();">Refresh</BUTTON>
+	<span ID="input_SB_RenewMedia">New USB</span>
+	</TD>
 </TR></TABLE>
 
 <div ID="elem_SB_LCDdisplay"></div>
@@ -66,10 +69,13 @@ function change(){
 <FORM ID="elem_SB_Form">
 <div ID="input_SB_Button" STYLE="text-align:center;"></div>
 </FORM>
-<BR>
-<TABLE width="100%"><TR><TD ID="elem_SB_IPlist" align="center"></TD></TR></TABLE>
-<TABLE width="100%"><TR><TD ID="elem_SB_Wireless" align="center"></TD></TR></TABLE>
-<TABLE width="100%"><TR><TD ID="elem_SB_MIDIdevs" align="center"></TD></TR></TABLE>
+
+<TABLE width="100%">
+	<TR><TD ID="elem_SB_bTracks" align="center"></TD></TR>
+	<TR><TD ID="elem_SB_MIDIdevs" align="center"></TD></TR>
+	<TR><TD ID="elem_SB_IPlist" align="center"></TD></TR>
+	<TR><TD ID="elem_SB_Wireless" align="center"></TD></TR>
+</TABLE>
 
 <script>
 	SB_Update();

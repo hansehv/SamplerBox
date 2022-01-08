@@ -13,9 +13,12 @@
 <FORM ID="elem_SB_Form">
 
 <TABLE WIDTH="100%"><TR>
-<TD WIDTH="112"><IMG SRC="SamplerBox.gif" BORDER="0" WIDTH="80" HEIGHT="27" ALIGN="middle" ALT=""></TD>
-<TD ALIGN="center"><B>Dashboard</B></TD>
-<TD ALIGN="center"><BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON> &nbsp; <span ID="input_SB_RenewMedia">New USB</span></TD>
+<TD WIDTH="80"><IMG SRC="SamplerBox.gif" BORDER="0" WIDTH="80" HEIGHT="27" ALIGN="middle" ALT=""></TD>
+<TD ALIGN="center">
+	<BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON>
+	<span ID="input_SB_RenewMedia">New USB</span>
+	<BUTTON TYPE="button" onclick='window.location.assign("lcdmenu.html");'>LCD Menu</BUTTON>
+	</TD>
 </TR></TABLE>
 
 <BUTTON TYPE="button" onclick='window.location.assign("definition.html");'>Preset</BUTTON> &nbsp; <span ID="input_SB_Preset"></span>
@@ -64,12 +67,10 @@
 <BR>
 <span ID="input_SB_MidiChannel">Midi channel: </span>
 <TABLE><TR><TD ID="elem_SB_bTracks"></TD></TR></TABLE>
-<TABLE><TR><TD ID="elem_SB_IPlist"></TD></TR></TABLE>
-<TABLE><TR><TD ID="elem_SB_Wireless"></TD></TR></TABLE>
-<TABLE><TR><TD ID="elem_SB_MIDIdevs"></TD></TR></TABLE>
-<HR>
-<BUTTON TYPE="button" onclick='window.location.assign("lcdmenu.html");'>LCD Menu</BUTTON>
- &nbsp; <BUTTON TYPE="button" onclick='window.location.assign("readme.html");'>Read Me</BUTTON>
+
+<BUTTON TYPE="button" onclick='window.location.assign("readme.html");'>Read Me</BUTTON>
+&nbsp;
+<BUTTON TYPE="button" onclick='window.location.assign("webdocs/index.html");'>Full Docs</BUTTON>
 </FORM>
 
 <script>SB_Update();</script>

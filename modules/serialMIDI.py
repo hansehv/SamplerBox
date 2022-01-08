@@ -92,7 +92,7 @@ class IO:
 
                 if data in realtimsg:	# send real time messages immediately
                     if self.realtime:	# if they are wanted, otherwise just ignore
-                        self.midicallback(mididev=self.uart, message=[data], time_stamp=None)
+                        self.midicallback(mididev=self.uart, imessage=[data], time_stamp=None)
                     continue		# they may interleave, so don't touch current process
 
                 if data == 0xF7:	# EndofSysEx
@@ -110,7 +110,7 @@ class IO:
                     if len(message):	# Did we collect any stuff
                         # Just send as it can be undefined messages or plain errors, decision up to receiver
                         # For simplicity sake, SysEx without EndofSysEx is considered an error
-                        self.midicallback(mididev=self.uart, message=message, time_stamp=None)
+                        self.midicallback(mididev=self.uart, imessage=message, time_stamp=None)
                         message = []	# Start a new message
 
                     if data in systemmsg:
@@ -128,7 +128,7 @@ class IO:
             message.append(data)
             bytenum -= 1
             if not bytenum:		# we're complete !
-                self.midicallback(mididev=self.uart, message=message, time_stamp=None)
+                self.midicallback(mididev=self.uart, imessage=message, time_stamp=None)
                 message = []	# Start a new message
 
     def send_raw(self, *message):	# procedure name compliant with rtmidi API

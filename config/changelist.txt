@@ -1,12 +1,17 @@
 This file contains changelog of samplerbox.py
 For changes on samplerbox_audio.pyx, see top of the source file
 
-Oct-Nov 2021:
+Oct-Dec 2021:
   - Changed and added configuration parameters for the drumpad
-    This enables the drumpad to sent programchanges and/or CC-messages.
-  - Fixed bug in setting voice via midi controller
+    This enables the drumpad to optionally send programchanges and/or CC-messages.
   - Added experimental support for midi recording
-...-Sept 2021:
+  - Split off and optimized display routines initialization in separate module
+    This also made the LEDs independent of the mutual exclusive character displays
+  - Added multi-withmaster device, a combination of the master and an MT device
+  - Added layered voices (=more sounds per note)
+  - Added %gain for SMF
+  - Several bug fixes and code cosmetics for readability
+End 2020-Sept 2021:
   - Image built from scratch, changes not to be mentioned here
   - Converted to python 3, lots of changes, most impact:
     - configuration.txt layout changed, real extreme make-over
