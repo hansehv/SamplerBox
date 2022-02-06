@@ -537,8 +537,10 @@ class Sound:
             for ps in gv.playingsounds:
                 if self.mutegroup==ps.playingmutegroup() and playednote!=ps.playednote: # don't mute notes played by ourself (like chords & chorus)
                     ps.fadeout(False)   # fadeout the mutegroup sound(s) and cleanup admin where possible
-                    try: gv.playingnotes[ps.playednote]=[]
-                    except: pass
+                    try:
+                        gv.playingnotes[ps.playednote]=[]
+                    except:
+                        pass
                     if ps.playednote>=gv.BTNOTES and ps.playednote<gv.MTCHNOTES:
                         gv.playingbacktracks-=1
                     try:
@@ -700,6 +702,9 @@ def PlaySample(midinote,playnote,voice,velocity,startparm,retune,channel=0,play_
     global lastrnds
     velolevs=gv.voicelist[gp.getindex(voice,gv.voicelist)][4]
     velidx=int(1.0*(velocity*velolevs)/128+.9999)   # roundup without math
+    if (playnote,velidx,voice) not in gv.samples:
+        print("Note not loaded or filled")
+        return
     if startparm==-1:
         sample=lastrnds[playnote][0][lastrnds[playnote][1]]      # use the same sample for the release sample
     else:
@@ -941,7 +946,7 @@ def MidiCallback(mididev, imessage, time_stamp):
                                 PlaySample(midinote,playnote,voice,layvel*chorus.gain,5,retune+chorus.depth,MIDIchannel)
                             else:
                                 PlaySample(midinote,playnote,voice,layvel,0,retune,MIDIchannel)
-                            if not MT_in:
+                            if not MT_in and playnote in gv.playingnotes:
                                 for m in gv.playingnotes[playnote]:
                                     stopmode = m.playingstopmode()
                                     if stopmode == 3:
@@ -1416,9 +1421,9 @@ def ActuallyLoad():
                             elif (GetStopmode(mode)<-1) or (GetStopmode(mode)==127 and midinote>(127-gv.stop127)):
                                 print("invalid mode '%s' or note %d out of range, set to keyboard mode." % (mode, midinote))
                                 mode=PLAYLIVE
-                            if ( mutegroup>0 and retrigger=="Y" ):
+                            if ( mutegroup>0 and retrigger=="Y" and mode!=PLAYLIVE):
                                 retrigger = 'N'
-                                print ( "%s: Mutegroup and retrigger are mutually exclusive, set to retrigger=N" %fname )
+                                print ( "%s: Mutegroup and retrigger are mutually exclusive in special modes, set to retrigger=N" %fname )
                             try:
                                 if backtrack>-1:    # Backtracks are intended for start/stop via controller, so we can use unplayable notes
                                     if (gv.BTNOTES+backtrack, velocity, voice) in gv.samples:

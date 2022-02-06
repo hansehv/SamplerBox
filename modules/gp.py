@@ -55,7 +55,8 @@ gv.getindex=getindex                    # temporary till all modules are adapted
 
 def setFXpresets(val, *z):
     FXset = val
-    if isinstance(val,int):
+    try:
+        val =( int(val) ) # isinstance(val,int) doesn't work correctly here :-(
         try:
             FXset = gv.FXpresetnames[val]
         except:
@@ -64,6 +65,8 @@ def setFXpresets(val, *z):
         if idx < 0:
             idx = 0
             FXset = gv.FXpresetnames[idx]
+    except:
+        pass
     if FXset in ["",gv.FXpreset_last]:
         gv.FXpreset_last = gv.FXpresetnames[0]
     else:
