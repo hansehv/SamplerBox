@@ -350,8 +350,8 @@ def readFXpresets(ifile, override=False):
 			if len(sheet[i]) > 2:	 # skip useless lines
 				preset = sheet[i][0]
 				presetl = preset.lower()
-				if presetl in ["none", "box", "set"]:
-					if ( presetl == "none"
+				if presetl in ["none", "default", "box", "set"]:
+					if ( presetl in ["none", "default"]
 					or   (  (presetl == "box" and override)
 						 or (presetl == "set" and not override)
 						 )

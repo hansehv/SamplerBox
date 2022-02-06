@@ -43,7 +43,7 @@ Box,DelayMax,80,# maximum delay (50-150) of the flangerDelay=Off
 ,# -------------------------------------------------------------------------------------,,
 ,#         Out-of-range values can have serious implications,,
 Box,Moog,Off,# State of the filter: Off/On
-Box,MoogLvl,50,"# Lvl: wetlevel, 0-100: dry=1-wet"
+Box,MoogLvl,50,"# Lvl: wetlevel, 0-100, implicit dry"
 Box,MoogResonance,4,# resonance: 0-38. Exceeding 38 may cause crashes
 Box,MoogCutoff,10000,"# cutoff frequency, 1000-11000"
 Box,MoogDrive,1,"# drive: filter inputlevel, 1-20"
@@ -56,7 +56,7 @@ Box,Overdrive,Off,# State of the filter: Off/On
 Box,OverdriveBoost,30,# boost: target volume: 15-65
 Box,OverdriveDrive,5,# drive: level of distortion: 1-11
 Box,OverdriveTone,30,# tone: level of low pass filtering: 0-95
-Box,OverdriveLvl,1,"# lvl: wetlevel, 0-1: dry=1-wet"
+Box,OverdriveLvl,5,"# lvl: wetlevel, 1-10: with implicit dry"
 ,,,
 ,# -------------------------------------------------------------------------------------,,
 ,#         P E A K   L I M I T E R,,
