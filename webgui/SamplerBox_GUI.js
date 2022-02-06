@@ -39,6 +39,7 @@ var SB_variables={	// make sure all passed I/O parameters are covered here
 	v_SB_Preset: function(val){SB_Preset=val;},
 	v_SB_Gain: function(val){SB_Gain=val;},
 	v_SB_Pitchrange: function(val){SB_Pitchrange=val;},
+	v_SB_FXpreset: function(val){SB_FXpreset=val;},
 	v_SB_Notemap: function(val){SB_Notemap=val;},
 	v_SB_nm_inote: function(val){SB_nm_inote=val;},
 	v_SB_nm_onote: function(val){SB_nm_onote=val;},
@@ -99,6 +100,7 @@ var SB_variables={	// make sure all passed I/O parameters are covered here
 	v_SB_TREMtrill: function(val){SB_TREMtrill=val;},
 	v_SB_PANwidth: function(val){SB_PANwidth=val;},
 	v_SB_PANspeed: function(val){SB_PANspeed=val;},
+	v_SB_ARPeggiator: function(val){SB_ARPeggiator=val;},
 	v_SB_ARPstep: function(val){SB_ARPstep=val;},
 	v_SB_ARPsustain: function(val){SB_ARPsustain=val;},
 	v_SB_ARPloop: function(val){SB_ARPloop=val;},
@@ -117,6 +119,8 @@ var SB_variables={	// make sure all passed I/O parameters are covered here
 }
 
 // I-O Building blocks
+var OffOn = ["Off", "On"];
+var NoYes = ["No", "Yes"];
 var SB_input={	// make sure all passed I/O parameters are covered here, be it with a dummy
 	input_SB_MidiChannel: function(input_name,name,val,text){
 		return(text+SB_numselect(input_name,name,val,1,16,1,1));
@@ -136,6 +140,10 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 	},
 	input_SB_Voice: function(input_name,name,val,text){
 		return(text+SB_listselect(input_name,name,val,SB_Voicelist,2,SB_Voicelist.length,1));
+	},
+	input_SB_FXpreset: function(input_name,name,val,text){
+		for (i=1;i<SB_FXpresets.length;i++){if (SB_FXpresets[i]==SB_FXpreset) break;}
+		return(text+SB_listselect(input_name,name,i,SB_FXpresets,1,SB_FXpresets.length,1));
 	},
 	input_SB_Notemap: function(input_name,name,val,text){
 		for (i=1;i<SB_Notemaps.length;i++){if (SB_Notemaps[i]==SB_Notemap) break;}
@@ -166,10 +174,10 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 		//return(text+'<INPUT type="text" size="25" name="'+name+'" value="'+val+'" pattern="[A-Za-z0-9],_\ -" title="Invalid character found"</INPUT>');
 	},
 	input_SB_nm_clr: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["No",'Yes'],1,1));
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
 	},
 	input_SB_nm_sav: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["No",'Yes'],1,1));
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
 	},
 	input_SB_SoundVolume: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,100,1)); // left out because of unexact behaviour of logic+alsa:  +SB_numselect(input_name,name,val,0,100,1,1));
@@ -304,7 +312,7 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1,1));
 	},
 	input_SB_VIBRtrill: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
+		return(SB_radioselect(input_name,name,val,text,OffOn,1,1));
 	},
 	input_SB_TREMampl: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,1,100,1)+SB_numselect(input_name,name,val,1,100,1,1));
@@ -313,13 +321,16 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1,1));
 	},
 	input_SB_TREMtrill: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
+		return(SB_radioselect(input_name,name,val,text,OffOn,1,1));
 	},
 	input_SB_PANwidth: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,2,20,2)+SB_numselect(input_name,name,val,2,20,2,1));
 	},
 	input_SB_PANspeed: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,1,32,1)+SB_numselect(input_name,name,val,1,32,1,1));
+	},
+	input_SB_ARPeggiator: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,OffOn,1,1));
 	},
 	input_SB_ARPstep: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,10,100,1)+SB_numselect(input_name,name,val,10,100,1,1));
@@ -328,10 +339,10 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 		return(text+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_ARPloop: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
+		return(SB_radioselect(input_name,name,val,text,OffOn,1,1));
 	},
 	input_SB_ARP2end: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
+		return(SB_radioselect(input_name,name,val,text,OffOn,1,1));
 	},
 	input_SB_ARPord: function(input_name,name,val,text){
 		return(SB_radioselect(input_name,name,val,text,SB_ARPordlist,1,1));
@@ -342,7 +353,7 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 		return(text+'<label class="inline alignx"><INPUT type="checkbox" onclick="return false;"'+j+'></label>'+SB_slider(input_name,name,val,0,100,1)+SB_numselect(input_name,name,val,0,100,1,1));
 	},
 	input_SB_CHOrus: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,["Off","On"],1,1));
+		return(SB_radioselect(input_name,name,val,text,OffOn,1,1));
 	},
 	input_SB_CHOdepth: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,2,15,1)+SB_numselect(input_name,name,val,2,15,1,1));
@@ -366,8 +377,7 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 		return(text+SB_listselect(input_name,name,val,SB_Wireless,1,SB_MIDIdevs.length,1));
 	},
 	input_SB_DefinitionTxt: function(input_name,name,val,text){
-		if (SB_Samplesdir.charAt(0)=='/') m='';else m=' readonly';
-		return('<DIV STYLE="line-height:100%;text-align:center">'+text+m+'</DIV><TEXTAREA name="'+name+'"'+m+'>'+val+'</TEXTAREA>');
+		return('<DIV STYLE="line-height:100%;text-align:center">'+text+'</DIV><TEXTAREA name="'+name+'">'+val+'</TEXTAREA>');
 	}
 }
 

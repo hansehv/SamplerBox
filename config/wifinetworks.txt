@@ -6,19 +6,19 @@
 
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
+country=NL
 
 # Example using wpa protocol with pre shared key (most common)
 network={
-	ssid="ssid-name"
-	psk="password/key"
-	key_mgmt=WPA-PSK
+	ssid="your-ssid-name"
+	psk="your-wpa-key"
 }
 
 # Example using wep protocol
 network={
 	ssid="ssid-name"
 	key_mgmt=NONE
-	wep_key0="password/key"  # or 13 characters, or a hexkey starting with 0x
+	wep_key0="1234567890123"  # either 13 characters, or a hexkey starting with 0x
 	wep_tx_keyidx=0
 }
 

@@ -37,7 +37,7 @@ if numbuttons:
                 message="%s%s %s=%d" %(message,comma,m[1],m[2])
                 comma=","
             except:
-                print "Invalid button GPIO channel %d" %m[2]
+                print("Invalid button GPIO channel %d" %m[2])
                 numbuttons-=1
                 if m[0]<5: menubuttons-=1
                 m[2]=0
@@ -56,7 +56,7 @@ if numbuttons:
                             if m[0]<5:
                                 UI.menu(m[0],menubuttons)   # contains display logic
                             else:
-                                print "create extra button logic here"
+                                print("create extra button logic here")
                                 # optional display with optional lines
                                 #UI.display(l2,l3,l4)
                             break
@@ -65,4 +65,7 @@ if numbuttons:
     ButtonsThread = threading.Thread(target = Buttons)
     ButtonsThread.daemon = True
     ButtonsThread.start()
-    print "Started %d GPIO-buttons:%s" %(numbuttons,message)
+    print("Started %d GPIO-buttons:%s" %(numbuttons,message))
+    
+    def stop():
+        ButtonsThread.stop()

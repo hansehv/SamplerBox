@@ -34,7 +34,7 @@ def Preset(val=None):						# 0-127
 					if gv.getindex(val,gv.presetlist)>-1:
 						gv.PRESET=val
 						gv.LoadSamples()
-					else: print ("Preset %d does not exist, ignored" %val)
+					#else: print ("Preset %d does not exist, ignored" %val)
 				#else: print ("Preset %d already loaded" %val)
 			return gv.ActuallyLoading
 		return gv.PRESET
@@ -57,7 +57,7 @@ def Voice(val=None):						# index of Voicelist (or actual "voice#" if not numeri
 	try:
 		currvoice=gv.currvoice
 		if val!=None:
-			if isinstance(val,(int,long)):
+			if isinstance(val,int):
 				for voice in gv.voicelist:      	# count effects track and release samples
 					if voice[0]<1: val+=1
 				gv.setVoice(gv.voicelist[val][0],1)
@@ -66,6 +66,12 @@ def Voice(val=None):						# index of Voicelist (or actual "voice#" if not numeri
 			return currvoice!=gv.currvoice
 		return gv.currvoice
 	except: return 0
+def FXpreset(val=None):						# active effects preset, name in FXpresets
+	try:
+		if val!=None:
+			gp.setFXpresets(val)
+		return gv.FXpreset_last
+	except: return "None"
 def Notemap(val=None):						# active notemap, either index in notemap or "notemap name"
 	try:
 		if val!=None:
@@ -94,6 +100,13 @@ nm_sav=remap.notes_sav
 def Scale(val=None):						# index of ScaleName
 	try:
 		if val!=None:
+			if not isinstance(val,int):
+				if val=="Note":
+					val=0 
+				else:
+					val=gv.getindex(val,gv.scalename,True)
+					if val<0:
+						val=gv.currscale
 			if gv.currscale!=val:
 				gv.currscale=val
 				gv.currchord=0
@@ -102,6 +115,13 @@ def Scale(val=None):						# index of ScaleName
 def Chord(val=None):						# index of Chordname
 	try:
 		if val!=None:
+			if not isinstance(val,int):
+				if val=="Note":
+					val=0 
+				else:
+					val=gv.getindex(val,gv.chordname,True)
+					if val<0:
+						val=gv.currchord
 			if gv.currchord!=val:
 				gv.currchord=val
 				gv.currscale=0
@@ -462,6 +482,12 @@ def PANspeed(val=None):						# 1-32
 				LFO.PanSetspeed(val*4)
 		return LFO.PANspeed	#bug/4
 	except: return 0
+def ARPpower(val=None):					# boolean, or "N*" / "*"
+	try:
+		if val!=None:
+			arp.power( gv.parseBoolean(val) )
+		return 1 if arp.power else 0
+	except: return False
 def ARPstep(val=None):						# 10-100
 	try:
 		if val!=None:
@@ -511,14 +537,16 @@ def CHOrus(val=None):						# value in CHOtypes
 	except: return 0
 def CHOdepth(val=None):						# 2-15
 	try:
-		if val>=2 and val<=15:
-			chorus.setdepth(9.77*(val-2))
+		if val!=None:
+			if val>=2 and val<=15:
+				chorus.setdepth(9.77*(val-2))
 		return chorus.depth
 	except: return 0
 def CHOgain(val=None):						# 30-80
 	try:
-		if val>=30 and val<=80:
-			chorus.setgain(2.54*(val-30))
+		if val!=None:
+			if val>=30 and val<=80:
+				chorus.setgain(2.54*(val-30))
 		return chorus.gain*100
 	except: return 0
 def MidiChannel(val=None):					# 1-16
@@ -625,6 +653,8 @@ def qFractions(*z):					# Tone resolution
 	return remap.fractions
 def KeyNames(*z):					# Keynames used in csv files
 	return gv.keynames
+def FXpresets(*z):					# Defined effects presetlist for the current sample set
+	return gv.FXpresetnames
 def Chordname(*z):					# Chordnames as defined in chord.csv
 	return gv.chordname
 def Chordnote(*z):					# Chordnotes as defined in chord.csv
@@ -690,6 +720,9 @@ def Buttons(*z):					# Buttons supported by button menu
 #    if input contains errors, the proc tries to finish somehow, preferably without changing SB's status
 #  - if procedure is called with the underlying feature not enabled, a default value is returned
 #    this will ofcourse happen in display routines starting in early init stage, where features may NOT YET be enabled :-)
+# Third element (optional):
+#  - Alias = human readable text, used in the configuration files (e.g. the effects.csv)
+#  - After definition an extra dictionary is created below with this third element as key and the procedure as data
 
 procs={
 	"RenewMedia":["w",RenewMedia],	# boolean, True indicates "preset load in progress",
@@ -700,82 +733,84 @@ procs={
 	"DefinitionTxt":["w",DefinitionTxt],	# contains definition.txt, either returns definition.txt or renewmedia
 	"Preset":["w",Preset],					# 0-127, returns either preset or renewmedia
 	"Voice":["w",Voice],					# (integer) index of Voicelist or (string) actual voice, returns either voice or voicechange
+	"FXpreset":["w",FXpreset],				# (string) Name to be activated FXpresets, returns either "None" or the newly activated FXpreset
 	"Notemap":["w",Notemap],				# (string) Notemap or (integer) index in notemap of active notemap, returns either notemap or notemapchange
 	"nm_inote":["w",nm_inote],				# (string) Keyname or (integer) index in KeyNames for keyboardnote
 
 		# next procedures always return the value of the respective parameter
-	"nm_Q":["w",nm_Q],						# (integer) index of qFractions or (string) tones, so currently either "Semi" or "Quarter"
-	"nm_unote":["w",nm_unote],  			# index of an interface defined table/note to present the output note (when user prefers Bb above A# etcetera)
-	"nm_onote":["w",nm_onote],				# (integer) -2 to 127 with -2=Ctrl, -1=None and 0-127=midinotes or (string) notename + None/Ctrl
-	"nm_retune":["w",nm_retune],			# -50 - +50, retune in cents (0 is neutral)
-	"nm_voice":["w",nm_voice],     			# index of Voicelist to switch to, so you can only define switches to know voices in this preset
-	"nm_map":["w",nm_map],					# name of map to save
-	"nm_clr":["w",nm_clr],					# boolean, requesting clear notemap if True
-	"nm_sav":["w",nm_sav],					# boolean, requesting save notemap if True
-	"Scale":["w",Scale],					# index of ScaleName (& ScaleChord)
-	"Chord":["w",Chord],					# index of Chordname
-	"SoundVolume":["w",SoundVolume],		# 0-100
-	"MidiVolume":["w",MidiVolume],			# 0-100
-	"Gain":["w",Gain],						# 0-300 (100 is neutral
-	"Pitchrange":["w",Pitchrange],			# 0-12 (so max 1 octave up & down)
-	"FVtype":["w",FVtype],					# (integer) index or (string) of value in FVtypes
-	"FVroomsize":["w",FVroomsize],			# 0-100
-	"FVdamp":["w",FVdamp],					# 0-100
-	"FVlevel":["w",FVlevel],				# 0-100
-	"FVwidth":["w",FVwidth],				# 0-100
-	"AWtype":["w",AWtype],					# (integer) index or (string) of value in AWtypes
-	"AWmixing":["w",AWmixing],				# 0-100
-	"AWattack":["w",AWattack],				# 0-500
-	"AWrelease":["w",AWrelease],			# 0-500
-	"AWminfreq":["w",AWminfreq],			# 20-500
-	"AWmaxfreq":["w",AWmaxfreq],			# 1000-10000
-	"AWqfactor":["w",AWqfactor],			# 0-100
-	"AWspeed":["w",AWspeed],				# 100-1100
-	"AWlvlrange":["w",AWlvlrange],			# 0-100
-	"DLYtype":["w",DLYtype],				# (integer) index or (string) of value in DLYtypes
-	"DLYfb":["w",DLYfb],					# 0-100
-	"DLYwet":["w",DLYwet],					# 0-100
-	"DLYdry":["w",DLYdry],					# 0-100
-	"DLYtime":["w",DLYtime],				# 1000-61000
-	"DLYsteep":["w",DLYsteep],				# 1-11
-	"DLYsteplen":["w",DLYsteplen],			# 300-3300
-	"DLYmin":["w",DLYmin],					# 5-25
-	"DLYmax":["w",DLYmax],					# 50-150
-	"LFtype":["w",LFtype],					# (integer) index or (string) of value in LFtypes
-	"LFresonance":["w",LFresonance],		# 0-38
-	"LFcutoff":["w",LFcutoff],				# 1000-11000	
-	"LFdrive":["w",LFdrive],				# 1-20
-	"LFlvl":["w",LFlvl],					# 0-100
-	"LFgain":["w",LFgain],					# 10-110, Carefully test before using values above 50
-	"ODtype":["w",ODtype],					# (integer) index or (string) of value in ODtypes
-	"ODboost":["w",ODboost],				# 15-65
-	"ODdrive":["w",ODdrive],				# 1-11
-	"ODtone":["w",ODtone],					# 0-95 (accepts up to 100)
-	"ODmix":["w",ODmix],					# 0-10 (10=100% wet)
-	"PLtype":["w",PLtype],					# (integer) index or (string) of value in PLtypes
-	"PLthresh":["w",PLthresh],				# 70-110
-	"PLattack":["w",PLattack],				# 1-11
-	"PLrelease":["w",PLrelease],			# 1-11
-	"LFOtype":["w",LFOtype],				# (integer) index or (string) of value in LFOtypes
-	"VIBRpitch":["w",VIBRpitch],			# 1-64
-	"VIBRspeed":["w",VIBRspeed],			# 1-32	
-	"VIBRtrill":["w",VIBRtrill],			# boolean
-	"TREMampl":["w",TREMampl],				# 1-100
-	"TREMspeed":["w",TREMspeed],			# 1-32
-	"TREMtrill":["w",TREMtrill],			# boolean
-	"PANwidth":["w",PANwidth],				# 2-20
-	"PANspeed":["w",PANspeed],				# 1-32
-	"ARPord":["w",ARPord],					# (integer) index or (string) of value in ARPordlist
-	"ARPstep":["w",ARPstep],				# 10-100
-	"ARPsustain":["w",ARPsustain],			# 0-100
-	"ARPloop":["w",ARPloop],				# boolean
-	"ARP2end":["w",ARP2end],				# boolean
-	"ARPfade":["w",ARPfade],				# 0-100 (100 means "no fadeout")
-	"CHOrus":["w",CHOrus],					# (integer) index or (string) of value in CHOeffects
-	"CHOdepth":["w",CHOdepth],				# 2-15
-	"CHOgain":["w",CHOgain],				# 30-80
-	"MidiChannel":["w",MidiChannel],		# 1-16
-	"Button":["w",Button],					# index of Buttons, where 0 has no function (no button touched)
+	"nm_Q":["w",nm_Q],								# (integer) index of qFractions or (string) tones, so currently either "Semi" or "Quarter"
+	"nm_unote":["w",nm_unote],						# index of an interface defined table/note to present the output note (when user prefers Bb above A# etcetera)
+	"nm_onote":["w",nm_onote],						# (integer) -2 to 127 with -2=Ctrl, -1=None and 0-127=midinotes or (string) notename + None/Ctrl
+	"nm_retune":["w",nm_retune],					# -50 - +50, retune in cents (0 is neutral)
+	"nm_voice":["w",nm_voice],		     			# index of Voicelist to switch to, so you can only define switches to know voices in this preset
+	"nm_map":["w",nm_map],							# name of map to save
+	"nm_clr":["w",nm_clr],							# boolean, requesting clear notemap if True
+	"nm_sav":["w",nm_sav],							# boolean, requesting save notemap if True
+	"Scale":["w",Scale,gv.SCALES],					# index of ScaleName (& ScaleChord)
+	"Chord":["w",Chord,gv.CHORDS],					# index of Chordname
+	"SoundVolume":["w",SoundVolume],				# 0-100
+	"MidiVolume":["w",MidiVolume],					# 0-100
+	"Gain":["w",Gain],								# 0-300 (100 is neutral
+	"Pitchrange":["w",Pitchrange,gv.PITCHSENS],		# 0-12 (so max 1 octave up & down)
+	"FVtype":["w",FVtype,gv.REVERB],				# (integer) index or (string) of value in FVtypes
+	"FVroomsize":["w",FVroomsize,gv.REVERBROOM],	# 0-100
+	"FVdamp":["w",FVdamp,gv.REVERBDAMP],			# 0-100
+	"FVlevel":["w",FVlevel,gv.REVERBLVL],			# 0-100
+	"FVwidth":["w",FVwidth,gv.REVERBWIDTH],			# 0-100
+	"AWtype":["w",AWtype,gv.AUTOWAH],				# (integer) index or (string) of value in AWtypes
+	"AWmixing":["w",AWmixing,gv.AUTOWAHLVL],		# 0-100
+	"AWattack":["w",AWattack,gv.AUTOWAHATTACK],		# 0-500
+	"AWrelease":["w",AWrelease,gv.AUTOWAHRELEASE],	# 0-500
+	"AWminfreq":["w",AWminfreq,gv.AUTOWAHMIN],		# 20-500
+	"AWmaxfreq":["w",AWmaxfreq,gv.AUTOWAHMAX],		# 1000-10000
+	"AWqfactor":["w",AWqfactor,gv.AUTOWAHQ],		# 0-100
+	"AWspeed":["w",AWspeed,gv.AUTOWAHSPEED],		# 100-1100
+	"AWlvlrange":["w",AWlvlrange,gv.AUTOWAHLVLRNGE],# 0-100
+	"DLYtype":["w",DLYtype,gv.DELAYTYPE],			# (integer) index or (string) of value in DLYtypes
+	"DLYfb":["w",DLYfb,gv.DELAYFB],					# 0-100
+	"DLYwet":["w",DLYwet,gv.DELAYFW],				# 0-100
+	"DLYdry":["w",DLYdry,gv.DELAYMIX],				# 0-100
+	"DLYtime":["w",DLYtime,gv.DELAYTIME],			# 1000-61000
+	"DLYsteep":["w",DLYsteep,gv.DELAYSTEEP],		# 1-11
+	"DLYsteplen":["w",DLYsteplen,gv.DELAYSTEPLEN],	# 300-3300
+	"DLYmin":["w",DLYmin,gv.DELAYMIN],				# 5-25
+	"DLYmax":["w",DLYmax,gv.DELAYMAX],				# 50-150
+	"LFtype":["w",LFtype,gv.LADDER],				# (integer) index or (string) of value in LFtypes
+	"LFresonance":["w",LFresonance,gv.LADDERRES],	# 0-38
+	"LFcutoff":["w",LFcutoff,gv.LADDERCUTOFF],		# 1000-11000	
+	"LFdrive":["w",LFdrive,gv.LADDERDRIVE],			# 1-20
+	"LFlvl":["w",LFlvl,gv.LADDERLVL],				# 0-100
+	"LFgain":["w",LFgain,gv.LADDERGAIN],			# 10-110, Carefully test before using values above 50
+	"ODtype":["w",ODtype,gv.OVERDRIVE],				# (integer) index or (string) of value in ODtypes
+	"ODboost":["w",ODboost,gv.ODRVBOOST],			# 15-65
+	"ODdrive":["w",ODdrive,gv.ODRVDRIVE],			# 1-11
+	"ODtone":["w",ODtone,gv.ODRVTONE],				# 0-95 (accepts up to 100)
+	"ODmix":["w",ODmix,gv.ODRVMIX],					# 0-10 (10=100% wet)
+	"PLtype":["w",PLtype,gv.LIMITER],				# (integer) index or (string) of value in PLtypes
+	"PLthresh":["w",PLthresh,gv.LIMITTHRESH],		# 70-110
+	"PLattack":["w",PLattack,gv.LIMITATTACK],		# 1-11
+	"PLrelease":["w",PLrelease,gv.LIMITRELEASE],	# 1-11
+	"LFOtype":["w",LFOtype,gv.LFOTYPE],				# (integer) index or (string) of value in LFOtypes
+	"VIBRpitch":["w",VIBRpitch,gv.VIBRDEPTH],		# 1-64
+	"VIBRspeed":["w",VIBRspeed,gv.VIBRSPEED],		# 1-32	
+	"VIBRtrill":["w",VIBRtrill,gv.VIBRTRILL],		# boolean
+	"TREMampl":["w",TREMampl,gv.TREMDEPTH],			# 1-100
+	"TREMspeed":["w",TREMspeed,gv.TREMSPEED],		# 1-32
+	"TREMtrill":["w",TREMtrill,gv.TREMTRILL],		# boolean
+	"PANwidth":["w",PANwidth,gv.PANWIDTH],			# 2-20
+	"PANspeed":["w",PANspeed,gv.PANSPEED],			# 1-32
+	"ARPeggiator":["w",ARPpower,arp.power],			# boolean
+	"ARPord":["w",ARPord,gv.ARP],					# (integer) index or (string) of value in ARPordlist
+	"ARPstep":["w",ARPstep,gv.ARPTEMPO],			# 10-100
+	"ARPsustain":["w",ARPsustain,gv.ARPSUSTAIN],	# 0-100
+	"ARPloop":["w",ARPloop,gv.ARPLOOP],				# boolean
+	"ARP2end":["w",ARP2end,gv.ARP2END],				# boolean
+	"ARPfade":["w",ARPfade,gv.ARPFADE],				# 0-100 (100 means "no fadeout")
+	"CHOrus":["w",CHOrus,gv.CHORUS],				# (integer) index or (string) of value in CHOeffects
+	"CHOdepth":["w",CHOdepth,gv.CHORUSDEPTH],		# 2-15
+	"CHOgain":["w",CHOgain,gv.CHORUSGAIN],			# 30-80
+	"MidiChannel":["w",MidiChannel],				# 1-16
+	"Button":["w",Button],							# index of Buttons, where 0 has no function (no button touched)
 
 # Readonly variables changing during play (parameters are ignored)
 
@@ -803,6 +838,7 @@ procs={
 	"Stop127":["f",Stop127],				# First note at right/high side of keyboard area
 	"qFractions":["f",qFractions],			# [[1, 'Semi'], [2, 'Quarter']]
 	"KeyNames":["f",KeyNames],				# Notenames as defined in keynotes.csv
+	"FXpresets":["f",FXpresets],			# Effect presetnames available in current set (merged box en set presets)
 	"Chordname":["f",Chordname],			# Chordnames as defined in chord.csv
 	"Chordnote":["f",Chordnote],			# Chordnotes as defined in chord.csv
 	"Scalename":["f",Scalename],			# Scalenames as defined in scales.csv
@@ -816,8 +852,13 @@ procs={
 	"PLtypes":["f",PLtypes],				# Peak limiter (just on/off..)
 	"CHOtypes":["f",CHOtypes],				# Chorus (just on/off..)
 	"LFOtypes":["f",LFOtypes],				# Effects implemented via the Low Frequency Oscillator
-	"Buttons":["f",Buttons]					# Buttons supported by button menu
+	"Buttons":["f",Buttons]				# Buttons supported by button menu
 	}
+
+gv.procs_alias = {}
+for m in procs:
+	if len(procs[m]) > 2:
+		gv.procs_alias[ procs[m][2] ] = procs[m][1]
 
 #             = = = = =   Extra procedures, not (directly) related to in/output fields   = = = = =
 

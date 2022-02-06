@@ -11,7 +11,7 @@ LED_green = gv.cp.getint(gv.cfg,"LED_green".lower())
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(LED_red,GPIO.OUT)
 GPIO.setup(LED_green,GPIO.OUT)
-print 'Started LEDs via GPIO: Red=%d, Green=%d' %(LED_red,LED_green)
+print('Started LEDs via GPIO: Red=%d, Green=%d' %(LED_red,LED_green))
 
 redblink=False
 greenblink=False

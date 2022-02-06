@@ -41,7 +41,7 @@ def notes_sync():
 	nm_voice=0
 	nm_unote=2
 	if nm_inote>-1:
-		i=gv.getindex(nm_inote,gv.notemapping)
+		i=gp.getindex(nm_inote,gv.notemapping)
 		if i>-1:
 			nm_Q=gv.notemapping[i][1]
 			nm_onote=gv.notemapping[i][2]
@@ -55,7 +55,7 @@ def notes_consolidate():
 	global currinote,nm_inote,nm_Q,nm_onote,nm_retune,nm_voice
 	app=True
 	rem=(nm_onote==nm_inote and nm_retune==0 and nm_voice==0)
-	for i in xrange(len(gv.notemapping)):
+	for i in range(len(gv.notemapping)):
 		if currinote==gv.notemapping[i][0]:
 			if rem:
 				del gv.notemapping[i]
@@ -76,21 +76,21 @@ def notes_consolidate():
 def notes_Q(val=None):							# Fractions or index of qFractions
 	global nm_Q
 	if val!=None:
-		if isinstance(val,(int,long)):
+		if isinstance(val,int):
 			nm_Q=val
 		else:
 			for Q in fractions:
 				if Q[1]==val:
 					nm_Q=Q[0]
 					break
-		for j in xrange(len(gv.notemapping)):
+		for j in range(len(gv.notemapping)):
 			gv.notemapping[j][1]=nm_Q
 	return nm_Q
 def notes_inote(val=None):						# keyname or index in KeyNames for keyboardnote
 	global currinote,nm_inote
 	if val!=None:
 		currinote=nm_inote
-		if isinstance(val,(int,long)):
+		if isinstance(val,int):
 			nm_inote=int(gv.keynames[val][0])
 		else:
 			for key in gv.keynames:
@@ -103,7 +103,7 @@ def notes_onote(val=None):						# midinote or notename, with specials -2="Ctrl" 
 	global nm_Q,nm_onote,nm_unote
 	curronote=nm_onote
 	if val!=None:
-		if isinstance(val,(int,long)):
+		if isinstance(val,int):
 			nm_onote=val-2
 		else:
 			nm_onote=gv.notename2midinote(val,nm_Q)
@@ -122,7 +122,7 @@ def notes_voice(val=None):		       			# (integer) index of Voicelist to switch t
 	global nm_voice
 	if val!=None:
 		try:
-			if isinstance(val,(int,long)):
+			if isinstance(val,int):
 				if val<0:		# "no voice change"?
 					nm_voice=0
 				else:
@@ -137,7 +137,7 @@ def notes_unote(val=None):						# index of an interface defined table/note to pr
 	global nm_unote
 	if val!=None:
 		nm_unote=0
-		if isinstance(val,(int,long)):
+		if isinstance(val,int):
 			nm_unote=val
 		else:
 			try: nm_unote=int(val)
@@ -179,13 +179,13 @@ def notes_sav(val=None):						# boolean, but as read variable it's always 0=no/f
 			if nm_map not in gv.notemaps:
 				nm_map=""
 			gp.samples2write()
-			fname=gv.samplesdir+gv.presetlist[gv.getindex(gv.PRESET,gv.presetlist)][1]+"/"+gv.NOTEMAP_DEF
+			fname=gp.presetdir() + gv.NOTEMAP_DEF
 			with open(fname, 'w') as mapfile:
 				mapfile.write("Set,Fractions,Key,Note,Retune,Playvoice,unote\n")
 				for i in range(len(newnotemap)):
 					note=gv.midinote2notename(newnotemap[i][3],newnotemap[i][1])
 					key=newnotemap[i][2]
-					j=gv.getindex("%d"%key,gv.keynames)
+					j=gp.getindex("%d"%key,gv.keynames)
 					if j>0: key=gv.keynames[j][1]
 					mapfile.write('%s,%s,%s,%s,%s,%s,%s\n' %(newnotemap[i][0],newnotemap[i][1],key,note,newnotemap[i][4],newnotemap[i][5],newnotemap[i][6]))
 			gp.samples2read()

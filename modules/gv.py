@@ -3,12 +3,13 @@
 #  most variables are defined by the respective procedures
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
-#   see docs at https://homspace.nl/samplerbox
+#   see docs at  https://homspace.nl/samplerbox
 #   changelog in changelist.txt
 #
 
 # Literals
 cfg="config"
+CONFIG_LOC = "config/"
 SAMPLESDEF="definition.txt"
 CTRLMAP_DEF="CCmap.csv"
 NOTEMAP_DEF="notemap.csv"
@@ -16,11 +17,15 @@ VOICEMAP_DEF="MTchannelmap.csv"
 FIXED="Fixed"
 VOICES="Voices"
 NOTEMAPS="Notemaps"
+FXPRESETS="FXpresets"
 BACKTRACKS="BackTracks"
 SMFS="SMFs"
 SMFTEMPO="SMFtempo"
 SMFLOOP="SMFloop"
 SMFSTOP="SMFstop"
+SMFRECSTART="SMFrecstart"
+SMFRECABORT="SMFreccancel"
+SMFRECSAVE="SMFrecsave"
 MENU_INCR="Menu_Incr"
 MENU_DECR="Menu_Decr"
 MENU_SEL="Menu_Sel"
@@ -40,6 +45,7 @@ REVERBLVL="ReverbLvl"
 REVERBROOM="ReverbRoom"
 REVERBDAMP="ReverbDamp"
 REVERBWIDTH="ReverbWidth"
+AUTOWAH="WahType"
 AUTOWAHENV="EnvelopeWah"
 AUTOWAHLFO="LFOwah"
 AUTOWAHMAN="ManualWah"
@@ -52,6 +58,7 @@ AUTOWAHRELEASE="WahRelease"
 AUTOWAHSPEED="WahSpeed"
 AUTOWAHLVLRNGE="WahLvlRange"
 AUTOWAHPEDAL="WahPedal"
+DELAYTYPE="DelayType"
 ECHO="Echo"
 FLANGER="Flanger"
 DELAYFB="DelayFeedbackVol"
@@ -78,6 +85,7 @@ LIMITTHRESH="LimitThreshold"
 LIMITATTACK="LimitAttack"
 LIMITRELEASE="LimitRelease"
 PITCHSENS="PitchSens"
+LFOTYPE="LFOtype"
 VIBRATO="Vibrato"
 TREMOLO="Tremolo"
 PANNING="Panning"
@@ -111,7 +119,6 @@ ARP2END="ArpPlay2end"
 UA="UA"
 
 # Internal vars
-outports = {}
 ConfigErr=False
 LEDblink=False
 USE_ALSA_MIXER=False
@@ -149,22 +156,25 @@ CCmapSet=[]
 CCmapBox=[]
 keynames=[]
 drumpadmap=[]
-drumpad=False
 notemap=[]
 notemaps=[]
 currnotemap=""
 notemapping=[]
+MidiRecorder=False
 
-def NoProc(*vals):      # Dummy
-    pass
 def safeguard (*vals):  # dedicated proc for debugging MC-table
     arr=[]
     for val in vals :
         arr.append(val)
-    print "gv.Safeguard: call to unset procedure for %s:%s" %(arr[1],arr[0])
-def setMC(mc,proc):
-    x=getindex(mc,MC)
-    MC[x][2]=proc
+    print("gv.Safeguard: call to unset procedure for %s:%s" %(arr[1],arr[0]))
+def setMC( mc, proc ):
+    for x in range( len(MC) ):
+        if mc == MC[x][0]:
+            break
+    if x < len(MC):
+        MC[x][2] = proc
+    else:
+        print("gv.setMC: Can't set %s" %mc)
     return x
 MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch),procedure)
 [PROGUP,1,safeguard],
@@ -256,9 +266,13 @@ MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch)
 [SMFLOOP,1,safeguard],
 [SMFSTOP,1,safeguard],
 [SMFTEMPO,0,safeguard],
+[SMFRECSTART,1,safeguard],
+[SMFRECABORT,1,safeguard],
+[SMFRECSAVE,1,safeguard],
 [MENU_INCR,1,safeguard],
 [MENU_DECR,1,safeguard],
 [MENU_SEL,1,safeguard],
 [MENU_RET,1,safeguard],
-[NOTEMAPS,2,safeguard]
+[NOTEMAPS,2,safeguard],
+[FXPRESETS,2,safeguard]
 ]

@@ -59,21 +59,23 @@ def select(init=False):
 				procs.append(m)
 def selret():
 	global level
-	if level>0: level-=1
+	if level>0:
+		level-=1
 
 def value_up(val=1):
 	x=UI.procs[procs[menu[1]][1]][1]()
 	y=0
-	if isinstance(x,basestring):	# a returned string means its a table value or boolean
+	if isinstance(x,str):	# a returned string means its a table value or boolean
 		if procs[menu[1]][3]=="boolean":
 			y=True if val>0 else False
 		t=UI.procs[procs[menu[1]][3]][1]()
 		y=UI.getindex(x,t,True)
-		if y<0: y=0		# index=0, default value can have various names: "", "None", "____" etcetera
+		if y<0:
+			y=0		# index=0, default value can have various names: "", "None", "____" etcetera
 		y=value_idx_walk(val,t,y)
 	elif procs[menu[1]][3]=="boolean":	# a returned integer might be boolean, we need advice from menu-3
 		y=(val>0)
-	elif isinstance(procs[menu[1]][3],basestring):	# it may also mean a table value or index
+	elif isinstance(procs[menu[1]][3],str):	# it may also mean a table value or index
 		t=UI.procs[procs[menu[1]][3]][1]()
 		tt=t[0]
 		if isinstance(tt,list) and isinstance(tt[0],int):	# integer value in multi-dimension table
@@ -85,16 +87,22 @@ def value_up(val=1):
 			y=value_idx_walk(val,t,x)
 	else:
 		y=x+val*procs[menu[1]][5]
-		if y<=procs[menu[1]][3]: y=procs[menu[1]][3]
-		elif y>=procs[menu[1]][4]: y=procs[menu[1]][4]
+		if y<=procs[menu[1]][3]:
+			y=procs[menu[1]][3]
+		elif y>=procs[menu[1]][4]:
+			y=procs[menu[1]][4]
 	UI.procs[procs[menu[1]][1]][1](y)
+
 def value_dn():
 	value_up(-1)
+
 def value_idx_walk(val,t,x):
 	l=len(t)
 	y=x+val
-	if y<0: y=0 if l<3 else l-1
-	elif y>=l: y=0 if l>2 else l-1
+	if y<0:
+		y=0 if l<3 else l-1
+	elif y>=l:
+		y=0 if l>2 else l-1
 	return y
 	
 def nofunc(): pass
@@ -118,14 +126,17 @@ def nav(button, numbut):
 				select(True)	# cover your back for multiple buttons (eg GPIO & midi)
 				level=2
 			menu[0]=0
-		if button==2 and numbut==3 and level==1: button=4
+		if button==2 and numbut==3 and level==1:
+			button=4
 		butfunc[button][level]()
 		while True:
 			if not UI.RenewMedia():
 				displayed=UI.display('','',line1(),line2(),line3())
-				if displayed==None or displayed: break
+				if displayed==None or displayed:
+					break
 			time.sleep(0.1)
-	elif button!=0: print "Unknown menu button", button
+	elif button!=0:
+		print("Unknown menu button", button)
 
 def line1(*z):
 	if level==0: return maintxt
@@ -139,11 +150,11 @@ def line3(*z):
 	if level<2: return ""
 	s=""
 	x=UI.procs[procs[menu[1]][1]][1]()
-	if isinstance(x,basestring):	# luckily it's a string
+	if isinstance(x,str):	# luckily it's a string
 		s=x
 	elif procs[menu[1]][3]=="boolean":	# a number can be a boolean
 		s="On" if x else "Off"
-	elif isinstance(procs[menu[1]][3],basestring):	# and 'something' with a descriptive table
+	elif isinstance(procs[menu[1]][3],str):	# and 'something' with a descriptive table
 		t=UI.procs[procs[menu[1]][3]][1]()
 		tt=t[0]
 		if isinstance(tt,list):		# more than one dimension in this table

@@ -1,5 +1,5 @@
 # Here you can define static network information for specific SSID's
-#  - if the network you cannect to has no DHCP
+#  - if the network you connect to has no DHCP
 #  - if you have other reason to force a specific ip
 #    (e.g. a stage setup can be static because of equipment requirements)
 #
@@ -17,6 +17,7 @@ option classless_static_routes
 require dhcp_server_identifier
 slaac private
 nohook lookup-hostname
+noarp
 
 # ------------------------------------------------
 #

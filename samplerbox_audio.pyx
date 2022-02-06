@@ -1,3 +1,5 @@
+#!python
+#cython: language_level=3
 #
 #  SamplerBox 
 #
@@ -38,6 +40,9 @@
 #      - removed the %retune value
 #  December 2019
 #      - Excluded sequencer channels from pitchbend/vibrato/panning
+#  December 2021
+#      - Adapted quarternote calculation after python2.7 -> python3 conversion
+#        Intermediate rounding of formulas with mixed int/float variables changed
 #
 #  Rebuild with "python setup.py build_ext --inplace"
 
@@ -88,11 +93,7 @@ def mixaudiobuffers(list rmlist, int frame_count, numpy.ndarray FADEOUT, int FAD
             lpan = 1.0
             rpan = 1.0
         else:
-            if fractions==1:
-                j=0
-            else:
-                j=1/fractions-0.00001  # enable rounding without math
-            i = (SPEEDRANGE+(snd.note-snd.sound.midinote+j)/fractions) * PITCHSTEPS + snd.retune + PITCHBEND
+            i = (SPEEDRANGE+(snd.note-snd.sound.midinote)/fractions) * PITCHSTEPS + snd.retune + PITCHBEND
             if i < 0:                                # below zero is out of limits
                 i = 0                                # save the program by ruining the pitch :-(
             else:

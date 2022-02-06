@@ -90,9 +90,9 @@ gv.USE_IPv6 = gv.cp.getboolean(gv.cfg,"USE_IPv6".lower())
 def IPlist(*z):						# SB IP addresses (cable and wireless plus IPv6 if enabled in configuration.txt)
 	x=subprocess.check_output("hostname -I",shell=True).split()
 	if gv.USE_IPv6:
-		return([i for i in x])
+		return([i.decode('ascii') for i in x])
 	else:
-		return([i for i in x if i.find('.')>-1])
+		return([i.decode('ascii') for i in x if i.find(b'.')>-1])
 
-print "IP's: %s" %(IPlist())
-print "Wireless: %s" %wireless()[0]
+print ( "IP's: %s" %IPlist() )
+print ( "Wireless: %s" %wireless()[0] )

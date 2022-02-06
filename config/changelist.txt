@@ -1,6 +1,36 @@
 This file contains changelog of samplerbox.py
 For changes on samplerbox_audio.pyx, see top of the source file
 
+Jan-Feb 2022:
+  - Cosmetic change on the LCDmenu webgui screen.
+  - Code cosmetics
+  - Last minute bug fixes before public release
+Oct-Dec 2021:
+  - Changed and added configuration parameters for the drumpad
+    This enables the drumpad to optionally send programchanges and/or CC-messages.
+  - Added (very) experimental support for midi recording
+  - Split off and optimized display routines initialization in separate module
+    This also made the LEDs independent of the mutual exclusive character displays
+    .. in other words you can have LED's plus a character display !
+  - Added multi-withmaster device, a combination of the master and an MT device
+  - Added layered voices (=more sounds per note)
+  - Added %gain for SMF
+  - Several bug fixes and code cosmetics for readability
+End 2020-Sept 2021:
+  - Image built from scratch, changes not to be mentioned here
+  - Converted to python 3, lots of changes, most impact:
+    - configuration.txt layout changed, real extreme make-over
+    - folder structure adapted, ao to ease setting up without orginal image
+  - Added effects presets on set+voice level
+    For this effects presets are moved from configuration.txt to FXpresets.csv
+  - Bugfixes, cleanups and split off more functions to modules
+
+#----- python 2.7 train stops here to focus on new image with python 3 -----#
+Sbox20210521.zip is last original samplerbox based image with python 2.7
+Github updates after that date:
+  - Added support for cheap ebay HT16K33 I2C 7-segment displays
+  - Updated look of the Pimoroni display
+  - Fixed bug(s)
 Feb-May 2021:
   - Added OLED SSD1306 support
   - Made console log of smfplayer more informative

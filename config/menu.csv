@@ -1,9 +1,10 @@
 Main Menu,Item,Specs,Show as,API comment
 General,Preset,Presetlist,,"#: #,name"
 -,Voice,Voicelist,,"#: #,name"
--,Notemap,Notemaps,,name: name > name
 -,Scale,Scalename,,name: name > name
 -,Chord,Chordname,,name: name > name
+-,Notemap,Notemaps,,name: name > name
+-,FXpreset,FXpresets,,name: name > name
 -,SoundVolume,0-100-10,,
 -,MidiVolume,0-100,,
 -,Gain,0-300,,

@@ -88,10 +88,14 @@ UA,Chords,<chord name>,SwitchOn,# Chord has to be defined in chords.csv
 UA,Voices,<voice number>,SwitchOn,"# Voice > 0, voice# should be assigned to a sample pattern"
 UA,BackTracks,<backtrack number>,Toggle,"# Backtrack > 0, track# should be assigned to a sample"
 UA,Notemaps,<notemap name>,SwitchOn,# Use None or any not existing notemap for no notemapping
+UA,FXpresets,<effect presetname>,SwitchOn,# Names in box+set csv can be chosen
 UA,SMFs,<SMFseq number>,Toggle,"# SMF > 0, seq# starts/stops assigned to a sample"
 UA,Fixed,SMFstop,SwitchOff,# Stops playing sample
 UA,Fixed,SMFloop,Toggle,"# Can make sample loop, if so: pressing stop first ""unloop"" and second press stops immediately"
 UA,Fixed,SMFtempo,Continuous,"# unreliable, use on your own risk"
+UA,Fixed,SMFrecstart,SwitchOn,# Starts recording (at first touch of a key / controller)
+UA,Fixed,SMFreccancel,SwitchOff,# Stops recording without saving
+UA,Fixed,SMFrecsave,SwitchOff,# Stops recording and saves the file
 UA,Fixed,Menu_Incr,Switch,# The 4-button menu system
 UA,Fixed,Menu_Decr,Switch,
 UA,Fixed,Menu_Sel,Switch,

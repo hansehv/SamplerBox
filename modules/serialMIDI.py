@@ -49,43 +49,40 @@ except:
     pass
 
 class IO:
-    
+
     def __init__(self, midicallback=None, uart="SERIALPORT", realtime=False, sysex=False, timeout=0.01):
 
-	self.midicallback = midicallback
-	self.uart = uart
-	self.out = True
-	self.realtime = realtime
-	self.sysex = sysex
-	self.timeout = timeout
-	try:
-	    self.ser = serial.Serial('/dev/ttyAMA0', baudrate=38400)
-	    self.ser.close()	# this solves problem when MIDI are already arriving during RPi boot
-	    self.ser = serial.Serial('/dev/ttyAMA0', baudrate=38400, timeout=None, writeTimeout=self.timeout)
-	    # Above statement has a deprecated syntax as SB uses old serial in the Python 2.7 versions
-	    # Deprecated still works, but current is / should be:
-	    #self.ser = serial.Serial('/dev/ttyAMA0', baudrate=38400, write_timeout=self.timeout)
-	    self.listen()
-	    self.send_raw( *[137,0,0] )	# send noteoff in channel10 for note=0, a likely harmless test :-)
-	    time.sleep(self.timeout)
-	except:
-	    print ('Could not start MIDI serial on %s' %self.uart)
+        self.midicallback = midicallback
+        self.uart = uart
+        self.out = True
+        self.realtime = realtime
+        self.sysex = sysex
+        self.timeout = timeout
+        try:
+            self.ser = serial.Serial('/dev/ttyAMA0', baudrate=38400)
+            self.ser.close()	# this solves problem when MIDI are already arriving during RPi boot
+            self.ser = serial.Serial('/dev/ttyAMA0', baudrate=38400, write_timeout=self.timeout)
+            self.listen()
+            self.send_raw( *[137,0,0] )	# send noteoff in channel10 for note=0, a likely harmless test :-)
+            time.sleep(self.timeout)
+        except:
+            print ('Could not start MIDI serial on %s' %self.uart)
 
     def listen(self):
-	    MidiThread = threading.Thread(target=self.callback)
-	    MidiThread.daemon = True
-	    MidiThread.start()
-	    print ('Opened input "%s"' %self.uart)
-	
+            MidiThread = threading.Thread(target=self.callback)
+            MidiThread.daemon = True
+            MidiThread.start()
+            print ('Opened input "%s"' %self.uart)
+
     def callback(self):
         message = []
-	runningstatus = 0
-	runningbytes = 0
-	bytenum = 0
-	
+        runningstatus = 0
+        runningbytes = 0
+        bytenum = 0
+
         while True:
             data = ord(self.ser.read(1))  # read a byte
-	    
+
             #### in midimon only !! ####
             #if verbose:
             #	print ("Serialread: %d=%s" %( data, "0x{:02X}".format(data) ) )
@@ -95,7 +92,7 @@ class IO:
 
                 if data in realtimsg:	# send real time messages immediately
                     if self.realtime:	# if they are wanted, otherwise just ignore
-                        self.midicallback(mididev=self.uart, message=[data], time_stamp=None)
+                        self.midicallback(mididev=self.uart, imessage=[data], time_stamp=None)
                     continue		# they may interleave, so don't touch current process
 
                 if data == 0xF7:	# EndofSysEx
@@ -113,7 +110,7 @@ class IO:
                     if len(message):	# Did we collect any stuff
                         # Just send as it can be undefined messages or plain errors, decision up to receiver
                         # For simplicity sake, SysEx without EndofSysEx is considered an error
-                        self.midicallback(mididev=self.uart, message=message, time_stamp=None)
+                        self.midicallback(mididev=self.uart, imessage=message, time_stamp=None)
                         message = []	# Start a new message
 
                     if data in systemmsg:
@@ -125,26 +122,26 @@ class IO:
                 runningbytes = bytenum
 
             elif (not bytenum) and runningstatus:	# Received data without preceding status
-		    message = [runningstatus]	# use stored running status if available
-		    bytenum = runningbytes-1	# and related bytes (mind we "received" one)
+                    message = [runningstatus]	# use stored running status if available
+                    bytenum = runningbytes-1	# and related bytes (mind we "received" one)
 
             message.append(data)
             bytenum -= 1
             if not bytenum:		# we're complete !
-                self.midicallback(mididev=self.uart, message=message, time_stamp=None)
+                self.midicallback(mididev=self.uart, imessage=message, time_stamp=None)
                 message = []	# Start a new message
-	
+
     def send_raw(self, *message):	# procedure name compliant with rtmidi API
         #param message example: Midi Message [144, 60, 100]
-	if self.out:
-	    omsg = ""
-	    for i in message:
-		omsg = "%s%s" %( omsg, chr(i) )
-	    try:
-		self.ser.write(omsg)
-	    except:
-		print ("Write time out on %s, closed as MIDI OUT" %self.uart)
-		self.out = False
+        if self.out:
+            omsg = ""
+            for i in message:
+                omsg = "%s%s" %( omsg, chr(i) )
+            try:
+                self.ser.write(omsg.encode())
+            except:
+                print ("Write time out on %s, closed as MIDI OUT" %self.uart)
+                self.out = False
 
     def close_port(self):	# procedure name compliant with rtmidi API
-	    self.ser.close()
+        self.ser.close()

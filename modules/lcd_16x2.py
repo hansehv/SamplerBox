@@ -32,7 +32,7 @@ class HD44780:
         self.pins_db=pins_db
         self.bits=len(pins_db)
         if  not (self.bits==4 or self.bits==8):
-            print "HD44780: use/define exactly 4 or 8 datapins"
+            print("HD44780: use/define exactly 4 or 8 datapins")
             exit(1)
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.pin_e, GPIO.OUT)
@@ -43,7 +43,7 @@ class HD44780:
         self.prevs1=""
         self.prevs2=""
         self.busy=False
-        print 'Started 16x2 LCD via GPIO: RegisterSelect=%d, Enable=%d and Datalines=%s' %(pin_rs, pin_e, str(pins_db).replace(" ", ""))
+        print('Started 16x2 LCD via GPIO: RegisterSelect=%d, Enable=%d and Datalines=%s' %(pin_rs, pin_e, str(pins_db).replace(" ", "")))
 
     def clear(self):
         """ Blank / Reset LCD """
