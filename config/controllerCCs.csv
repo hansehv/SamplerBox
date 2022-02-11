@@ -1,6 +1,7 @@
-Controller,CC,Val,
+Controller,CC,Val,Comments
 #,Example using Nektar Impact LX49 and Behringer FCB1010,,
 #,"Both reprogrammed to use full possibilities of ""free"" standard MIDI controls",,
+ChannelAfterTouch,120,-1,"# Not a real CC, plse read the docs"
 ModWheel,1,-1,# Standard controller is 1
 Volume,7,-1,# Standard controller is 7
 Sustain,64,-1,# Standard controller is 64

@@ -738,8 +738,19 @@ def playBackTrack(x,*z):
             gv.playingbacktracks+=1
         except:
             print('Unassigned/unfilled track or other exception for backtrack %s->%d' % (x,playnote))
+def NoteDamp(playnote,pressure):
+    print(playnote,pressure)
+    if pressure>0:
+        print ("Choking")
+        for m in gv.playingnotes[playnote]:
+            m.fadeout(False)
+            gv.playingnotes[playnote] = []
+            gv.triggernotes[playnote] = 128  # housekeeping
+            print("Choked...")
+            DampNoise(m)
+            print("..completely")
 
-                            # and announce the procs to modules
+    # announce the procs to modules, except for the note related (~polyphonic aftertouch)
 gv.setMC(gv.PANIC,AllNotesOff)
 gv.setMC(gv.EFFECTSOFF,EffectsOff)
 gv.setMC(gv.PROGUP,ProgramUp)
@@ -808,7 +819,7 @@ def MidiCallback(mididev, imessage, time_stamp):
     if messagetype == 0xFF:     # "realtime" reset has to reset all activity & settings
         AllNotesOff()           # (..other realtime will be ignored below..)
         return CallbackState()
-    if messagetype not in [8,9,11,12,14]:
+    if messagetype not in [8,9,10,11,12,14]:
         return CallbackState()                  # skip things we can't deal with anyway
  
     if gv.MidiRecorder:         # Record remaining interesting stuff if needed
@@ -1000,14 +1011,26 @@ def MidiCallback(mididev, imessage, time_stamp):
             if MT_in:               # restore previous saved voice and some effects
                 CallbackIsolateMT(MT_in, False)
 
-        elif messagetype == 12: # Program change
-            UI.Preset(midinote+gv.PRESETBASE)
-
-        elif messagetype == 14: # Pitch Bend (velocity contains MSB, note contains 0 or LSB if supported by controller)
-            PitchWheel(midinote,velocity)
+        elif messagetype == 10: # Polyphonic aftertouch
+            print("recognized poly AT")
+            for playnote in range(128):
+                if gv.triggernotes[playnote] == midinote:   # did we make this one play ?
+                    NoteDamp(playnote,velocity)    # velocity=pressure
+            print("completed poly AT")
 
         elif messagetype == 11: # control change (CC = Continuous Controllers)
-            ControlChange(midinote,velocity)
+            ControlChange(midinote,velocity)    # midinote=CCnum, velocity=CCval
+
+        elif messagetype == 12: # Program change
+            UI.Preset(midinote+gv.PRESETBASE)   # midinote=program#
+
+        elif messagetype == 13: # Channel aftertouch
+            CCidx=gp.getindex(gv.controllerCCs,gv.CHAFTOUCH)
+            if CC>-1:
+                ControlChange(gv.controllerCCs[CCidx][1],midinote)    # midinote=pressure
+
+        elif messagetype == 14: # Pitch Bend (velocity contains MSB, note contains 0 or LSB if supported by controller)
+            PitchWheel(midinote,velocity)       # midinote=MSB, velocity=LSB
 
         CallbackState()
 
