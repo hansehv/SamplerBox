@@ -99,6 +99,8 @@ def setVoice(x,iv=0,*z):
                                     continue
                             if not found:
                                 gv.CCmap.append( gv.CCmapSet[i] )             # else add entry
+                    if gv.AFTERTOUCH:
+                        AfterTouch.msgFilter()  # filter unused aftertouch signals
                     gv.display("")
                     gv.menu_CCdef()
 def setMTvoice(mididev,MIDIchannel,voice):
@@ -163,6 +165,9 @@ gv.SAMPLES_ONUSB    = gv.cp.get(gv.cfg,"USB_MOUNTPOINT".lower())
 gv.SAMPLES_INBOX    = "samples/"
 USE_HTTP_GUI        = gv.cp.getboolean(gv.cfg,"USE_HTTP_GUI".lower())
 gv.USE_SMFPLAYER    = gv.cp.getboolean(gv.cfg,"USE_SMFPLAYER".lower())
+gv.CHAN_AFTOUCH     = gv.cp.getboolean(gv.cfg,"CHANNEL_AFTERTOUCH".lower())
+gv.POLY_AFTOUCH     = gv.cp.getboolean(gv.cfg,"POLYPHONIC_AFTERTOUCH".lower())
+gv.AFTERTOUCH       = gv.CHAN_AFTOUCH or gv.POLY_AFTOUCH
 
 x=gv.cp.get(gv.cfg,"MULTI_TIMBRALS".lower()).split(',')
 gv.MULTI_TIMBRALS={}
@@ -172,6 +177,7 @@ gv.MULTI_WITHMASTER=gv.cp.get(gv.cfg,"MULTI_WITHMASTER".lower()).split(',')
 for i in range(len(gv.MULTI_WITHMASTER)):
     gv.MULTI_TIMBRALS[ gv.MULTI_WITHMASTER[i].strip() ] = [0]*16  # init program=voice per channel#
 gv.MIDI_CHANNEL     = gv.cp.getint(gv.cfg,"MIDI_CHANNEL".lower())
+gv.MASTER_MESSAGES  = [8,9,11,12,14]
 DRUMPAD_CHANNEL     = gv.cp.getint(gv.cfg,"DRUMPAD_CHANNEL".lower())
 DRUMPAD_MESSAGES    = [8,9]
 if (gv.cp.getboolean(gv.cfg,"DRUMPAD_CONTROLCHANGE".lower())):
@@ -212,10 +218,9 @@ gv.sample_mode = BOXSAMPLE_MODE
 import NotesChordsScales
 NotesChordsScales.getdefs()
 
-# Midi controllers and keyboard definition
+# Midi controllers, keyboard definition and menu
 getcsv.readcontrollerCCs(gv.CONFIG_LOC + CTRLCCS_DEF)
 getcsv.readkeynames(gv.CONFIG_LOC + KEYNAMES_DEF)
-gv.CCmapBox = getcsv.readCCmap(gv.CONFIG_LOC + gv.CTRLMAP_DEF)
 getcsv.readmenu(gv.CONFIG_LOC + MENU_DEF)
 
 #########################################
@@ -257,11 +262,22 @@ import LFO      # take notice: part of process in audio callback
 #
 import chorus   # take notice: part of process in midi callback and ARP
 
+# Aftertouch capabilities (if supported by device),
+# real time enabling is done depending on definitions
+#
+if gv.AFTERTOUCH:
+    import AfterTouch
+
 # SMFplayer for limited playing and recording standard MIDI files
 # Parallel process of sending midinotes to samplerbox midi-in channels
 #
 if gv.USE_SMFPLAYER:
     import smfplayer
+
+# Now we can finalize the controllerCC's assignments
+# (above virtual controllers can be set).
+#
+gv.CCmapBox = getcsv.readCCmap(gv.CONFIG_LOC + gv.CTRLMAP_DEF)
 
 ###########################################
 # Audio including Effects/Filters/SMFplayer
@@ -403,18 +419,22 @@ class PlayingSound:
         self.note = note
         self.retune = retune
         self.velocity = velocity
-        self.vel = velocity*gv.globalgain
+        self.vel = velocity * gv.globalgain
         self.stopnote = stopnote
         self.channel = channel
 
     def __str__(self):
-        return "<PlayingSound note: '%i', velocity: '%i', pos: '%i'>" %(self.note, self.vel, self.pos)
+        return "<PlayingSound note: '%i', velocity: '%i', vel: '%i'>" %(self.note, self.velocity, self.vel)
     def playingnote(self):
         return self.note
     def playingretune(self):
         return self.retune
     def playingvelocity(self):
         return self.velocity
+    def playingvolume(self, upd=False, val=0):
+        if upd:
+            self.vel = val * gv.globalgain
+        return (self.vel / gv.globalgain)
     def playingstopnote(self):
         return self.stopnote
     def playingmutegroup(self):
@@ -647,7 +667,7 @@ def Sustain(CCval,*z):
             sustain = False
             for n in gv.sustainplayingnotes:
                 n.fadeout()
-                PlayRelSample(n.playingrelsample(),n.playingvoice(),n.playingnote(),n.playingvelocity(),n.playingretune(),n.playingchannel())
+                PlayRelSample(n.playingrelsample(),n.playingvoice(),n.playingnote(),n.playingvolume(),n.playingretune(),n.playingchannel())
             gv.sustainplayingnotes = []
         else:               # sustain on
             sustain = True
@@ -688,7 +708,7 @@ def DampLast(CCval,*z):
         gv.sustainplayingnotes = []
 def DampNoise(m):
     if m.playingdampnoise():
-        PlayRelSample(m.playingrelsample(),m.playingvoice(),m.playingnote(),m.playingvelocity(),m.playingretune(),m.playingchannel(),True)
+        PlayRelSample(m.playingrelsample(),m.playingvoice(),m.playingnote(),m.playingvolume(),m.playingretune(),m.playingchannel(),True)
 def PlayRelSample(relsample,voice,playnote,velocity,retune,channel=0,play_as_is=False):
     if relsample in "ES":
         if relsample=='E':
@@ -738,17 +758,6 @@ def playBackTrack(x,*z):
             gv.playingbacktracks+=1
         except:
             print('Unassigned/unfilled track or other exception for backtrack %s->%d' % (x,playnote))
-def NoteDamp(playnote,pressure):
-    print(playnote,pressure)
-    if pressure>0:
-        print ("Choking")
-        for m in gv.playingnotes[playnote]:
-            m.fadeout(False)
-            gv.playingnotes[playnote] = []
-            gv.triggernotes[playnote] = 128  # housekeeping
-            print("Choked...")
-            DampNoise(m)
-            print("..completely")
 
     # announce the procs to modules, except for the note related (~polyphonic aftertouch)
 gv.setMC(gv.PANIC,AllNotesOff)
@@ -763,6 +772,7 @@ gv.setMC(gv.SUSTAIN,Sustain)
 gv.setMC(gv.DAMP,Damp)
 gv.setMC(gv.DAMPNEW,DampNew)
 gv.setMC(gv.DAMPLAST,DampLast)
+gv.DampNoise=DampNoise
 gv.PlayRelSample=PlayRelSample
 gv.PlaySample=PlaySample
 gv.setMC(gv.BACKTRACKS,playBackTrack)
@@ -819,7 +829,7 @@ def MidiCallback(mididev, imessage, time_stamp):
     if messagetype == 0xFF:     # "realtime" reset has to reset all activity & settings
         AllNotesOff()           # (..other realtime will be ignored below..)
         return CallbackState()
-    if messagetype not in [8,9,10,11,12,14]:
+    if messagetype not in gv.MASTER_MESSAGES:
         return CallbackState()                  # skip things we can't deal with anyway
  
     if gv.MidiRecorder:         # Record remaining interesting stuff if needed
@@ -925,6 +935,7 @@ def MidiCallback(mididev, imessage, time_stamp):
                             gv.currchord = gv.scalechord[gv.currscale][gv.last_musicnote]
                         playchord=gv.currchord
                         layers = gv.currlayers  # master keyboard area can be layered
+                        gv.lastvel = velocity   # reference for the aftertouch
                     else:
                         gv.last_musicnote=12 # Set musicnotesymbol to "effects" in webgui
                         playchord=0       # no chords outside keyboardrange / in effects channel.
@@ -989,7 +1000,7 @@ def MidiCallback(mididev, imessage, time_stamp):
                             velmixer = m.playingvelocity()  # save org value for release sample
                             m.fadeout()
                             gv.playingnotes[mtchnote] = []
-                            PlayRelSample(m.playingrelsample(),m.playingvoice(),m.playingnote(),m.playingvelocity(),m.playingretune(),m.playingchannel())
+                            PlayRelSample(m.playingrelsample(),m.playingvoice(),m.playingnote(),m.playingvolume(),m.playingretune(),m.playingchannel())
                 else:
                     for playnote in range(128):
                         if gv.triggernotes[playnote] == midinote:   # did we make this one play ?
@@ -1005,18 +1016,22 @@ def MidiCallback(mididev, imessage, time_stamp):
                                     else:
                                         m.fadeout()
                                         gv.playingnotes[playnote] = []
-                                        PlayRelSample(m.playingrelsample(),m.playingvoice(),m.playingnote(),m.playingvelocity(),m.playingretune(),m.playingchannel())
+                                        PlayRelSample(m.playingrelsample(),m.playingvoice(),m.playingnote(),m.playingvolume(),m.playingretune(),m.playingchannel())
                                         gv.playingnotes[playnote] = []
 
             if MT_in:               # restore previous saved voice and some effects
                 CallbackIsolateMT(MT_in, False)
 
         elif messagetype == 10: # Polyphonic aftertouch
-            print("recognized poly AT")
-            for playnote in range(128):
-                if gv.triggernotes[playnote] == midinote:   # did we make this one play ?
-                    NoteDamp(playnote,velocity)    # velocity=pressure
-            print("completed poly AT")
+            done = False
+            if midinote in gv.playingnotes:
+                for playnote in range(128):
+                    if gv.triggernotes[playnote] == midinote:   # did we make this one play ?
+                        done = True
+                        AfterTouch.Polyphonic(playnote,velocity)    # velocity=pressure
+            if not done:
+                # deal with notepair followers missing the master
+                AfterTouch.Polyphonic(midinote,velocity)    # velocity=pressure
 
         elif messagetype == 11: # control change (CC = Continuous Controllers)
             ControlChange(midinote,velocity)    # midinote=CCnum, velocity=CCval
@@ -1025,9 +1040,7 @@ def MidiCallback(mididev, imessage, time_stamp):
             UI.Preset(midinote+gv.PRESETBASE)   # midinote=program#
 
         elif messagetype == 13: # Channel aftertouch
-            CCidx=gp.getindex(gv.controllerCCs,gv.CHAFTOUCH)
-            if CC>-1:
-                ControlChange(gv.controllerCCs[CCidx][1],midinote)    # midinote=pressure
+            AfterTouch.Channel(midinote)        # midinote=pressure
 
         elif messagetype == 14: # Pitch Bend (velocity contains MSB, note contains 0 or LSB if supported by controller)
             PitchWheel(midinote,velocity)       # midinote=MSB, velocity=LSB
@@ -1138,6 +1151,9 @@ def ActuallyLoad():
     PREMUTEGROUP=0
     PREFILLNOTE = 'Y'
     PRELAYERS = ''
+    if gv.POLY_AFTOUCH:
+        AfterTouch.fillpairs(init=True)
+    PREPAFPAIR = ''
     for dev in gv.MULTI_TIMBRALS:
         gv.MULTI_TIMBRALS[dev] = [0]*16     # init program=voice per channel#
     gv.samples = {}
@@ -1194,9 +1210,9 @@ def ActuallyLoad():
                         continue
                     if r'%%release' in pattern:
                         PRERELEASE = (int(pattern.split('=')[1].strip()))
-                        if PRERELEASE > 127:
-                            print("Release of %d limited to %d" % (PRERELEASE, 127))
-                            PRERELEASE = 127
+                        #127#if PRERELEASE > 127:
+                        #    print("Release of %d limited to %d" % (PRERELEASE, 127))
+                        #    PRERELEASE = 127
                         continue
                     if r'%%dampnoise' in pattern:
                         m = pattern.split('=')[1].strip().title()
@@ -1205,9 +1221,9 @@ def ActuallyLoad():
                         continue
                     if r'%%damp' in pattern:
                         PREDAMP = (int(pattern.split('=')[1].strip()))
-                        if PREDAMP > 127:
-                            print("Damp of %d limited to %d" % (PREDAMP, 127))
-                            PREDAMP = 127
+                        #127#if PREDAMP > 127:
+                        #    print("Damp of %d limited to %d" % (PREDAMP, 127))
+                        #    PREDAMP = 127
                         continue
                     if r'%%retrigger' in pattern:
                         m = pattern.split('=')[1].strip().title()
@@ -1216,15 +1232,15 @@ def ActuallyLoad():
                         continue
                     if r'%%xfadeout' in pattern:
                         PREXFADEOUT = (int(pattern.split('=')[1].strip()))
-                        if PREXFADEOUT > 127:
-                            print("xfadeout of %d limited to %d" % (PREXFADEOUT, 127))
-                            PREXFADEOUT = 127
+                        #127#if PREXFADEOUT > 127:
+                        #    print("xfadeout of %d limited to %d" % (PREXFADEOUT, 127))
+                        #    PREXFADEOUT = 127
                         continue
                     if r'%%xfadein' in pattern:
                         PREXFADEIN = (int(pattern.split('=')[1].strip()))
-                        if PREXFADEIN > 127:
-                            print("xfadein of %d limited to %d" % (PREXFADEIN, 127))
-                            PREXFADEIN = 127
+                        #127#if PREXFADEIN > 127:
+                        #    print("xfadein of %d limited to %d" % (PREXFADEIN, 127))
+                        #    PREXFADEIN = 127
                         continue
                     if r'%%xfadevol' in pattern:
                         PREXFADEVOL = abs(float(pattern.split('=')[1].strip()))
@@ -1298,7 +1314,7 @@ def ActuallyLoad():
                     defaultparams = { 'midinote':'-128', 'velocity':'-1', 'gain':'1', 'notename':'', 'voice':'1', 'velolevs':PREVELOLEVS, 'mode':gv.sample_mode, 'velmode':PREVELMODE,\
                                       'transpose':PRETRANSPOSE, 'release':PRERELEASE, 'damp':PREDAMP, 'dampnoise':PREDAMPNOISE, 'retrigger':PRERETRIGGER, 'mutegroup':PREMUTEGROUP,\
                                       'relsample':PRERELSAMPLE, 'xfadeout':PREXFADEOUT, 'xfadein':PREXFADEIN, 'xfadevol':PREXFADEVOL, 'qnote':PREQNOTE, 'notemap':PRENOTEMAP,\
-                                      'fxpreset':PREFXPRESET, 'layers':PRELAYERS, 'fillnote':PREFILLNOTE, 'rnds':'1', 'smfseq':'1', 'voicemap':"", 'backtrack':'-1'}
+                                      'fxpreset':PREFXPRESET, 'layers':PRELAYERS, 'pafpair':PREPAFPAIR, 'fillnote':PREFILLNOTE, 'rnds':'1', 'smfseq':'1', 'voicemap':"", 'backtrack':'-1'}
                     if len(pattern.split(',')) > 1:
                         defaultparams.update(dict([item.split('=') for item in pattern.split(',', 1)[1].replace(' ','').replace('%', '').split(',')]))
                     pattern = pattern.split(',')[0]
@@ -1311,7 +1327,7 @@ def ActuallyLoad():
                                     .replace(r"%xfadeout", r"(?P<xfadeout>\d+)").replace(r"%xfadein", r"(?P<xfadein>\d+)").replace(r"%xfadevol", r"(?P<xfadevol>\d+)")\
                                     .replace(r"%rnds", r"(?P<rnds>[1-9])").replace(r"%qnote", r"(?P<qnote>[YyNnOoEe])").replace(r"%notemap", r"(?P<notemap>[A-Za-z0-9]\_\-\&)")\
                                     .replace(r"%fxpreset", r"(?P<fxpreset>[A-Za-z0-9]\_\-\&)").replace(r"%smfseq", r"(?P<smfseq>\d+)").replace(r"%voicemap", r"(?P<voicemap>[A-Za-z0-9]\_\-\&)")\
-                                    .replace(r"%backtrack", r"(?P<backtrack>\d+)").replace(r"%layers", r"(?P<layers>[A-Za-z0-9]\_\-\&)")\
+                                    .replace(r"%backtrack", r"(?P<backtrack>\d+)").replace(r"%layers", r"(?P<layers>[A-Za-z0-9]\_\-\&)").replace(r"%pafpair", r"(?P<pafpair>[A-Ga-gks#\-0-9();])")\
                                     .replace(r"%notename", r"(?P<notename>[A-Ga-g][#ks]?[0-9])").replace(r"\*", r".*?").strip()    # .*? => non greedy
                     for fname in os.listdir(dirname):
                         if LoadingInterrupt:
@@ -1388,6 +1404,9 @@ def ActuallyLoad():
                                 else:
                                     print("%s: ignored notename / midinote in voice %d: '%s'/%d" %(fname, voice, notename, midinote))
                                     continue
+                            if gv.POLY_AFTOUCH:
+                                pafpair = (info.get('pafpair', defaultparams['pafpair'])).rstrip()
+                                AfterTouch.fillpairs(voice,fractions,pafpair)
                             if backtrack > -1:
                                 if midinote >-1:
                                     if notename:tracknames[backtrack][2]=notename
@@ -1422,9 +1441,9 @@ def ActuallyLoad():
                             mutegroup = int(info.get('mutegroup', defaultparams['mutegroup']))
                             gain = abs(float((info.get('gain', defaultparams['gain']))))
                             release = int(info.get('release', defaultparams['release']))
-                            if (release>127): release=127
+                            #127#if (release>127): release=127
                             damp = int(info.get('damp', defaultparams['damp']))
-                            if (damp>127): damp=127
+                            #127#if (damp>127): damp=127
                             dampnoise = True if info.get('dampnoise', defaultparams['dampnoise']).title()[0][:1]=="Y" else False
                             relsample = info.get('relsample', defaultparams['relsample']).title()[0][:1]
                             if relsample=="S" and voice<1:
@@ -1432,9 +1451,9 @@ def ActuallyLoad():
                                 if voice==0:    # But the effects channel is special, so player needs to be notified
                                     print("%s: ignored release sample ('S') for voice 0 as effects channel doesn't support this" %fname)
                             xfadeout = int(info.get('xfadeout', defaultparams['xfadeout']))
-                            if (xfadeout>127): xfadeout=127
+                            #127#if (xfadeout>127): xfadeout=127
                             xfadein = int(info.get('xfadein', defaultparams['xfadein']))
-                            if (xfadein>127): xfadein=127
+                            #127#if (xfadein>127): xfadein=127
                             xfadevol = abs(float(info.get('xfadevol', defaultparams['xfadevol'])))
                             #
                             # Replace inconsistent/impossible combinations with something workable

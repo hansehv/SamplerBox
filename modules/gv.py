@@ -34,6 +34,9 @@ CHORDS="Chords"
 SCALES="Scales"
 PITCHWHEEL="PitchWheel"
 CHAFTOUCH="ChannelAfterTouch"
+PAFTOUCH="PolyAfterTouch"
+PAFVOLUME="pafVolume"
+PAFCHOKE="pafChoke"
 PROGUP="ProgramUp"
 PROGDN="ProgramDown"
 VOLUME="Volume"
@@ -124,7 +127,9 @@ ConfigErr=False
 LEDblink=False
 USE_ALSA_MIXER=False
 BTNOTES=130         # Backtracknotes start
-MTCHNOTES=1024      # Multitimbral channel notes start - so leaves <1024 for main keyboard notes, next available 17408 (theoretically)
+MTCHNOTES=1024      # Multitimbral channel notes start:
+                    # so this leaves <1024 for main keyboard notes,
+                    # and next available is 17408 (theoretically)
 ActuallyLoading=False
 basename="None"
 DefinitionTxt=""
@@ -177,7 +182,12 @@ def setMC( mc, proc ):
     else:
         print("gv.setMC: Can't set %s" %mc)
     return x
-MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch),procedure)
+MC=[    # [name,type,procedure] where type can be
+        #   - 0= continuous
+        #   - 1= switch (switches a value)
+        #   - 2= switchtable
+        #   - 3= 2 value switch (has a value)
+        #   - 4= polyphonic (key-specific) aftertouch
 [PROGUP,1,safeguard],
 [PROGDN,1,safeguard],
 [PITCHWHEEL,0,safeguard],
@@ -187,6 +197,8 @@ MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch)
 [DAMP,3,safeguard],
 [DAMPNEW,3,safeguard],
 [DAMPLAST,3,safeguard],
+[PAFVOLUME,4,safeguard],
+[PAFCHOKE,4,safeguard],
 [ROTATE,1,safeguard],
 [VIBRATO,1,safeguard],
 [TREMOLO,1,safeguard],
