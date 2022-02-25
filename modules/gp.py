@@ -53,6 +53,15 @@ def getindex(key, table, onecol=False, casesens=True):
     return -100000
 gv.getindex=getindex                    # temporary till all modules are adapted..
 
+def getvirtualCC():
+    # Returns lowest CC minus 1. 
+    # Since table is initiated with a -1, it will always be negative
+    vCC = 0
+    for m in gv.controllerCCs:
+        if m[1] < vCC:
+            vCC = m[1]
+    return vCC-1
+
 def setFXpresets(val, *z):
     FXset = val
     try:

@@ -2,15 +2,19 @@ Controller,Type,Sets,Mode,#TAKE CARE: most keywords are case sensitive
 #  ###########################,,,,
 #  DO NOT EDIT THIS TABLE !!!!,,,,
 #  ###########################,,,,
+UA,Fixed,EffectsOff,SwitchOff,# Switch all effects  off
+UA,Fixed,Panic,SwitchOff,# Kills all ongoing sounds
 UA,Fixed,ProgramUp,Switch,# Not needed when standard Program up button present
 UA,Fixed,ProgramDown,Switch,# Not needed when standard Program down button present
 UA,Fixed,PitchWheel,Continuous,# Not needed when standard pitchwheel present
-UA,Fixed,PitchSens,Continuous,
+UA,Fixed,PitchSens,Continuous,# Range of the pitchwheel
 UA,Fixed,Volume,Continuous,
 UA,Fixed,Sustain,Continuous,"# Pedal: Sustain. Pedal functions are complex to mix, so preferably use only one"
 UA,Fixed,Damp,Continuous,# Pedal: Damp all (conventional damp)
 UA,Fixed,DampNew,Continuous,"# Pedal: Damp only new notes,  a kind of pizzicato effect"
 UA,Fixed,DampLast,Continuous,# Pedal: Notes played during pedal press are damped on pedal release
+,,,,
+"## LFO effects: vibrato, tremolo, panning and rotate ##",,,,
 UA,Fixed,Rotate,Toggle,
 UA,Fixed,Vibrato,Toggle,
 UA,Fixed,Tremolo,Toggle,
@@ -24,15 +28,21 @@ UA,Fixed,TremSpeed,Continuous,#Can be set with LFOspeed
 UA,Fixed,TremTrill,Toggle,
 UA,Fixed,PanSpeed,Continuous,
 UA,Fixed,PanWidth,Continuous,#Can be set with LFOspeed
+,,,,
+## Chorus ##,,,,
 UA,Fixed,Chorus,Toggle,
 UA,Fixed,ChorusDepth,Continuous,
 UA,Fixed,ChorusGain,Continuous,
+,,,,
+## Reverb ##,,,,
 UA,Fixed,Reverb,Toggle,
 UA,Fixed,ReverbLvl,Continuous,
 UA,Fixed,ReverbRoom,Continuous,
 UA,Fixed,ReverbDamp,Continuous,
 UA,Fixed,ReverbWidth,Continuous,
 UA,Fixed,EnvelopeWah,Toggle,
+,,,,
+"## Various WAH effects (wahpedal, autowah, LFO-wah) ##",,,,
 UA,Fixed,LFOwah,Toggle,
 UA,Fixed,ManualWah,Toggle,# Usually a pedal
 UA,Fixed,WahLvl,Continuous,# Wet/dry mix
@@ -44,6 +54,8 @@ UA,Fixed,WahRelease,Continuous,
 UA,Fixed,WahSpeed,Continuous,
 UA,Fixed,WahLvlRange,Continuous,
 UA,Fixed,WahPedal,Continuous,
+,,,,
+## Echo and Flanger (fast echo) ##,,,,
 UA,Fixed,Echo,Toggle,
 UA,Fixed,Flanger,Toggle,
 UA,Fixed,DelayFeedbackVol,Continuous,
@@ -54,21 +66,29 @@ UA,Fixed,DelaySteep,Continuous,
 UA,Fixed,DelaySteplen,Continuous,
 UA,Fixed,DelayMin,Continuous,
 UA,Fixed,DelayMax,Continuous,
+,,,,
+## Moog low-pass ##,,,,
 UA,Fixed,Moog,Toggle,
 UA,Fixed,MoogLvl,Continuous,
 UA,Fixed,MoogResonance,Continuous,
 UA,Fixed,MoogCutoff,Continuous,
 UA,Fixed,MoogDrive,Continuous,
 UA,Fixed,MoogGain,Continuous,
+,,,,
+## Overdrive ##,,,,
 UA,Fixed,Overdrive,Toggle,
 UA,Fixed,OverdriveBoost,Continuous,
 UA,Fixed,OverdriveDrive,Continuous,
 UA,Fixed,OverdriveTone,Continuous,
 UA,Fixed,OverdriveLvl,Continuous,
+,,,,
+## Limiter ##,,,,
 UA,Fixed,Limiter,Toggle,
 UA,Fixed,LimitThreshold,Continuous,
 UA,Fixed,LimitAttack,Continuous,
 UA,Fixed,LimitRelease,Continuous,
+,,,,
+## Arpeggiator ##,,,,
 UA,Fixed,Arpeggiator,Toggle,
 UA,Fixed,ArpUp,SwitchOn,#Can be set with ArpUpDown
 UA,Fixed,ArpDown,SwitchOn,#Can be set with ArpUpDown
@@ -80,15 +100,20 @@ UA,Fixed,ArpPlay2end,Toggle,
 UA,Fixed,ArpTime,Continuous,
 UA,Fixed,ArpFadeout,Continuous,#127 means no fade out =  repeat till toggled/set off
 UA,Fixed,ArpSustain,Continuous,
-UA,Fixed,EffectsOff,SwitchOff,
-UA,Fixed,Panic,SwitchOff,
+,,,,
+,,,,
+## Auto chord ##,,,,
 UA,Fixed,AutoChordOff,SwitchOff,
 UA,Scales,<scale name>,SwitchOn,# Scale has to defined in scales.csv
 UA,Chords,<chord name>,SwitchOn,# Chord has to be defined in chords.csv
+,,,,
+## Functions to choose particular options from lists with midi buttons ##,,,,
 UA,Voices,<voice number>,SwitchOn,"# Voice > 0, voice# should be assigned to a sample pattern"
 UA,BackTracks,<backtrack number>,Toggle,"# Backtrack > 0, track# should be assigned to a sample"
 UA,Notemaps,<notemap name>,SwitchOn,# Use None or any not existing notemap for no notemapping
 UA,FXpresets,<effect presetname>,SwitchOn,# Names in box+set csv can be chosen
+,,,,
+## Midi files player / recorder ##,,,,
 UA,SMFs,<SMFseq number>,Toggle,"# SMF > 0, seq# starts/stops assigned to a sample"
 UA,Fixed,SMFstop,SwitchOff,# Stops playing sample
 UA,Fixed,SMFloop,Toggle,"# Can make sample loop, if so: pressing stop first ""unloop"" and second press stops immediately"
@@ -96,7 +121,13 @@ UA,Fixed,SMFtempo,Continuous,"# unreliable, use on your own risk"
 UA,Fixed,SMFrecstart,SwitchOn,# Starts recording (at first touch of a key / controller)
 UA,Fixed,SMFreccancel,SwitchOff,# Stops recording without saving
 UA,Fixed,SMFrecsave,SwitchOff,# Stops recording and saves the file
+,,,,
+## Menu buttons assignment ##,,,,
 UA,Fixed,Menu_Incr,Switch,# The 4-button menu system
 UA,Fixed,Menu_Decr,Switch,
 UA,Fixed,Menu_Sel,Switch,
 UA,Fixed,Menu_Ret,Switch,
+,,,,
+## Aftertouch effects ##,,,,
+UA,Fixed,pafVolume,pAftouch,
+UA,Fixed,pafChoke,pAftouch,

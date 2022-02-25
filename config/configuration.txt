@@ -2,7 +2,6 @@
 #  SamplerBox local configuration
 #
 #  SamplerBox extended by HansEhv (https://github.com/hansehv)
-#  see docs at  http://homspace.xs4all.nl/homspace/samplerbox
 #  license: Creative Commons ShareAlike 3.0 (http://creativecommons.org/licenses/by-sa/3.0/)
 #
 ###################################################################################
@@ -37,31 +36,26 @@ BLOCKSIZE = High
 USE_48kHz = False
 
 # Set True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
-USE_SERIALPORT_MIDI = False
+USE_SERIALPORT_MIDI = True
 SERIALPORT_TIMEOUT = 0.01
 SERIALPORT_REALTIME = False
 SERIALPORT_SYSEX = False
 
-# --- next display definitions are mutually exclusive = you can have only one
-#
-# Set True to use a 16x2 direct connected/wired HD44780 LCD, configure GPIO pins below
+#-----   D I S P L A Y   T Y P E   (optional, max 1)
+## Set True to use a 16x2 direct connected/wired HD44780 LCD, configure GPIO pins below
+## ==> set to False if you use an I2C-HD44780
 USE_HD44780_16x2_LCD = False
-# If you use an I2C-HD44780, above option should be false !!!
-# Set True or 16x2 (=True) or 20x4 to use a 16x2 or 20x4 I2C connected HD44780 LCD
+## Set True or 16x2 (=True) or 20x4 to use a 16x2 or 20x4 I2C connected HD44780 LCD
 USE_I2C_LCD = False
-#
-# Set True to use an OLED display, configure GPIO pins below
+## Set True to use an OLED display, configure GPIO pins below
 USE_OLED = False
-#
-# Set True to use LCD of Pimoroni PirateAudio hat. Configure GPIO pins below
+## Set True to use LCD of Pimoroni PirateAudio hat. Configure GPIO pins below
 USE_PIMORONI_LCD = False
-#
-# Set True to use a 7-segment display via I2C
-# Two versions: original sparkfun display and cheap HT16K33 based ebay version
+## Set True to use a 7-segment display via I2C
+## Two versions: original sparkfun display and cheap HT16K33 based ebay version
 USE_I2C_7SEGMENTDISPLAY = False
 USE_i2c_7SEGMENTDISPLAY_HT16K33 = False
-#
-# --- above display definitions are mutually exclusive = you can have only one
+#-----   D I S P L A Y   T Y P E   (optional, max 1)
 
 # Set True to use the GPIO buttons, configure GPIO pins below
 USE_BUTTONS = False
@@ -81,6 +75,7 @@ MAX_POLYPHONY = 80
 # Used memory percentage at which loading of samples stops
 MAX_MEMLOAD = 90
 
+#-----   M A S T E R   K E Y B O A R D
 # Master midi channel and midi channel of the drumpads (if applicable,
 #     see "Keyboards with drumpads" in MoreInfo in the docs for usage)
 # If drumpad channel=0, it's disabled (fyi: drumchannel is usually 10)
@@ -90,6 +85,10 @@ MIDI_CHANNEL = 1
 DRUMPAD_CHANNEL = 0
 DRUMPAD_PROGRAMCHANGE = False
 DRUMPAD_CONTROLCHANGE = False
+# Does the master device have aftertouch capabilities:
+CHANNEL_AFTERTOUCH = True
+POLYPHONIC_AFTERTOUCH = True
+#-----   M A S T E R   K E Y B O A R D
 
 # Multi timbral devices, comma separated.
 # Exactly as in the midi open message, but without quotes!
@@ -106,9 +105,9 @@ MIDI_THRU =
 NOTES_CC = 119
 
 # Sample mode is how the samples are played, Keyb is standard MIDI behaviour.
-#		Keyb	- reacts on "keyboard" interaction
-#		Once	- ignores loop markers ("just play the sample with option to stop")
-#		Onc2	- ignores loop markers with note-off by same note ("just play the sample with option to stop")
+#	Keyb	- reacts on "keyboard" interaction
+#	Once	- ignores loop markers ("just play the sample with option to stop")
+#	Onc2	- ignores loop markers with note-off by same note ("just play the sample with option to stop")
 #		Loop	- recognize loop markers, note-off by same note ("just play the loop with option to stop")
 #		Loos	- recognize loop markers, note-off by 127-note ("just play the loop with option to stop")
 BOXSAMPLE_MODE = Keyb
@@ -121,9 +120,9 @@ BOXVELOCITY_LEVELS = 1
 BOXVELOCITY_MODE = Accurate
 
 # Value of "Right side", "Left side" has some notes slack
-#		88-key:	- 108=C8
-#		77-key:	- 103=G7
-#		61-key:	- 96=C7
+#	88-key:	- 108=C8
+#	77-key:	- 103=G7
+#	61-key:	- 96=C7
 BOXSTOP127 = 109
 
 # the startup (alsa=output) volume (0-100)
@@ -144,9 +143,9 @@ BOXDAMP = 10
 BOXDAMPNOISE = False
 
 # action on retriggered still playing notes (occurs in once/loop modes and chords):
-#               R:      - Noteoff and fadeout according release value
-#               D:      - Noteoff and fadeout according damp value
-#               Y:      - Yes, retrigger is allowed, keep the playing sound
+#	R: - Noteoff and fadeout according release value
+#	D: - Noteoff and fadeout according damp value
+#	Y: - Yes, retrigger is allowed, keep the playing sound
 BOXRETRIGGER = R
 
 # release samples: N=none, E=Embedded, S=Separate

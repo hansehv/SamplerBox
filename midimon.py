@@ -204,10 +204,14 @@ def MidiCallback(mididev, message, time_stamp):
         messagetype = status >> 4
         messagechannel = (status&0xF) + 1   # make channel# human..
         spec = ""
-        if messagetype == 8 or messagetype == 9:
+        if messagetype in [8, 9]:   # note off/on
             spec = "%d=%s, velocity=%d" %(data1, midinote2notename(data1,1), data2)
+        elif messagetype == 10:   # Polyphonic aftertouch
+            spec = "note %d=%s, pressure=%d" %(data1, midinote2notename(data1,1), data2)
         elif messagetype == 12: # Program change
             spec = '%d (=%d for humans)' %(data1, data1+1)
+        elif messagetype == 13: # Channel aftertouch
+            spec = 'pressure=%d' %(data1)
         elif messagetype == 14: # Pitchbend
             spec = '%s (SB uses %d)' %(dataval, data2)
         elif messagetype == 11: # control change (CC = Continuous Controllers)
