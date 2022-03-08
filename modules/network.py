@@ -9,7 +9,7 @@
 ###############################################################
 
 import sys,subprocess
-import gv
+import gv, gp
 
 interface = "wlan0"
 qvals = [
@@ -75,11 +75,11 @@ def IP(val=None):
 			IPaddress="Not connected"
 		elif val==None:
 			if IPaddress in IPs:
-				val=gv.getindex(IPaddress,IPs,True)
+				val=gp.getindex(IPaddress,IPs,True)
 				if val<0:val=0
 			else: val=0
 		elif not isinstance(val,int):
-			val=gv.getindex(val,IPs,True)
+			val=gp.getindex(val,IPs,True)
 			if val<0: val=0
 		elif val>=len(IPs) or val<0: val=0
 		IPaddress=IPs[val]

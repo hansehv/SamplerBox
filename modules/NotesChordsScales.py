@@ -5,7 +5,7 @@
 #   see docs at https://homspace.nl/samplerbox
 #   changelog in changelist.txt
 #
-import gv,getcsv
+import gv,gp,getcsv
 
 CHORDS_DEF = "chords.csv"
 SCALES_DEF = "scales.csv"
@@ -70,14 +70,14 @@ def midinote2notename(midinote,fractions):
 	return notename
 
 def setChord(x,*z):
-	y=gv.getindex(x,gv.chordname,True)
+	y=gp.getindex(x,gv.chordname,True)
 	if y>-1:				# ignore if undefined
 		gv.currscale=0	    # playing chords excludes scales
 		gv.currchord=y
 		gv.display("")
 
 def setScale(x,*z):
-	y=gv.getindex(x,gv.scalename,True)
+	y=gp.getindex(x,gv.scalename,True)
 	if y>-1:				# ignore if undefined
 		gv.currchord=0	    # playing chords excludes scales
 		gv.currscale=y
@@ -87,7 +87,7 @@ def setNotemap(x, *z):
 	try:
 		y=x-1
 	except:
-		y=gv.getindex(x,gv.notemaps,True)
+		y=gp.getindex(x,gv.notemaps,True)
 	if y>-1:
 		if gv.notemaps[y]!=gv.currnotemap:
 			gv.currnotemap=gv.notemaps[y]

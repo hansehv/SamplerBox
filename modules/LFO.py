@@ -12,6 +12,8 @@
 # Clock can be via call in AudioCallback, on PI3 approx once per 11msec's
 # for a saw=(128 up) or triangle=(128 up+down) a stepsize of 14 gives ~10Hz/5Hz respectively
 
+import gp
+
 LFOblock=0          # index values for readability
 LFOsaw=1
 LFOinvsaw=2
@@ -146,7 +148,7 @@ def PanProc(*z):
     if effect==4:
         PanLFO.setstep(VIBRspeed)
     PanLFO.process()
-    gv.PANvalue=1-2.0*PANwidth*PanLFO.gettriangle()/127
+    gv.PANvalue=1-2.0*PANwidth*PanLFO.gettriangle()/128
 def PanTidy(TurnOn):
     global PANspeed
     if TurnOn:
@@ -192,8 +194,8 @@ def LFOspeed(CCval,*z):
 gv.setMC(gv.LFOSPEED,LFOspeed)
 
 effects=["Off",gv.VIBRATO,gv.TREMOLO,gv.PANNING,gv.ROTATE]
-process=[gv.NoProc,VibrProc,TremProc,PanProc,RotaProc]
-tidy=[gv.NoProc,VibrTidy,TremTidy,PanTidy,RotaTidy]
+process=[gp.NoProc,VibrProc,TremProc,PanProc,RotaProc]
+tidy=[gp.NoProc,VibrTidy,TremTidy,PanTidy,RotaTidy]
 effect=0   # 0 = no vibrato/tremolo/pan/rotate
 def setType(x,*z):
     global effect
@@ -223,7 +225,7 @@ def reset(scope=-1):
     global VIBRpitch,VIBRspeed,VIBRtrill,TREMampl,BOXTREMspeed,TREMspeed,TREMtrill,PANwidth,PANspeed
     effect=0
     #if scope in [-2, -3, -4]:       # also reset values
-    #    effect = gv.getindex( gv.cp.get(gv.cfg,"LFOeffect".lower()), effects, True, False )
+    #    effect = gp.getindex( gv.cp.get(gv.cfg,"LFOeffect".lower()), effects, True, False )
     #    if effect < 0 :
     #        effect = 0
         #if scope == -3:         # load sample set default

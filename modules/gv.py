@@ -33,10 +33,6 @@ MENU_RET="Menu_Ret"
 CHORDS="Chords"
 SCALES="Scales"
 PITCHWHEEL="PitchWheel"
-CHAFTOUCH="ChannelAfterTouch"
-PAFTOUCH="PolyAfterTouch"
-PAFVOLUME="pafVolume"
-PAFCHOKE="pafChoke"
 PROGUP="ProgramUp"
 PROGDN="ProgramDown"
 VOLUME="Volume"
@@ -120,6 +116,16 @@ ARPRNDLIN="ArpRndLin"
 ARPFADE="ArpFadeout"
 ARPLOOP="ArpLoop"
 ARP2END="ArpPlay2end"
+CHAFTOUCH="ChannelAfterTouch"
+CHAFREVERS="chafReverse"
+PAFTOUCH="PolyAfterTouch"
+PAFREVERS="pafReverse"
+PAFVOLUME="pafVolume"
+PAFPITCH="pafPitchBend"
+PAFPITCHRANGE="pafPitchRange"
+PAFPAN="pafPan"
+PAFPANWIDTH="pafPanWidth"
+PAFCHOKE="pafChoke"
 UA="UA"
 
 # Internal vars
@@ -152,6 +158,7 @@ last_midinote=-1
 midi_mute=False
 globalgain=1        # the input volume correction, change per set in definition.txt
 PITCHBEND=0
+PANCORR = 10
 chordname=[]
 chordnote=[]
 scalename=[]
@@ -197,8 +204,6 @@ MC=[    # [name,type,procedure] where type can be
 [DAMP,3,safeguard],
 [DAMPNEW,3,safeguard],
 [DAMPLAST,3,safeguard],
-[PAFVOLUME,4,safeguard],
-[PAFCHOKE,4,safeguard],
 [ROTATE,1,safeguard],
 [VIBRATO,1,safeguard],
 [TREMOLO,1,safeguard],
@@ -287,5 +292,13 @@ MC=[    # [name,type,procedure] where type can be
 [MENU_SEL,1,safeguard],
 [MENU_RET,1,safeguard],
 [NOTEMAPS,2,safeguard],
-[FXPRESETS,2,safeguard]
+[FXPRESETS,2,safeguard],
+[CHAFREVERS,1,safeguard],
+[PAFREVERS,1,safeguard],
+[PAFVOLUME,4,safeguard],
+[PAFPITCH,4,safeguard],
+[PAFPITCHRANGE,0,safeguard],
+[PAFPAN,4,safeguard],
+[PAFPANWIDTH,0,safeguard],
+[PAFCHOKE,4,safeguard]
 ]

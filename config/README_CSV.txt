@@ -82,3 +82,9 @@ Syntax of menu.csv (for buttons, both GPIO and midi):
   - Value range (0-100) optionally extended with changevalue (changevalue=1 is default)
     (0-100-5 has a range 0-100 and button will make 20 steps of 5) 
 - Column4=Show as: Gives the name to show for the item if you want it to be different
+-----------------------------------------------------------------------------------
+Syntax of FXpresets.csv:
+- Headings!
+- Column1=Parameter: name of the parameter defined here
+- Column2=Value: preset value
+- Column3=Comment: gives accepted values and other info

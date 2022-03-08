@@ -8,6 +8,7 @@
 #  license:   Creative Commons ShareAlike 3.0 (http://creativecommons.org/licenses/by-sa/3.0/)
 #
 #  samplerbox_audio.pyx: Audio engine (Cython) 
+#  Rebuild with "python setup.py build_ext --inplace"
 #
 #  Original version adapted extended by HansEhv (https://github.com/hansehv):
 #
@@ -43,10 +44,8 @@
 #  December 2021
 #      - Adapted quarternote calculation after python2.7 -> python3 conversion
 #        Intermediate rounding of formulas with mixed int/float variables changed
-#
-#  Rebuild with "python setup.py build_ext --inplace"
-
-
+#  February 2022
+#      - Added possibility for sounds having adapted panorama per note
 
 import cython
 import numpy
@@ -86,12 +85,12 @@ def mixaudiobuffers(list rmlist, int frame_count, numpy.ndarray FADEOUT, int FAD
                 if i >= speedrange*PITCHSTEPS:       # 2*48=96 and higher is out of limits
                     i = (speedrange-1) * PITCHSTEPS  # save the program by ruining the pitch :-(
             speed = SPEED[i]
-            lpan = 1.0
-            rpan = 1.0
+            lpan = snd.sound.leftpan    # values of the..
+            rpan = snd.sound.rightpan   # ..definition.txt
         elif snd.sound.voice==0:    # Exclude FXtrack from notefill, pitchbend and panning
             speed = SPEED[SPEEDRANGE*PITCHSTEPS]
-            lpan = 1.0
-            rpan = 1.0
+            lpan = snd.sound.leftpan    # values of the..
+            rpan = snd.sound.rightpan   # ..definition.txt
         else:
             i = (SPEEDRANGE+(snd.note-snd.sound.midinote)/fractions) * PITCHSTEPS + snd.retune + PITCHBEND
             if i < 0:                                # below zero is out of limits
@@ -101,12 +100,9 @@ def mixaudiobuffers(list rmlist, int frame_count, numpy.ndarray FADEOUT, int FAD
                 if i >= speedrange*PITCHSTEPS:       # 2*48=96 and higher is out of limits
                     i = (speedrange-1) * PITCHSTEPS  # save the program by ruining the pitch :-(
             speed = SPEED[i]
-            if gv.PANvalue > 0:
-                lpan = 1.0-gv.PANvalue
-                rpan = 1.0+gv.PANvalue/10
-            else:
-                lpan = 1.0-gv.PANvalue/10
-                rpan = 1.0+gv.PANvalue
+            # values of the polyaftertouch pan and LFO (also use by chanaftertouch pan)
+            lpan, rpan = splitpan(snd.sound.lpan, snd.sound.rpan, gv.PANvalue)
+
         newsz = frame_count * speed
         z = snd.sound.data
         zz = <short *> (z.data)
@@ -206,3 +202,13 @@ def binary24_to_int16(char *data, int length):
         b[2*i] = data[3*i+1]
         b[2*i+1] = data[3*i+2]
     return res
+
+def splitpan(float left, float right, float panvalue):
+    cdef float lpan, rpan
+    if panvalue > 0:
+        lpan = left-panvalue
+        rpan = right+panvalue/gv.PANCORR
+    else:
+        lpan = left-panvalue/gv.PANCORR
+        rpan = right+panvalue
+    return lpan, rpan

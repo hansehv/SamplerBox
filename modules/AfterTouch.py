@@ -33,6 +33,7 @@ if gv.POLY_AFTOUCH:
     polyCC = gp.getvirtualCC()
     polyCCidx = len(gv.controllerCCs)
     gv.controllerCCs.append([gv.PAFTOUCH,polyCC,-4])
+
 # Fill notepairs (actuallyload procedure)
 
 def getnotenumber(voice, pair, partner, fractions):
@@ -92,14 +93,21 @@ def msgRem(msg):
                 msgs.append(m)
         gv.MASTER_MESSAGES = msgs
 
+chanproc = ""
+polyproc = ""
 def msgFilter():
+    global chanproc, polyproc
     chan = False
     poly = False
+    chanproc = ""
+    polyproc = ""
     for m in gv.CCmap:
         if m[0] == chanCCidx:
             chan = True
+            chanproc = gv.MC[m[1]][0]
         elif m[0] == polyCCidx:
             poly = True
+            polyproc = gv.MC[m[1]][0]
         if (chan and poly):
             break
     if poly and gv.POLY_AFTOUCH:
@@ -111,10 +119,13 @@ def msgFilter():
     elif gv.CHAN_AFTOUCH:
         msgRem(13)
 
+
 ### CHANNEL effects ########################
 
 def Channel(pressure, *z):
     if pressure > 0:    # pressure=0 is too complicated
+        if chanReverse:
+            pressure = 128 - pressure
         for m in gv.CCmap:
             if m[0] == chanCCidx:
                 if gv.MC[m[1]][0] == gv.VOLUME:
@@ -127,10 +138,20 @@ def Channel(pressure, *z):
                     gv.MC[m[1]][2](pressure, gv.MC[m[1]][0])
                 break
 
+chanReverse = False
+def chanRevToggle(*z):
+    global chanReverse
+    chanReverse = not chanReverse
+
+gv.setMC(gv.CHAFREVERS,chanRevToggle)
+
+
 ### POLYPHONIC effects #####################
 
 def Polyphonic(note, pressure, *z):
     if pressure > 0:    # pressure=0 is too complicated
+        if pafReverse:
+            pressure = 128 - pressure
         for m in gv.CCmap:
             if m[0] == polyCCidx:
                 if note in gv.playingnotes:
@@ -138,25 +159,55 @@ def Polyphonic(note, pressure, *z):
                         # this loops through layers and chorus
                         gv.MC[m[1]][2](pn, pressure, note)
                 followed = False    # prevent accumulation (e.g. with chorus)
-                if note in notepairs[gv.currvoice] and not followed:
-                    # process the followers, even if the master isn't played
-                    #  (it doesn't hurt for the master, but will catch
-                    #   specials like cymbal bell choke via the rim)
-                    for follower in notepairs[gv.currvoice][note]:
-                        if follower in gv.playingnotes:
-                            for fn in gv.playingnotes[follower]:
-                                gv.MC[m[1]][2](fn, pressure, note)
+                voice = gv.currvoice
+                if voice not in notepairs:
+                    voice = 0
+                if voice in notepairs:
+                    if note in notepairs[gv.currvoice] and not followed:
+                        # process the followers, even if the master isn't played
+                        #  (it doesn't hurt for the master, but will catch
+                        #   specials like cymbal center choke via the rim)
+                        for follower in notepairs[gv.currvoice][note]:
+                            if follower in gv.playingnotes:
+                                for fn in gv.playingnotes[follower]:
+                                    gv.MC[m[1]][2](fn, pressure, note)
                 break
+
+pafReverse = False
+def pafRevToggle(*z):
+    global pafReverse
+    pafReverse = not chanReverse
 
 def paVolume(pn, pressure, note, *z):
     pn.playingvolume(True, pressure)
 
 def paChoke(pn, pressure, note, *z):
-    if pressure > 0:
-        pn.fadeout(False)
-        gv.playingnotes[note] = []
-        gv.triggernotes[note] = 128  # housekeeping
-        gv.DampNoise(pn)
+    # perhaps we should be testing on=127 or >64 ... feedback needed...
+    pn.fadeout(False)
+    gv.playingnotes[note] = []
+    gv.triggernotes[note] = 128  # housekeeping
+    gv.DampNoise(pn)
 
+paPitchRange = 2  # 1 note = 2 semi tones. Up&down total that is.
+def paPitchSetRange(val,*z):
+    global paPitchRange
+    paPitchRange = int( val/10 )
+def paPitch(pn, pressure, note, *z):
+    diff = pressure - pn.playingvelocity()
+    pn.playingretune(True, diff*paPitchRange)
+    # self.retune += (2*val-self.velocity) -> starting velocity is neutral
+
+paPanWidth = 0.5
+def paPan(pn, pressure, note, *z):
+    pn.playingpan(True, pressure, paPanWidth)
+def paPanSetwidth(val,*z):
+    global paPanWidth
+    paPanWidth=val/127.0            # values 0-1, both left & right
+
+gv.setMC(gv.PAFREVERS,pafRevToggle)
 gv.setMC(gv.PAFVOLUME,paVolume)
+gv.setMC(gv.PAFPITCH,paPitch)
+gv.setMC(gv.PAFPITCHRANGE,paPitchSetRange)
+gv.setMC(gv.PAFPAN,paPan)
+gv.setMC(gv.PAFPANWIDTH,paPanSetwidth)
 gv.setMC(gv.PAFCHOKE,paChoke)
