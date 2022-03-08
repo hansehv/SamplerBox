@@ -62,17 +62,32 @@
 <BR>
 <BUTTON TYPE="button" onclick='window.location.assign("limiter.html");'>&nbsp;Limiter&nbsp;</BUTTON>
  &nbsp; <span ID="input_SB_PLtype"></span>
+<span ID="aftertouch_button"></span>
 <BR>
 <span ID="input_SB_SoundVolume">Line volume :</span>
 <BR>
 <span ID="input_SB_MidiChannel">Midi channel: </span>
-<TABLE><TR><TD ID="elem_SB_bTracks"></TD></TR></TABLE>
+<TABLE cellpadding=10><TR><TD ID="elem_SB_bTracks"></TD></TR></TABLE>
 
 <BUTTON TYPE="button" onclick='window.location.assign("readme.html");'>Read Me</BUTTON>
 &nbsp;
 <BUTTON TYPE="button" onclick='window.location.assign("webdocs/index.html");'>Full Docs</BUTTON>
 </FORM>
 
-<script>SB_Update();</script>
+<script>
+	SB_Update();
+	if (SB_AfterTouchSup==1) {
+		html=`<BR><BUTTON TYPE="button" onclick='window.location.assign("aftertouch.html");'>Aftertouch</BUTTON> &nbsp;`;
+		a="";
+		if (SB_AfterTouchd[0]==1) {
+			html =  html+"Channel";
+			a=" and ";
+		}
+		if (SB_AfterTouchd[2]==1) {
+			html =  html+a+"Polyphonic";
+		}
+		document.getElementById( "aftertouch_button" ).innerHTML = html;
+	}
+</script>
 </BODY>
 </HTML>

@@ -69,3 +69,7 @@ Arpeggiator,ARPord,ARPordlist,Order,name: name > x
 -,ARPloop,boolean,Loop,
 -,ARP2end,boolean,Play2end,
 -,ARPfade,0-100,Fadeout,"# 100 means ""no fadeout"""
+Aftertouch,CHAFreverse,boolean,ChanRevers,
+-,PAFreverse,boolean,KeyRevers,
+-,PAFpitchrange,1-12,Pitchrange,
+-,PAFpanwidth,0-10,Panwidth,

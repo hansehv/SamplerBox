@@ -129,5 +129,11 @@ UA,Fixed,Menu_Sel,Switch,
 UA,Fixed,Menu_Ret,Switch,
 ,,,,
 ## Aftertouch effects ##,,,,
+UA,Fixed,chafReverse,Toggle,# Inverse pressure reading for channel aftertouch
+UA,Fixed,pafReverse,Toggle,# Inverse pressure reading for polyphonic aftertouch
 UA,Fixed,pafVolume,pAftouch,
+UA,Fixed,pafPitchbend,pAftouch,
+UA,Fixed,pafPitchRange,Continuous,# Set depth of above
+UA,Fixed,pafPan,pAftouch,
+UA,Fixed,pafPanWidth,Continuous,# Set depth of above
 UA,Fixed,pafChoke,pAftouch,

@@ -36,7 +36,7 @@ BLOCKSIZE = High
 USE_48kHz = False
 
 # Set True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
-USE_SERIALPORT_MIDI = True
+USE_SERIALPORT_MIDI = False
 SERIALPORT_TIMEOUT = 0.01
 SERIALPORT_REALTIME = False
 SERIALPORT_SYSEX = False
@@ -86,8 +86,8 @@ DRUMPAD_CHANNEL = 0
 DRUMPAD_PROGRAMCHANGE = False
 DRUMPAD_CONTROLCHANGE = False
 # Does the master device have aftertouch capabilities:
-CHANNEL_AFTERTOUCH = True
-POLYPHONIC_AFTERTOUCH = True
+CHANNEL_AFTERTOUCH = False
+POLYPHONIC_AFTERTOUCH = False
 #-----   M A S T E R   K E Y B O A R D
 
 # Multi timbral devices, comma separated.

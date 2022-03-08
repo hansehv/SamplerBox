@@ -118,7 +118,10 @@ def readCCmap(ifile, override=False):
 				values=[0,"",None,voice]
 				x=gp.getindex(sheet[i][0],gv.controllerCCs)
 				if x<0:
-					print("%s: Controller %s not defined, ignoring %s" %(ifile, sheet[i][0], str(sheet[i])))
+					if gv.controllerCCs < 0:
+						print("%s: Controller %s not activated, check configuration.txt settings, ignoring %s" %(ifile, sheet[i][0], str(sheet[i])))
+					else:
+						print("%s: Controller %s not defined, ignoring %s" %(ifile, sheet[i][0], str(sheet[i])))
 					gv.ConfigErr=True
 					continue
 				elif len(sheet[i])>1:	   # skip empty lines
