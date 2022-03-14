@@ -11,6 +11,7 @@ Feb-Mar 2022:
      - CymbalChoke = Damp
      - Notepairs = apply effect on other note(s) too
   - Lifted "127" restriction on %release and %xfadein/out
+  - Added %pan parameter for positioning mono samples
   - Code cosmetics
 Jan-Feb 2022:
   - Cosmetic change on the LCDmenu webgui screen.
