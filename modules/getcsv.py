@@ -100,7 +100,7 @@ def readcontrollerCCs(ifile):
 	return 
 
 def readCCmap(ifile, override=False):
-	# CCmap: [buttonindex, procedureindex , additional procedure parameter, voice]
+	# CCmap: [buttonindex, procedureindex, additional procedure parameter, voice]
 	CCmap=[]
 	try:
 		sheet=readcsv(ifile)
@@ -118,7 +118,10 @@ def readCCmap(ifile, override=False):
 				values=[0,"",None,voice]
 				x=gp.getindex(sheet[i][0],gv.controllerCCs)
 				if x<0:
-					print("%s: Controller %s not defined, ignoring %s" %(ifile, sheet[i][0], str(sheet[i])))
+					if gv.controllerCCs < 0:
+						print("%s: Controller %s not activated, check configuration.txt settings, ignoring %s" %(ifile, sheet[i][0], str(sheet[i])))
+					else:
+						print("%s: Controller %s not defined, ignoring %s" %(ifile, sheet[i][0], str(sheet[i])))
 					gv.ConfigErr=True
 					continue
 				elif len(sheet[i])>1:	   # skip empty lines
@@ -132,10 +135,14 @@ def readCCmap(ifile, override=False):
 								print ("%s: Controller '%s' already mapped, ignored %s" %(ifile,gv.controllerCCs[x][0],sheet[i]))
 								gv.ConfigErr=True
 								continue
-						if gp.getindex(sheet[i][3].lower(),["continuous","toggle","switch","switchon","switchoff"],True)<0:
+						contype=sheet[i][3].lower()
+						if gp.getindex(contype,["continuous","toggle","switch","switchon","switchoff","paftouch"],True)<0:
 							print("%s: Mode '%s' unrecognized, ignored: %s" %(ifile, sheet[i][3], str(sheet[i])))
 							gv.ConfigErr=True
-						elif (sheet[i][3].lower()!="continuous" and gv.controllerCCs[x][2]==-1 or sheet[i][3].lower()=="continuous" and gv.controllerCCs[x][2]!=-1):
+						elif ( contype != "continuous" and gv.controllerCCs[x][2]==-1
+							or contype == "continuous" and gv.controllerCCs[x][2]!=-1
+							or contype != "paftouch" and gv.controllerCCs[x][2]==-4
+							or contype == "paftouch" and gv.controllerCCs[x][2]!=-4):
 							print("%s: Continuous/switch controller mapped to incompatible function, ignored: %s" %(ifile, str(sheet[i])))
 							gv.ConfigErr=True
 						else:

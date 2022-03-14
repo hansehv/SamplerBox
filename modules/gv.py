@@ -116,6 +116,16 @@ ARPRNDLIN="ArpRndLin"
 ARPFADE="ArpFadeout"
 ARPLOOP="ArpLoop"
 ARP2END="ArpPlay2end"
+CHAFTOUCH="ChannelAfterTouch"
+CHAFREVERS="chafReverse"
+PAFTOUCH="PolyAfterTouch"
+PAFREVERS="pafReverse"
+PAFVOLUME="pafVolume"
+PAFPITCH="pafPitchBend"
+PAFPITCHRANGE="pafPitchRange"
+PAFPAN="pafPan"
+PAFPANWIDTH="pafPanWidth"
+PAFCHOKE="pafChoke"
 UA="UA"
 
 # Internal vars
@@ -123,7 +133,9 @@ ConfigErr=False
 LEDblink=False
 USE_ALSA_MIXER=False
 BTNOTES=130         # Backtracknotes start
-MTCHNOTES=1024      # Multitimbral channel notes start - so leaves <1024 for main keyboard notes, next available 17408 (theoretically)
+MTCHNOTES=1024      # Multitimbral channel notes start:
+                    # so this leaves <1024 for main keyboard notes,
+                    # and next available is 17408 (theoretically)
 ActuallyLoading=False
 basename="None"
 DefinitionTxt=""
@@ -146,6 +158,7 @@ last_midinote=-1
 midi_mute=False
 globalgain=1        # the input volume correction, change per set in definition.txt
 PITCHBEND=0
+PANCORR = 10
 chordname=[]
 chordnote=[]
 scalename=[]
@@ -176,7 +189,12 @@ def setMC( mc, proc ):
     else:
         print("gv.setMC: Can't set %s" %mc)
     return x
-MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch),procedure)
+MC=[    # [name,type,procedure] where type can be
+        #   - 0= continuous
+        #   - 1= switch (switches a value)
+        #   - 2= switchtable
+        #   - 3= 2 value switch (has a value)
+        #   - 4= polyphonic (key-specific) aftertouch
 [PROGUP,1,safeguard],
 [PROGDN,1,safeguard],
 [PITCHWHEEL,0,safeguard],
@@ -274,5 +292,13 @@ MC=[              # name, type(0=continuous,1=switch,2=switchtable,3=2valswitch)
 [MENU_SEL,1,safeguard],
 [MENU_RET,1,safeguard],
 [NOTEMAPS,2,safeguard],
-[FXPRESETS,2,safeguard]
+[FXPRESETS,2,safeguard],
+[CHAFREVERS,1,safeguard],
+[PAFREVERS,1,safeguard],
+[PAFVOLUME,4,safeguard],
+[PAFPITCH,4,safeguard],
+[PAFPITCHRANGE,0,safeguard],
+[PAFPAN,4,safeguard],
+[PAFPANWIDTH,0,safeguard],
+[PAFCHOKE,4,safeguard]
 ]

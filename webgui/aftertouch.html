@@ -1,0 +1,40 @@
+<!DOCTYPE html><HTML><HEAD><meta charset="UTF-8">
+	<TITLE>Aftertouch</TITLE>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
+<script SRC="SamplerBox.API" TYPE="text/javascript"></script>
+<script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+</HEAD>
+<BODY>
+
+<TABLE WIDTH="100%"><TR>
+<TD width="125"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Dashboard</BUTTON></TD>
+<TD ALIGN="center"><B>Aftertouch</B></TD>
+<TD ALIGN="center"><BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON></TD>
+</TR></TABLE>
+
+<FORM ID="elem_SB_Form" STYLE="line-height:300%;">
+<script>SB_Update();SB_init_FullNotenames();</script>
+<span ID="input_SB_Voice">Voice: </span>
+<HR>
+<B><span ID="elem_SB_Aftertouchdc">Channel aftertouch</span></B>
+<BR>
+<span ID="input_SB_CHAFreverse">Reverse aftertouch:</span>
+<HR>
+<B><span ID="elem_SB_Aftertouchdp">Polyphonic aftertouch</span></B>
+<BR>
+<span ID="input_SB_PAFreverse">Reverse aftertouch:</span>
+<BR>
+<span ID="input_SB_PAFpitchrange">&nbsp; - Pitchrange:</span>
+<BR>
+<span ID="input_SB_PAFpanwidth">&nbsp; - Panwidth &nbsp;:</span>
+</FORM>
+<TABLE cellpadding=10><TR><TD>
+<span ID="elem_SB_AftertouchPairs"></span>
+</TD></TR></TABLE>
+<HR>
+
+<script>SB_Update();</script>
+</BODY>
+</HTML>

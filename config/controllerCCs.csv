@@ -1,9 +1,14 @@
-Controller,CC,Val,
-#,Example using Nektar Impact LX49 and Behringer FCB1010,,
-#,"Both reprogrammed to use full possibilities of ""free"" standard MIDI controls",,
+Controller,CC,Val,Comments
+,,,
+#,,,"Standard stuff, suggest to leave as is"
+# ChannelAfterTouch,auto,-1,Automatically added when CHANNEL_AFTERTOUCH is set in configuration
+# PolyAfterTouch,auto,-1,Automatically added when POLYPHONIC_AFTERTOUCH is set in configuration
 ModWheel,1,-1,# Standard controller is 1
 Volume,7,-1,# Standard controller is 7
 Sustain,64,-1,# Standard controller is 64
+,,,
+#,,,Example using Nektar Impact LX49 and Behringer FCB1010
+#,,,"Both reprogrammed to use full possibilities of ""free"" standard MIDI controls"
 Drawbar1,81,-1,# LX49 reprogrammed
 Drawbar2,82,-1,# LX49 reprogrammed
 Drawbar3,83,-1,# LX49 reprogrammed

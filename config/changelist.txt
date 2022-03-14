@@ -1,10 +1,22 @@
 This file contains changelog of samplerbox.py
 For changes on samplerbox_audio.pyx, see top of the source file
 
+Feb-Mar 2022:
+  - Added aftertouch
+    Channel: all "continuous" functions
+    PolyPhonic:
+     - Volume
+     - Pan
+     - Pitch
+     - CymbalChoke = Damp
+     - Notepairs = apply effect on other note(s) too
+  - Lifted "127" restriction on %release and %xfadein/out
+  - Added %pan parameter for positioning mono samples
+  - Code cosmetics
 Jan-Feb 2022:
   - Cosmetic change on the LCDmenu webgui screen.
   - Code cosmetics
-  - Last minute bug fixes before public release
+  - Last minute bug fixes before public release 220206
 Oct-Dec 2021:
   - Changed and added configuration parameters for the drumpad
     This enables the drumpad to optionally send programchanges and/or CC-messages.

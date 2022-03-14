@@ -211,5 +211,5 @@ if device_found:
 else:
     print ( 'Alsamixer not setup, so no hardware volume control' )
     USE_ALSA_MIXER=False
-    gv.getvolume=gv.NoProc
-    gv.setvolume=gv.NoProc
+    gv.getvolume=gp.NoProc
+    gv.setvolume=gp.NoProc

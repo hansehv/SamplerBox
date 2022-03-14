@@ -151,13 +151,13 @@ def notes_map(val=None):						# name of map to save
 	return nm_map
 def notes_clear(val=None):
 	if val!=None:
-		if gv.parseBoolean(val):
+		if gp.parseBoolean(val):
 			gv.notemapping=[]
 	return False
 def notes_sav(val=None):						# boolean, but as read variable it's always 0=no/false
 	global newnotemap, nm_map
 	if val!=None:
-		if gv.parseBoolean(val) and nm_map!="":	# do we want to save a map and do we know the name to save it ?
+		if gp.parseBoolean(val) and nm_map!="":	# do we want to save a map and do we know the name to save it ?
 			newnotemap=[]
 			changes_added=False
 			j=0

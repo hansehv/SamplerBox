@@ -9,7 +9,6 @@ import gv, subprocess
 
 def NoProc(*vals):      # Dummy
     pass
-gv.NoProc=NoProc        # temporary till all modules are adapted..
 
 def samples2write():
     if gv.RUN_FROM_IMAGE:
@@ -29,6 +28,7 @@ def samples2read():
         else:
             subprocess.call( ['umount', gv.samplesdir] )
             subprocess.call( ['mount', '-vr', '/dev/mmcblk0p3', gv.samplesdir] )
+
 def presetdir():
     return gv.samplesdir+gv.presetlist[getindex(gv.PRESET,gv.presetlist)][1]+"/"
 
@@ -51,7 +51,24 @@ def getindex(key, table, onecol=False, casesens=True):
             else:
                 if key.lower()==table[i][0].lower:  return i
     return -100000
-gv.getindex=getindex                    # temporary till all modules are adapted..
+
+def parseBoolean(val):
+	if val:
+		try:
+			val+=0		# is it an integer (~=boolean) ? (Integers !=0 are True)
+		except:			# text is True unless starting with: Of(f), N(one), F(alse)
+			if str(val)[0:2].title()=="Of" or str(val)[0].upper()=="N" or str(val)[0].upper()=="F":
+				return False
+	return val
+
+def getvirtualCC():
+    # Returns lowest CC minus 1. 
+    # Since table is initiated with a -1, it will always be negative
+    vCC = 0
+    for m in gv.controllerCCs:
+        if m[1] < vCC:
+            vCC = m[1]
+    return vCC-1
 
 def setFXpresets(val, *z):
     FXset = val

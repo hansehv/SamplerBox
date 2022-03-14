@@ -72,7 +72,7 @@ Box,LimitRelease,11,# release time: 5-25
 Box,LFOtype,Off,# State of the LFO=Modulator: Off/Vibrato/Tremolo/Panning/Rotate
 Box,VibrDepth,8,# Vibrato note variation (1-32) in 1/32 notes
 Box,VibrSpeed,15,"# Speed (1-32) : 14 ==> 10Hz on saw & block, 5Hz on triangle"
-Box,VibrTrill,Offf,"# Trill (Off/On): variations are not smooth but in blockform, a kind of yodeling"
+Box,VibrTrill,Off,"# Trill (Off/On): variations are not smooth but in blockform, a kind of yodeling"
 Box,TremDepth,18,"# amplitude variation 0-100, resulting volume is between full=100 and full-TremDepth"
 Box,TremSpeed,3,# Speed (1-32) : 14 ==> 10Hz
 Box,TremTrill,Off,"# Trill (Off/On): variations are not smooth but in blockform, a goatlike sound"
@@ -98,3 +98,11 @@ Box,ArpSustain,10,# 0-100
 Box,ArpFadeout,100,"# 0-100 (100 means ""no fadeout"")"
 Box,ArpLoop,On,
 Box,ArpPlay2end,Off,
+,,,
+,# -------------------------------------------------------------------------------------,,
+,#         A F T E R T O U C H,,# Only works when enabled in configuration.txt and supported by your device
+,# -------------------------------------------------------------------------------------,,"# The actual effect is set in Ccmap, here we only define the parameters"
+Box,chafReverse,Off,# Channel aftertouch pressure interpretation
+Box,pafReverse,Off,# Polyphonic aftertouch pressure interpretation
+Box,pafPitchRange,4,# 1-12 total semitones
+Box,pafPanWidth,10,"# 0-10, 0 = no pan, 10 = max left/right"

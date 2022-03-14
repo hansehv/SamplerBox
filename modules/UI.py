@@ -12,9 +12,10 @@
 #
 ###############################################################
 
-#import operator,math
 import re
 import gv,gp,remap,arp,chorus,Cpp,LFO,network
+if gv.AFTERTOUCH:
+	import AfterTouch
 import menu as butmenu
 
 # Writable variables
@@ -25,26 +26,28 @@ def RenewMedia(val=None):					# boolean, return value True indicates "preset loa
 			gv.basename="None"				# start from scratch
 			gv.LoadSamples()            	# perform the loading
 		return gv.ActuallyLoading
-	except: return True
+	except:
+		return True
 def Preset(val=None):						# 0-127
 	try:
 		if val!=None:
 			if val>=0 and val<=127:
 				if gv.PRESET!=val:
-					if gv.getindex(val,gv.presetlist)>-1:
+					if gp.getindex(val,gv.presetlist)>-1:
 						gv.PRESET=val
 						gv.LoadSamples()
 					#else: print ("Preset %d does not exist, ignored" %val)
 				#else: print ("Preset %d already loaded" %val)
 			return gv.ActuallyLoading
 		return gv.PRESET
-	except: return 0
+	except:
+		return 0
 def DefinitionTxt(val=None):				# contains definition.txt
 	try:
 		if val!=None:
 			if gv.DefinitionTxt != val:
 				gv.DefinitionTxt = val
-				fname=gv.samplesdir+gv.presetlist[gv.getindex(gv.PRESET,gv.presetlist)][1]+"/"+gv.SAMPLESDEF
+				fname=gv.samplesdir+gv.presetlist[gp.getindex(gv.PRESET,gv.presetlist)][1]+"/"+gv.SAMPLESDEF
 				gp.samples2write()
 				with open(fname,'w') as definitionfile: definitionfile.write(gv.DefinitionTxt)
 				gp.samples2read()
@@ -52,7 +55,8 @@ def DefinitionTxt(val=None):				# contains definition.txt
 				gv.LoadSamples()
 			return gv.ActuallyLoading
 		return gv.DefinitionTxt
-	except: return "** Error **"
+	except:
+		return "** Error **"
 def Voice(val=None):						# index of Voicelist (or actual "voice#" if not numeric)
 	try:
 		currvoice=gv.currvoice
@@ -71,7 +75,9 @@ def FXpreset(val=None):						# active effects preset, name in FXpresets
 		if val!=None:
 			gp.setFXpresets(val)
 		return gv.FXpreset_last
-	except: return "None"
+	except:
+		return "None"
+
 def Notemap(val=None):						# active notemap, either index in notemap or "notemap name"
 	try:
 		if val!=None:
@@ -87,7 +93,8 @@ def Notemap(val=None):						# active notemap, either index in notemap or "notema
 				remap.nm_inote=-1			# restart the mapping circus when underlying table shifted
 			return mapchange
 		return gv.currnotemap
-	except: return ""
+	except:
+		return ""
 nm_inote=remap.notes_inote
 nm_Q=remap.notes_Q
 nm_unote=remap.notes_unote
@@ -97,6 +104,7 @@ nm_voice=remap.notes_voice
 nm_map=remap.notes_map
 nm_clr=remap.notes_clear
 nm_sav=remap.notes_sav
+
 def Scale(val=None):						# index of ScaleName
 	try:
 		if val!=None:
@@ -104,14 +112,15 @@ def Scale(val=None):						# index of ScaleName
 				if val=="Note":
 					val=0 
 				else:
-					val=gv.getindex(val,gv.scalename,True)
+					val=gp.getindex(val,gv.scalename,True)
 					if val<0:
 						val=gv.currscale
 			if gv.currscale!=val:
 				gv.currscale=val
 				gv.currchord=0
 		return gv.currscale
-	except: return 0
+	except:
+		return 0
 def Chord(val=None):						# index of Chordname
 	try:
 		if val!=None:
@@ -119,35 +128,40 @@ def Chord(val=None):						# index of Chordname
 				if val=="Note":
 					val=0 
 				else:
-					val=gv.getindex(val,gv.chordname,True)
+					val=gp.getindex(val,gv.chordname,True)
 					if val<0:
 						val=gv.currchord
 			if gv.currchord!=val:
 				gv.currchord=val
 				gv.currscale=0
 		return gv.currchord
-	except: return 0
+	except:
+		return 0
 def SoundVolume(val=None):					# 0-100 in steps of roughly 10 (logarithmatic scale)
 	try:
 		if val!=None:
 			if val>=0 and val<=100:
 				gv.setvolume(val)
 		return 0.99+gv.volume
-	except: return 0
+	except:
+		return 0
 def MidiVolume(val=None):					# 0-100
 	try:
 		if val!=None:
 			if val>=0 and val<=100:
 				gv.volumeCC=float(val)/100
 		return int(gv.volumeCC*100)
-	except: return 0
+	except:
+		return 0
 def Gain(val=None):							# 0-300 (100 is neutral)
 	try:
 		if val!=None:
 			if val>=0 and val<=300:
 				gv.globalgain=float(val)/100
 		return gv.globalgain*100
-	except: return 0
+	except:
+		return 0
+
 def Pitchrange(val=None):					# 0-12 (so max 1 octave up & down)
 	try:
 		if val!=None:
@@ -155,172 +169,199 @@ def Pitchrange(val=None):					# 0-12 (so max 1 octave up & down)
 				gv.pitchnotes=val*2			# make it up&down
 		return gv.pitchnotes/2
 	except: return 12
+
 def FVtype(val=None):						# value in FVtypes
 	try:
 		if val!=None:
 			if isinstance(val,int): Cpp.FVsetType(val)
-			else: Cpp.FVsetType(gv.getindex(val,Cpp.FVtypes,True))
+			else: Cpp.FVsetType(gp.getindex(val,Cpp.FVtypes,True))
 		return Cpp.FVtype
-	except: return 0
+	except:
+		return 0
 def FVroomsize(val=None):					# 0-100
 	try:
 		if val!=None:
 			if val>=0 and val<=100:
 				Cpp.FVsetroomsize(1.27*val)
 		return Cpp.FVroomsize*100
-	except: return 0
+	except:
+		return 0
 def FVdamp(val=None):						# 0-100
 	try:
 		if val!=None:
 			if val>=0 and val<=100:
 				Cpp.FVsetdamp(1.27*val)
 		return Cpp.FVdamp*100
-	except: return 0
+	except:
+		return 0
 def FVlevel(val=None):						# 0-100
 	try:
 		if val!=None:
 			if val>=0 and val<=100:
 				Cpp.FVsetlevel(1.27*val)
 		return Cpp.FVlevel*100
-	except: return 0
+	except:
+		return 0
 def FVwidth(val=None):						# 0-100
 	try:
 		if val!=None:
 			if val>=0 and val<=100:
 				Cpp.FVsetwidth(1.27*val)
 		return Cpp.FVwidth*100
-	except: return 0
+	except:
+		return 0
+
 def AWtype(val=None):						# value in AWtypes
 	try:
 		if val!=None:
 			if isinstance(val,int): Cpp.AWsetType(val)
-			else: Cpp.AWsetType(gv.getindex(val,Cpp.AWtypes,True))
+			else: Cpp.AWsetType(gp.getindex(val,Cpp.AWtypes,True))
 		return Cpp.AWtype
-	except: return 0
+	except:
+		return 0
 def AWmixing(val=None):						# 0-100
 	try:
 		if val!=None:
 			if val>=0 and val<=100:
 				Cpp.AWsetMixing(1.27*val)
 		return Cpp.AWmixing*100
-	except: return 0
+	except:
+		return 0
 def AWattack(val=None):						# 0-500
 	try:
 		if val!=None:
 			if val>=0 and val<=500:
 				Cpp.AWsetAttack(0.254*val)
 		return Cpp.AWattack*1000
-	except: return 0
+	except:
+		return 0
 def AWrelease(val=None):					# 0-500
 	try:
 		if val!=None:
 			if val>=0 and val<=500:
 				Cpp.AWsetRelease(0.254*val)
 		return Cpp.AWrelease*10000
-	except: return 0
+	except:
+		return 0
 def AWminfreq(val=None):					# 20-500
 	try:
 		if val!=None:
 			if val>=20 and val<=500:
 				Cpp.AWsetMinFreq(0.254*val)
 		return Cpp.AWminfreq
-	except: return 20
+	except:
+		return 20
 def AWmaxfreq(val=None):					# 1000-10000
 	try:
 		if val!=None:
 			if val>=1000 and val<=10000:
 				Cpp.AWsetMaxFreq(0.0127*val)
 		return Cpp.AWmaxfreq
-	except: return 1000
+	except:
+		return 1000
 def AWqfactor(val=None):					# 0-100
 	try:
 		if val!=None:
 			if val>=0 and val<=100:
 				Cpp.AWsetQualityFactor(1.27*val)
 		return Cpp.AWqfactor*10
-	except: return 0
+	except:
+		return 0
 def AWspeed(val=None):						# 100-1100
 	try:
 		if val!=None:
 			if val>=100 and val<=1100:
 				Cpp.AWsetSpeed(0.127*(val-100))
 		return Cpp.AWspeed
-	except: return 100
+	except:
+		return 100
 def AWlvlrange(val=None):					# 0-100
 	try:
 		if val!=None:
 			if val>=0 and val<=100:
 				Cpp.AWsetLVLrange(1.27*val)
 		return Cpp.AWlvlrange
-	except: return 0
+	except:
+		return 0
+
 def DLYtype(val=None):						# value in DLYtypes
 	try:
 		if val!=None:
 			if isinstance(val,int): Cpp.DLYsetType(val)
-			else: Cpp.DLYsetType(gv.getindex(val,Cpp.DLYtypes,True))
+			else: Cpp.DLYsetType(gp.getindex(val,Cpp.DLYtypes,True))
 		return Cpp.DLYtype
-	except: return 0
+	except:
+		return 0
 def DLYfb(val=None):						# 0-100
 	try:
 		if val!=None:
 			if val>=0 and val<=100:
 				Cpp.DLYsetfb(1.27*val)
 		return Cpp.DLYfb*100
-	except: return 0
+	except:
+		return 0
 def DLYwet(val=None):						# 0-100
 	try:
 		if val!=None:
 			if val>=0 and val<=100:
 				Cpp.DLYsetwet(1.27*val)
 		return Cpp.DLYwet*100
-	except: return 0
+	except:
+		return 0
 def DLYdry(val=None):						# 0-100
 	try:
 		if val!=None:
 			if val>=0 and val<=100:
 				Cpp.DLYsetdry(1.27*val)
 		return Cpp.DLYdry*100
-	except: return 0
+	except:
+		return 0
 def DLYtime(val=None):						# 1000-61000
 	try:
 		if val!=None:
 			if val>=1000 and val<=61000:
 				Cpp.DLYsettime(1.27*(val-1000)/600)
 		return Cpp.DLYtime
-	except: return 0
+	except:
+		return 0
 def DLYsteep(val=None):						# 1-11
 	try:
 		if val!=None:
 			if val>=1 and val<=11:
 				Cpp.DLYsetsteep(12.7*(val-1))
 		return Cpp.DLYsteep
-	except: return 1
+	except:
+		return 1
 def DLYsteplen(val=None):					# 300-3300
 	try:
 		if val!=None:
 			if val>=300 and val<=3300:
 				Cpp.DLYsetsteplen(1.27*(val-300)/30)
 		return Cpp.DLYsteplen
-	except: return 300
+	except:
+		return 300
 def DLYmin(val=None):						# 5-25
 	try:
 		if val!=None:
 			if val>=5 and val<=25:
 				Cpp.DLYsetmin(5.36*(val-5))
 		return Cpp.DLYmin
-	except: return 5
+	except:
+		return 5
 def DLYmax(val=None):						# 50-150
 	try:
 		if val!=None:
 			if val>=50 and val<=150:
 				Cpp.DLYsetmax(1.27*(val-50))
 		return Cpp.DLYmax
-	except: return 50
+	except:
+		return 50
+
 def LFtype(val=None):						# value in LFtypes
 	try:
 		if val!=None:
 			if isinstance(val,int): Cpp.LFsetType(val)
-			else: Cpp.LFsetType(gv.getindex(val,Cpp.LFtypes,True))
+			else: Cpp.LFsetType(gp.getindex(val,Cpp.LFtypes,True))
 		return Cpp.LFtype
 	except: return 0
 def LFresonance(val=None):					# 0-38
@@ -329,163 +370,190 @@ def LFresonance(val=None):					# 0-38
 			if val>=0 and val<=38:
 				Cpp.LFsetResonance(127*val/38)
 		return Cpp.LFresonance*10
-	except: return 0
+	except:
+		return 0
 def LFcutoff(val=None):						# 1000-11000
 	try:
 		if val!=None:
 			if val>=1000 and val<=11000:
 				Cpp.LFsetCutoff(1.27*(val-1000)/100)
 		return Cpp.LFcutoff
-	except: return 1000
+	except:
+		return 1000
 def LFdrive(val=None):						# 1-20
 	try:
 		if val!=None:
 			if val>=1 and val<=20:
 				Cpp.LFsetDrive((val-1)*6.35) 	# =/20.0*127)
 		return Cpp.LFdrive
-	except: return 1
+	except:
+		return 1
 def LFlvl(val=None):						# 0-100
 	try:
 		if val!=None:
 			if val>=0 and val<=100:
 				Cpp.LFsetLvl(1.27*val)
 		return Cpp.LFlvl*100
-	except: return 0
+	except:
+		return 0
 def LFgain(val=None):						# 10-110, Carefully test before using values above 50
 	try:
 		if val!=None:
 			if val>=10 and val<=110:
 				Cpp.LFsetGain(1.27*(val-10))
 		return Cpp.LFgain*10
-	except: return 10
+	except:
+		return 10
+
 def ODtype(val=None):						# value in ODtypes
 	try:
 		if val!=None:
 			if isinstance(val,int): Cpp.ODsetType(val)
-			else: Cpp.ODsetType(gv.getindex(val,Cpp.ODtypes,True))
+			else: Cpp.ODsetType(gp.getindex(val,Cpp.ODtypes,True))
 		return Cpp.ODtype
-	except: return 0
+	except:
+		return 0
 def ODboost(val=None):						# 15-65
 	try:
 		if val!=None:
 			if val>=15 and val<=65:
 				Cpp.ODsetBoost(127*(val-15)/50)
 		return Cpp.ODboost
-	except: return 30
+	except:
+		return 30
 def ODdrive(val=None):						# 1-11
 	try:
 		if val!=None:
 			if val>=1 and val<=11:
 				Cpp.ODsetDrive((val-1)*12.7)
 		return Cpp.ODdrive
-	except: return 0
+	except:
+		return 0
 def ODtone(val=None):						# 0-95 (accepts up to 100)
 	try:
 		if val!=None:
 			if val>=0 and val<=100:
 				Cpp.ODsetTone(val*1.27)
 		return Cpp.ODtone
-	except: return 1
+	except:
+		return 1
 def ODmix(val=None):						# 0-10
 	try:
 		if val!=None:
 			if val>=0 and val<=10:
 				Cpp.ODsetMix(val*12.7)
 		return Cpp.ODmix*10
-	except: return 1
+	except:
+		return 1
+
 def PLtype(val=None):						# value in PLtypes
 	try:
 		if val!=None:
 			if isinstance(val,int): Cpp.PLsetType(val)
-			else: Cpp.PLsetType(gv.getindex(val,Cpp.PLtypes,True))
+			else: Cpp.PLsetType(gp.getindex(val,Cpp.PLtypes,True))
 		return Cpp.PLtype
-	except: return 0
+	except:
+		return 0
 def PLthresh(val=None):						# 70-110
 	try:
 		if val!=None:
 			if val>=70 and val<=110:
 				Cpp.PLsetThresh(127*(val-70)/40)
 		return Cpp.PLthresh
-	except: return 0
+	except:
+		return 0
 def PLattack(val=None):						# 1-11
 	try:
 		if val!=None:
 			if val>=1 and val<=11:
 				Cpp.PLsetAttack((val-1)*12.7)
 		return Cpp.PLattack
-	except: return 1
+	except:
+		return 1
 def PLrelease(val=None):					# 1-11
 	try:
 		if val!=None:
 			if val>=5 and val<=25:
 				Cpp.PLsetRelease((val-5)*6.35)
 		return Cpp.PLrelease
-	except: return 8
+	except:
+		return 8
+
 def LFOtype(val=None):						# value in LFOtypes
 	try:
 		if val!=None:
 			if isinstance(val,int): LFO.setType(val)
-			else: LFO.setType(gv.getindex(val,LFO.effects,True))
+			else: LFO.setType(gp.getindex(val,LFO.effects,True))
 		return LFO.effect
-	except: return 0
+	except:
+		return 0
 def VIBRpitch(val=None):					# 1-64
 	try:
 		if val!=None:
 			if val>=1 and val<=64:
 				LFO.VIBRpitch=1.0*val/16
 		return LFO.VIBRpitch*16
-	except: return 0
+	except:
+		return 0
 def VIBRspeed(val=None):					# 1-32	
 	try:
 		if val!=None:
 			if val>=1 and val<=32:
 				LFO.VibrSetspeed(val*4)
 		return LFO.VIBRspeed	#bug/4
-	except: return 0
+	except:
+		return 0
 def VIBRtrill(val=None):					# boolean, or "N*" / "*"
 	try:
 		if val!=None:
-			LFO.VIBRtrill=gv.parseBoolean(val)
+			LFO.VIBRtrill=gp.parseBoolean(val)
 		return 1 if LFO.VIBRtrill else 0
-	except: return 0
+	except:
+		return 0
 def TREMampl(val=None):						# 1-100
 	try:
 		if val!=None:
 			if val>=1 and val<=100:
 				LFO.TREMampl=0.01*val
 		return LFO.TREMampl*100
-	except: return 0
+	except:
+		return 0
 def TREMspeed(val=None):					# 1-32
 	try:
 		if val!=None:
 			if val>=1 and val<=32:
 				LFO.TremSetspeed(val*4)
 		return LFO.TREMspeed	#bug/4
-	except: return 0
+	except:
+		return 0
 def TREMtrill(val=None):					# boolean, or "N*" / "*"
 	try:
 		if val!=None:
-			LFO.TREMtrill=gv.parseBoolean(val)
+			LFO.TREMtrill=gp.parseBoolean(val)
 		return 1 if LFO.TREMtrill else 0
-	except: return False
+	except:
+		return False
 def PANwidth(val=None):						# 2-20
 	try:
 		if val!=None:
 			if val>=2 and val<=20:
 				LFO.PANwidth=0.05*val
 		return LFO.PANwidth*20
-	except: return 0
+	except:
+		return 0
 def PANspeed(val=None):						# 1-32
 	try:
 		if val!=None:
 			if val>=1 and val<=32:
 				LFO.PanSetspeed(val*4)
 		return LFO.PANspeed	#bug/4
-	except: return 0
+	except:
+		return 0
+
 def ARPpower(val=None):					# boolean, or "N*" / "*"
 	try:
 		if val!=None:
-			arp.power( gv.parseBoolean(val) )
+			arp.power( gp.parseBoolean(val) )
 		return 1 if arp.power else 0
 	except: return False
 def ARPstep(val=None):						# 10-100
@@ -494,61 +562,72 @@ def ARPstep(val=None):						# 10-100
 			if val>=1 and val<=100:
 				arp.tempo(1.27*val)
 		return arp.stepticks
-	except: return 0
+	except:
+		return 0
 def ARPsustain(val=None):					# 0-100
 	try:
 		if val!=None:
 			if val>=1 and val<=100:
 				arp.sustain(1.27*val)
 		return arp.noteticks
-	except: return 0
+	except:
+		return 0
 def ARPloop(val=None):						# boolean, or "N*" / "*"
 	try:
 		if val!=None:
-			arp.loop=gv.parseBoolean(val)
+			arp.loop=gp.parseBoolean(val)
 		return 1 if arp.loop else 0
-	except: return False
+	except:
+		return False
 def ARP2end(val=None):						# boolean, or "N*" / "*"
 	try:
 		if val!=None:
-			arp.play2end=gv.parseBoolean(val)
+			arp.play2end=gp.parseBoolean(val)
 		return 1 if arp.play2end else 0
-	except: return False
+	except:
+		return False
 def ARPord(val=None):						# value in ARPordlist
 	try:
 		if val!=None:
 			if isinstance(val,int): arp.ordnum(val)
-			else: arp.ordnum(gv.getindex(val,arp.modes,True))
+			else: arp.ordnum(gp.getindex(val,arp.modes,True))
 		return arp.mode
-	except: return 0
+	except:
+		return 0
 def ARPfade(val=None):						# 0-100 (100 means "no fadeout")
 	try:
 		if val!=None:
 			if val>=1 and val<=100:
 				arp.fadeout(1.27*val)
 		return arp.fadecycles
-	except: return 0
+	except:
+		return 0
+
 def CHOrus(val=None):						# value in CHOtypes
 	try:
 		if val!=None:
 			if isinstance(val,int): chorus.setType(val)
-			else: chorus.setType(gv.getindex(val,chorus.effects,True))
+			else: chorus.setType(gp.getindex(val,chorus.effects,True))
 		return chorus.effect
-	except: return 0
+	except:
+		return 0
 def CHOdepth(val=None):						# 2-15
 	try:
 		if val!=None:
 			if val>=2 and val<=15:
 				chorus.setdepth(9.77*(val-2))
 		return chorus.depth
-	except: return 0
+	except:
+		return 0
 def CHOgain(val=None):						# 30-80
 	try:
 		if val!=None:
 			if val>=30 and val<=80:
 				chorus.setgain(2.54*(val-30))
 		return chorus.gain*100
-	except: return 0
+	except:
+		return 0
+
 def MidiChannel(val=None):					# 1-16
 	try:
 		if val!=None:
@@ -556,18 +635,61 @@ def MidiChannel(val=None):					# 1-16
 				gv.MIDI_CHANNEL=val
 		return gv.MIDI_CHANNEL
 	except: return 1
+
+def CHAFreverse(val=None):					# boolean, or "N*" / "*"
+	if gv.AFTERTOUCH:
+		try:
+			if val!=None:
+				AfterTouch.chanReverse=gp.parseBoolean(val)
+			return 1 if AfterTouch.chanReverse else 0
+		except:
+			pass
+	return 0
+def PAFreverse(val=None):					# boolean, or "N*" / "*"
+	if gv.AFTERTOUCH:
+		try:
+			if val!=None:
+				AfterTouch.pafReverse=gp.parseBoolean(val)
+			return 1 if AfterTouch.pafReverse else 0
+		except:
+			pass
+	return 0
+def PAFpitchrange(val=None):						# 1-12
+	if gv.AFTERTOUCH:
+		try:
+			if val!=None:
+				if val>=1 and val<=12:
+					AfterTouch.paPitchSetRange( (127/12)*val )
+			return AfterTouch.paPitchRange
+		except:
+			pass
+	return 2
+def PAFpanwidth(val=None):							# 0-10 5=center
+	if gv.AFTERTOUCH:
+		try:
+			if val!=None:
+				if val>=0 and val<=10:
+					AfterTouch.paPanSetwidth( 12.7*val )
+			return AfterTouch.paPanWidth*10
+		except:
+			pass
+	return 5
+
 def Button(val=None):
 	try:
 		if val!=None:
 			if isinstance(val,int): but=int(val)
-			else: but=gv.getindex(val,butmenu.buttons,True)
+			else: but=gp.getindex(val,butmenu.buttons,True)
 			if but>-1:
 				butmenu.nav(but,4)
 				return True
 		return False
-	except: return False
+	except:
+		return False
 
+# #######################################
 # Readonly variables changing during play
+# #######################################
 
 def LastMidiNote(*z):				# last note on master controller in the keyboard area
 	try: return gv.last_midinote
@@ -586,7 +708,7 @@ def Presetlist(*z):					# [[#,name],.....], so preset "0 Demo" gives element [0,
 	except: return ""
 def xvoice(*z):						# Does the effects voice (voice=0) exist ?
 	try:
-		if gv.getindex(0,gv.voicelist)>-1:
+		if gp.getindex(0,gv.voicelist)>-1:
 			return True
 	except: pass
 	return False
@@ -612,6 +734,7 @@ def NoteMapping(*z):				# [[keybnote,qfraction,soundnote,retune,voice]...]
 def MenuDisplay(*z):				# [line1,line2, ..] lines of the characterdisplay of the (button) menu
 	try: return [butmenu.line1(),butmenu.line2(),butmenu.line3()]
 	except: return ["No menu defined",""]
+
 IP=network.IP
 IPlist=network.IPlist
 def Wireless(*z):
@@ -621,6 +744,7 @@ def Wireless(*z):
 		return ["Network error"]
 def SSID(*z):
 	return Wireless()[0]
+
 mididevs=[]
 mididev=""
 def MIDIdevs(*z):					# Current opened mididevices except internal=smfplayer
@@ -632,10 +756,10 @@ def MIDIdev(val=None):				# Pseudo update to serve the button menu system
 		if len(devs)==0:
 			mididev="None"
 		elif val==None:
-			val=gv.getindex(mididev,devs,True)
+			val=gp.getindex(mididev,devs,True)
 			if val<0:val=0
 		elif not isinstance(val,int):
-			val=gv.getindex(val,mididevs,True)
+			val=gp.getindex(val,mididevs,True)
 			if val<0: val=0
 		elif val>=len(mididevs) or val<0:
 			val=0
@@ -643,7 +767,25 @@ def MIDIdev(val=None):				# Pseudo update to serve the button menu system
 		return mididev
 	except: return "Error"
 
+def AfterTouchd(*z):				#  Details of aftertouch support
+	if gv.AFTERTOUCH:
+		chan = 1 if gv.CHAN_AFTOUCH else 0
+		poly = 1 if gv.POLY_AFTOUCH else 0
+		return [chan, AfterTouch.chanproc, poly, AfterTouch.polyproc]
+	else:
+		return [0, "", 0, ""]
+def AfterTouchPairs(*z):			# Notepairs of current voice
+	pairs = []
+	if gv.AFTERTOUCH:
+		if gv.currvoice in AfterTouch.notepairs:
+			for m in AfterTouch.notepairs[gv.currvoice]:
+				pairs.append([m, AfterTouch.notepairs[gv.currvoice][m] ])
+	return pairs
+	
+
+# #######################################################
 # Readonly variables from configuration and mapping files
+# #######################################################
 
 def Samplesdir(*z):					# Active samples directory. Either /samples (on SD), /media (on USB) or other path if not using the scripts on SB-image
 	return gv.samplesdir
@@ -691,10 +833,14 @@ def LFOtypes(*z):					# Effects implemented via the Low Frequency Oscillator
 	except: return ["Off"]
 def CHOtypes(*z):					# Effects implemented via Chorus
 	return chorus.effects
+def AfterTouchSup(*z):					# Is aftertouch supported according configuration.txt ?
+	return gv.AFTERTOUCH
 def Buttons(*z):					# Buttons supported by button menu
 	return butmenu.buttons
 
+# #################################################################################
 #                         = = = = =   D I C T I O N A R Y   = = = = =
+# #################################################################################
 
 # quite some variables have range 0-100 to both have some parallel with midi 0-127 as well as the human perception
 # others still show values indicating the struggle with tuning :-(
@@ -810,6 +956,10 @@ procs={
 	"CHOdepth":["w",CHOdepth,gv.CHORUSDEPTH],		# 2-15
 	"CHOgain":["w",CHOgain,gv.CHORUSGAIN],			# 30-80
 	"MidiChannel":["w",MidiChannel],				# 1-16
+	"CHAFreverse":["w",CHAFreverse,gv.CHAFREVERS],	# boolean (0-1)
+	"PAFreverse":["w",PAFreverse,gv.PAFREVERS],		# boolean (0-1)
+	"PAFpitchrange":["w",PAFpitchrange,gv.PAFPITCHRANGE],	# 1-12 (semitones, up&down, so max 1 octave total)
+	"PAFpanwidth":["w",PAFpanwidth,gv.PAFPANWIDTH],	# 0-10 5=center
 	"Button":["w",Button],							# index of Buttons, where 0 has no function (no button touched)
 
 # Readonly variables changing during play (parameters are ignored)
@@ -819,7 +969,7 @@ procs={
 	"DefErr":["v",DefErr],					# empty or short indication of lines with errors in the definition.txt
 	"Mode":["v",Mode],						# play mode (keyb, once, loop etc)
 	"Presetlist":["v",Presetlist],			# [[#,name],.....], so preset "0 Demo" gives element [0,"0 Demo]
-	"xvoice":["v",xvoice],					# Does the effects track (voice=0) exist ?
+	"xvoice":["v",xvoice],					# Does the/ effects track (voice=0) exist ?
 	"Voicelist":["v",Voicelist],			# [[#,name],.....] similar to table defined in code or stored in config files on SD or USB, however without voice 0 (effects track)
 	"bTracks":["v",bTracks],				# [[#,name,notename in notemap],.....]. Number >0 can be assigned to a midiCC
 	"Notemaps":["v",Notemaps],				# Available notemaps (names)
@@ -831,6 +981,8 @@ procs={
 	"SSID":["w",SSID],						# Wireless network (it's classified "w" to force into the button menu)
 	"MIDIdevs":["v",MIDIdevs],				# Current opened mididevices except internal=smfplayer
 	"MIDIdev":["w",MIDIdev],				# Opened MIDIdevice (it's classified "w" to force into the button menu)
+	"AfterTouchd":["v",AfterTouchd],		# Details of aftertouch support
+	"AfterTouchPairs":["v",AfterTouchPairs],# Notepairs of current voice
 
 # Readonly variables from configuration and mapping files (parameters are ignored)
 
@@ -850,9 +1002,10 @@ procs={
 	"LFtypes":["f",LFtypes],				# Moog low pass (just on/off..)
 	"ODtypes":["f",ODtypes],				# Overdrive effect (just on/off..)
 	"PLtypes":["f",PLtypes],				# Peak limiter (just on/off..)
-	"CHOtypes":["f",CHOtypes],				# Chorus (just on/off..)
 	"LFOtypes":["f",LFOtypes],				# Effects implemented via the Low Frequency Oscillator
-	"Buttons":["f",Buttons]				# Buttons supported by button menu
+	"CHOtypes":["f",CHOtypes],				# Chorus (just on/off..)
+	"AfterTouchSup":["f",AfterTouchSup],	# Is aftertouch supported in this configuration
+	"Buttons":["f",Buttons]					# Buttons supported by button menu
 	}
 
 gv.procs_alias = {}
@@ -871,8 +1024,8 @@ cfg_int=lambda x: gv.cp.getint(gv.cfg,x.lower())
 cfg_float=lambda x: gv.cp.getfloat(gv.cfg,x.lower())
 cfg_bool=lambda x: gv.cp.getboolean(gv.cfg,x.lower())
 # miscellaneous
-getindex=gv.getindex						# index=getindex(searchval,table<,onecol>). "onecol" is optional boolean "has table one column only". Default=False
-display=gv.NoProc							# if the user interface needs to display something on the system display
+getindex=gp.getindex						# index=getindex(searchval,table<,onecol>). "onecol" is optional boolean "has table one column only". Default=False
+display=gp.NoProc							# if the user interface needs to display something on the system display
 menu=butmenu.nav							# the buttons menu navigation
 USE_ALSA_MIXER=False						# this is (re)set by audio detection
 USE_IPv6=gv.USE_IPv6						# set by network module
