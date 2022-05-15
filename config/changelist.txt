@@ -1,7 +1,7 @@
 This file contains changelog of samplerbox.py
 For changes on samplerbox_audio.pyx, see top of the source file
 
-Feb-Mar 2022:
+Feb-May 2022:
   - Added aftertouch
     Channel: all "continuous" functions
     PolyPhonic:
@@ -12,6 +12,10 @@ Feb-Mar 2022:
      - Notepairs = apply effect on other note(s) too
   - Lifted "127" restriction on %release and %xfadein/out
   - Added %pan parameter for positioning mono samples
+  - Added R/O part of CCmap editing in GUI (editing module can be used in/for other UI's).
+  - Added rotate parameter for OLED displays
+  - Fixed bug in notemapping screen ("Ctrl" and "None" showed as "None" and "0")
+  - Changed web "LCD"screen & building block to accommodate other skins.
   - Code cosmetics
 Jan-Feb 2022:
   - Cosmetic change on the LCDmenu webgui screen.

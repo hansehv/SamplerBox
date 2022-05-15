@@ -88,6 +88,13 @@ DRUMPAD_CONTROLCHANGE = False
 # Does the master device have aftertouch capabilities:
 CHANNEL_AFTERTOUCH = False
 POLYPHONIC_AFTERTOUCH = False
+# Value of "Right side", "Left side" has some notes slack
+#	88-key:	- 108=C8
+#	77-key:	- 103=G7
+#	61-key:	- 96=C7
+BOXSTOP127 = 109
+# Controlnumber used when using music notes for controls (=as CC).
+NOTES_CC = 119
 #-----   M A S T E R   K E Y B O A R D
 
 # Multi timbral devices, comma separated.
@@ -100,9 +107,6 @@ MULTI_WITHMASTER =
 # Devices to receive SB's input, either "All" without quotes or comma separated values,
 #  use regular expressions for patterns (see docs on MIDI-THRU)
 MIDI_THRU =
-
-# Controlnumber used when using music notes for controls (=as CC).
-NOTES_CC = 119
 
 # Sample mode is how the samples are played, Keyb is standard MIDI behaviour.
 #	Keyb	- reacts on "keyboard" interaction
@@ -118,12 +122,6 @@ BOXSAMPLE_MODE = Keyb
 #		Accurate- velocity as played, allows for multiple (normalized!) samples for timbre
 BOXVELOCITY_LEVELS = 1
 BOXVELOCITY_MODE = Accurate
-
-# Value of "Right side", "Left side" has some notes slack
-#	88-key:	- 108=C8
-#	77-key:	- 103=G7
-#	61-key:	- 96=C7
-BOXSTOP127 = 109
 
 # the startup (alsa=output) volume (0-100)
 # assumed value of the volumeknob controller before first use, max=1.0 (the knob can only decrease).
@@ -211,6 +209,8 @@ I2C_LCD_PORT=1
 #     -- USE_OLED -- OLED connection and device settings (SPI connection)
 # Set to the correct OLED driver chip, one of: SH1106 or SSD1306 (more to come)
 # RSt=Reset, CS=ChipsSelect, DC=data/command
+# ROTATE: 0, 1, 2 or 3 only, respectively 0, 90, 180, 270 degrees clockwise.
+#
 OLED_DRIVER = SH1106
 OLED_RST=25
 OLED_CS=8
@@ -219,6 +219,7 @@ OLED_PORT=0
 OLED_WIDTH=128
 OLED_HEIGHT=64
 OLED_PADDING=-2
+OLED_ROTATE=2
 
 #     -- USE_PIMORONI_LCD -- LCD connection and device settings (SPI connection)
 # BL=Backlight pin, CS=Chips select pin, DC=data/command pin

@@ -36,6 +36,7 @@ INPUT, SELECT, .value {
 	-moz-border-radius: 5px;
 	border-radius: 5px;
 	background-color:var(--bgcolor-value);}
+.value { padding: 0px 5px; }
 OPTION:nth-child(odd) {background-color: var(--bgcolor-listodd);}
 OPTION:nth-child(even) {background-color: var(--bgcolor-listeven);}
 .LCD {
@@ -43,6 +44,9 @@ OPTION:nth-child(even) {background-color: var(--bgcolor-listeven);}
 	font-size:xx-large;
 	color:var(--color-LCD);
 	background-color:var(--bgcolor-LCD);
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
 	}
 TEXTAREA {
 	unicode-bidi:font-family:monospace;

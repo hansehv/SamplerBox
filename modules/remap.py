@@ -108,7 +108,8 @@ def notes_onote(val=None):						# midinote or notename, with specials -2="Ctrl" 
 		else:
 			nm_onote=gv.notename2midinote(val,nm_Q)
 			if nm_onote<-3: nm_onote=-1
-		if curronote!=nm_onote: nm_unote=0
+		if curronote!=nm_onote:
+			nm_unote=0
 	return nm_onote
 def notes_retune(val=None):						# -50 - +50 (0 is neutral)
 	global nm_retune

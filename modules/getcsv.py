@@ -47,7 +47,7 @@ def readcsv(ifile, numtxt=100, header=True):
 					rows.append(row)
 	return rows
 
-def readchords(ifile):
+def chords(ifile):
 	sheet=readcsv(ifile,1,False)
 	gv.chordnote=[[0]]	 # single note
 	gv.chordname=[""]
@@ -60,7 +60,7 @@ def readchords(ifile):
 			gv.chordnote.append(values)
 	return 
 
-def readscales(ifile):
+def scales(ifile):
 	sheet=readcsv(ifile)
 	gv.scalechord=[[0,0,0,0,0,0,0,0,0,0,0,0]]  # single notes
 	gv.scalename=[""]
@@ -81,13 +81,50 @@ def readscales(ifile):
 		gv.scalechord.append(values)
 	return
 
-def readcontrollerCCs(ifile):
+gv.CCfamilies = []
+def controls(ifile):
+	# makes gv.CCfamily and sets indexes in gv.MC
+	if len(gv.CCfamilies) > 0:
+		return		# we've been here before
+	controls = []
+	sheet=readcsv(ifile)
+	for i in range( len(sheet) ):
+		if len(sheet[i])>3:	 # skip useless lines
+			control = sheet[i][2] if sheet[i][1]=='Fixed' else sheet[i][1]
+			x = gp.getindex(control,gv.MC)
+			if x < 0:
+				print ( "%s: Control %s not defined, ignored %s" %(ifile,sheet[i][2],sheet[i]) )
+				gv.ConfigErr=True
+			elif gv.MC[x][2] != gv.safeguard:
+				contype=sheet[i][3].lower()
+				if contype not in gv.MCmodes:
+					print("%s: Mode '%s' unrecognized, ignored: %s" %(ifile, sheet[i][3], str(sheet[i])))
+					gv.ConfigErr=True
+				else:
+					controls.append([ sheet[i][0], control, gv.MCmodes[contype][1] ])
+					if gp.getindex( sheet[i][0], gv.CCfamilies, True ) < 0:
+						gv.CCfamilies.append(sheet[i][0])
+		else:
+			print ("%s: ignored %s" %(ifile, sheet[i]))
+			gv.ConfigErr=True
+	gv.CCfamilies.sort()
+	for i in range( len(controls) ):
+		x = gp.getindex(controls[i][1],gv.MC)
+		# add the family index of valid controls to the gv.MC
+		gv.MC[x].append( gp.getindex(controls[i][0], gv.CCfamilies, True) )
+		# add the modename index of valid controls to the gv.MC
+		gv.MC[x].append( controls[i][2] )
+	return
+
+def controllerCCs(ifile):
 	# controllerCCs: [wheel/button/pot/drawbarname, controller, data LSB (-1 if continuous controller)]
 	sheet=readcsv(ifile,1)
 	gv.controllerCCs=[[gv.UA,-1,-1]]  # define controller for unassigned controls
 	for i in range(len(sheet)):
-		if len(sheet[i])>2:	 # skip useless lines
-			if gp.getindex(sheet[i][0],gv.controllerCCs)>-1:
+		if len(sheet[i]) > 2:		# skip useless lines
+			if sheet[i][2] == 0:
+				print ("%s: Controller %s has value=0, ignored %s" %(ifile,sheet[i][0],sheet[i]))
+			elif gp.getindex(sheet[i][0],gv.controllerCCs)>-1:
 				print ("%s: Controller %s already defined, ignored %s" %(ifile,sheet[i][0],sheet[i]))
 			else:
 				values=[]
@@ -99,13 +136,13 @@ def readcontrollerCCs(ifile):
 			gv.ConfigErr=True
 	return 
 
-def readCCmap(ifile, override=False):
+def CCmap(ifile, override=False):
 	# CCmap: [buttonindex, procedureindex, additional procedure parameter, voice]
 	CCmap=[]
 	try:
 		sheet=readcsv(ifile)
 		for i in range(len(sheet)):
-			voice=0
+			voice=-1
 			if override:
 				x=sheet[i].pop(0)
 				try:
@@ -118,10 +155,7 @@ def readCCmap(ifile, override=False):
 				values=[0,"",None,voice]
 				x=gp.getindex(sheet[i][0],gv.controllerCCs)
 				if x<0:
-					if gv.controllerCCs < 0:
-						print("%s: Controller %s not activated, check configuration.txt settings, ignoring %s" %(ifile, sheet[i][0], str(sheet[i])))
-					else:
-						print("%s: Controller %s not defined, ignoring %s" %(ifile, sheet[i][0], str(sheet[i])))
+					print("%s: Controller %s not defined, ignoring %s" %(ifile, sheet[i][0], str(sheet[i])))
 					gv.ConfigErr=True
 					continue
 				elif len(sheet[i])>1:	   # skip empty lines
@@ -136,14 +170,13 @@ def readCCmap(ifile, override=False):
 								gv.ConfigErr=True
 								continue
 						contype=sheet[i][3].lower()
-						if gp.getindex(contype,["continuous","toggle","switch","switchon","switchoff","paftouch"],True)<0:
+						if contype not in gv.MCmodes:
 							print("%s: Mode '%s' unrecognized, ignored: %s" %(ifile, sheet[i][3], str(sheet[i])))
 							gv.ConfigErr=True
-						elif ( contype != "continuous" and gv.controllerCCs[x][2]==-1
-							or contype == "continuous" and gv.controllerCCs[x][2]!=-1
-							or contype != "paftouch" and gv.controllerCCs[x][2]==-4
-							or contype == "paftouch" and gv.controllerCCs[x][2]!=-4):
-							print("%s: Continuous/switch controller mapped to incompatible function, ignored: %s" %(ifile, str(sheet[i])))
+						elif ( gv.MCmodes[contype][0] == 0 and gv.controllerCCs[x][2] < 1
+							or gv.MCmodes[contype][0] < 0 and gv.controllerCCs[x][2] != gv.MCmodes[contype][0]
+							):
+							print("%s: Continuous/switch/aftertouch controller mapped to incompatible function, ignored: %s" %(ifile, str(sheet[i])))
 							gv.ConfigErr=True
 						else:
 							values[0]=x	 # identify controller
@@ -165,10 +198,10 @@ def readCCmap(ifile, override=False):
 			print("%s: No default controller mapping found" %(ifile))
 	return CCmap
 
-keynames=[]
-def readkeynames(ifile):
+keyvals = []
+def keynames(ifile):
+	global keyvals
 	# keynames: [name of key/string/pad, midinote sent by this trigger]
-	global keynames
 	gv.keynames=[["-1","None"]]
 	keynames=[]
 	gv.drumpadmap=[]
@@ -176,7 +209,6 @@ def readkeynames(ifile):
 		sheet=readcsv(ifile)
 		for i in range(len(sheet)):
 			values=[]
-			valucas=[]
 			valuesDP=[]
 			valuesCC=[]
 			if len(sheet[i])>1:	 # skip useless lines
@@ -184,19 +216,13 @@ def readkeynames(ifile):
 					print ("%s: Key %s already defined, ignored %s" %(ifile,sheet[i][0],sheet[i]))
 				else:
 					try:
-						values.append(sheet[i][1])
-						values.append(sheet[i][0])
+						keyvals.extend([[ sheet[i][0], sheet[i][1] ]])
+						values.extend([ sheet[i][1], sheet[i][0] ])
 						gv.keynames.append(values)
-						valucas.append(sheet[i][0].upper())
-						valucas.append(sheet[i][1])
-						keynames.append(valucas)
-						valuesCC.append(sheet[i][0])
-						valuesCC.append(gv.NOTES_CC)
-						valuesCC.append(int(sheet[i][1]))
+						valuesCC.extend([ sheet[i][0], gv.NOTES_CC, int(sheet[i][1]) ])
 						gv.controllerCCs.append(valuesCC)
 						if len(sheet[i])>2: # drumpad remap definition
-							valuesDP.append(int(sheet[i][2]))
-							valuesDP.append(int(sheet[i][1]))
+							valuesDP.extend([ int(sheet[i][2]), int(sheet[i][1]) ])
 							gv.drumpadmap.append(valuesDP)
 					except:
 						print ("%s: %s contains errors, partly processed" %(ifile, sheet[i]))
@@ -207,9 +233,8 @@ def readkeynames(ifile):
 		pass	# giving keys/strings/triggers a name is optional
 	return 
 
-def readnotemap(ifile):
-	# notemap: [set, fractions, key, note, retune, playvoice]
-	global keynames
+def notemap(ifile):
+	# notemap: [set, fractions, key, note, retune, playvoice, unote]
 	gv.notemap=[]
 	gv.notemaps=[]
 	try:		# note mapping is optional
@@ -231,8 +256,7 @@ def readnotemap(ifile):
 				try:
 					values[2]=int(sheet[i][2])
 				except:
-					ucas=sheet[i][2].upper()
-					x=gp.getindex(ucas,keynames)
+					x=gp.getindex( sheet[i][2], keyvals, casesens=False)
 					if x<0:
 						print(("%s: keyname '%s' not defined, ignored %s" %(ifile, sheet[i][2], sheet[i])))
 						continue
@@ -277,7 +301,7 @@ def readnotemap(ifile):
 		pass	# notemapping is optional
 	return
 
-def readMTchannelmap(ifile):
+def MTchannelmap(ifile):
 	# MTchannelmap: [name of MTdevice/smf/mid/song, channel used in MTdevice/smf, progchange in that channel, voice to use]
 	# Channels are the "human channels", so range 1-16 making default=1 and drum=10
 	# Similar for the program changes, so piano=1
@@ -305,7 +329,7 @@ def readMTchannelmap(ifile):
 		pass	# this is all optional, default is channel#->voice#
 	return 
 
-def readmenu(ifile):
+def menu(ifile):
 	# menu: [Menu, Item, Show as, Spectype, Spec1, Spec2]
 	import UI,menu
 	sheet=readcsv(ifile,100,False)
@@ -346,7 +370,7 @@ def readmenu(ifile):
 
 FXpresets_box = {}
 gv.FXpresets = {}
-def readFXpresets(ifile, override=False):
+def FXpresets(ifile, override=False):
 	# FXpresets: [Presetname, Parameter, Value]
 	global FXpresets_box
 	if override:
@@ -390,7 +414,7 @@ def readFXpresets(ifile, override=False):
 		gv.FXpreset_last="None"
 	return 
 
-def readlayers(ifile):
+def layers(ifile):
 	gv.layers=[]		# layers
 	gv.layernames=[]	# layernames	
 	try:
