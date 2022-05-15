@@ -59,10 +59,11 @@ class oled:
         self.x = 0
         serial = spi(device=port, port=port, bus_speed_hz = 8000000, transfer_size = 4096, gpio_DC = DC, gpio_RST = RST)
         
+        rot = gv.cp.getint(gv.cfg,"OLED_ROTATE".lower())
         if driver=="SH1106":
-            self.device = sh1106(serial, rotate=2)
+            self.device = sh1106(serial, rotate=rot)
         elif driver=="SSD1306":
-            self.device = ssd1306(serial, rotate=2)
+            self.device = ssd1306(serial, rotate=rot)
         else:
             print("Wrong driver")
         self.canvas = canvas(self.device)

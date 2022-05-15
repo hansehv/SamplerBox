@@ -12,13 +12,19 @@
 <TABLE WIDTH="100%"><TR>
 <TD width="125"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Dashboard</BUTTON></TD>
 <TD ALIGN="center"><B>definition.txt</B></TD>
-<TD ALIGN="center"><BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON> &nbsp; <span ID="input_SB_RenewMedia">New USB</span></TD>
+<TD ALIGN="center">
+	<BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON>
+	<span ID="input_SB_RenewMedia">New USB</span>
+	</TD>
 </TR></TABLE>
 <span ID="input_SB_Preset">Preset: </span>
  &nbsp; &nbsp; <BUTTON TYPE="submit">Save Text</BUTTON>
-<div STYLE="line-height:150%;"><BR></div>
+<BR>
 <span ID="input_SB_DefinitionTxt"></span>
-<BR><div ID="elem_SB_DefErr">Skipped because of errors: line#  </div>
+<span style="line-height:100%;">
+<div ID="elem_SB_Samplesdir">Source: </div>
+<div ID="elem_SB_DefErr">Skipped because of errors: line#  </div>
+</span>
 </FORM>
 
 <script>SB_Update();</script>

@@ -142,6 +142,7 @@ VELSAMPLE = "Sample"                    # velocity equals sampled value, require
 VELACCURATE = "Accurate"                # velocity as played, allows for multiple (normalized!) samples for timbre
 VELOSTEPS = [127,64,32,16,8,4,2,1]      # accepted numer of velocity layers
 CTRLCCS_DEF = "controllerCCs.csv"
+CONTROLS_DEF = "controls.csv"
 KEYNAMES_DEF = "keynotes.csv"
 MENU_DEF = "menu.csv"
 FXPRESETS_DEF = "FXpresets.csv"
@@ -208,12 +209,11 @@ gv.sample_mode = BOXSAMPLE_MODE
 
 # Definition of notes, chords and scales
 import NotesChordsScales
-NotesChordsScales.getdefs()
 
 # Midi controllers, keyboard definition and menu
-getcsv.readcontrollerCCs(gv.CONFIG_LOC + CTRLCCS_DEF)
-getcsv.readkeynames(gv.CONFIG_LOC + KEYNAMES_DEF)
-getcsv.readmenu(gv.CONFIG_LOC + MENU_DEF)
+getcsv.controllerCCs(gv.CONFIG_LOC + CTRLCCS_DEF)
+getcsv.keynames(gv.CONFIG_LOC + KEYNAMES_DEF)
+getcsv.menu(gv.CONFIG_LOC + MENU_DEF)
 
 #########################################
 # Setup UI and display routine (if any..)
@@ -266,10 +266,10 @@ if gv.AFTERTOUCH:
 if gv.USE_SMFPLAYER:
     import smfplayer
 
-# Now we can finalize the controllerCC's assignments
-# (above virtual controllers can be set).
+# Now we can finalize the control's/controllerCC's assignments
+# (above virtual controllers can be set, controls are set).
 #
-gv.CCmapBox = getcsv.readCCmap(gv.CONFIG_LOC + gv.CTRLMAP_DEF)
+gv.CCmapBox = getcsv.CCmap(gv.CONFIG_LOC + gv.CTRLMAP_DEF)
 
 ###########################################
 # Audio including Effects/Filters/SMFplayer
@@ -281,7 +281,7 @@ gv.CCmapBox = getcsv.readCCmap(gv.CONFIG_LOC + gv.CTRLMAP_DEF)
 import audio    # import after effects settings to avoid unassigned pointers.
 UI.USE_ALSA_MIXER=audio.USE_ALSA_MIXER
 
-getcsv.readFXpresets(gv.CONFIG_LOC + FXPRESETS_DEF)
+getcsv.FXpresets(gv.CONFIG_LOC + FXPRESETS_DEF)
 
 ############################################################
 ##  SLIGHT MODIFICATION OF PYTHON'S WAVE MODULE
@@ -1167,9 +1167,10 @@ def ActuallyLoad():
     gv.samples = {}
     gv.smfseqs = {}
     gv.currsmf = 0
-    gv.smfdrums={}
+    gv.smfdrums = {}
+    gv.smfnames = []
     fillnotes = {}
-    gv.btracklist=[]
+    gv.btracklist = []
     tracknames  = []
     for backtrack in range(128):
         tracknames.append([False, "", ""])
@@ -1188,12 +1189,12 @@ def ActuallyLoad():
 
     #print 'Preset loading: %s ' % gv.basename
     gv.display("Loading %s" % gv.basename,"L%03d" % gv.PRESET)
-    getcsv.readnotemap(os.path.join(dirname, gv.NOTEMAP_DEF))
-    gv.CCmapSet=getcsv.readCCmap(os.path.join(dirname, gv.CTRLMAP_DEF), True)
-    getcsv.readMTchannelmap(os.path.join(dirname, gv.VOICEMAP_DEF))
-    getcsv.readFXpresets(os.path.join(dirname, FXPRESETS_DEF), True)
+    getcsv.notemap(os.path.join(dirname, gv.NOTEMAP_DEF))
+    gv.CCmapSet=getcsv.CCmap(os.path.join(dirname, gv.CTRLMAP_DEF), True)
+    getcsv.MTchannelmap(os.path.join(dirname, gv.VOICEMAP_DEF))
+    getcsv.FXpresets(os.path.join(dirname, FXPRESETS_DEF), True)
     gp.setFXpresets("Default")
-    getcsv.readlayers( os.path.join(dirname, LAYERS_DEF) )
+    getcsv.layers( os.path.join(dirname, LAYERS_DEF) )
 
     definitionfname = os.path.join(dirname, gv.SAMPLESDEF)
     if os.path.isfile(definitionfname):
@@ -1677,8 +1678,15 @@ except:
     exit(1)
 
 #########################################
-##  MIDI DEVICES DETECTION
-##  and MAIN LOOP
+##  Consolidate all controls
+#########################################
+
+getcsv.controls(gv.CONFIG_LOC + CONTROLS_DEF)
+UI.cm_setctrlnames()
+UI.cm_setvaltabs()
+
+#########################################
+##  MIDI devices detection
 #########################################
 
 x=gv.cp.get(gv.cfg,"MIDI_THRU".lower()).split(',')
@@ -1742,6 +1750,10 @@ if (len(thru_ports) > 0):
 
 midi_in = rtmidi2.MidiInMulti()
 midi_in.callback = MidiCallback
+
+#########################################
+##  MAIN LOOP
+#########################################
 
 curr_inports = []
 prev_inports = []

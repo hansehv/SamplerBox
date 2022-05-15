@@ -32,7 +32,7 @@ if gv.CHAN_AFTOUCH:
 if gv.POLY_AFTOUCH:
     polyCC = gp.getvirtualCC()
     polyCCidx = len(gv.controllerCCs)
-    gv.controllerCCs.append([gv.PAFTOUCH,polyCC,-4])
+    gv.controllerCCs.append([gv.PAFTOUCH,polyCC,-2])
 
 # Fill notepairs (actuallyload procedure)
 
