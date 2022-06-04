@@ -697,7 +697,7 @@ def DefErr(*z):						# empty or short indication of lines with errors in the def
 def Mode(*z):						# play mode (keyb, once, loop, mixed etc)
 	return gv.sample_mode
 
-def Presetlist(*z):					# [[#,name],.....], so preset "0 Demo" gives element [0,"0 Demo]
+def Presetlist(*z):					# [Presetname, Parameter, Value]
 	return gv.presetlist
 
 def xvoice(*z):						# Does the effects voice (voice=0) exist ?
@@ -849,6 +849,9 @@ cm_control = UI_CCmap.control			# (string) Controlname or (integer) index of con
 cm_controlMC = UI_CCmap.controlMC		# index of control within gv.MC
 cm_controlval = UI_CCmap.controlval		# value of this control when it's a table select
 cm_controlr = UI_CCmap.controller		# index of controller choice above
+cm_assign_levs = UI_CCmap.assign_levels	# value table for radio buttons / dropdown
+cm_assign = UI_CCmap.assign				# assign values to current CCmap
+cm_reset = UI_CCmap.resetmap			# boolean, requesting rebuild voice-ccmap if True
 cm_sav = UI_CCmap.savemap				# boolean, requesting save voice-ccmap if True
 cm_controls = UI_CCmap.controls			# indexes of controls in current cc-mapping selection
 cm_controlmode = UI_CCmap.controlmode	# name of controlmode of current control
@@ -856,6 +859,7 @@ cm_controltype = UI_CCmap.controltype	# value of controltype of current control
 cm_controllers = UI_CCmap.controllers	# indexes of controllers in current control & notemap selection
 cm_current = UI_CCmap.current			# current CCmap
 cm_consolidate = UI_CCmap.consolidate	# combine all selections to a consistent report
+cm_bTracks = UI_CCmap.numbered_btracks	# backtracks with seq# > 0
 # CCmap metadata
 cm_ctrlnames = UI_CCmap.ctrlnames		# mappable Control names
 cm_ctrlmodes = UI_CCmap.ctrlmodes		# index of button mode/function
@@ -924,7 +928,9 @@ procs={
 	"nm_sav":["w",nm_sav],							# boolean, requesting save notemap if True
 	"cm_controlval":["w",cm_controlval],			# value of this control when it's a table select
 	"cm_controlr":["w",cm_controlr],				# index of controller choice above
+	"cm_reset":["w",cm_reset],						# boolean, requesting rebuild voice-ccmap if True
 	"cm_sav":["w",cm_sav],							# boolean, requesting save voice-ccmap if True
+	"cm_assign":["w",cm_assign],					# assign values to current CCmap
 	"Scale":["w",Scale,gv.SCALES],					# index of ScaleName (& ScaleChord)
 	"Chord":["w",Chord,gv.CHORDS],					# index of Chordname
 	"SoundVolume":["w",SoundVolume],				# 0-100
@@ -1001,7 +1007,7 @@ procs={
 	"LastMusicNote":["v",LastMusicNote],	# the same, now music notation (if available)
 	"DefErr":["v",DefErr],					# empty or short indication of lines with errors in the definition.txt
 	"Mode":["v",Mode],						# play mode (keyb, once, loop etc)
-	"Presetlist":["v",Presetlist],			# [[#,name],.....], so preset "0 Demo" gives element [0,"0 Demo]
+	"Presetlist":["v",Presetlist],			# [Presetname, Parameter, Value]
 	"xvoice":["v",xvoice],					# Does the/ effects track (voice=0) exist ?
 	"Voicelist":["v",Voicelist],			# [[#,name],.....] similar to table defined in code or stored in config files on SD or USB, however without voice 0 (effects track)
 	"SMFsongs":["v",SMFsongs],				# [[SMFseq#,name],.....]
@@ -1014,6 +1020,7 @@ procs={
 	"cm_controltype":["v",cm_controltype],	# value of controltype of current control
 	"cm_controllers":["v",cm_controllers],	# indexes of controllers in current control & notemap selection
 	"cm_current":["v",cm_current],			# current CCmap
+	"cm_bTracks":["v",cm_bTracks],			# backtracks with seq# > 0
 	"MenuDisplay":["v",MenuDisplay],		# [line1,line2, ..] lines of the characterdisplay of the (button) menu
 	"IP":["w",IP],							# index of IP addresses found (it's classified "w" to force into the button menu)
 	"IPlist":["v",IPlist],					# SB IP addresses (cable and wireless plus IPv6 if enabled in configuration.txt)
@@ -1031,7 +1038,7 @@ procs={
 	"qFractions":["f",qFractions],			# [[1, 'Semi'], [2, 'Quarter']]
 	"KeyNames":["f",KeyNames],				# Notenames as defined in keynotes.csv
 	"NotesCC":["f",NotesCC],				# Controller# for notes used as CC.
-	"FXpresets":["f",FXpresets],			# Effect presetnames available in current set (merged box en set presets)
+	"FXpresets":["f",FXpresets],			# Effect presets available in current set (merged box en set presets)
 	"Chordname":["f",Chordname],			# Chordnames as defined in chord.csv
 	"Chordnote":["f",Chordnote],			# Chordnotes as defined in chord.csv
 	"Scalename":["f",Scalename],			# Scalenames as defined in scales.csv
@@ -1048,6 +1055,7 @@ procs={
 	"AfterTouchSup":["f",AfterTouchSup],	# Is aftertouch supported in this configuration
 	"CCfamilies":["f",CCfamilies],			# Control=effect families/groups
 	"CCmodes":["f",CCmodes],				# Control mode/function
+	"cm_assign_levs":["f",cm_assign_levs],	# value table forradio buttons /  dropdown
 	"cm_ctrlnames":["f",cm_ctrlnames],		# mappable Control names
 	"cm_ctrlmodes":["f",cm_ctrlmodes],		# index of button mode/function
 	"cm_ctrlrnames":["f",cm_ctrlrnames],	# mappable Controller names

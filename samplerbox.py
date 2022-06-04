@@ -15,7 +15,7 @@
 ##  Miscellaneous generic procs (too small to split off), published via gv
 ##########################################################################
 
-import sys
+import sys, copy
 sys.path.append('./modules')
 import gv
 
@@ -80,18 +80,7 @@ def setVoice(x,iv=0,*z):
                     FXset = gv.voicelist[xvoice][5]
                     FXset = gp.setFXpresets(FXset)      # when FXset doesn't exist, result will be "None"
                     gv.FXpreset_last = FXset            # force showing of the FX preset
-                    gv.CCmap = list(gv.CCmapBox)        # construct this voice's CC setup
-                    for i in range( len(gv.CCmapSet) ):
-                        found = False
-                        if gv.CCmapSet[i][3]==0 or gv.CCmapSet[i][3]==voice:    # voice applies
-                            for j in range( len(gv.CCmap) ):                 # so check if button is known
-                                if gv.CCmapSet[i][0] == gv.CCmap[j][0]:
-                                    found = True
-                                    if (gv.CCmapSet[i][3] >= gv.CCmap[j][3]): # voice specific takes precedence
-                                        gv.CCmap[j] = gv.CCmapSet[i]          # replace entry
-                                    continue
-                            if not found:
-                                gv.CCmap.append( gv.CCmapSet[i] )             # else add entry
+                    gp.setCCmap(voice)                  # build CCmap for this voice
                     if gv.AFTERTOUCH:
                         AfterTouch.msgFilter()  # filter unused aftertouch signals
                     gv.display("")

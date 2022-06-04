@@ -56,6 +56,8 @@ var SB_variables={	// make sure all passed I/O parameters are covered here
 	v_SB_cm_controlval: function(val){SB_cm_controlval=val;},
 	v_SB_cm_controlr: function(val){SB_cm_controlr=val;},
 	v_SB_cm_sav: function(val){SB_cm_sav=val;},
+	v_SB_cm_assign: function(val){SB_cm_assign=val;},
+	v_SB_cm_reset: function(val){SB_cm_reset=val;},
 	v_SB_Scale: function(val){SB_Scale=val;},
 	v_SB_Chord: function(val){SB_Chord=val;},
 	v_SB_FVtype: function(val){SB_FVtype=val;},
@@ -215,7 +217,7 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 					dims=2;
 					break;
 				case "BackTracks":
-					table=SB_bTracks;
+					table=SB_cm_bTracks;
 					dims=2;
 					break;
 				case "SMFs":
@@ -230,7 +232,7 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 					break;
 			}
 			if (table.length==0) { return (text+"No values available"); }
-			return(text+SB_listselect(input_name,name,val,table,dims,table.length,1));
+			return(text+SB_listselect_check(input_name,name,val,table,dims,table.length,1));
 		}
 		else return ""
 	},
@@ -243,6 +245,12 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 	},
 	input_SB_cm_sav: function(input_name,name,val,text){
 		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+	},
+	input_SB_cm_reset: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+	},
+	input_SB_cm_assign: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,SB_cm_assign_levs,1,1));
 	},
 	input_SB_SoundVolume: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,100,1));
@@ -464,8 +472,8 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 }
 
 // Read-only building blocks
-SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_xvoice","elem_SB_DefErr",
-			"elem_SB_LastMidiNote","elem_SB_LastMusicNote",
+SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_Voice","elem_SB_xvoice",
+			"elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote",
 			"elem_SB_Aftertouchdc","elem_SB_Aftertouchdp","elem_SB_AftertouchPairs",
 			"elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales",
 			"elem_SB_Notemap","elem_SB_CCmap","elem_SB_cm_current",,"elem_SB_cm_controlmode",
@@ -483,6 +491,14 @@ var SB_element={
 	},
 	elem_SB_Mode: function(elem_name){
 		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+SB_Mode+'</SPAN>';
+	},
+	elem_SB_Voice: function(elem_name){
+		for ( i=0; i<SB_Voicelist.length; i++ ){
+			if (SB_Voicelist[i][0] == SB_Voice) {
+				break;
+			}
+		}
+		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+SB_Voicelist[i][1]+'</SPAN>';
 	},
 	elem_SB_xvoice: function(elem_name,text) {
 		if (SB_xvoice==0) j="";else j="CHECKED";
@@ -613,12 +629,12 @@ var SB_element={
 	},
 
 	elem_SB_cm_current: function(elem_name){
-		html='<TABLE CLASS="datatable" ID="TableID_CCmap"><TR><TH>Controller<TH>Control</TH><TH>Value</TH><TH>Level</TH></TR>';
+		html='<TABLE CLASS="datatable"><TR><TH>Controller<TH>Control</TH><TH>Value</TH><TH>Level</TH></TR>';
 		for ( var i=0; i<SB_cm_current.length; i++ ) {
 			var controller = SB_cm_ctrlrnames[ SB_cm_current[i][0] ];
 			var control = SB_cm_ctrlnames[ SB_cm_current[i][1] ];
 			var value = SB_cm_current[i][2];
-			if (value == "None") {
+			if (value == "None" && ['Notemaps', 'FXpresets'].indexOf(control) < 0 ) {
 				value = SB_CCmodes[ SB_cm_ctrlmodes[ SB_cm_current[i][1] ]];
 			}
 			level = "Voice";
@@ -702,6 +718,7 @@ var SB_element={
 }
 
 // Subroutines
+var checked = "";
 
 function SB_slider(input_name,name,val,min,max,step){
 	return('<INPUT ID="'+input_name+'_r" name="'+name+'" TYPE="range" VALUE="'+val+'" min="'+min+'" max="'+max+
@@ -725,15 +742,33 @@ function SB_slidersync(IDslider, IDvar, sliderchange){
 function SB_listselect(input_name,name,val,table,dims,size,update){
 	html='<SELECT class="custom-dropdown__select custom-dropdown__select--white" name="'+name+
 			'" id="select_'+name+'" SIZE="1"';
-	if (update==1) {html=html+' onchange=SB_Submit()';}
+	if (update==1) {
+		html=html+' onchange=SB_Submit()';
+		}
 	//else {html=html+' onchange=SB_updateval(this)';}
 	html=html+'>';
+	checked = "";
 	for(var i=0;i<size;i++){
 		j="";
-		if (dims==1){if (i==val) j=" selected";k=table[i];}
-		else {if (table[i][0]==val) j=" selected";k=table[i][1];}
+		if (dims==1){
+			if (i==val) j=" selected";
+			k=table[i];
+			}
+		else {
+			if (table[i][0]==val) j=" selected";
+			k=table[i][1];
+			}
+		if (j != ""){
+			checked = "CHECKED";
+		}
 		html=html+'<OPTION VALUE='+i+j+'>'+k+'</OPTION>';}
 	return(html+'</SELECT>');
+}
+function SB_listselect_check(input_name,name,val,table,dims,size,update){
+	html = SB_listselect(input_name,name,val,table,dims,size,update)
+	html = html +
+			'<label class="inline alignx"><INPUT type="checkbox" onclick="return false;"'+ checked
+	return( html + '></label>' );
 }
 function SB_radioselect(input_name,name,val,text,table,dims,update){
 	html='<div class="switch-field">'
