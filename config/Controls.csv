@@ -42,30 +42,30 @@ Reverb,Fixed,ReverbDamp,Continuous,
 Reverb,Fixed,ReverbWidth,Continuous,
 ,,,,
 "## Various WAH effects (wahpedal, autowah, LFO-wah) ##",,,,
-Wah,Fixed,EnvelopeWah,Toggle,
-Wah,Fixed,LFOwah,Toggle,
-Wah,Fixed,ManualWah,Toggle,# Usually a pedal
+Wah,Fixed,EnvelopeWah,Toggle,# Choose AutoWah
+Wah,Fixed,LFOwah,Toggle,# Choose Oscillator driven Wah
+Wah,Fixed,ManualWah,Toggle,# Choose manual Wah (usually a pedal)
 Wah,Fixed,WahLvl,Continuous,# Wet/dry mix
-Wah,Fixed,WahMin,Continuous,
-Wah,Fixed,WahMax,Continuous,
-Wah,Fixed,WahQ,Continuous,
-Wah,Fixed,WahAttack,Continuous,
-Wah,Fixed,WahRelease,Continuous,
-Wah,Fixed,WahSpeed,Continuous,
-Wah,Fixed,WahLvlRange,Continuous,
-Wah,Fixed,WahPedal,Continuous,
+Wah,Fixed,WahMin,Continuous,# Minumum of wah filter range
+Wah,Fixed,WahMax,Continuous,# Maximum of wah filter range
+Wah,Fixed,WahQ,Continuous,# Qfactor
+Wah,Fixed,WahAttack,Continuous,# Auto(envelope)wah attack sensitivity
+Wah,Fixed,WahRelease,Continuous,# Auto(envelope)wah release sensitivity
+Wah,Fixed,WahSpeed,Continuous,# LFOwah oscillator speed
+Wah,Fixed,WahLvlRange,Continuous,# LFO and manual/pedal “strength”
+Wah,Fixed,WahPedal,Continuous,# Manual/pedal controller
 ,,,,
 ## Echo and Flanger (fast echo) ##,,,,
-Echo / Flanger,Fixed,Echo,Toggle,
-Echo / Flanger,Fixed,Flanger,Toggle,
-Echo / Flanger,Fixed,DelayFeedbackVol,Continuous,
-Echo / Flanger,Fixed,DelayWet,Continuous,
-Echo / Flanger,Fixed,DelayDry,Continuous,
-Echo / Flanger,Fixed,DelayTime,Continuous,
-Echo / Flanger,Fixed,DelaySteep,Continuous,
-Echo / Flanger,Fixed,DelaySteplen,Continuous,
-Echo / Flanger,Fixed,DelayMin,Continuous,
-Echo / Flanger,Fixed,DelayMax,Continuous,
+Echo / Flanger,Fixed,Echo,Toggle,# Choose Echo
+Echo / Flanger,Fixed,Flanger,Toggle,# Choose Flanger
+Echo / Flanger,Fixed,DelayFeedbackVol,Continuous,# Echo + Flanger
+Echo / Flanger,Fixed,DelayWet,Continuous,# Echo + Flanger
+Echo / Flanger,Fixed,DelayDry,Continuous,# Echo
+Echo / Flanger,Fixed,DelayTime,Continuous,# Echo
+Echo / Flanger,Fixed,DelaySteep,Continuous,# Flanger (gradient)
+Echo / Flanger,Fixed,DelaySteplen,Continuous,# Flanger (cyclelen)
+Echo / Flanger,Fixed,DelayMin,Continuous,# Flanger (minimum of flanger range)
+Echo / Flanger,Fixed,DelayMax,Continuous,# Flanger (maximum of flanger range)
 ,,,,
 ## Moog low-pass ##,,,,
 Moog low-pass,Fixed,Moog,Toggle,

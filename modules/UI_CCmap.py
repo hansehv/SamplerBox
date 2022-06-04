@@ -8,6 +8,7 @@
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 #   see docs at https://homspace.nl/samplerbox
 ###############################################################
+import copy
 import gv,gp
 
 ctrlfam = 0
@@ -18,11 +19,15 @@ ctrls = []
 ctrlnams = []
 ctrlmods = []
 
-ctrlr = 0
+ctrlr = -1
 ctrlrs = []
 ctrlrnams = []
+prevctrlr = -1
+prevctrlval = -1
+prevvoice = -1
 
 voicelist = []
+btracklist = []
 valtabs = {}
 cmap = []
 
@@ -36,15 +41,24 @@ def realvoices(*z):					# [[#,name],.....] similar as variables/tables defined i
 	except: pass
 	return voicelist
 
+def numbered_btracks(*z):
+	return btracklist
+
 def setvaltabs():
-	global valtabs
+	global valtabs, btracklist
+	notemaps = ["None"]
+	notemaps.extend(gv.notemaps)
+	btracklist = []
+	for i in range(len(gv.btracklist)):      # filter out effects track and release samples
+		if gv.btracklist[i][0]>0:
+			btracklist.append([ gv.btracklist[i][0], gv.btracklist[i][1] ])
 	valtabs = {
 			'Chords': [gv.chordname, 1],		# name (starting "")
 			'Scales': [gv.scalename, 1],		# name (starting "")
 			'Voices': [voicelist, 2],			# voice#, name
-			'BackTracks': [gv.btracklist, 3],	# track#, name, note
+			'BackTracks': [btracklist, 2],		# track#, name
 			'SMFs': [gv.smfnames, 2],			# seq#, (file)name
-			'Notemaps': [gv.notemaps, 1],		# name (starting "None")
+			'Notemaps': [notemaps, 1],			# name (starting "None")
 			'FXpresets': [gv.FXpresetnames, 1]	# name (starting "None")
 		};
 
@@ -90,7 +104,7 @@ def family(val=None):
 					break
 		if savfam != ctrlfam:
 			ctrl = 0
-			ctrlr = 0
+			ctrlr = -1
 			ctrlval = -1
 		return savfam == ctrlfam
 	return ctrlfam
@@ -126,7 +140,7 @@ def control(val=None):
 					ctrl=i
 					break
 		if savc != ctrl:
-			ctrlr = 0
+			ctrlr = -1
 			ctrlval = -1
 		return savc == ctrl
 	if len( ctrls ) > 0:
@@ -137,22 +151,27 @@ def controlMC(*z):
 	return ctrlMC
 
 def controlval(val=None):
-	global ctrlval
+	# controlval is fout voor unassigned controllers (wordt 1e occurence)
+	global ctrlval, prevctrlval
 	ctrlidx = ctrls[ctrl]
 	MC = gv.MC[ ctrlidx ]
 	if MC[1] == 2:	# a tablevalue
 		table = valtabs[ MC[0] ][0]
 		onecol = True if valtabs[ MC[0] ][1] == 1 else False
-		if ctrlr == 0:
-			controller()
+		controller()	# safety first
 		ctrlridx = ctrlrs[ctrlr]
 		if ctrlval < 0:
+			if ctrlr == 0:	# don't change for unassigning !
+				ctrlval = prevctrlval
+				return ctrlval
 			ctrlval = 0
 			for i in range(len(cmap)):
 				if cmap[i][0] == ctrlridx:
 					if cmap[i][1] == ctrlidx:
 						if onecol:
 							ctrlval = gp.getindex(cmap[i][2], table, onecol=True)
+							if ctrlval < 0:
+								ctrlval = 0
 						else:
 							ctrlval = int( cmap[i][2] )
 					break
@@ -160,6 +179,7 @@ def controlval(val=None):
 			ctrlval = int(val)
 			if not onecol:
 				ctrlval = table[ctrlval][0]
+		prevctrlval = ctrlval
 	return ctrlval
 
 def controlmode(*z):
@@ -194,9 +214,8 @@ def controllers(*z):
 		ctrlrs = [0]	# insert the "unassigned"
 		keys = []
 		for n in gv.notemapping:
-
-			if n[3] == -2:	# key mapped as control
-				keys.append( n[1] )
+			if n[2] == -2:	# key mapped as control
+				keys.append( n[0] )
 		for c in gv.controllerCCs:
 			if c[2] > 0:
 				if c[1] == gv.NOTES_CC:
@@ -209,12 +228,15 @@ def controllers(*z):
 	return ctrlrs
 
 def controller(val=None):
-	global ctrlr, ctrlval
+	global ctrlr, prevctrlr, prevvoice, ctrlval
 
 	if val == None:
+		if prevvoice != gv.currvoice:
+			prevvoice = gv.currvoice
+			ctrlr = -1
 		try:
 			control = ctrls[ctrl]
-			if ctrlr == 0:
+			if ctrlr < 0:
 				ctrlrMC = 0
 				for m in cmap:
 					if m[1] == control:
@@ -222,13 +244,15 @@ def controller(val=None):
 						ctrlr = gp.getindex(ctrlrMC, ctrlrs, onecol=True)
 						break
 		except:
-			ctrlr = -1
-		if ctrlr < 0:
+			ctrlr = -2
+		if ctrlr < -1:
 			print ("UI_CCmap controller: Logic error, ", ctrlr)
-			ctrlr = 0;
+			ctrlr = -1;
 
 	else:
 		savc = ctrlr
+		if ctrlr:
+			prevctrlr = ctrlrs[ctrlr]
 		ctrlr = 0
 		try:
 			val = int(val)
@@ -247,7 +271,75 @@ def controller(val=None):
 			ctrlval = -1
 	return ctrlr
 
-#def assign(val=None):
+def assign_levels():
+	return ["","Set","Voice"]
+
+def assign(val=None):
+	if val:
+		voice = 0 if val=="Set" else gv.currvoice
+		if ctrlr == 0:
+			return unassign(voice)
+		controller = ctrlrs[ctrlr]
+		control = ctrls[ctrl]
+		parm = gv.MCmodenames[ gv.MC[control][4] ]
+		if gv.MC[control][1] == 2:
+			valtab = valtabs[ ctrlnams[control] ][0]
+			if not len(valtab):
+				return 0
+			if valtabs[ ctrlnams[control] ][1] == 1:
+				parm = valtab[ctrlval]
+			else:
+				x = gp.getindex( ctrlval, valtab)
+				if x < 0:
+					print ( "UI_CCmap assign: Logic error, ", ctrlval, ctrlnams[control] )
+				parm = valtabs[ ctrlnams[control] ][0][ x ][0]
+		found = False
+		for c in gv.CCmap:
+			if controller == c[0]:
+				found = True
+				if (c[3] == voice
+				 or c[3] < 1 ):
+					c[1] = control
+					c[2] = parm
+					c[3] = voice
+		if not found:
+			gv.CCmap.append([ controller, control, parm, voice ])
+	return 0
+
+def unassign(voice):
+	global ctrlr
+	# We can not and will not unassign system defaults ("Box", voice=-1)
+	for i in range( len(gv.CCmap) ):
+		if gv.CCmap[i][0] == prevctrlr:
+			if gv.CCmap[i][3] == voice:
+				found = False
+				# -1 = box, 0 = set, >0 = voice
+				level = 1 if gv.CCmap[i][3] > 0 else 0
+				if level == 1:
+					found = unassignlev(i, gv.CCmapSet, 1)
+				if not found:
+					found = unassignlev(i, gv.CCmapBox, 0)
+				if not found:
+					del gv.CCmap[i]
+				break
+	ctrlr = -1
+	return 0
+
+def unassignlev(entry, CCmapX, level):
+	found = False
+	for j in range( len(CCmapX) ):
+		if (CCmapX[j][0] == prevctrlr
+		and CCmapX[j][3] < level):
+			gv.CCmap[entry] = copy.deepcopy(CCmapX[j])
+			found = True
+			break
+	return found
+
+def resetmap(val=None):
+	if val:
+		if gp.parseBoolean(val):
+			gp.setCCmap(gv.currvoice)
+	return(0)
 
 def savemap(val=None):
 	return 0

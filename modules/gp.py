@@ -5,7 +5,8 @@
 #   see docs at https://homspace.nl/samplerbox
 #   changelog in changelist.txt
 #
-import gv, subprocess
+import subprocess, copy
+import gv
 
 def NoProc(*vals):		# Dummy
 	pass
@@ -29,7 +30,7 @@ def samples2read():
 			subprocess.call( ['umount', gv.samplesdir] )
 			subprocess.call( ['mount', '-vr', '/dev/mmcblk0p3', gv.samplesdir] )
 
-def no_delimiters(raw):	# rude but effective for failsafe operation :-)
+def no_delimiters(raw):	# crude but effective for failsafe operation :-)
 	return raw.replace(",",".").replace(";",":").replace("\t"," ")
 
 def presetdir():
@@ -76,6 +77,21 @@ def getvirtualCC():
 		if m[1] < vCC:
 			vCC = m[1]
 	return vCC-1
+
+def setCCmap(voice):
+	gv.CCmap = copy.deepcopy( list(gv.CCmapBox) )	# construct this voice's CC setup
+	for i in range( len(gv.CCmapSet) ):
+		found = False
+		if (gv.CCmapSet[i][3] == 0
+		or gv.CCmapSet[i][3] == voice):				# voice applies
+			for j in range( len(gv.CCmap) ):		# so check if button is known
+				if gv.CCmapSet[i][0] == gv.CCmap[j][0]:
+					found = True
+					if (gv.CCmapSet[i][3] >= gv.CCmap[j][3]):	# voice specific takes precedence
+						gv.CCmap[j] = copy.deepcopy( gv.CCmapSet[i] )	# replace entry
+					continue
+			if not found:
+				gv.CCmap.append( copy.deepcopy( gv.CCmapSet[i] ) )		# else add entry
 
 def setFXpresets(val, *z):
 	FXset = val

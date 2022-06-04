@@ -6,8 +6,8 @@
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
 ###############################################################
 
-import time,numpy,re,sounddevice,configparser
-import samplerbox_audio,gv,Cpp,arp,LFO
+import time, numpy, re, sounddevice, configparser
+import samplerbox_audio, gv, gp, Cpp, arp, LFO
 
 AUDIO_DEVICE_ID = gv.cp.getint(gv.cfg,"AUDIO_DEVICE_ID".lower())
 AUDIO_DEVICE_NAME = gv.cp.get(gv.cfg,"AUDIO_DEVICE_NAME".lower())
@@ -169,7 +169,7 @@ except:
     except:
         print ( '** sounddevice returns error! **' )
     time.sleep(0.5)
-    gv.GPIOcleanup()
+    gp.GPIOcleanup()
     exit(1)
 
 device_found=False

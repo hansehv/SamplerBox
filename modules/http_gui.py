@@ -145,7 +145,8 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 			if UI.cm_family(fields["SB_cm_family"][0]): # other family invalidates other changes anyway :-)
 				if UI.cm_control(fields["SB_cm_control"][0]):
 					if UI.cm_controlr(fields["SB_cm_controlr"][0]):
-						UI.cm_controlval(fields["SB_cm_controlval"][0])
+						if "SB_cm_controlval" in fields:
+							UI.cm_controlval(fields["SB_cm_controlval"][0])
 			UI.cm_consolidate()
 
 		scalechange=False	   # Scale takes precedence over Chord

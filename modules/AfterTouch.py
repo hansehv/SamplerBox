@@ -182,7 +182,7 @@ def paVolume(pn, pressure, note, *z):
     pn.playingvolume(True, pressure)
 
 def paChoke(pn, pressure, note, *z):
-    # perhaps we should be testing on=127 or >64 ... feedback needed...
+    # perhaps we should be testing on =127 or >64 ... feedback needed...
     pn.fadeout(False)
     gv.playingnotes[note] = []
     gv.triggernotes[note] = 128  # housekeeping
