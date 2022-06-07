@@ -29,7 +29,6 @@ prevvoice = -1
 voicelist = []
 btracklist = []
 valtabs = {}
-cmap = []
 
 def realvoices(*z):					# [[#,name],.....] similar as variables/tables defined in code or stored in config files on SD or USB, however without voice 0 (effects track)
 	global voicelist
@@ -165,15 +164,15 @@ def controlval(val=None):
 				ctrlval = prevctrlval
 				return ctrlval
 			ctrlval = 0
-			for i in range(len(cmap)):
-				if cmap[i][0] == ctrlridx:
-					if cmap[i][1] == ctrlidx:
+			for i in range(len(gv.CCmap)):
+				if gv.CCmap[i][0] == ctrlridx:
+					if gv.CCmap[i][1] == ctrlidx:
 						if onecol:
-							ctrlval = gp.getindex(cmap[i][2], table, onecol=True)
+							ctrlval = gp.getindex(gv.CCmap[i][2], table, onecol=True)
 							if ctrlval < 0:
 								ctrlval = 0
 						else:
-							ctrlval = int( cmap[i][2] )
+							ctrlval = int( gv.CCmap[i][2] )
 					break
 		elif val != None:
 			ctrlval = int(val)
@@ -238,7 +237,7 @@ def controller(val=None):
 			control = ctrls[ctrl]
 			if ctrlr < 0:
 				ctrlrMC = 0
-				for m in cmap:
+				for m in gv.CCmap:
 					if m[1] == control:
 						ctrlrMC = m[0]
 						ctrlr = gp.getindex(ctrlrMC, ctrlrs, onecol=True)
@@ -307,7 +306,7 @@ def assign(val=None):
 	return 0
 
 def unassign(voice):
-	global ctrlr
+	global ctrlr, ctrlval
 	# We can not and will not unassign system defaults ("Box", voice=-1)
 	for i in range( len(gv.CCmap) ):
 		if gv.CCmap[i][0] == prevctrlr:
@@ -323,14 +322,15 @@ def unassign(voice):
 					del gv.CCmap[i]
 				break
 	ctrlr = -1
+	ctrlval = -1
 	return 0
 
 def unassignlev(entry, CCmapX, level):
 	found = False
-	for j in range( len(CCmapX) ):
-		if (CCmapX[j][0] == prevctrlr
-		and CCmapX[j][3] < level):
-			gv.CCmap[entry] = copy.deepcopy(CCmapX[j])
+	for m in CCmapX:
+		if (m[0] == prevctrlr
+		and m[3] < level):
+			gv.CCmap[entry] = copy.deepcopy(m)
 			found = True
 			break
 	return found
@@ -341,15 +341,57 @@ def resetmap(val=None):
 			gp.setCCmap(gv.currvoice)
 	return(0)
 
-def savemap(val=None):
+def savemap(val=None):				# boolean, but as read variable it's always 0=no/false
+	# update all this-voice assignments
+	# update set changes where visible (= not hidden by a voice assignment)
+	# save the (sampleset) CCmap csv
+	
+	# CCmap:	[buttonindex, procedureindex, additional procedure parameter, voice]
+	# file:		[Voice, Controller, Type, Sets, Mode]
+	# MC:		[name,type,procedure,familyindex,MCmodenameindex]
+	
+	newmapset = []
+	thisvoice = []
+	if val!=None:
+		if gp.parseBoolean(val):	# do we want to save a map ?
+
+			# fill newmap with current except voice =-1 (box default)
+			for m in gv.CCmap:
+				if m[3] >= 0:
+					newmapset.append(m)
+					if m[3] > 0:
+						thisvoice.append(m[0])
+
+			# add other voices and possible overridden set values
+			for m in gv.CCmapSet:
+				if m[3] != gv.currvoice:
+					if (m[3] > 0
+					or  m[0] in thisvoice):
+						newmapset.append(m)
+
+			# sort on voice
+			sortedset = sorted(newmapset, key = lambda x: ( x[3], x[0]))
+
+			# save the stuff
+			gp.samples2write()
+			fname=gp.presetdir() + gv.CTRLMAP_DEF
+			with open(fname, 'w') as mapfile:
+				mapfile.write("Voice,Controller,Type,Sets,Mode\n")
+				for m in sortedset:
+					mc = gv.MC[ m[1] ]
+					voice = m[3]
+					controller = gv.controllerCCs[ m[0] ][0]
+					typ = "Fixed"
+					sets = mc[0]
+					mode = gv.MCmodenames[ mc[4] ]
+					if mc[1] == 2:	# value tables variable
+						typ = mc[0]
+						sets = m[2]
+					mapfile.write('%s,%s,%s,%s,%s\n' %(voice,controller,typ,sets,mode) )
+					gv.CCmapSet = sortedset
+			gp.samples2read()
+
 	return 0
 
 def current(*z):
-	global cmap
-	# CCmap: [buttonindex, procedureindex, additional procedure parameter, voice]
-	cmap = []
-	for m in gv.CCmap:
-		if (m[3] == gv.currvoice
-		or	m[3] < 1):
-			cmap.append(m)
-	return cmap
+	return gv.CCmap

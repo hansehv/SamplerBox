@@ -232,7 +232,7 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 					break;
 			}
 			if (table.length==0) { return (text+"No values available"); }
-			return(text+SB_listselect_check(input_name,name,val,table,dims,table.length,1));
+			return(text+SB_listselect(input_name,name,val,table,dims,table.length,1));
 		}
 		else return ""
 	},
@@ -718,7 +718,6 @@ var SB_element={
 }
 
 // Subroutines
-var checked = "";
 
 function SB_slider(input_name,name,val,min,max,step){
 	return('<INPUT ID="'+input_name+'_r" name="'+name+'" TYPE="range" VALUE="'+val+'" min="'+min+'" max="'+max+
@@ -747,7 +746,6 @@ function SB_listselect(input_name,name,val,table,dims,size,update){
 		}
 	//else {html=html+' onchange=SB_updateval(this)';}
 	html=html+'>';
-	checked = "";
 	for(var i=0;i<size;i++){
 		j="";
 		if (dims==1){
@@ -758,18 +756,10 @@ function SB_listselect(input_name,name,val,table,dims,size,update){
 			if (table[i][0]==val) j=" selected";
 			k=table[i][1];
 			}
-		if (j != ""){
-			checked = "CHECKED";
-		}
 		html=html+'<OPTION VALUE='+i+j+'>'+k+'</OPTION>';}
 	return(html+'</SELECT>');
 }
-function SB_listselect_check(input_name,name,val,table,dims,size,update){
-	html = SB_listselect(input_name,name,val,table,dims,size,update)
-	html = html +
-			'<label class="inline alignx"><INPUT type="checkbox" onclick="return false;"'+ checked
-	return( html + '></label>' );
-}
+
 function SB_radioselect(input_name,name,val,text,table,dims,update){
 	html='<div class="switch-field">'
 	for (i=0;i<table.length;i++){
