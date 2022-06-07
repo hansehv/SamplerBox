@@ -1055,7 +1055,7 @@ procs={
 	"AfterTouchSup":["f",AfterTouchSup],	# Is aftertouch supported in this configuration
 	"CCfamilies":["f",CCfamilies],			# Control=effect families/groups
 	"CCmodes":["f",CCmodes],				# Control mode/function
-	"cm_assign_levs":["f",cm_assign_levs],	# value table forradio buttons /  dropdown
+	"cm_assign_levs":["f",cm_assign_levs],	# value table for radio buttons /  dropdown
 	"cm_ctrlnames":["f",cm_ctrlnames],		# mappable Control names
 	"cm_ctrlmodes":["f",cm_ctrlmodes],		# index of button mode/function
 	"cm_ctrlrnames":["f",cm_ctrlrnames],	# mappable Controller names
