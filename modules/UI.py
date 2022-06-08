@@ -14,7 +14,7 @@
 
 import re
 import gv,gp
-import remap,UI_CCmap
+import UI_notemap,UI_CCmap
 import arp,chorus,Cpp,LFO,network
 if gv.AFTERTOUCH:
 	import AfterTouch
@@ -94,7 +94,7 @@ def Notemap(val=None):						# active notemap, either index in notemap or "notema
 			mapchange=(currnotemap!=newnotemap)
 			if mapchange:
 				gv.setNotemap(val)
-				remap.nm_inote=-1			# restart the mapping circus when underlying table shifted
+				UI_notemap.nm_inote=-1			# restart the mapping circus when underlying table shifted
 			return mapchange
 		return gv.currnotemap
 	except:
@@ -781,7 +781,7 @@ def Samplesdir(*z):					# Active samples directory. Either /samples (on SD), /me
 def Stop127(*z):					# First note at right/high side of keyboard area
 	return gv.stop127
 def qFractions(*z):					# Tone resolution
-	return remap.fractions
+	return UI_notemap.fractions
 def KeyNames(*z):					# Keynames used in csv files
 	return gv.keynames
 def NotesCC(*z):					# Controller# for notes used as CC.
@@ -830,18 +830,18 @@ def Buttons(*z):					# Buttons supported by button menu
 # #######################################################
 
 # notemap I-O fields
-nm_inote = remap.notes_inote
-nm_Q = remap.notes_Q
-nm_unote = remap.notes_unote
-nm_onote = remap.notes_onote
-nm_retune = remap.notes_retune
-nm_voice = remap.notes_voice
-nm_map = remap.notes_map
-nm_clr = remap.notes_clear
-nm_sav = remap.notes_sav
+nm_inote = UI_notemap.notes_inote
+nm_Q = UI_notemap.notes_Q
+nm_unote = UI_notemap.notes_unote
+nm_onote = UI_notemap.notes_onote
+nm_retune = UI_notemap.notes_retune
+nm_voice = UI_notemap.notes_voice
+nm_map = UI_notemap.notes_map
+nm_clr = UI_notemap.notes_clear
+nm_sav = UI_notemap.notes_sav
 # notemap housekeeping
-nm_sync = remap.notes_sync					# Execute before showing results on the display to be in sync with play status
-nm_consolidate = remap.notes_consolidate	# Executed before using/presenting changes on nm_inote, nm_onote, nm_retune, nm_voice or nm_unote
+nm_sync = UI_notemap.notes_sync					# Execute before showing results on the display to be in sync with play status
+nm_consolidate = UI_notemap.notes_consolidate	# Executed before using/presenting changes on nm_inote, nm_onote, nm_retune, nm_voice or nm_unote
 
 # CCmap I-O fields
 cm_family = UI_CCmap.family				# (string) Familyname or (integer) index of control family to limit the dropdown
