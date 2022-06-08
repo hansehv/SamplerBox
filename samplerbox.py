@@ -839,13 +839,13 @@ def MidiCallback(mididev, imessage, time_stamp):
     # Multitimbrals identification and "hardware remap" of the drumpad
     # ----------------------------------------------------------------
     MT_in=False
-    if mididev in gv.MULTI_TIMBRALS:
+    if MIDIchannel == gv.MIDI_CHANNEL:
+        if (mididev not in gv.MULTI_TIMBRALS
+        or  mididev in gv.MULTI_WITHMASTER):
+            MIDIchannel = 0
+    if (    MIDIchannel > 0
+    and mididev in gv.MULTI_TIMBRALS):
         MT_in = True
-    elif MIDIchannel == gv.MIDI_CHANNEL:
-        MIDIchannel = 0
-    else:
-        if mididev in gv.MULTI_WITHMASTER:
-            MT_in = True
 
     if MT_in:
         if messagetype in [8,9,12]: # we only accept note on/off and program change commands from the sequencers and other multitimbrals
@@ -1042,7 +1042,7 @@ def MidiCallback(mididev, imessage, time_stamp):
         elif messagetype == 14: # Pitch Bend (note contains MSB, velocity contains 0 or LSB if supported by controller)
             PitchWheel(midinote,velocity)       # midinote=MSB, velocity=LSB
 
-        CallbackState()
+    CallbackState()
 
 gv.MidiCallback = MidiCallback
 
