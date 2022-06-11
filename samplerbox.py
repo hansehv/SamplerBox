@@ -872,13 +872,14 @@ def MidiCallback(mididev, imessage, time_stamp):
         mtchnote = MIDIchannel*gv.MTCHNOTES+midinote
         velocity = message[2] if len(message) > 2 else None
 
-        if messagetype==8 or messagetype==9:           # We may have a note on/off
+        if messagetype in [8,9,10,13]:           # We may have a note on/off or aftertouch
             retune=0
             if not MT_in:
                 i=gp.getindex(midinote,gv.notemapping)
                 if i>-1:        # do we have a mapped note ?
                     if gv.notemapping[i][2]==-2:      # This key is actually a CC = control change
-                        if velocity==0 or messagetype==8: midinote=0
+                        if velocity==0 or messagetype==8:
+                            midinote=0
                         ControlChange(gv.NOTES_CC, midinote)
                         return CallbackState()
                     midinote=gv.notemapping[i][2]
@@ -1037,7 +1038,7 @@ def MidiCallback(mididev, imessage, time_stamp):
             UI.Preset(midinote+gv.PRESETBASE)   # midinote=program#
 
         elif messagetype == 13: # Channel aftertouch
-            AfterTouch.Channel(midinote)        # midinote=pressure
+            AfterTouch.Channel(midinote, velocity)  # midinote=pressure. Velocity is dummy, included for local usage of 13
 
         elif messagetype == 14: # Pitch Bend (note contains MSB, velocity contains 0 or LSB if supported by controller)
             PitchWheel(midinote,velocity)       # midinote=MSB, velocity=LSB
