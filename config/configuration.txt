@@ -36,6 +36,8 @@ BLOCKSIZE = High
 USE_48kHz = False
 
 # Set True to enable MIDI IN via SerialPort (e.g. RaspberryPi's GPIO UART pins)
+# Timeout value determines when "port not found" condition is raised and serial is disabled
+# Next parameters control acceptance of processing realtime and/or sysex messages
 USE_SERIALPORT_MIDI = False
 SERIALPORT_TIMEOUT = 0.01
 SERIALPORT_REALTIME = False

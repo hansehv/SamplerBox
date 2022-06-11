@@ -476,7 +476,7 @@ SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_Voice","e
 			"elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote",
 			"elem_SB_Aftertouchdc","elem_SB_Aftertouchdp","elem_SB_AftertouchPairs",
 			"elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales",
-			"elem_SB_Notemap","elem_SB_CCmap","elem_SB_cm_current",,"elem_SB_cm_controlmode",
+			"elem_SB_Notemap","elem_SB_CCmap","elem_SB_cm_current","elem_SB_cm_controlmode",
 			"elem_SB_bTracks","elem_SB_IPlist","elem_SB_Wireless","elem_SB_MIDIdevs","elem_SB_LCDdisplay"];
 SB_numelems=SB_ElemID.length;
 var SB_element={

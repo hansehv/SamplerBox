@@ -176,7 +176,7 @@ def Polyphonic(note, pressure, *z):
 pafReverse = False
 def pafRevToggle(*z):
     global pafReverse
-    pafReverse = not chanReverse
+    pafReverse = not PafReverse
 
 def paVolume(pn, pressure, note, *z):
     pn.playingvolume(True, pressure)
