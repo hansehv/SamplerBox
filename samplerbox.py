@@ -872,7 +872,7 @@ def MidiCallback(mididev, imessage, time_stamp):
         mtchnote = MIDIchannel*gv.MTCHNOTES+midinote
         velocity = message[2] if len(message) > 2 else None
 
-        if messagetype in [8,9,10,13]:           # We may have a note on/off or aftertouch
+        if messagetype in [8,9,10]:           # We may have a note on/off or aftertouch
             retune=0
             if not MT_in:
                 i=gp.getindex(midinote,gv.notemapping)
