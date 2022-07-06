@@ -11,10 +11,6 @@ CHORDS_DEF = "chords.csv"
 SCALES_DEF = "scales.csv"
 
 notenames=["C","Cs","C#","Dk","D","Ds","D#","Ek","E","Es","F","Fs","F#","Gk","G","Gs","G#","Ak","A","As","A#","Bk","B","Bs"]
-
-def getdefs():
-	getcsv.readchords(gv.CONFIG_LOC + CHORDS_DEF)
-	getcsv.readscales(gv.CONFIG_LOC + SCALES_DEF)
 	
 def notename2midinote(inotename,fractions):
 	notename=inotename.title()
@@ -103,6 +99,8 @@ def setNotemap(x, *z):
 gv.notename2midinote=notename2midinote
 gv.midinote2notename=midinote2notename
 gv.setNotemap=setNotemap
+gv.setMC(gv.NOTEMAPS,setNotemap)
 gv.setMC(gv.CHORDS,setChord)
 gv.setMC(gv.SCALES,setScale)
-gv.setMC(gv.NOTEMAPS,setNotemap)
+getcsv.chords(gv.CONFIG_LOC + CHORDS_DEF)
+getcsv.scales(gv.CONFIG_LOC + SCALES_DEF)

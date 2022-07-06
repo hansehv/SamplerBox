@@ -10,13 +10,6 @@
 ###############################################################
 import gv,gp
 
-##########  G e n e r i c   p r o c s   ##########
-
-def no_delimiters(raw):	# rude but effective for failsafe operation :-)
-	return raw.replace(",",".").replace(";",":").replace("\t"," ")
-
-##########  N O T E   M A P P I N G   ##########
-
 fractions=[[1,"Semi"],[2,"Quarter"]]
 newnotemap=[]
 actnotemap="%$@"
@@ -108,7 +101,8 @@ def notes_onote(val=None):						# midinote or notename, with specials -2="Ctrl" 
 		else:
 			nm_onote=gv.notename2midinote(val,nm_Q)
 			if nm_onote<-3: nm_onote=-1
-		if curronote!=nm_onote: nm_unote=0
+		if curronote!=nm_onote:
+			nm_unote=0
 	return nm_onote
 def notes_retune(val=None):						# -50 - +50 (0 is neutral)
 	global nm_retune
@@ -147,7 +141,7 @@ def notes_unote(val=None):						# index of an interface defined table/note to pr
 def notes_map(val=None):						# name of map to save
 	global nm_map
 	if val!=None:
-		nm_map=no_delimiters(val.title())
+		nm_map=gp.no_delimiters(val.title())
 	return nm_map
 def notes_clear(val=None):
 	if val!=None:

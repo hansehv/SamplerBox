@@ -39,6 +39,7 @@ var SB_variables={	// make sure all passed I/O parameters are covered here
 	v_SB_Preset: function(val){SB_Preset=val;},
 	v_SB_Gain: function(val){SB_Gain=val;},
 	v_SB_Pitchrange: function(val){SB_Pitchrange=val;},
+	v_SB_Voice: function(val){SB_Voice=val;},
 	v_SB_FXpreset: function(val){SB_FXpreset=val;},
 	v_SB_Notemap: function(val){SB_Notemap=val;},
 	v_SB_nm_inote: function(val){SB_nm_inote=val;},
@@ -50,7 +51,13 @@ var SB_variables={	// make sure all passed I/O parameters are covered here
 	v_SB_nm_sav: function(val){SB_nm_name=val;},
 	v_SB_nm_retune: function(val){SB_nm_retune=val;},
 	v_SB_nm_voice: function(val){SB_nm_voice=val;},
-	v_SB_Voice: function(val){SB_Voice=val;},
+	v_SB_cm_family: function(val){SB_cm_family=val;},
+	v_SB_cm_control: function(val){SB_cm_control=val;},
+	v_SB_cm_controlval: function(val){SB_cm_controlval=val;},
+	v_SB_cm_controlr: function(val){SB_cm_controlr=val;},
+	v_SB_cm_sav: function(val){SB_cm_sav=val;},
+	v_SB_cm_assign: function(val){SB_cm_assign=val;},
+	v_SB_cm_reset: function(val){SB_cm_reset=val;},
 	v_SB_Scale: function(val){SB_Scale=val;},
 	v_SB_Chord: function(val){SB_Chord=val;},
 	v_SB_FVtype: function(val){SB_FVtype=val;},
@@ -182,6 +189,68 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 	},
 	input_SB_nm_sav: function(input_name,name,val,text){
 		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+	},
+	input_SB_cm_family: function(input_name,name,val,text){
+		return(text+SB_listselect(input_name,name,val,SB_CCfamilies,1,SB_CCfamilies.length,1));
+	},
+	input_SB_cm_control: function(input_name,name,val,text){
+		names = [];
+		for (i=0; i<SB_cm_controls.length; i++) {
+			names.push(SB_cm_ctrlnames[ SB_cm_controls[i] ]);
+		}
+		return(text+SB_listselect(input_name,name,val,names,1,names.length,1));
+	},
+	input_SB_cm_controlval: function(input_name,name,val,text){
+		if (SB_cm_controltype==2) {
+			// ensure this is sync'd with UI_CCmap.setvaltabs !!
+			table = [];
+			dims = 1;
+			switch (SB_cm_ctrlnames[SB_cm_controlMC]) {
+				case "Chords":
+					table=SB_Chordname;
+					break;
+				case "Scales":
+					table=SB_Scalename;
+					break;
+				case "Voices":
+					table=SB_Voicelist;
+					dims=2;
+					break;
+				case "BackTracks":
+					table=SB_cm_bTracks;
+					dims=2;
+					break;
+				case "SMFs":
+					table=SB_SMFsongs;
+					dims=2;
+					break;
+				case "Notemaps":
+					table=SB_Notemaps;
+					break;
+				case "FXpresets":
+					table=SB_FXpresets;
+					break;
+			}
+			if (table.length==0) { return (text+"No values available"); }
+			return(text+SB_listselect(input_name,name,val,table,dims,table.length,1));
+		}
+		else return ""
+	},
+	input_SB_cm_controlr: function(input_name,name,val,text){
+		names = [];
+		for (i=0; i<SB_cm_controllers.length; i++) {
+			names.push(SB_cm_ctrlrnames[ SB_cm_controllers[i] ]);
+		}
+		return(text+SB_listselect(input_name,name,val,names,1,names.length,1));
+	},
+	input_SB_cm_sav: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+	},
+	input_SB_cm_reset: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+	},
+	input_SB_cm_assign: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,SB_cm_assign_levs,1,1));
 	},
 	input_SB_SoundVolume: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,100,1));
@@ -403,10 +472,11 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 }
 
 // Read-only building blocks
-SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_xvoice","elem_SB_DefErr",
-			"elem_SB_LastMidiNote","elem_SB_LastMusicNote",
+SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_Voice","elem_SB_xvoice",
+			"elem_SB_DefErr","elem_SB_LastMidiNote","elem_SB_LastMusicNote",
 			"elem_SB_Aftertouchdc","elem_SB_Aftertouchdp","elem_SB_AftertouchPairs",
-			"elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales","elem_SB_Notemap",
+			"elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales",
+			"elem_SB_Notemap","elem_SB_CCmap","elem_SB_cm_current","elem_SB_cm_controlmode",
 			"elem_SB_bTracks","elem_SB_IPlist","elem_SB_Wireless","elem_SB_MIDIdevs","elem_SB_LCDdisplay"];
 SB_numelems=SB_ElemID.length;
 var SB_element={
@@ -422,9 +492,18 @@ var SB_element={
 	elem_SB_Mode: function(elem_name){
 		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+SB_Mode+'</SPAN>';
 	},
+	elem_SB_Voice: function(elem_name){
+		for ( i=0; i<SB_Voicelist.length; i++ ){
+			if (SB_Voicelist[i][0] == SB_Voice) {
+				break;
+			}
+		}
+		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+SB_Voicelist[i][1]+'</SPAN>';
+	},
 	elem_SB_xvoice: function(elem_name,text) {
 		if (SB_xvoice==0) j="";else j="CHECKED";
-		document.getElementById(elem_name).innerHTML=text+'<label class="inline alignx"><INPUT type="checkbox" onclick="return false;"'+j+'></label>';
+		document.getElementById(elem_name).innerHTML=text+'<label class="inline alignx">'+
+							'<INPUT type="checkbox" onclick="return false;"'+j+'></label>';
 	},
 	elem_SB_DefErr: function(elem_name,text) {
 		if (SB_DefErr=="") document.getElementById(elem_name).innerHTML=''
@@ -438,6 +517,7 @@ var SB_element={
 		if (SB_LastMusicNote<0) {m="None";} else {m=SB_Noteprint(SB_LastMusicNote);}
 		document.getElementById(elem_name).innerHTML='<SPAN CLASS="value">'+m+'</SPAN>';
 	},
+
 	elem_SB_Aftertouchdc: function(elem_name,text){
 		if (SB_AfterTouchd[0]==0) {c="";} else {c=', unassigned';}
 		if (SB_AfterTouchd[1]!="") {c=', using "' + SB_AfterTouchd[1] + '"';}
@@ -471,6 +551,7 @@ var SB_element={
 		document.getElementById(elem_name).innerHTML=html+'</TABLE>';
 		}
 	},
+
 	elem_SB_Scale: function(elem_name){
 		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+SB_Scalename[SB_Scale]+'</SPAN>';
 	},
@@ -480,7 +561,8 @@ var SB_element={
 	elem_SB_Chords: function(elem_name){
 		html='<TABLE CLASS="datatable"><TR><TH>Chord</TH><TH>Notes for C</TH></TR>';
 		for (i=1;i<SB_Chordname.length;i++){
-			html=html+'<TR CLASS="datatable"><TD CLASS="datatable" STYLE="text-align:left;">'+SB_Chordname[i]+'&nbsp;</TD><TD CLASS="datatable" STYLE="text-align:left;">&nbsp;';
+			html=html+'<TR CLASS="datatable"><TD CLASS="datatable" STYLE="text-align:left;">'+SB_Chordname[i]+
+						'&nbsp;</TD><TD CLASS="datatable" STYLE="text-align:left;">&nbsp;';
 			filler="";
 			for (j=0;j<SB_Chordnote[i].length;j++){
 				html=html+filler+SB_Noteprint(SB_Chordnote[i][j]);
@@ -493,7 +575,8 @@ var SB_element={
 	elem_SB_Scales: function(elem_name){
 		html='<TABLE CLASS="datatable"><TR><TH>Scale</TH><TH>Implemented Chords</TH></TR>';
 		for (i=1;i<SB_Scalename.length;i++){
-			html=html+'<TR CLASS="datatable"><TD CLASS="datatable" STYLE="text-align:left;">'+SB_Scalename[i]+'&nbsp;</TD><TD CLASS="datatable" STYLE="text-align:left;">&nbsp;';
+			html=html+'<TR CLASS="datatable"><TD CLASS="datatable" STYLE="text-align:left;">'+SB_Scalename[i]+
+						'&nbsp;</TD><TD CLASS="datatable" STYLE="text-align:left;">&nbsp;';
 			filler="";
 			for (j=0;j<SB_Scalechord[i].length;j++){
 				if (SB_Scalechord[i][j]>0){
@@ -507,39 +590,92 @@ var SB_element={
 	},
 	elem_SB_Notemap: function(elem_name){
 		html='<TABLE CLASS="datatable" ID="TableID_Notemap"><TR><TH style="display:none;"><TH>Key</TH><TH>Plays</TH><TH>Tune</TH><TH>Voice</TH></TR>';
-		for (var i=0;i<SB_NoteMapping.length;i++){
-			var inote=SB_NoteMapping[i][0];
-			var inotenam="%s" %inote;
-			var retune="";
-			var voice="";
-			var j=0;var k="";
-			for (j=0;i<SB_KeyNames.length;j++){
-				if (SB_KeyNames[j][0]==inote){
-					inotenam=SB_KeyNames[j][1];
-					if (inote==SB_nm_inote){k='CLASS="rowsel"'}
-					else {k='CLASS="datatable"'}
+		for (var i=0; i<SB_NoteMapping.length; i++) {
+			var inote = SB_NoteMapping[i][0];
+			var inotenam = "%s" %inote;
+			var retune = "";
+			var voice = "";
+			var j = 0;
+			var k='CLASS="datatable"';
+			for (j=0; i<SB_KeyNames.length; j++) {
+				if (SB_KeyNames[j][0] == inote) {
+					inotenam = SB_KeyNames[j][1];
+					if (inote == SB_nm_inote) {
+						k='CLASS="rowsel"';
+						}
 					break;
 				}
 			}
-			var dd=SB_unote_options(SB_NoteMapping[i][2]);
-			onotenam=dd[SB_NoteMapping[i][5]];
-			if (onotenam=="None"){onotenam="";}
-			if (SB_NoteMapping[i][3]!=0){retune=SB_NoteMapping[i][3]}
-			if (SB_NoteMapping[i][4]!=0){voice=SB_NoteMapping[i][4]}
-			html=html+'<TR '+k+'><TD style="display:none;">'+j+'</TD><TD CLASS="datatable">'+inotenam+'</TD><TD CLASS="datatable">'+onotenam+'</TD><TD CLASS="datatable">'+retune+'</TD><TD CLASS="datatable">'+voice+'</TD></TR>';
+			var dd = SB_unote_options(SB_NoteMapping[i][2]);
+			onotenam = dd[SB_NoteMapping[i][5]];
+			if (onotenam == "None") {
+				onotenam="";
+				}
+			if (SB_NoteMapping[i][3] != 0) {
+				retune=SB_NoteMapping[i][3]
+				}
+			if (SB_NoteMapping[i][4] != 0) {
+				voice=SB_NoteMapping[i][4]
+				}
+			html = html + '<TR ' +k+ '>' +
+				'<TD style="display:none;">' +j+ '</TD>' +
+				'<TD CLASS="datatable">' +inotenam+ '</TD>' +
+				'<TD CLASS="datatable">' +onotenam+ '</TD>' +
+				'<TD CLASS="datatable">' +retune+ '</TD>' +
+				'<TD CLASS="datatable">' +voice+ '</TD>' +
+				'<TD></TR>';
 		}
 		document.getElementById(elem_name).innerHTML=html+'</TABLE>';
 	},
+
+	elem_SB_cm_current: function(elem_name){
+		html='<TABLE CLASS="datatable"><TR><TH>Controller<TH>Control</TH><TH>Value</TH><TH>Level</TH></TR>';
+		for ( var i=0; i<SB_cm_current.length; i++ ) {
+			var controller = SB_cm_ctrlrnames[ SB_cm_current[i][0] ];
+			var control = SB_cm_ctrlnames[ SB_cm_current[i][1] ];
+			var value = SB_cm_current[i][2];
+			if (value == "None" && ['Notemaps', 'FXpresets'].indexOf(control) < 0 ) {
+				value = SB_CCmodes[ SB_cm_ctrlmodes[ SB_cm_current[i][1] ]];
+			}
+			level = "Voice";
+			switch ( SB_cm_current[i][3] ) {
+				case -1:
+					level = "Sys";
+					break;
+				case  0:
+					level = "Set";
+					break;
+			}
+			var k = 'CLASS="datatable"';
+			if ( SB_cm_controllers[ SB_cm_controlr ] == SB_cm_current[i][0] ) {
+				k='CLASS="rowsel"';
+			}
+			html = html + '<TR ' +k+ '>' +
+				'<TD CLASS="datatable">' +controller+ '</TD>' +
+				'<TD CLASS="datatable">' +control+ '</TD>' +
+				'<TD CLASS="datatable">' +value+ '</TD>' +
+				'<TD CLASS="datatable">' +level+ '</TD>' +
+				'</TR>';
+		}
+		document.getElementById(elem_name).innerHTML=html+'</TABLE>';
+	},
+	elem_SB_cm_controlmode: function(elem_name){
+		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+SB_cm_controlmode+'</SPAN>';
+	},
+
 	elem_SB_bTracks: function(elem_name){
 		if (SB_bTracks.length==0) {document.getElementById(elem_name).innerHTML='';}
 		else {
 			html='<TABLE BORDER="1" CLASS="datatable"><TR><TH>Knob</TH><TH>Backtrack</TH><TH>Note</TH></TR>';
 			for (i=0;i<SB_bTracks.length;i++){
-				html=html+'<TR CLASS="datatable"><TD CLASS="datatable"">'+SB_bTracks[i][0]+'</TD><TD CLASS="datatable"">'+SB_bTracks[i][1]+'</TD><TD CLASS="datatable"">'+SB_bTracks[i][2]+'</TD></TR>';
+				html=html+'<TR CLASS="datatable"><TD CLASS="datatable"">'+SB_bTracks[i][0]+
+					'</TD><TD CLASS="datatable"">'+SB_bTracks[i][1]+
+					'</TD><TD CLASS="datatable"">'+SB_bTracks[i][2]+'</TD></TR>';
 			}
 			document.getElementById(elem_name).innerHTML=html+'</TABLE><P>';
 		}
 	},
+
 	elem_SB_IPlist: function(elem_name){
 		if (SB_IPlist.length==0) {document.getElementById(elem_name).innerHTML='';}
 		else {
@@ -560,6 +696,7 @@ var SB_element={
 			document.getElementById(elem_name).innerHTML=html+'</TABLE><P>';
 		}
 	},
+
 	elem_SB_MIDIdevs: function(elem_name){
 		if (SB_MIDIdevs.length==0) {document.getElementById(elem_name).innerHTML='';}
 		else {
@@ -570,24 +707,21 @@ var SB_element={
 			document.getElementById(elem_name).innerHTML=html+'</TABLE><P>';
 		}
 	},
+
 	elem_SB_LCDdisplay: function(elem_name){
-		html='<TABLE BORDER="2" CELLPADDING="10"  CELLSPACING="5" WIDTH="350" align="center">';
+		html='<TABLE BORDER="'+LCDborder+'" CELLPADDING="'+LCDpad+'" CELLSPACING="'+LCDspace+'" WIDTH="'+LCDwidth+'" align="center">';
 		for (i=0;i<SB_MenuDisplay.length;i++){
-			html=html+'<TR BORDER="0"><TD align="center" class="value LCD">'+SB_MenuDisplay[i]+'</TD></TR>';
+			html=html+'<TR BORDER="0"><TD align="center" class="LCD">'+SB_MenuDisplay[i]+'</TD></TR>';
 		}
 		document.getElementById(elem_name).innerHTML=html+'</TABLE><P>';
 	}
 }
 
 // Subroutines
-function SB_notechord(note,chord){
-	if (SB_Chordname[chord]=="Maj") c="";
-	else c=SB_Chordname[chord].toLowerCase();
-	var p=SB_Noteprint(note);
-	return(p+c);
-}
+
 function SB_slider(input_name,name,val,min,max,step){
-	return('<INPUT ID="'+input_name+'_r" name="'+name+'" TYPE="range" VALUE="'+val+'" min="'+min+'" max="'+max+'" step="'+step+'" onchange=SB_slidersync("'+input_name+'_r","'+input_name+'_v",true)>');
+	return('<INPUT ID="'+input_name+'_r" name="'+name+'" TYPE="range" VALUE="'+val+'" min="'+min+'" max="'+max+
+			'" step="'+step+'" onchange=SB_slidersync("'+input_name+'_r","'+input_name+'_v",true)>');
 }
 function SB_numselect(input_name,name,val,min,max,step,update){
 	html='<SELECT ID="'+input_name+'_v" name="'+name+'" SIZE="1"';
@@ -598,18 +732,49 @@ function SB_numselect(input_name,name,val,min,max,step,update){
 		html=html+'<OPTION VALUE='+i+ii+'>'+i+'</OPTION>';}
 	return(html+'</SELECT>');
 }
+function SB_slidersync(IDslider, IDvar, sliderchange){
+	if (document.getElementById(IDvar) && document.getElementById(IDslider)){
+		if (sliderchange) document.getElementById(IDvar).value=document.getElementById(IDslider).value;
+		else document.getElementById(IDslider).value=document.getElementById(IDvar).value;}
+	SB_Submit();
+}
 function SB_listselect(input_name,name,val,table,dims,size,update){
-	html='<SELECT class="custom-dropdown__select custom-dropdown__select--white" name="'+name+'" id="select_'+name+'" SIZE="1"';
-	if (update==1) {html=html+' onchange=SB_Submit()';}
+	html='<SELECT class="custom-dropdown__select custom-dropdown__select--white" name="'+name+
+			'" id="select_'+name+'" SIZE="1"';
+	if (update==1) {
+		html=html+' onchange=SB_Submit()';
+		}
 	//else {html=html+' onchange=SB_updateval(this)';}
 	html=html+'>';
 	for(var i=0;i<size;i++){
 		j="";
-		if (dims==1){if (i==val) j=" selected";k=table[i];}
-		else {if (table[i][0]==val) j=" selected";k=table[i][1];}
+		if (dims==1){
+			if (i==val) j=" selected";
+			k=table[i];
+			}
+		else {
+			if (table[i][0]==val) j=" selected";
+			k=table[i][1];
+			}
 		html=html+'<OPTION VALUE='+i+j+'>'+k+'</OPTION>';}
 	return(html+'</SELECT>');
 }
+
+function SB_radioselect(input_name,name,val,text,table,dims,update){
+	html='<div class="switch-field">'
+	for (i=0;i<table.length;i++){
+		j="";
+		id=name+"-id_"+i
+		if (i==val) j="CHECKED"; else j="";
+		if (dims==1){if (i==val) j=" CHECKED";k=table[i];l=table[i];}
+		else {if (table[i][0]==val) j=" CHECKED";k=table[i][1];l=table[i][0];}
+		html=html+' <INPUT type="radio" name="'+name+'" id="'+id+'" value="'+l+'" '+j;
+		if (update==1) {html=html+' onclick="SB_Submit()"'};
+		html=html+'><LABEL for="'+id+'">'+k+'</LABEL>';
+	}
+	return(text+html+'</div>');
+}
+
 function SB_notemapselect() {
     var rows = document.getElementById("TableID_Notemap").rows;
     for (i = 0; i < rows.length; i++) {
@@ -641,27 +806,13 @@ function SB_unote_options(onote){
 	}
 	return(d)
 }
-function SB_slidersync(IDslider, IDvar, sliderchange){
-	if (document.getElementById(IDvar) && document.getElementById(IDslider)){
-		if (sliderchange) document.getElementById(IDvar).value=document.getElementById(IDslider).value;
-		else document.getElementById(IDslider).value=document.getElementById(IDvar).value;}
-	SB_Submit();
-}
-function SB_radioselect(input_name,name,val,text,table,dims,update){
-	html='<div class="switch-field">'
-	for (i=0;i<table.length;i++){
-		j="";
-		id=name+"-id_"+i
-		if (i==val) j="CHECKED"; else j="";
-		if (dims==1){if (i==val) j=" CHECKED";k=table[i];l=table[i];}
-		else {if (table[i][0]==val) j=" CHECKED";k=table[i][1];l=table[i][0];}
-		html=html+' <INPUT type="radio" name="'+name+'" id="'+id+'" value="'+l+'" '+j;
-		if (update==1) {html=html+' onclick="SB_Submit()"'};
-		html=html+'><LABEL for="'+id+'">'+k+'</LABEL>';
-	}
-	return(text+html+'</div>');
-}
 
+function SB_notechord(note,chord){
+	if (SB_Chordname[chord]=="Maj") c="";
+	else c=SB_Chordname[chord].toLowerCase();
+	var p=SB_Noteprint(note);
+	return(p+c);
+}
 var SB_Notename=[["C"],["Cs"],["C&#9839;","D&#9837;"],["Dk"],["D"],["Ds"],["D&#9839;","E&#9837;"],["Ek"],["E"],
 				["Es","Fk"],["F"],["Fs"],["F&#9839;","G&#9837;"],["Gk"],["G"],["Gs"],["G&#9839;","A&#9837;"],
 				["Ak"],["A"],["As"],["A&#9839;","B&#9837;"],["Bk"],["B"],["Bs","Ck"],["FX"]];

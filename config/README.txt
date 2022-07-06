@@ -42,7 +42,10 @@ In this directory:
   Other messages like (notes and program changes) are standard.
 
 - Controls.csv
-  This lists all functions available for use in the CCmap, purely for reference.
+  This lists all functions available for use in the CCmap, use it for reference.
+  Layout is almost identical to CCmap, except for the first column:
+  Here this column is used to identify the "family" in the GUI CC-mapping
+  When using a line in CCmap: replace familyname with controllername (or UA)
 
 - CCmap.csv
   Here you tell how you want your knobs, buttons, drawbars, pedals

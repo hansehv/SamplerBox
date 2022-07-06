@@ -15,7 +15,7 @@
 ##  Miscellaneous generic procs (too small to split off), published via gv
 ##########################################################################
 
-import sys
+import sys, copy
 sys.path.append('./modules')
 import gv
 
@@ -80,18 +80,7 @@ def setVoice(x,iv=0,*z):
                     FXset = gv.voicelist[xvoice][5]
                     FXset = gp.setFXpresets(FXset)      # when FXset doesn't exist, result will be "None"
                     gv.FXpreset_last = FXset            # force showing of the FX preset
-                    gv.CCmap = list(gv.CCmapBox)        # construct this voice's CC setup
-                    for i in range( len(gv.CCmapSet) ):
-                        found = False
-                        if gv.CCmapSet[i][3]==0 or gv.CCmapSet[i][3]==voice:    # voice applies
-                            for j in range( len(gv.CCmap) ):                 # so check if button is known
-                                if gv.CCmapSet[i][0] == gv.CCmap[j][0]:
-                                    found = True
-                                    if (gv.CCmapSet[i][3] >= gv.CCmap[j][3]): # voice specific takes precedence
-                                        gv.CCmap[j] = gv.CCmapSet[i]          # replace entry
-                                    continue
-                            if not found:
-                                gv.CCmap.append( gv.CCmapSet[i] )             # else add entry
+                    gp.setCCmap(voice)                  # build CCmap for this voice
                     if gv.AFTERTOUCH:
                         AfterTouch.msgFilter()  # filter unused aftertouch signals
                     gv.display("")
@@ -142,6 +131,7 @@ VELSAMPLE = "Sample"                    # velocity equals sampled value, require
 VELACCURATE = "Accurate"                # velocity as played, allows for multiple (normalized!) samples for timbre
 VELOSTEPS = [127,64,32,16,8,4,2,1]      # accepted numer of velocity layers
 CTRLCCS_DEF = "controllerCCs.csv"
+CONTROLS_DEF = "controls.csv"
 KEYNAMES_DEF = "keynotes.csv"
 MENU_DEF = "menu.csv"
 FXPRESETS_DEF = "FXpresets.csv"
@@ -208,12 +198,11 @@ gv.sample_mode = BOXSAMPLE_MODE
 
 # Definition of notes, chords and scales
 import NotesChordsScales
-NotesChordsScales.getdefs()
 
 # Midi controllers, keyboard definition and menu
-getcsv.readcontrollerCCs(gv.CONFIG_LOC + CTRLCCS_DEF)
-getcsv.readkeynames(gv.CONFIG_LOC + KEYNAMES_DEF)
-getcsv.readmenu(gv.CONFIG_LOC + MENU_DEF)
+getcsv.controllerCCs(gv.CONFIG_LOC + CTRLCCS_DEF)
+getcsv.keynames(gv.CONFIG_LOC + KEYNAMES_DEF)
+getcsv.menu(gv.CONFIG_LOC + MENU_DEF)
 
 #########################################
 # Setup UI and display routine (if any..)
@@ -266,10 +255,10 @@ if gv.AFTERTOUCH:
 if gv.USE_SMFPLAYER:
     import smfplayer
 
-# Now we can finalize the controllerCC's assignments
-# (above virtual controllers can be set).
+# Now we can finalize the control's/controllerCC's assignments
+# (above virtual controllers can be set, controls are set).
 #
-gv.CCmapBox = getcsv.readCCmap(gv.CONFIG_LOC + gv.CTRLMAP_DEF)
+gv.CCmapBox = getcsv.CCmap(gv.CONFIG_LOC + gv.CTRLMAP_DEF)
 
 ###########################################
 # Audio including Effects/Filters/SMFplayer
@@ -281,7 +270,7 @@ gv.CCmapBox = getcsv.readCCmap(gv.CONFIG_LOC + gv.CTRLMAP_DEF)
 import audio    # import after effects settings to avoid unassigned pointers.
 UI.USE_ALSA_MIXER=audio.USE_ALSA_MIXER
 
-getcsv.readFXpresets(gv.CONFIG_LOC + FXPRESETS_DEF)
+getcsv.FXpresets(gv.CONFIG_LOC + FXPRESETS_DEF)
 
 ############################################################
 ##  SLIGHT MODIFICATION OF PYTHON'S WAVE MODULE
@@ -850,13 +839,13 @@ def MidiCallback(mididev, imessage, time_stamp):
     # Multitimbrals identification and "hardware remap" of the drumpad
     # ----------------------------------------------------------------
     MT_in=False
-    if mididev in gv.MULTI_TIMBRALS:
+    if MIDIchannel == gv.MIDI_CHANNEL:
+        if (mididev not in gv.MULTI_TIMBRALS
+        or  mididev in gv.MULTI_WITHMASTER):
+            MIDIchannel = 0
+    if (    MIDIchannel > 0
+    and mididev in gv.MULTI_TIMBRALS):
         MT_in = True
-    elif MIDIchannel == gv.MIDI_CHANNEL:
-        MIDIchannel = 0
-    else:
-        if mididev in gv.MULTI_WITHMASTER:
-            MT_in = True
 
     if MT_in:
         if messagetype in [8,9,12]: # we only accept note on/off and program change commands from the sequencers and other multitimbrals
@@ -883,13 +872,14 @@ def MidiCallback(mididev, imessage, time_stamp):
         mtchnote = MIDIchannel*gv.MTCHNOTES+midinote
         velocity = message[2] if len(message) > 2 else None
 
-        if messagetype==8 or messagetype==9:           # We may have a note on/off
+        if messagetype in [8,9,10]:           # We may have a note on/off or aftertouch
             retune=0
             if not MT_in:
                 i=gp.getindex(midinote,gv.notemapping)
                 if i>-1:        # do we have a mapped note ?
                     if gv.notemapping[i][2]==-2:      # This key is actually a CC = control change
-                        if velocity==0 or messagetype==8: midinote=0
+                        if velocity==0 or messagetype==8:
+                            midinote=0
                         ControlChange(gv.NOTES_CC, midinote)
                         return CallbackState()
                     midinote=gv.notemapping[i][2]
@@ -1048,12 +1038,12 @@ def MidiCallback(mididev, imessage, time_stamp):
             UI.Preset(midinote+gv.PRESETBASE)   # midinote=program#
 
         elif messagetype == 13: # Channel aftertouch
-            AfterTouch.Channel(midinote)        # midinote=pressure
+            AfterTouch.Channel(midinote, velocity)  # midinote=pressure. Velocity is dummy, included for local usage of 13
 
         elif messagetype == 14: # Pitch Bend (note contains MSB, velocity contains 0 or LSB if supported by controller)
             PitchWheel(midinote,velocity)       # midinote=MSB, velocity=LSB
 
-        CallbackState()
+    CallbackState()
 
 gv.MidiCallback = MidiCallback
 
@@ -1167,9 +1157,10 @@ def ActuallyLoad():
     gv.samples = {}
     gv.smfseqs = {}
     gv.currsmf = 0
-    gv.smfdrums={}
+    gv.smfdrums = {}
+    gv.smfnames = []
     fillnotes = {}
-    gv.btracklist=[]
+    gv.btracklist = []
     tracknames  = []
     for backtrack in range(128):
         tracknames.append([False, "", ""])
@@ -1188,12 +1179,12 @@ def ActuallyLoad():
 
     #print 'Preset loading: %s ' % gv.basename
     gv.display("Loading %s" % gv.basename,"L%03d" % gv.PRESET)
-    getcsv.readnotemap(os.path.join(dirname, gv.NOTEMAP_DEF))
-    gv.CCmapSet=getcsv.readCCmap(os.path.join(dirname, gv.CTRLMAP_DEF), True)
-    getcsv.readMTchannelmap(os.path.join(dirname, gv.VOICEMAP_DEF))
-    getcsv.readFXpresets(os.path.join(dirname, FXPRESETS_DEF), True)
+    getcsv.notemap(os.path.join(dirname, gv.NOTEMAP_DEF))
+    gv.CCmapSet=getcsv.CCmap(os.path.join(dirname, gv.CTRLMAP_DEF), True)
+    getcsv.MTchannelmap(os.path.join(dirname, gv.VOICEMAP_DEF))
+    getcsv.FXpresets(os.path.join(dirname, FXPRESETS_DEF), True)
     gp.setFXpresets("Default")
-    getcsv.readlayers( os.path.join(dirname, LAYERS_DEF) )
+    getcsv.layers( os.path.join(dirname, LAYERS_DEF) )
 
     definitionfname = os.path.join(dirname, gv.SAMPLESDEF)
     if os.path.isfile(definitionfname):
@@ -1677,8 +1668,15 @@ except:
     exit(1)
 
 #########################################
-##  MIDI DEVICES DETECTION
-##  and MAIN LOOP
+##  Consolidate all controls
+#########################################
+
+getcsv.controls(gv.CONFIG_LOC + CONTROLS_DEF)
+UI.cm_setctrlnames()
+UI.cm_setvaltabs()
+
+#########################################
+##  MIDI devices detection
 #########################################
 
 x=gv.cp.get(gv.cfg,"MIDI_THRU".lower()).split(',')
@@ -1742,6 +1740,10 @@ if (len(thru_ports) > 0):
 
 midi_in = rtmidi2.MidiInMulti()
 midi_in.callback = MidiCallback
+
+#########################################
+##  MAIN LOOP
+#########################################
 
 curr_inports = []
 prev_inports = []

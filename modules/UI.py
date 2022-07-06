@@ -13,12 +13,16 @@
 ###############################################################
 
 import re
-import gv,gp,remap,arp,chorus,Cpp,LFO,network
+import gv,gp
+import UI_notemap,UI_CCmap
+import arp,chorus,Cpp,LFO,network
 if gv.AFTERTOUCH:
 	import AfterTouch
 import menu as butmenu
 
-# Writable variables
+# #######################################
+#        Writable variables
+# #######################################
 
 def RenewMedia(val=None):					# boolean, return value True indicates "preset load in progress",
 	try:									# setting optional input to any value except False or "n*" forces a reload of same sample set
@@ -90,20 +94,11 @@ def Notemap(val=None):						# active notemap, either index in notemap or "notema
 			mapchange=(currnotemap!=newnotemap)
 			if mapchange:
 				gv.setNotemap(val)
-				remap.nm_inote=-1			# restart the mapping circus when underlying table shifted
+				UI_notemap.nm_inote=-1			# restart the mapping circus when underlying table shifted
 			return mapchange
 		return gv.currnotemap
 	except:
 		return ""
-nm_inote=remap.notes_inote
-nm_Q=remap.notes_Q
-nm_unote=remap.notes_unote
-nm_onote=remap.notes_onote
-nm_retune=remap.notes_retune
-nm_voice=remap.notes_voice
-nm_map=remap.notes_map
-nm_clr=remap.notes_clear
-nm_sav=remap.notes_sav
 
 def Scale(val=None):						# index of ScaleName
 	try:
@@ -692,45 +687,40 @@ def Button(val=None):
 # #######################################
 
 def LastMidiNote(*z):				# last note on master controller in the keyboard area
-	try: return gv.last_midinote
-	except: return -1
+	return gv.last_midinote
 def LastMusicNote(*z):				# the same, now music notation (if available)
-	try: return gv.last_musicnote
-	except: return ""
+	return gv.last_musicnote
+
 def DefErr(*z):						# empty or short indication of lines with errors in the definition.txt
-	try: return gv.DefinitionErr
-	except: return ""
+	return gv.DefinitionErr
+
 def Mode(*z):						# play mode (keyb, once, loop, mixed etc)
-	try: return gv.sample_mode
-	except: return ""
-def Presetlist(*z):					# [[#,name],.....], so preset "0 Demo" gives element [0,"0 Demo]
-	try: return gv.presetlist
-	except: return ""
+	return gv.sample_mode
+
+def Presetlist(*z):					# [Presetname, Parameter, Value]
+	return gv.presetlist
+
 def xvoice(*z):						# Does the effects voice (voice=0) exist ?
-	try:
-		if gp.getindex(0,gv.voicelist)>-1:
-			return True
-	except: pass
+	if gp.getindex(0,gv.voicelist)>-1:
+		return True
 	return False
-def Voicelist(*z):					# [[#,name],.....] similar as variables/tables defined in code or stored in config files on SD or USB, however without voice 0 (effects track)
-	vlist=[]
-	try:
-		for i in range(len(gv.voicelist)):      # filter out effects track and release samples
-			if gv.voicelist[i][0]>0:
-				vlist.append(gv.voicelist[i])
-	except: pass
-	return vlist
+Voicelist = UI_CCmap.realvoices		# [[#,name],.....] similar as variables/tables defined in code or stored in config files on SD or USB, however without voice 0 (effects track)
+
+def SMFsongs(*z):					# [[SMFseq#,name],.....]
+	if gv.USE_SMFPLAYER:
+		return gv.smfnames
+	return []
+
 def bTracks(*z):					# [[#,name,notename in notemap],.....]. Number >0 can be assigned to a midiCC
-	try: return gv.btracklist
-	except: return []
+	return gv.btracklist
+
 def Notemaps(*z):					# Available notemaps (names)
 	notemaps=["None"]
-	try: notemaps.extend(gv.notemaps)
-	except: pass
+	notemaps.extend(gv.notemaps)
 	return notemaps
 def NoteMapping(*z):				# [[keybnote,qfraction,soundnote,retune,voice]...]
-	try: return gv.notemapping
-	except: return []
+	return gv.notemapping
+
 def MenuDisplay(*z):				# [line1,line2, ..] lines of the characterdisplay of the (button) menu
 	try: return [butmenu.line1(),butmenu.line2(),butmenu.line3()]
 	except: return ["No menu defined",""]
@@ -782,7 +772,6 @@ def AfterTouchPairs(*z):			# Notepairs of current voice
 				pairs.append([m, AfterTouch.notepairs[gv.currvoice][m] ])
 	return pairs
 	
-
 # #######################################################
 # Readonly variables from configuration and mapping files
 # #######################################################
@@ -792,9 +781,11 @@ def Samplesdir(*z):					# Active samples directory. Either /samples (on SD), /me
 def Stop127(*z):					# First note at right/high side of keyboard area
 	return gv.stop127
 def qFractions(*z):					# Tone resolution
-	return remap.fractions
+	return UI_notemap.fractions
 def KeyNames(*z):					# Keynames used in csv files
 	return gv.keynames
+def NotesCC(*z):					# Controller# for notes used as CC.
+	return gv.NOTES_CC
 def FXpresets(*z):					# Defined effects presetlist for the current sample set
 	return gv.FXpresetnames
 def Chordname(*z):					# Chordnames as defined in chord.csv
@@ -808,35 +799,74 @@ def Scalechord(*z):					# [[0];[0,...],.....], chords(indexes) per scale
 def ARPordlist(*z):					# Playorders available for ARP
 	return arp.modes
 def FVtypes(*z):					# Effects implemented via the reverb/freeverb filter
-	try: return Cpp.FVtypes
-	except: return ["Off"]
+	return Cpp.FVtypes
 def DLYtypes(*z):					# Effects implemented via the Delay line filter
-	try: return Cpp.DLYtypes
-	except: return ["Off"]
+	return Cpp.DLYtypes
 def AWtypes(*z):					# Wah types implemented via the AutoWah filter
-	try: return Cpp.AWtypes
-	except: return ["Off"]
+	return Cpp.AWtypes
 def DLYtypes(*z):					# Effects implemented via the echo/faser filter
-	try: return Cpp.DLYtypes
-	except: return ["Off"]
+	return Cpp.DLYtypes
 def LFtypes(*z):					# Effects implemented via the Moog low-pass filter
-	try: return Cpp.LFtypes
-	except: return ["Off"]
+	return Cpp.LFtypes
 def ODtypes(*z):					# Effects implemented via Overdrive effect
-	try: return Cpp.ODtypes
-	except: return ["Off"]
+	return Cpp.ODtypes
 def PLtypes(*z):					# Effects implemented via Peak limiter
-	try: return Cpp.PLtypes
-	except: return ["Off"]
+	return Cpp.PLtypes
 def LFOtypes(*z):					# Effects implemented via the Low Frequency Oscillator
-	try: return LFO.effects
-	except: return ["Off"]
+	return LFO.effects
 def CHOtypes(*z):					# Effects implemented via Chorus
 	return chorus.effects
-def AfterTouchSup(*z):					# Is aftertouch supported according configuration.txt ?
+def AfterTouchSup(*z):				# Is aftertouch supported according configuration.txt ?
 	return gv.AFTERTOUCH
+def CCfamilies(*z):					# Controller groups/families
+	return gv.CCfamilies
+def CCmodes(*z):					# Control mode/function
+	return gv.MCmodenames
 def Buttons(*z):					# Buttons supported by button menu
 	return butmenu.buttons
+
+# #######################################################
+#       Linked-to procedures in other modules
+# #######################################################
+
+# notemap I-O fields
+nm_inote = UI_notemap.notes_inote
+nm_Q = UI_notemap.notes_Q
+nm_unote = UI_notemap.notes_unote
+nm_onote = UI_notemap.notes_onote
+nm_retune = UI_notemap.notes_retune
+nm_voice = UI_notemap.notes_voice
+nm_map = UI_notemap.notes_map
+nm_clr = UI_notemap.notes_clear
+nm_sav = UI_notemap.notes_sav
+# notemap housekeeping
+nm_sync = UI_notemap.notes_sync					# Execute before showing results on the display to be in sync with play status
+nm_consolidate = UI_notemap.notes_consolidate	# Executed before using/presenting changes on nm_inote, nm_onote, nm_retune, nm_voice or nm_unote
+
+# CCmap I-O fields
+cm_family = UI_CCmap.family				# (string) Familyname or (integer) index of control family to limit the dropdown
+cm_control = UI_CCmap.control			# (string) Controlname or (integer) index of control within family
+cm_controlMC = UI_CCmap.controlMC		# index of control within gv.MC
+cm_controlval = UI_CCmap.controlval		# value of this control when it's a table select
+cm_controlr = UI_CCmap.controller		# index of controller choice above
+cm_assign_levs = UI_CCmap.assign_levels	# value table for radio buttons / dropdown
+cm_assign = UI_CCmap.assign				# assign values to current CCmap
+cm_reset = UI_CCmap.resetmap			# boolean, requesting rebuild voice-ccmap if True
+cm_sav = UI_CCmap.savemap				# boolean, requesting save voice-ccmap if True
+cm_controls = UI_CCmap.controls			# indexes of controls in current cc-mapping selection
+cm_controlmode = UI_CCmap.controlmode	# name of controlmode of current control
+cm_controltype = UI_CCmap.controltype	# value of controltype of current control
+cm_controllers = UI_CCmap.controllers	# indexes of controllers in current control & notemap selection
+cm_current = UI_CCmap.current			# current CCmap
+cm_consolidate = UI_CCmap.consolidate	# combine all selections to a consistent report
+cm_bTracks = UI_CCmap.numbered_btracks	# backtracks with seq# > 0
+# CCmap metadata
+cm_ctrlnames = UI_CCmap.ctrlnames		# mappable Control names
+cm_ctrlmodes = UI_CCmap.ctrlmodes		# index of button mode/function
+cm_ctrlrnames = UI_CCmap.ctrlrnames		# mappable Controller names
+# not in dict, called once after all control info has been collected
+cm_setctrlnames = UI_CCmap.setnames
+cm_setvaltabs = UI_CCmap.setvaltabs
 
 # #################################################################################
 #                         = = = = =   D I C T I O N A R Y   = = = = =
@@ -847,9 +877,11 @@ def Buttons(*z):					# Buttons supported by button menu
 # or don't fit in the 0-100 mantra (for instance min and max settings should have same scale to avoid confusion)
 # etcetera...etcetera... in other words, not completely consistent :-)
 
-# Please look at the webgui to see some hints & practical use; much more educational and easier than explaining all variables here
+# Please look at the webgui to see some hints & practical use;
+#						much more educational and easier than explaining all variables here
 # First element:
-#  - w= writable: the ui can change this via a procuderu with dictionary name (NOT via this dictionary !! Use the proper function !)
+#  - w= writable: the ui can change this via a procedure with dictionary name
+#					(NOT via this dictionary !! Use the proper function !)
 #  - v= variable: informational variables/tables that change in normal (play) situation
 #  - f= fixed   : informational variables/tables defined in code or stored in config files on SD or USB
 # Second element:
@@ -882,6 +914,8 @@ procs={
 	"FXpreset":["w",FXpreset],				# (string) Name to be activated FXpresets, returns either "None" or the newly activated FXpreset
 	"Notemap":["w",Notemap],				# (string) Notemap or (integer) index in notemap of active notemap, returns either notemap or notemapchange
 	"nm_inote":["w",nm_inote],				# (string) Keyname or (integer) index in KeyNames for keyboardnote
+	"cm_family":["w",cm_family],			# (string) Familyname or (integer) index of control family to limit the dropdown
+	"cm_control":["w",cm_control],			# (string) Controlname or (integer) index of control within family
 
 		# next procedures always return the value of the respective parameter
 	"nm_Q":["w",nm_Q],								# (integer) index of qFractions or (string) tones, so currently either "Semi" or "Quarter"
@@ -892,6 +926,11 @@ procs={
 	"nm_map":["w",nm_map],							# name of map to save
 	"nm_clr":["w",nm_clr],							# boolean, requesting clear notemap if True
 	"nm_sav":["w",nm_sav],							# boolean, requesting save notemap if True
+	"cm_controlval":["w",cm_controlval],			# value of this control when it's a table select
+	"cm_controlr":["w",cm_controlr],				# index of controller choice above
+	"cm_reset":["w",cm_reset],						# boolean, requesting rebuild voice-ccmap if True
+	"cm_sav":["w",cm_sav],							# boolean, requesting save voice-ccmap if True
+	"cm_assign":["w",cm_assign],					# assign values to current CCmap
 	"Scale":["w",Scale,gv.SCALES],					# index of ScaleName (& ScaleChord)
 	"Chord":["w",Chord,gv.CHORDS],					# index of Chordname
 	"SoundVolume":["w",SoundVolume],				# 0-100
@@ -968,12 +1007,20 @@ procs={
 	"LastMusicNote":["v",LastMusicNote],	# the same, now music notation (if available)
 	"DefErr":["v",DefErr],					# empty or short indication of lines with errors in the definition.txt
 	"Mode":["v",Mode],						# play mode (keyb, once, loop etc)
-	"Presetlist":["v",Presetlist],			# [[#,name],.....], so preset "0 Demo" gives element [0,"0 Demo]
+	"Presetlist":["v",Presetlist],			# [Presetname, Parameter, Value]
 	"xvoice":["v",xvoice],					# Does the/ effects track (voice=0) exist ?
 	"Voicelist":["v",Voicelist],			# [[#,name],.....] similar to table defined in code or stored in config files on SD or USB, however without voice 0 (effects track)
+	"SMFsongs":["v",SMFsongs],				# [[SMFseq#,name],.....]
 	"bTracks":["v",bTracks],				# [[#,name,notename in notemap],.....]. Number >0 can be assigned to a midiCC
 	"Notemaps":["v",Notemaps],				# Available notemaps (names)
 	"NoteMapping":["v",NoteMapping],		# [[keybnote,qfraction,soundnote,retune,voice]...]	
+	"cm_controls":["v",cm_controls],		# indexes of controls in current cc-mapping selection
+	"cm_controlMC":["v",cm_controlMC],		# index of control within gv.MC
+	"cm_controlmode":["v",cm_controlmode],	# name of controlmode of current control
+	"cm_controltype":["v",cm_controltype],	# value of controltype of current control
+	"cm_controllers":["v",cm_controllers],	# indexes of controllers in current control & notemap selection
+	"cm_current":["v",cm_current],			# current CCmap
+	"cm_bTracks":["v",cm_bTracks],			# backtracks with seq# > 0
 	"MenuDisplay":["v",MenuDisplay],		# [line1,line2, ..] lines of the characterdisplay of the (button) menu
 	"IP":["w",IP],							# index of IP addresses found (it's classified "w" to force into the button menu)
 	"IPlist":["v",IPlist],					# SB IP addresses (cable and wireless plus IPv6 if enabled in configuration.txt)
@@ -990,7 +1037,8 @@ procs={
 	"Stop127":["f",Stop127],				# First note at right/high side of keyboard area
 	"qFractions":["f",qFractions],			# [[1, 'Semi'], [2, 'Quarter']]
 	"KeyNames":["f",KeyNames],				# Notenames as defined in keynotes.csv
-	"FXpresets":["f",FXpresets],			# Effect presetnames available in current set (merged box en set presets)
+	"NotesCC":["f",NotesCC],				# Controller# for notes used as CC.
+	"FXpresets":["f",FXpresets],			# Effect presets available in current set (merged box en set presets)
 	"Chordname":["f",Chordname],			# Chordnames as defined in chord.csv
 	"Chordnote":["f",Chordnote],			# Chordnotes as defined in chord.csv
 	"Scalename":["f",Scalename],			# Scalenames as defined in scales.csv
@@ -1005,6 +1053,12 @@ procs={
 	"LFOtypes":["f",LFOtypes],				# Effects implemented via the Low Frequency Oscillator
 	"CHOtypes":["f",CHOtypes],				# Chorus (just on/off..)
 	"AfterTouchSup":["f",AfterTouchSup],	# Is aftertouch supported in this configuration
+	"CCfamilies":["f",CCfamilies],			# Control=effect families/groups
+	"CCmodes":["f",CCmodes],				# Control mode/function
+	"cm_assign_levs":["f",cm_assign_levs],	# value table for radio buttons /  dropdown
+	"cm_ctrlnames":["f",cm_ctrlnames],		# mappable Control names
+	"cm_ctrlmodes":["f",cm_ctrlmodes],		# index of button mode/function
+	"cm_ctrlrnames":["f",cm_ctrlrnames],	# mappable Controller names
 	"Buttons":["f",Buttons]					# Buttons supported by button menu
 	}
 
@@ -1013,16 +1067,14 @@ for m in procs:
 	if len(procs[m]) > 2:
 		gv.procs_alias[ procs[m][2] ] = procs[m][1]
 
-#             = = = = =   Extra procedures, not (directly) related to in/output fields   = = = = =
+#             = = = = =   Extra procedures and variables linked to via UI   = = = = =
 
-# notemap housekeeping
-nm_sync=remap.notes_sync					# Execute before showing results on the display to be in sync with play status
-nm_consolidate=remap.notes_consolidate		# Executed before using/presenting changes on nm_inote, nm_onote, nm_retune, nm_voice or nm_unote
 # access to configuration.txt, example: up=UI.cfg_int("BUT_incr")
 cfg_txt=lambda x: gv.cp.get(gv.cfg,x.lower())
 cfg_int=lambda x: gv.cp.getint(gv.cfg,x.lower())
 cfg_float=lambda x: gv.cp.getfloat(gv.cfg,x.lower())
 cfg_bool=lambda x: gv.cp.getboolean(gv.cfg,x.lower())
+
 # miscellaneous
 getindex=gp.getindex						# index=getindex(searchval,table<,onecol>). "onecol" is optional boolean "has table one column only". Default=False
 display=gp.NoProc							# if the user interface needs to display something on the system display

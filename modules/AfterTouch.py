@@ -32,7 +32,7 @@ if gv.CHAN_AFTOUCH:
 if gv.POLY_AFTOUCH:
     polyCC = gp.getvirtualCC()
     polyCCidx = len(gv.controllerCCs)
-    gv.controllerCCs.append([gv.PAFTOUCH,polyCC,-4])
+    gv.controllerCCs.append([gv.PAFTOUCH,polyCC,-2])
 
 # Fill notepairs (actuallyload procedure)
 
@@ -176,13 +176,13 @@ def Polyphonic(note, pressure, *z):
 pafReverse = False
 def pafRevToggle(*z):
     global pafReverse
-    pafReverse = not chanReverse
+    pafReverse = not PafReverse
 
 def paVolume(pn, pressure, note, *z):
     pn.playingvolume(True, pressure)
 
 def paChoke(pn, pressure, note, *z):
-    # perhaps we should be testing on=127 or >64 ... feedback needed...
+    # perhaps we should be testing on =127 or >64 ... feedback needed...
     pn.fadeout(False)
     gv.playingnotes[note] = []
     gv.triggernotes[note] = 128  # housekeeping

@@ -27,6 +27,7 @@ msleep = lambda x: time.sleep(x/1000.0)
 client   	= 14
 port    	= 0
 gv.smfseqs	= {}
+gv.smfnames	= []
 gv.currsmf	= 0
 gv.smftempo	= 240
 streamtempo	= 240
@@ -276,6 +277,7 @@ def load(line,dirname, fname, smfseq, gain, voicemap):
 						d="%swith instruments %s" %(c,sorted(drums))
 					print (" - %d='%s'%s%s %s%s" %(key+1,value[0],p,s,l,d))
 			gv.smfseqs[smfseq]=[fname,stream.resolution,events,voices,voicemap,sorted(drums)]
+			gv.smfnames.append([smfseq,song])
 		except:
 			print("SMFplayer: error reading %s in %s" %(fname,dirname))
 
@@ -293,6 +295,7 @@ def drumlist():
 	for i in sorted (drums.keys()):
 		print (" - %d in %s" %(i,drums[i]))
 
+''' Currently unused coding
 def seqlist():
 	# returns [smfseq#, songname, voicemap, [channel#, channelname, [used_voices]], [used percussionsounds] ]
 	smflist=[]
@@ -305,6 +308,7 @@ def seqlist():
 				used.append([ value[3][i][0]+1, value[3][i][1][0], value[3][i][1][2] ])
 		smflist.append([key, song, value[4], used, value[5] ])
 	return(smflist)
+'''
 
 # ----------------------------------------------------------------------
 #		P L A Y E R		T H R E A D

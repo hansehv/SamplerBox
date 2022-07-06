@@ -5,44 +5,52 @@
 <LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
 <script SRC="SamplerBox.API" TYPE="text/javascript"></script>
 <script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+
 <script>
-var auto=getURLparm('auto');
-if (!auto){
-	auto=getCookie('auto');
-	if (auto=='') auto="No"
-};
-var ticks=getURLparm('ticks');
-if (!ticks){
-	ticks=getCookie('ticks');
-	if (ticks=='') ticks=1.5;
-};
-var ticker;
-function refreshWithURLparms(){
-	SB_Refresh('ticks',ticks,'auto',auto);
-};
-function start(){
-	ticker=setInterval(refreshWithURLparms, 1000*ticks);
-	document.getElementById('playbutton').innerHTML='<BUTTON TYPE="button" onclick="stop();">Pause AutoRefresh</BUTTON>';
-	auto="yes"
-	setCookie('auto', auto)
-};
-function stop(){
-	window.clearTimeout(ticker)
-	document.getElementById('playbutton').innerHTML='<BUTTON TYPE="button" onclick="start();">Start AutoRefresh</BUTTON>';
-	auto="no"
-	setCookie('auto', auto)
-};
-function change(){
-	var sel=document.getElementById('set-ticks');
-	ticks=sel.options[sel.selectedIndex].value;
-	setCookie('ticks', ticks);
-};
+	var LCDborder = 2;
+	var LCDpad = 10;
+	var LCDspace = 5;
+	var LCDwidth = 350;
+
+	var auto=getURLparm('auto');
+	if (!auto){
+		auto=getCookie('auto');
+		if (auto=='') auto="No"
+	};
+	var ticks=getURLparm('ticks');
+	if (!ticks){
+		ticks=getCookie('ticks');
+		if (ticks=='') ticks=1.5;
+	};
+	var ticker;
+
+	function refreshWithURLparms(){
+		SB_Refresh('ticks',ticks,'auto',auto);
+	};
+	function start(){
+		ticker=setInterval(refreshWithURLparms, 1000*ticks);
+		document.getElementById('playbutton').innerHTML='<BUTTON TYPE="button" onclick="stop();">Pause AutoRefresh</BUTTON>';
+		auto="yes"
+		setCookie('auto', auto)
+	};
+	function stop(){
+		window.clearTimeout(ticker)
+		document.getElementById('playbutton').innerHTML='<BUTTON TYPE="button" onclick="start();">Start AutoRefresh</BUTTON>';
+		auto="no"
+		setCookie('auto', auto)
+	};
+	function change(){
+		var sel=document.getElementById('set-ticks');
+		ticks=sel.options[sel.selectedIndex].value;
+		setCookie('ticks', ticks);
+	};
 </script>
+
 </HEAD>
 <BODY>
 
 <TABLE WIDTH="100%"><TR>
-<TD width="1"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Home</BUTTON></TD>
+<TD width="1"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Dashboard</BUTTON></TD>
 <TD ALIGN="center"><B>LCD Menu</B></TD>
 <TD width="250">
 	<BUTTON TYPE="button" onclick="refreshWithURLparms();">Refresh</BUTTON>
@@ -51,20 +59,22 @@ function change(){
 </TR></TABLE>
 
 <div ID="elem_SB_LCDdisplay"></div>
+
 <FORM ID="elem_SB_Form">
 <div ID="input_SB_Button" STYLE="text-align:center;"></div>
 </FORM>
+
 <P>
 <div STYLE="text-align:center;">
 <span ID="playbutton" STYLE="text-align:center;"></span>
  &nbsp; <SELECT id="set-ticks" SIZE="1" onchange="change();">
 	 <script>
-		 values=[1,1.5,2,3,5];
-		 html="";
-		 for(var i=0;i<values.length;i++){
-			 s="";
-			 if (values[i]==ticks) s=" selected";
-			 document.write("<OPTION VALUE="+values[i]+s+">"+values[i]+"</OPTION>")
+		values=[1,1.5,2,3,5];
+		html="";
+		for(var i=0;i<values.length;i++){
+			s="";
+			if (values[i]==ticks) s=" selected";
+			document.write("<OPTION VALUE="+values[i]+s+">"+values[i]+"</OPTION>")
 		}
 	 </script>
  </SELECT>

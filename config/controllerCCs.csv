@@ -1,8 +1,8 @@
 Controller,CC,Val,Comments
+# ChannelAfterTouch,auto,-1,Automatically added when CHANNEL_AFTERTOUCH is set in configuration
+# PolyAfterTouch,auto,-2,Automatically added when POLYPHONIC_AFTERTOUCH is set in configuration
 ,,,
 #,,,"Standard stuff, suggest to leave as is"
-# ChannelAfterTouch,auto,-1,Automatically added when CHANNEL_AFTERTOUCH is set in configuration
-# PolyAfterTouch,auto,-1,Automatically added when POLYPHONIC_AFTERTOUCH is set in configuration
 ModWheel,1,-1,# Standard controller is 1
 Volume,7,-1,# Standard controller is 7
 Sustain,64,-1,# Standard controller is 64
