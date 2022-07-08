@@ -1,23 +1,26 @@
-<!DOCTYPE html><HTML><HEAD><meta charset="UTF-8">
-	<TITLE>Set Definition</TITLE>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html><HTML><HEAD>
 <meta http-equiv="Content-Script-Type" content="text/javascript">
-<LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
 <script SRC="SamplerBox.API" TYPE="text/javascript"></script>
 <script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+<script>htmlheader("DefinitionTxt");</script>
 </HEAD>
 <BODY>
 
 <FORM ID="elem_SB_Form">
+
+<span style="line-height:100%;">
 <TABLE WIDTH="100%"><TR>
-<TD width="125"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Dashboard</BUTTON></TD>
+<TD width="125"><script>navbutton("index","Dashboard");</script></TD>
 <TD ALIGN="center"><B>definition.txt</B></TD>
 <TD ALIGN="center">
+	<script>navbutton("FXpresets","FXpresets");</script>
 	<BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON>
 	<span ID="input_SB_RenewMedia">New USB</span>
 	</TD>
 </TR></TABLE>
-<span ID="input_SB_Preset">Preset: </span>
+</span>
+
+<span ID="input_SB_Preset">SampleSet: </span>
  &nbsp; &nbsp; <BUTTON TYPE="submit">Save Text</BUTTON>
 <BR>
 <span ID="input_SB_DefinitionTxt"></span>

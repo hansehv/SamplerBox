@@ -85,13 +85,14 @@ Syntax of menu.csv (for buttons, both GPIO and midi):
 -----------------------------------------------------------------------------------
 Syntax of FXpresets.csv:
 - Headings!
-- Column1=Parameter: name of the parameter defined here
+- Column1=Preset name
   The presets for the available controls=effects and are set here "in a global fashion", so
   this is "the system default" and MUST contain all parameters as it is the initialization.
   The presetname is fixed to "Box".
   Definitions in the sample set directories only have to contain the parameters necessary
   for your purpose. The sample set default is then identified with "Set".
   The combination of Box+Set is the active default of the set called "Default".
-- Column2=Value: preset value
-- Column3=Comment: gives accepted values and other info
+- Column2=Parameter: name of the parameter defined here
+- Column3=Value: preset value
+- Column4=Comment: gives accepted values and other info
  

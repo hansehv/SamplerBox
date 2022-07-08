@@ -1,16 +1,13 @@
-<!DOCTYPE html><HTML><HEAD><meta charset="UTF-8">
-<BR><TITLE>BuildingBlocks</TITLE>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html><HTML><HEAD>
 <meta http-equiv="Content-Script-Type" content="text/javascript">
-<LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
+<script SRC="SamplerBox.API" TYPE="text/javascript"></script>
+<script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+<script>htmlheader("BuildingBlocks");</script>
 </HEAD>
 <BODY>
 
-<TABLE WIDTH="100%"><TR>
-<TD width="125"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Dashboard</BUTTON></TD>
-<TD ALIGN="center"><B>Building Blocks</B></TD>
-<TD ALIGN="center"><BUTTON TYPE="button" onclick='window.location.assign("readme.html");'>back to Readme</BUTTON></TD>
-</TR></TABLE>
+<span ID="header"></span><script>header("readme", "back to Readme");</script>
+
 <style>
 TD {padding: 2px 5px;}
 TD:first-of-type {
