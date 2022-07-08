@@ -58,6 +58,19 @@ var SB_variables={	// make sure all passed I/O parameters are covered here
 	v_SB_cm_sav: function(val){SB_cm_sav=val;},
 	v_SB_cm_assign: function(val){SB_cm_assign=val;},
 	v_SB_cm_reset: function(val){SB_cm_reset=val;},
+	v_SB_fxp_LFO: function(val){SB_fxp_LFO=val;},
+	v_SB_fxp_chorus: function(val){SB_fxp_chorus=val;},
+	v_SB_fxp_reverb: function(val){SB_fxp_reverb=val;},
+	v_SB_fxp_autowah: function(val){SB_fxp_autowah=val;},
+	v_SB_fxp_delay: function(val){SB_fxp_delay=val;},
+	v_SB_fxp_moog: function(val){SB_fxp_moog=val;},
+	v_SB_fxp_overdrive: function(val){SB_fxp_overdrive=val;},
+	v_SB_fxp_limiter: function(val){SB_fxp_limiter=val;},
+	v_SB_fxp_arp: function(val){SB_fxp_arp=val;},
+	v_SB_fxp_autochord: function(val){SB_fxp_autochord=val;},
+	v_SB_fxp_aftertouch: function(val){SB_fxp_aftertouch=val;},
+	v_SB_fxp_name: function(val){SB_fxp_name=val;},
+	v_SB_fxp_save: function(val){SB_fxp_save=val;},
 	v_SB_Scale: function(val){SB_Scale=val;},
 	v_SB_Chord: function(val){SB_Chord=val;},
 	v_SB_FVtype: function(val){SB_FVtype=val;},
@@ -251,6 +264,46 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 	},
 	input_SB_cm_assign: function(input_name,name,val,text){
 		return(SB_radioselect(input_name,name,val,text,SB_cm_assign_levs,1,1));
+	},
+	input_SB_fxp_LFO: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+	},
+	input_SB_fxp_chorus: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+	},
+	input_SB_fxp_reverb: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+	},
+	input_SB_fxp_autowah: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+	},
+	input_SB_fxp_delay: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+	},
+	input_SB_fxp_moog: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+	},
+	input_SB_fxp_overdrive: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+	},
+	input_SB_fxp_limiter: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+	},
+	input_SB_fxp_arp: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+	},
+	input_SB_fxp_autochord: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+	},
+	input_SB_fxp_aftertouch: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+	},
+	input_SB_fxp_name: function(input_name,name,val,text){
+		return(text+'<INPUT type="text" size="25" name="'+name+'" value="'+val+'" onchange=SB_Submit()</INPUT>');
+		//return(text+'<INPUT type="text" size="25" name="'+name+'" value="'+val+'" pattern="[A-Za-z0-9],_\ -" title="Invalid character found"</INPUT>');
+	},
+	input_SB_fxp_save: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
 	},
 	input_SB_SoundVolume: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,100,1));
@@ -477,7 +530,8 @@ SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_Voice","e
 			"elem_SB_Aftertouchdc","elem_SB_Aftertouchdp","elem_SB_AftertouchPairs",
 			"elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales",
 			"elem_SB_Notemap","elem_SB_CCmap","elem_SB_cm_current","elem_SB_cm_controlmode",
-			"elem_SB_bTracks","elem_SB_IPlist","elem_SB_Wireless","elem_SB_MIDIdevs","elem_SB_LCDdisplay"];
+			"elem_SB_bTracks","elem_SB_IPlist","elem_SB_Wireless","elem_SB_MIDIdevs",
+			"elem_SB_LCDdisplay"];
 SB_numelems=SB_ElemID.length;
 var SB_element={
 	elem_SB_Form: function(elem_name){
@@ -857,16 +911,49 @@ function SB_Refresh(){	// gets the page again without resending any form values
         qstr+=sep+arguments[i]+'='+arguments[i+1];
         sep="&";
     }
-    console.log(qstr)
 	window.location.assign(window.location.pathname+qstr);
 }
 function SB_Submit(){
 	document.getElementById("elem_SB_Form").submit();
 }
 
-// -----------------------------------------------------------------
-// Next functions are not part of the API but useful in some screens
-// -----------------------------------------------------------------
+// -------------------------------------------------------------------
+// Next functions are not part of the API but useful in (some) screens
+// -------------------------------------------------------------------
+
+let SB_tabname = "SamplerBox";
+function htmlheader(tabname) {
+	SB_tabname = tabname;
+	html = '<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
+	html += '<TITLE>' + tabname + '</TITLE>';
+	html += '<LINK REL="stylesheet" TYPE="text/css" HREF="' + SB_CSSname + '">';
+	document.write( html );
+	return;
+}
+
+function header() {
+	html = '<TABLE WIDTH="100%"><TR><TD width="125">';
+	html += navbutton( "index", "Dashboard", 1 );
+	html += '</TD><TD ALIGN="center"><B>' + SB_tabname + '</B></TD><TD ALIGN="center">';
+	for (var i = 0; i < arguments.length; i+=2) {
+		html += navbutton( arguments[i], arguments[i+1], 1 ) + " ";
+		}
+	html += '<BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON>' +
+			'</TD></TR></TABLE>';
+	document.getElementById("header").innerHTML = html;
+	return;
+}
+
+function navbutton(screen, text) {
+	html = '<BUTTON TYPE="button" onclick=\'window.location.assign("' +
+			screen + '.html");\'>' + text + '</BUTTON>';
+	if (arguments.length == 2) {
+		document.write(html);
+	}
+	else {
+		return html;
+	}
+}
 
 function setCookie(cname, cvalue, exhours=4) {
 	var d = new Date();

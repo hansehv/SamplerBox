@@ -116,7 +116,8 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 				return
 		if "SB_FXpreset" in fields:
 			specials.append("FXpreset")
-			if ( UI.FXpreset(int(fields["SB_FXpreset"][0])) != "None" ):
+			FXset = UI.FXpreset()
+			if ( UI.FXpreset(int(fields["SB_FXpreset"][0])) not in ["None", FXset] ):
 				self.do_GET()   # answer the browser
 				return
 

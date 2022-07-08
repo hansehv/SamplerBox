@@ -90,7 +90,7 @@ def controls(ifile):
 	sheet=readcsv(ifile)
 	for i in range( len(sheet) ):
 		if len(sheet[i])>3:	 # skip useless lines
-			control = sheet[i][2] if sheet[i][1]=='Fixed' else sheet[i][1]
+			control = sheet[i][2] if sheet[i][1] in ['Fixed','Dummy'] else sheet[i][1]
 			x = gp.getindex(control,gv.MC)
 			if x < 0:
 				print ( "%s: Control %s not defined, ignored %s" %(ifile,sheet[i][2],sheet[i]) )
@@ -368,13 +368,12 @@ def menu(ifile):
 	menu.init()
 	return 
 
-FXpresets_box = {}
+gv.FXpresets_box = {}
 gv.FXpresets = {}
 def FXpresets(ifile, override=False):
 	# FXpresets: [Presetname, Parameter, Value]
-	global FXpresets_box
 	if override:
-		gv.FXpresets = copy.deepcopy( FXpresets_box )
+		gv.FXpresets = copy.deepcopy( gv.FXpresets_box )
 	try:
 		sheet = readcsv( ifile, 100 )
 		for i in range( len(sheet) ):
@@ -410,7 +409,7 @@ def FXpresets(ifile, override=False):
 	for key in gv.FXpresets.keys():
 		gv.FXpresetnames.append(key)
 	if not override:
-		FXpresets_box = copy.deepcopy( gv.FXpresets )
+		gv.FXpresets_box = copy.deepcopy( gv.FXpresets )
 		gv.FXpreset_last="None"
 	return 
 

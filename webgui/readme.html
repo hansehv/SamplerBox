@@ -1,17 +1,12 @@
-<!DOCTYPE html><HTML><HEAD><meta charset="UTF-8">
-	<TITLE>Readme/Examples</TITLE>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html><HTML><HEAD>
 <meta http-equiv="Content-Script-Type" content="text/javascript">
-<LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
 <script SRC="SamplerBox.API" TYPE="text/javascript"></script>
 <script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+<script>htmlheader("ReadMe");</script>
 </HEAD>
 <BODY>
-<TABLE WIDTH="100%"><TR>
-<TD width="125"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Dashboard</BUTTON></TD>
-<TD ALIGN="center"><B>Readme</B></TD>
-<TD ALIGN="center">
-</TR></TABLE>
+
+<span ID="header"></span><script>header();</script>
 
 <HR><H3>Introduction:</H3><HR>
 <A HREF="webdocs/index.html">This copy of the website</A> gives overall information.
@@ -55,7 +50,6 @@ It can viewed at by simply displaying source in your webbrowser.
 <span ID="input_SB_SoundVolume">DAC volume:</span>
 <span ID="input_SB_MidiVolume">Midi volume:</span>
 <span ID="input_SB_Gain">Gain:</span>
-<span ID="input_SB_Pitchrange">Pitchrange:</span>
 <BR><span ID="input_SB_DefinitionTxt">Definition file:</span><BR>
 <BUTTON TYPE="reset">Reset</BUTTON> &nbsp; 
 <BUTTON TYPE="submit">Submit</BUTTON> &nbsp; 

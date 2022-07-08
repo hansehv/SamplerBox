@@ -13,11 +13,12 @@ Feb-June 2022:
   - Lifted "127" restriction on %release and %xfadein/out
   - Added %pan parameter for positioning mono samples
   - Added CCmap editing in GUI (editing module can be used in/for other UI's).
+  - Added FXpresets editing in GUI (editing module can be used in/for other UI's).
   - Added rotate parameter for OLED displays
-  - Fixed bug in notemapping screen ("Ctrl" and "None" showed as "None" and "0")
   - Changed web "LCD"screen & building block to accommodate other skins.
   - Renamed remap.py to UI_notemap.py
-  - Bug fixes & lots of code cosmetics/cleanups
+  - Lots of bug fixes
+  - Lots of code cosmetics/cleanups
 Jan-Feb 2022:
   - Cosmetic change on the LCDmenu webgui screen.
   - Code cosmetics

@@ -14,11 +14,13 @@
 
 import re
 import gv,gp
-import UI_notemap,UI_CCmap
+import UI_notemap,UI_CCmap,UI_FXpresets
 import arp,chorus,Cpp,LFO,network
-if gv.AFTERTOUCH:
+if gv.AFTOUCH_ON:
 	import AfterTouch
 import menu as butmenu
+
+OffOn = ["Off", "On"]
 
 # #######################################
 #        Writable variables
@@ -77,7 +79,7 @@ def Voice(val=None):						# index of Voicelist (or actual "voice#" if not numeri
 def FXpreset(val=None):						# active effects preset, name in FXpresets
 	try:
 		if val!=None:
-			gp.setFXpresets(val)
+			UI_FXpresets.setpreset(val)
 		return gv.FXpreset_last
 	except:
 		return "None"
@@ -339,7 +341,7 @@ def DLYmin(val=None):						# 5-25
 	try:
 		if val!=None:
 			if val>=5 and val<=25:
-				Cpp.DLYsetmin(5.36*(val-5))
+				Cpp.DLYsetmin(6.36*(val-5))
 		return Cpp.DLYmin
 	except:
 		return 5
@@ -632,7 +634,7 @@ def MidiChannel(val=None):					# 1-16
 	except: return 1
 
 def CHAFreverse(val=None):					# boolean, or "N*" / "*"
-	if gv.AFTERTOUCH:
+	if gv.AFTOUCH_ON:
 		try:
 			if val!=None:
 				AfterTouch.chanReverse=gp.parseBoolean(val)
@@ -641,7 +643,7 @@ def CHAFreverse(val=None):					# boolean, or "N*" / "*"
 			pass
 	return 0
 def PAFreverse(val=None):					# boolean, or "N*" / "*"
-	if gv.AFTERTOUCH:
+	if gv.AFTOUCH_ON:
 		try:
 			if val!=None:
 				AfterTouch.pafReverse=gp.parseBoolean(val)
@@ -650,7 +652,7 @@ def PAFreverse(val=None):					# boolean, or "N*" / "*"
 			pass
 	return 0
 def PAFpitchrange(val=None):						# 1-12
-	if gv.AFTERTOUCH:
+	if gv.AFTOUCH_ON:
 		try:
 			if val!=None:
 				if val>=1 and val<=12:
@@ -660,7 +662,7 @@ def PAFpitchrange(val=None):						# 1-12
 			pass
 	return 2
 def PAFpanwidth(val=None):							# 0-10 5=center
-	if gv.AFTERTOUCH:
+	if gv.AFTOUCH_ON:
 		try:
 			if val!=None:
 				if val>=0 and val<=10:
@@ -725,8 +727,8 @@ def MenuDisplay(*z):				# [line1,line2, ..] lines of the characterdisplay of the
 	try: return [butmenu.line1(),butmenu.line2(),butmenu.line3()]
 	except: return ["No menu defined",""]
 
-IP=network.IP
-IPlist=network.IPlist
+IP = network.IP
+IPlist = network.IPlist
 def Wireless(*z):
 	try:
 		return network.wireless()
@@ -758,7 +760,7 @@ def MIDIdev(val=None):				# Pseudo update to serve the button menu system
 	except: return "Error"
 
 def AfterTouchd(*z):				#  Details of aftertouch support
-	if gv.AFTERTOUCH:
+	if gv.AFTOUCH_ON:
 		chan = 1 if gv.CHAN_AFTOUCH else 0
 		poly = 1 if gv.POLY_AFTOUCH else 0
 		return [chan, AfterTouch.chanproc, poly, AfterTouch.polyproc]
@@ -766,7 +768,7 @@ def AfterTouchd(*z):				#  Details of aftertouch support
 		return [0, "", 0, ""]
 def AfterTouchPairs(*z):			# Notepairs of current voice
 	pairs = []
-	if gv.AFTERTOUCH:
+	if gv.AFTOUCH_ON:
 		if gv.currvoice in AfterTouch.notepairs:
 			for m in AfterTouch.notepairs[gv.currvoice]:
 				pairs.append([m, AfterTouch.notepairs[gv.currvoice][m] ])
@@ -804,8 +806,6 @@ def DLYtypes(*z):					# Effects implemented via the Delay line filter
 	return Cpp.DLYtypes
 def AWtypes(*z):					# Wah types implemented via the AutoWah filter
 	return Cpp.AWtypes
-def DLYtypes(*z):					# Effects implemented via the echo/faser filter
-	return Cpp.DLYtypes
 def LFtypes(*z):					# Effects implemented via the Moog low-pass filter
 	return Cpp.LFtypes
 def ODtypes(*z):					# Effects implemented via Overdrive effect
@@ -817,16 +817,18 @@ def LFOtypes(*z):					# Effects implemented via the Low Frequency Oscillator
 def CHOtypes(*z):					# Effects implemented via Chorus
 	return chorus.effects
 def AfterTouchSup(*z):				# Is aftertouch supported according configuration.txt ?
-	return gv.AFTERTOUCH
+	return gv.AFTOUCH_ON
 def CCfamilies(*z):					# Controller groups/families
 	return gv.CCfamilies
 def CCmodes(*z):					# Control mode/function
 	return gv.MCmodenames
 def Buttons(*z):					# Buttons supported by button menu
 	return butmenu.buttons
+def CSSname(*z):					# webGUI "skin"
+	return("SamplerBox.css")
 
 # #######################################################
-#       Linked-to procedures in other modules
+#       Functionalities split off in sub UI-modules
 # #######################################################
 
 # notemap I-O fields
@@ -868,6 +870,21 @@ cm_ctrlrnames = UI_CCmap.ctrlrnames		# mappable Controller names
 cm_setctrlnames = UI_CCmap.setnames
 cm_setvaltabs = UI_CCmap.setvaltabs
 
+# FXpresets I-O fields
+fxp_LFO = UI_FXpresets.LFO				# Buttons/booleans to set the scope of saving
+fxp_chorus = UI_FXpresets.chorus
+fxp_reverb = UI_FXpresets.reverb
+fxp_autowah = UI_FXpresets.autowah
+fxp_delay = UI_FXpresets.delay
+fxp_moog = UI_FXpresets.ladder
+fxp_overdrive = UI_FXpresets.overdrive
+fxp_limiter = UI_FXpresets.limiter
+fxp_arp = UI_FXpresets.arp
+fxp_autochord = UI_FXpresets.autochord
+fxp_aftertouch = UI_FXpresets.aftertouch
+fxp_name = UI_FXpresets.setname			# Preset name to save
+fxp_save = UI_FXpresets.save			# boolean, requesting save preset if True
+
 # #################################################################################
 #                         = = = = =   D I C T I O N A R Y   = = = = =
 # #################################################################################
@@ -897,10 +914,12 @@ cm_setvaltabs = UI_CCmap.setvaltabs
 #    if filled, its value is processed; the user facing procedure should perform error checking
 #    if input contains errors, the proc tries to finish somehow, preferably without changing SB's status
 #  - if procedure is called with the underlying feature not enabled, a default value is returned
-#    this will ofcourse happen in display routines starting in early init stage, where features may NOT YET be enabled :-)
+#    this will ofcourse happen in display routines starting in early init stage,
+#                                          where features may NOT YET be enabled :-)
 # Third element (optional):
-#  - Alias = human readable text, used in the configuration files (e.g. the effects.csv)
-#  - After definition an extra dictionary is created below with this third element as key and the procedure as data
+#  - Alias = human readable text, used in the configuration files (e.g. the FXpresets.csv)
+#  - After definition an extra dictionary is created below
+#    with this third element as key and the procedure as data
 
 procs={
 	"RenewMedia":["w",RenewMedia],	# boolean, True indicates "preset load in progress",
@@ -931,75 +950,88 @@ procs={
 	"cm_reset":["w",cm_reset],						# boolean, requesting rebuild voice-ccmap if True
 	"cm_sav":["w",cm_sav],							# boolean, requesting save voice-ccmap if True
 	"cm_assign":["w",cm_assign],					# assign values to current CCmap
-	"Scale":["w",Scale,gv.SCALES],					# index of ScaleName (& ScaleChord)
-	"Chord":["w",Chord,gv.CHORDS],					# index of Chordname
+	"fxp_LFO":["w",fxp_LFO],						# Buttons/booleans to set the scope of saving
+	"fxp_chorus":["w",fxp_chorus],					#  "
+	"fxp_reverb":["w",fxp_reverb],					#  "
+	"fxp_autowah":["w",fxp_autowah],				#  "
+	"fxp_delay":["w",fxp_delay],					#  "
+	"fxp_moog":["w",fxp_moog],						#  "
+	"fxp_overdrive":["w",fxp_overdrive],			#  "
+	"fxp_limiter":["w",fxp_limiter],				#  "
+	"fxp_arp":["w",fxp_arp],						#  "
+	"fxp_autochord":["w",fxp_autochord],			#  "
+	"fxp_aftertouch":["w",fxp_aftertouch],			#  "
+	"fxp_name":["w",fxp_name],						# Preset name to save
+	"fxp_save":["w",fxp_save],						# boolean, requesting save preset if True
 	"SoundVolume":["w",SoundVolume],				# 0-100
 	"MidiVolume":["w",MidiVolume],					# 0-100
-	"Gain":["w",Gain],								# 0-300 (100 is neutral
-	"Pitchrange":["w",Pitchrange,gv.PITCHSENS],		# 0-12 (so max 1 octave up & down)
-	"FVtype":["w",FVtype,gv.REVERB],				# (integer) index or (string) of value in FVtypes
-	"FVroomsize":["w",FVroomsize,gv.REVERBROOM],	# 0-100
-	"FVdamp":["w",FVdamp,gv.REVERBDAMP],			# 0-100
-	"FVlevel":["w",FVlevel,gv.REVERBLVL],			# 0-100
-	"FVwidth":["w",FVwidth,gv.REVERBWIDTH],			# 0-100
-	"AWtype":["w",AWtype,gv.AUTOWAH],				# (integer) index or (string) of value in AWtypes
-	"AWmixing":["w",AWmixing,gv.AUTOWAHLVL],		# 0-100
-	"AWattack":["w",AWattack,gv.AUTOWAHATTACK],		# 0-500
-	"AWrelease":["w",AWrelease,gv.AUTOWAHRELEASE],	# 0-500
-	"AWminfreq":["w",AWminfreq,gv.AUTOWAHMIN],		# 20-500
-	"AWmaxfreq":["w",AWmaxfreq,gv.AUTOWAHMAX],		# 1000-10000
-	"AWqfactor":["w",AWqfactor,gv.AUTOWAHQ],		# 0-100
-	"AWspeed":["w",AWspeed,gv.AUTOWAHSPEED],		# 100-1100
-	"AWlvlrange":["w",AWlvlrange,gv.AUTOWAHLVLRNGE],# 0-100
-	"DLYtype":["w",DLYtype,gv.DELAYTYPE],			# (integer) index or (string) of value in DLYtypes
-	"DLYfb":["w",DLYfb,gv.DELAYFB],					# 0-100
-	"DLYwet":["w",DLYwet,gv.DELAYFW],				# 0-100
-	"DLYdry":["w",DLYdry,gv.DELAYMIX],				# 0-100
-	"DLYtime":["w",DLYtime,gv.DELAYTIME],			# 1000-61000
-	"DLYsteep":["w",DLYsteep,gv.DELAYSTEEP],		# 1-11
-	"DLYsteplen":["w",DLYsteplen,gv.DELAYSTEPLEN],	# 300-3300
-	"DLYmin":["w",DLYmin,gv.DELAYMIN],				# 5-25
-	"DLYmax":["w",DLYmax,gv.DELAYMAX],				# 50-150
-	"LFtype":["w",LFtype,gv.LADDER],				# (integer) index or (string) of value in LFtypes
-	"LFresonance":["w",LFresonance,gv.LADDERRES],	# 0-38
-	"LFcutoff":["w",LFcutoff,gv.LADDERCUTOFF],		# 1000-11000	
-	"LFdrive":["w",LFdrive,gv.LADDERDRIVE],			# 1-20
-	"LFlvl":["w",LFlvl,gv.LADDERLVL],				# 0-100
-	"LFgain":["w",LFgain,gv.LADDERGAIN],			# 10-110, Carefully test before using values above 50
-	"ODtype":["w",ODtype,gv.OVERDRIVE],				# (integer) index or (string) of value in ODtypes
-	"ODboost":["w",ODboost,gv.ODRVBOOST],			# 15-65
-	"ODdrive":["w",ODdrive,gv.ODRVDRIVE],			# 1-11
-	"ODtone":["w",ODtone,gv.ODRVTONE],				# 0-95 (accepts up to 100)
-	"ODmix":["w",ODmix,gv.ODRVMIX],					# 0-10 (10=100% wet)
-	"PLtype":["w",PLtype,gv.LIMITER],				# (integer) index or (string) of value in PLtypes
-	"PLthresh":["w",PLthresh,gv.LIMITTHRESH],		# 70-110
-	"PLattack":["w",PLattack,gv.LIMITATTACK],		# 1-11
-	"PLrelease":["w",PLrelease,gv.LIMITRELEASE],	# 1-11
-	"LFOtype":["w",LFOtype,gv.LFOTYPE],				# (integer) index or (string) of value in LFOtypes
-	"VIBRpitch":["w",VIBRpitch,gv.VIBRDEPTH],		# 1-64
-	"VIBRspeed":["w",VIBRspeed,gv.VIBRSPEED],		# 1-32	
-	"VIBRtrill":["w",VIBRtrill,gv.VIBRTRILL],		# boolean
-	"TREMampl":["w",TREMampl,gv.TREMDEPTH],			# 1-100
-	"TREMspeed":["w",TREMspeed,gv.TREMSPEED],		# 1-32
-	"TREMtrill":["w",TREMtrill,gv.TREMTRILL],		# boolean
-	"PANwidth":["w",PANwidth,gv.PANWIDTH],			# 2-20
-	"PANspeed":["w",PANspeed,gv.PANSPEED],			# 1-32
-	"ARPeggiator":["w",ARPpower,arp.power],			# boolean
-	"ARPord":["w",ARPord,gv.ARP],					# (integer) index or (string) of value in ARPordlist
-	"ARPstep":["w",ARPstep,gv.ARPTEMPO],			# 10-100
-	"ARPsustain":["w",ARPsustain,gv.ARPSUSTAIN],	# 0-100
-	"ARPloop":["w",ARPloop,gv.ARPLOOP],				# boolean
-	"ARP2end":["w",ARP2end,gv.ARP2END],				# boolean
-	"ARPfade":["w",ARPfade,gv.ARPFADE],				# 0-100 (100 means "no fadeout")
-	"CHOrus":["w",CHOrus,gv.CHORUS],				# (integer) index or (string) of value in CHOeffects
-	"CHOdepth":["w",CHOdepth,gv.CHORUSDEPTH],		# 2-15
-	"CHOgain":["w",CHOgain,gv.CHORUSGAIN],			# 30-80
 	"MidiChannel":["w",MidiChannel],				# 1-16
-	"CHAFreverse":["w",CHAFreverse,gv.CHAFREVERS],	# boolean (0-1)
-	"PAFreverse":["w",PAFreverse,gv.PAFREVERS],		# boolean (0-1)
-	"PAFpitchrange":["w",PAFpitchrange,gv.PAFPITCHRANGE],	# 1-12 (semitones, up&down, so max 1 octave total)
-	"PAFpanwidth":["w",PAFpanwidth,gv.PAFPANWIDTH],	# 0-10 5=center
 	"Button":["w",Button],							# index of Buttons, where 0 has no function (no button touched)
+	"Gain":["w",Gain],								# 0-300 (100 is neutral
+	"Scale":["w",Scale,gv.SCALES,gv.chordname],			# index of ScaleName (& ScaleChord)
+	"Chord":["w",Chord,gv.CHORDS,gv.scalename],			# index of Chordname
+	"Pitchrange":["w",Pitchrange,gv.PITCHSENS,"int"],	# 0-12 (so max 1 octave up & down)
+	"FVtype":["w",FVtype,gv.REVERB,Cpp.FVtypes],		# (integer) index or (string) of value in FVtypes
+	"FVroomsize":["w",FVroomsize,gv.REVERBROOM,"int"],	# 0-100
+	"FVdamp":["w",FVdamp,gv.REVERBDAMP,"int"],			# 0-100
+	"FVlevel":["w",FVlevel,gv.REVERBLVL,"int"],			# 0-100
+	"FVwidth":["w",FVwidth,gv.REVERBWIDTH,"int"],		# 0-100
+	"AWtype":["w",AWtype,gv.AUTOWAHTYPE,Cpp.AWtypes],	# (integer) index or (string) of value in AWtypes
+	"AWmixing":["w",AWmixing,gv.AUTOWAHLVL,"int"],		# 0-100
+	"AWattack":["w",AWattack,gv.AUTOWAHATTACK,"int"],	# 0-500
+	"AWrelease":["w",AWrelease,gv.AUTOWAHRELEASE,"int"],# 0-500
+	"AWminfreq":["w",AWminfreq,gv.AUTOWAHMIN,"int"],	# 20-500
+	"AWmaxfreq":["w",AWmaxfreq,gv.AUTOWAHMAX,"int"],	# 1000-10000
+	"AWqfactor":["w",AWqfactor,gv.AUTOWAHQ,"int"],		# 0-100
+	"AWspeed":["w",AWspeed,gv.AUTOWAHSPEED,"int"],		# 100-1100
+	"AWlvlrange":["w",AWlvlrange,gv.AUTOWAHLVLRNGE,"int"], # 0-100
+	"DLYtype":["w",DLYtype,gv.DELAYTYPE,Cpp.DLYtypes],	# (integer) index or (string) of value in DLYtypes
+	"DLYfb":["w",DLYfb,gv.DELAYFB,"int"],				# 0-100
+	"DLYwet":["w",DLYwet,gv.DELAYFW,"int"],				# 0-100
+	"DLYdry":["w",DLYdry,gv.DELAYMIX,"int"],			# 0-100
+	"DLYtime":["w",DLYtime,gv.DELAYTIME,"int"],			# 1000-61000
+	"DLYsteep":["w",DLYsteep,gv.DELAYSTEEP,"int"],		# 1-11
+	"DLYsteplen":["w",DLYsteplen,gv.DELAYSTEPLEN,"int"],# 300-3300
+	"DLYmin":["w",DLYmin,gv.DELAYMIN,"int"],			# 5-25
+	"DLYmax":["w",DLYmax,gv.DELAYMAX,"int"],			# 50-150
+	"LFtype":["w",LFtype,gv.LADDER,Cpp.LFtypes],		# (integer) index or (string) of value in LFtypes
+	"LFresonance":["w",LFresonance,gv.LADDERRES,"int"],	# 0-38
+	"LFcutoff":["w",LFcutoff,gv.LADDERCUTOFF,"int"],	# 1000-11000	
+	"LFdrive":["w",LFdrive,gv.LADDERDRIVE,"int"],		# 1-20
+	"LFlvl":["w",LFlvl,gv.LADDERLVL,"int"],				# 0-100
+	"LFgain":["w",LFgain,gv.LADDERGAIN,"int"],			# 10-110, Carefully test before using values above 50
+	"ODtype":["w",ODtype,gv.OVERDRIVE,Cpp.ODtypes],		# (integer) index or (string) of value in ODtypes
+	"ODboost":["w",ODboost,gv.ODRVBOOST,"int"],			# 15-65
+	"ODdrive":["w",ODdrive,gv.ODRVDRIVE,"int"],			# 1-11
+	"ODtone":["w",ODtone,gv.ODRVTONE,"int"],			# 0-95 (accepts up to 100)
+	"ODmix":["w",ODmix,gv.ODRVMIX,"int"],				# 0-10 (10=100% wet)
+	"PLtype":["w",PLtype,gv.LIMITER,Cpp.PLtypes],		# (integer) index or (string) of value in PLtypes
+	"PLthresh":["w",PLthresh,gv.LIMITTHRESH,"int"],		# 70-110
+	"PLattack":["w",PLattack,gv.LIMITATTACK,"int"],		# 1-11
+	"PLrelease":["w",PLrelease,gv.LIMITRELEASE,"int"],	# 1-11
+	"LFOtype":["w",LFOtype,gv.LFOTYPE,LFO.effects],		# (integer) index or (string) of value in LFOtypes
+	"VIBRpitch":["w",VIBRpitch,gv.VIBRDEPTH,"int"],		# 1-64
+	"VIBRspeed":["w",VIBRspeed,gv.VIBRSPEED,"int"],		# 1-32	
+	"VIBRtrill":["w",VIBRtrill,gv.VIBRTRILL,OffOn],		# boolean
+	"TREMampl":["w",TREMampl,gv.TREMDEPTH,"int"],		# 1-100
+	"TREMspeed":["w",TREMspeed,gv.TREMSPEED,"int"],		# 1-32
+	"TREMtrill":["w",TREMtrill,gv.TREMTRILL,OffOn],		# boolean
+	"PANwidth":["w",PANwidth,gv.PANWIDTH,"int"],		# 2-20
+	"PANspeed":["w",PANspeed,gv.PANSPEED,"int"],		# 1-32
+	"ARPeggiator":["w",ARPpower,arp.power,OffOn],		# boolean
+	"ARPord":["w",ARPord,gv.ARP,arp.modes],				# (integer) index or (string) of value in ARPordlist
+	"ARPstep":["w",ARPstep,gv.ARPTEMPO,"int"],			# 10-100
+	"ARPsustain":["w",ARPsustain,gv.ARPSUSTAIN,"int"],	# 0-100
+	"ARPloop":["w",ARPloop,gv.ARPLOOP,OffOn],			# boolean
+	"ARP2end":["w",ARP2end,gv.ARP2END,OffOn],			# boolean
+	"ARPfade":["w",ARPfade,gv.ARPFADE,"int"],			# 0-100 (100 means "no fadeout")
+	"CHOrus":["w",CHOrus,gv.CHORUS,chorus.effects],		# (integer) index or (string) of value in CHOeffects
+	"CHOdepth":["w",CHOdepth,gv.CHORUSDEPTH,"int"],		# 2-15
+	"CHOgain":["w",CHOgain,gv.CHORUSGAIN,"int"],		# 30-80
+	"CHAFreverse":["w",CHAFreverse,gv.CHAFREVERS,OffOn], # boolean (0-1)
+	"PAFreverse":["w",PAFreverse,gv.PAFREVERS,OffOn],	# boolean (0-1)
+	"PAFpitchrange":["w",PAFpitchrange,gv.PAFPITCHRANGE,"int"],	# 1-12 (semitones, up&down, so max 1 octave total)
+	"PAFpanwidth":["w",PAFpanwidth,gv.PAFPANWIDTH,"int"], # 0-10 5=center
 
 # Readonly variables changing during play (parameters are ignored)
 
@@ -1059,13 +1091,14 @@ procs={
 	"cm_ctrlnames":["f",cm_ctrlnames],		# mappable Control names
 	"cm_ctrlmodes":["f",cm_ctrlmodes],		# index of button mode/function
 	"cm_ctrlrnames":["f",cm_ctrlrnames],	# mappable Controller names
-	"Buttons":["f",Buttons]					# Buttons supported by button menu
+	"Buttons":["f",Buttons],				# Buttons supported by button menu
+	"CSSname":["f",CSSname]					# webGUI "skin"
 	}
 
 gv.procs_alias = {}
 for m in procs:
 	if len(procs[m]) > 2:
-		gv.procs_alias[ procs[m][2] ] = procs[m][1]
+		gv.procs_alias[ procs[m][2] ] = [ procs[m][1], procs[m][3]]
 
 #             = = = = =   Extra procedures and variables linked to via UI   = = = = =
 

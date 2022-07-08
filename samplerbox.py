@@ -78,10 +78,10 @@ def setVoice(x,iv=0,*z):
                 if iv >- 1:   # not map change so mappings can be changed
                     gv.setNotemap( gv.voicelist[xvoice][3] )
                     FXset = gv.voicelist[xvoice][5]
-                    FXset = gp.setFXpresets(FXset)      # when FXset doesn't exist, result will be "None"
-                    gv.FXpreset_last = FXset            # force showing of the FX preset
-                    gp.setCCmap(voice)                  # build CCmap for this voice
-                    if gv.AFTERTOUCH:
+                    FXset = UI.FXpreset(FXset)      # when FXset doesn't exist, result will be "None"
+                    gv.FXpreset_last = FXset        # force showing of the FX preset
+                    gp.setCCmap(voice)              # build CCmap for this voice
+                    if gv.AFTOUCH_ON:
                         AfterTouch.msgFilter()  # filter unused aftertouch signals
                     gv.display("")
                     gv.menu_CCdef()
@@ -134,9 +134,6 @@ CTRLCCS_DEF = "controllerCCs.csv"
 CONTROLS_DEF = "controls.csv"
 KEYNAMES_DEF = "keynotes.csv"
 MENU_DEF = "menu.csv"
-FXPRESETS_DEF = "FXpresets.csv"
-LAYERS_DEF = "layers.csv"
-
 
 ##########  Read LOCAL CONFIG (==> /boot/samplerbox/configuration.txt) for generic use,
 #           reading LOCAL CONFIG can be done elsewhere as well if it's one-time or local/optional.
@@ -149,7 +146,7 @@ USE_HTTP_GUI        = gv.cp.getboolean(gv.cfg,"USE_HTTP_GUI".lower())
 gv.USE_SMFPLAYER    = gv.cp.getboolean(gv.cfg,"USE_SMFPLAYER".lower())
 gv.CHAN_AFTOUCH     = gv.cp.getboolean(gv.cfg,"CHANNEL_AFTERTOUCH".lower())
 gv.POLY_AFTOUCH     = gv.cp.getboolean(gv.cfg,"POLYPHONIC_AFTERTOUCH".lower())
-gv.AFTERTOUCH       = gv.CHAN_AFTOUCH or gv.POLY_AFTOUCH
+gv.AFTOUCH_ON       = gv.CHAN_AFTOUCH or gv.POLY_AFTOUCH
 
 x=gv.cp.get(gv.cfg,"MULTI_TIMBRALS".lower()).split(',')
 gv.MULTI_TIMBRALS={}
@@ -246,7 +243,7 @@ import chorus   # take notice: part of process in midi callback and ARP
 # Aftertouch capabilities (if supported by device),
 # real time enabling is done depending on definitions
 #
-if gv.AFTERTOUCH:
+if gv.AFTOUCH_ON:
     import AfterTouch
 
 # SMFplayer for limited playing and recording standard MIDI files
@@ -270,7 +267,7 @@ gv.CCmapBox = getcsv.CCmap(gv.CONFIG_LOC + gv.CTRLMAP_DEF)
 import audio    # import after effects settings to avoid unassigned pointers.
 UI.USE_ALSA_MIXER=audio.USE_ALSA_MIXER
 
-getcsv.FXpresets(gv.CONFIG_LOC + FXPRESETS_DEF)
+getcsv.FXpresets(gv.CONFIG_LOC + gv.FXPRESETS_DEF)
 
 ############################################################
 ##  SLIGHT MODIFICATION OF PYTHON'S WAVE MODULE
@@ -1182,9 +1179,10 @@ def ActuallyLoad():
     getcsv.notemap(os.path.join(dirname, gv.NOTEMAP_DEF))
     gv.CCmapSet=getcsv.CCmap(os.path.join(dirname, gv.CTRLMAP_DEF), True)
     getcsv.MTchannelmap(os.path.join(dirname, gv.VOICEMAP_DEF))
-    getcsv.FXpresets(os.path.join(dirname, FXPRESETS_DEF), True)
-    gp.setFXpresets("Default")
-    getcsv.layers( os.path.join(dirname, LAYERS_DEF) )
+    getcsv.FXpresets(os.path.join(dirname, gv.FXPRESETS_DEF), True)
+    UI.FXpreset("None")     # Force the default preset to load in next ststement
+    UI.FXpreset("Default")
+    getcsv.layers( os.path.join(dirname, gv.LAYERS_DEF) )
 
     definitionfname = os.path.join(dirname, gv.SAMPLESDEF)
     if os.path.isfile(definitionfname):
@@ -1630,12 +1628,6 @@ def ActuallyLoad():
     gv.midi_mute = midi_mute    # restore mute status
 
 #########################################
-##  LOAD FIRST SOUNDBANK
-#########################################
-
-LoadSamples()
-
-#########################################
 ##      O P T I O N A L S
 ##  - BUTTONS via GPIO
 ##  - WebGUI thread
@@ -1669,11 +1661,13 @@ except:
 
 #########################################
 ##  Consolidate all controls
+##  LOAD FIRST SOUNDBANK
 #########################################
 
 getcsv.controls(gv.CONFIG_LOC + CONTROLS_DEF)
 UI.cm_setctrlnames()
 UI.cm_setvaltabs()
+LoadSamples()
 
 #########################################
 ##  MIDI devices detection

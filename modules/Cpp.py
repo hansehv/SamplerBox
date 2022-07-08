@@ -21,12 +21,6 @@ c_filters = cdll.LoadLibrary('./filters/interface.so')
 #
 #   O V E R A L L    R O U T I N E S
 #
-REVERB = "Reverb"
-WAH = "Wah"
-DELAY = "Delay"
-MOOG = "Moog"
-OVERDRIVE = "Overdrive"
-LIMITER = "Limiter"
 
 def ResetAll(scope=-1):
     FVreset(scope)
@@ -92,7 +86,7 @@ def FVsetType(x,*z):
     global FVtype
     c_filters.fvmute()
     FVtype=x
-    seteffect(REVERB, x)
+    seteffect(gv.REVERB, x)
 def FVsetReverb(*z):
     global FVtype
     if FVtype==1: FVsetType(0)
@@ -180,7 +174,7 @@ def AWsetType(x,*z):         # 0,1,2,3 = off,envelope,LFO,CC
     c_filters.awmute()
     c_filters.awsetWahType(x)
     AWtype=x
-    seteffect(WAH, x)
+    seteffect(gv.AUTOWAH, x)
 def AWtoggle(x):
     global AWtype
     if AWtype==x: AWsetType(0)
@@ -268,7 +262,7 @@ def DLYsetType(x,*z):
     if x==1: c_filters.dlysetmix(DLYdry)
     if x==2: c_filters.dlysetmix(1-DLYwet)
     DLYtype=x
-    seteffect(DELAY, x)
+    seteffect(gv.DELAY, x)
 def DLYsetEcho(*z):      # in Hz, should be same as audiovalue
     global DLYtype
     if DLYtype==1: DLYsetType(0)
@@ -353,7 +347,7 @@ def LFsetType(x,*z):
     global LFtype
     c_filters.lfmute()
     LFtype=x
-    seteffect(MOOG, x)
+    seteffect(gv.LADDER, x)
 def LFsetLadder(*z):
     global LFtype
     if LFtype==1: LFsetType(0)
@@ -418,7 +412,7 @@ ODtype=1
 def ODsetType(x,*z):
     global ODtype
     ODtype=x
-    seteffect(OVERDRIVE, x)
+    seteffect(gv.OVERDRIVE, x)
 def ODsetOverdrive(*z):
     global ODtype
     if ODtype==1: ODsetType(0)
@@ -476,7 +470,7 @@ def PLsetType(x,*z):
     global PLtype
     c_filters.plinit()
     PLtype=x
-    seteffect(LIMITER, x)
+    seteffect(gv.LIMITER, x)
 def LFsetLimiter(*z):
     global PLtype
     if PLtype==1: PLsetType(0)
@@ -506,7 +500,7 @@ def PLreset(scope=-1):
         #    load sample set default
         #else:                   # system default
     PLsetType(PLtype)
-gv.setMC(gv.LIMITER,LFsetLimiter)      # announce to CCmap
+gv.setMC(gv.gv.LIMITER,LFsetLimiter)      # announce to CCmap
 gv.setMC(gv.LIMITTHRESH,PLsetThresh)
 gv.setMC(gv.LIMITATTACK,PLsetAttack)
 gv.setMC(gv.LIMITRELEASE,PLsetRelease)
@@ -514,12 +508,12 @@ gv.setMC(gv.LIMITRELEASE,PLsetRelease)
 #
 #   = = =   I N I T I A L I Z E   = = =
 #
-effects = { REVERB: [5, 0, c_filters.reverb, FVsetType],
-            WAH: [3 , 0, c_filters.autowah, PLsetType],
-            DELAY: [4 , 0, c_filters.delay, DLYsetType],
-            MOOG: [2 , 0, c_filters.moog, LFsetType],
-            OVERDRIVE: [1 , 0, c_filters.overdrive, ODsetType],
-            LIMITER: [6 , 0, c_filters.limiter, PLsetType]
+effects = { gv.REVERB: [5, 0, c_filters.reverb, FVsetType],
+            gv.AUTOWAH: [3 , 0, c_filters.autowah, PLsetType],
+            gv.DELAY: [4 , 0, c_filters.delay, DLYsetType],
+            gv.LADDER: [2 , 0, c_filters.moog, LFsetType],
+            gv.OVERDRIVE: [1 , 0, c_filters.overdrive, ODsetType],
+            gv.LIMITER: [6 , 0, c_filters.limiter, PLsetType]
         }
 active = []
 

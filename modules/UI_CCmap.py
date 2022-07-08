@@ -52,13 +52,13 @@ def setvaltabs():
 		if gv.btracklist[i][0]>0:
 			btracklist.append([ gv.btracklist[i][0], gv.btracklist[i][1] ])
 	valtabs = {
-			'Chords': [gv.chordname, 1],		# name (starting "")
-			'Scales': [gv.scalename, 1],		# name (starting "")
-			'Voices': [voicelist, 2],			# voice#, name
-			'BackTracks': [btracklist, 2],		# track#, name
-			'SMFs': [gv.smfnames, 2],			# seq#, (file)name
-			'Notemaps': [notemaps, 1],			# name (starting "None")
-			'FXpresets': [gv.FXpresetnames, 1]	# name (starting "None")
+			gv.CHORDS: [gv.chordname, 1],		# name (starting "")
+			gv.SCALES: [gv.scalename, 1],		# name (starting "")
+			gv.VOICES: [voicelist, 2],			# voice#, name
+			gv.BACKTRACKS: [btracklist, 2],		# track#, name
+			gv.SMFS: [gv.smfnames, 2],			# seq#, (file)name
+			gv.NOTEMAPS: [notemaps, 1],			# name (starting "None")
+			gv.FXPRESETS: [gv.FXpresetnames, 1]	# name (starting "None")
 		};
 
 def setnames():

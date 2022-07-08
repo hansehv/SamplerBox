@@ -1,20 +1,12 @@
-<!DOCTYPE html><HTML><HEAD><meta charset="UTF-8">
-	<TITLE>Wah</TITLE>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html><HTML><HEAD>
 <meta http-equiv="Content-Script-Type" content="text/javascript">
-<LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
 <script SRC="SamplerBox.API" TYPE="text/javascript"></script>
 <script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+<script>htmlheader("Wah");</script>
 </HEAD>
 <BODY>
 
-<TABLE WIDTH="100%"><TR>
-<TD width="125"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Dashboard</BUTTON></TD>
-<TD ALIGN="center"><B>Wah</B></TD>
-<TD ALIGN="center">
-	<BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON>
-	</TD>
-</TR></TABLE>
+<span ID="header"></span><script>header("FXpresets","Presets");</script>
 
 <FORM ID="elem_SB_Form">
 <span ID="input_SB_AWtype">&nbsp; &nbsp; &nbsp;</span>
