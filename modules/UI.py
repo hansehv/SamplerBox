@@ -884,6 +884,8 @@ fxp_autochord = UI_FXpresets.autochord
 fxp_aftertouch = UI_FXpresets.aftertouch
 fxp_name = UI_FXpresets.setname			# Preset name to save
 fxp_save = UI_FXpresets.save			# boolean, requesting save preset if True
+# not in dict, called via dedicated submit button
+fxp_resetscope = UI_FXpresets.defaults4sav
 
 # #################################################################################
 #                         = = = = =   D I C T I O N A R Y   = = = = =

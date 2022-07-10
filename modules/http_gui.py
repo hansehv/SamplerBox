@@ -120,6 +120,10 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 			if ( UI.FXpreset(int(fields["SB_FXpreset"][0])) not in ["None", FXset] ):
 				self.do_GET()   # answer the browser
 				return
+		if "SB_fxp_resetscope" in fields:
+			UI.fxp_resetscope(True)
+			self.do_GET()   # answer the browser
+			return
 
 		mapchange=False
 		if "SB_Notemap" in fields:

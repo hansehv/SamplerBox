@@ -9,10 +9,14 @@
 <span ID="header"></span><script>header("definition","SampleSet");</script>
 
 <FORM ID="elem_SB_Form" STYLE="line-height:300%;">
-	<P><span ID="input_SB_FXpreset">Last selected: </span>
-	<BR>
-	&nbsp;Settings applying to this preset / to be saved:
-	<BR>
+	<DIV style="line-height:200%;">
+		<span ID="input_SB_FXpreset">&nbsp;Last selected:</span>
+		<BR>
+		&nbsp;Settings applying to this preset / to be saved
+		<BR>
+		<button name="SB_fxp_resetscope" type="submit" value="1">Set all to "No"</button>
+		&nbsp;or select:<BR>
+	</DIV>
 	<script>navbutton("autochord","Autochord&nbsp;");</script>
 	 &nbsp; <span ID="input_SB_fxp_autochord"></span>
 	<BR>
@@ -47,12 +51,15 @@
 	 &nbsp; <span ID="input_SB_fxp_aftertouch"></span>
 	<BR>
 	<DIV style="line-height:100%;">
-	&nbsp;Presetname to use (no name => no save !):
-	<BR><span ID="input_SB_fxp_name" ></span>
-	<BUTTON TYPE="submit">Enter</BUTTON>
-	<BR>Press "Enter" after typing a name in above box.
-	<BR><span ID="input_SB_fxp_save">&nbsp;Save preset ? </span>
+		&nbsp;Presetname to use (no name => no save !):
+		<BR><span ID="input_SB_fxp_name" ></span>
+		<BUTTON TYPE="submit">Enter</BUTTON>
+		<BR>&nbsp;Press "Enter" after typing a name in above box.
 	</DIV>
+	<span ID="input_SB_fxp_save">&nbsp;Save preset ? </span>
+	<BR>
+	&nbsp;Saving with all selects set to "No" deletes the preset.
+	
 </FORM>
 
 <script>SB_Update();</script>
