@@ -68,13 +68,15 @@ def setpreset(val, *z):
 	return FXset
 gv.setMC(gv.FXPRESETS,setpreset)
 
-def defaults4sav():
+def defaults4sav(resetall=False):
 	'''
 	- gv.FXpreset[gv.FXpreset_last][control] => gv.MC[control][3] = family
 	- any definition causes savit[family] to be True
 	'''
 	for control in savit:
 		savit[control] = False
+	if resetall:
+		return
 	if gv.FXpreset_last not in ["None","Default"]:
 		for mc in gv.MC:
 			if len(mc) > 3:
@@ -173,6 +175,10 @@ def save(val=False):
 		'''
 		if len( gv.FXpresets[presetname] ) == 0:
 			del gv.FXpresets[presetname]
+			if presetname in gv.FXpresetnames:
+				gv.FXpresetnames.remove(presetname)
+		elif presetname not in gv.FXpresetnames:
+			gv.FXpresetnames.append(presetname)
 		'''
 		Now save the stuff,
 		while skipping "Default" entries duplicating the system default ("BOX")
@@ -195,4 +201,5 @@ def save(val=False):
 									)
 								)
 		gp.samples2read()
+		setpreset(presetname)
 	return False
