@@ -58,6 +58,7 @@ var SB_variables={	// make sure all passed I/O parameters are covered here
 	v_SB_cm_sav: function(val){SB_cm_sav=val;},
 	v_SB_cm_assign: function(val){SB_cm_assign=val;},
 	v_SB_cm_reset: function(val){SB_cm_reset=val;},
+	v_SB_fxp_resetscope: function(val){SB_fxp_resetscope=val;},
 	v_SB_fxp_LFO: function(val){SB_fxp_LFO=val;},
 	v_SB_fxp_chorus: function(val){SB_fxp_chorus=val;},
 	v_SB_fxp_reverb: function(val){SB_fxp_reverb=val;},
@@ -265,6 +266,9 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 	input_SB_cm_assign: function(input_name,name,val,text){
 		return(SB_radioselect(input_name,name,val,text,SB_cm_assign_levs,1,1));
 	},
+	input_SB_fxp_resetscope: function(input_name,name,val,text){
+		return(SB_valbutton(input_name,name,1,text));
+	},
 	input_SB_fxp_LFO: function(input_name,name,val,text){
 		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
 	},
@@ -300,10 +304,9 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 	},
 	input_SB_fxp_name: function(input_name,name,val,text){
 		return(text+'<INPUT type="text" size="25" name="'+name+'" value="'+val+'" onchange=SB_Submit()</INPUT>');
-		//return(text+'<INPUT type="text" size="25" name="'+name+'" value="'+val+'" pattern="[A-Za-z0-9],_\ -" title="Invalid character found"</INPUT>');
 	},
 	input_SB_fxp_save: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+		return(SB_valbutton(input_name,name,1,text));
 	},
 	input_SB_SoundVolume: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,100,1));
@@ -772,6 +775,10 @@ var SB_element={
 }
 
 // Subroutines
+
+function SB_valbutton(input_name,name,val,text){
+	return('<button name="'+name+'" type="submit" value="'+val+'">'+text+'</button>');
+}
 
 function SB_slider(input_name,name,val,min,max,step){
 	return('<INPUT ID="'+input_name+'_r" name="'+name+'" TYPE="range" VALUE="'+val+'" min="'+min+'" max="'+max+

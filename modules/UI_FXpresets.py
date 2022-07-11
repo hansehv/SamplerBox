@@ -58,7 +58,7 @@ def setpreset(val, *z):
 	elif (FXset != gv.FXpreset_last):
 		if FXset in gv.FXpresetnames:
 			gv.FXpreset_last = FXset
-			defaults4sav()	# this the 1st reason for defining the "setpreset" proc in here
+			defaults4sav(False)	# this the 1st reason for defining the "setpreset" proc in here
 			if gv.FXpreset_last != "None":
 				for effect in gv.FXpresets[FXset]:
 					gv.procs_alias[ effect ][0]( gv.FXpresets[FXset][effect] )
@@ -68,20 +68,22 @@ def setpreset(val, *z):
 	return FXset
 gv.setMC(gv.FXPRESETS,setpreset)
 
-def defaults4sav(resetall=False):
+def defaults4sav(resetall=None):
 	'''
 	- gv.FXpreset[gv.FXpreset_last][control] => gv.MC[control][3] = family
 	- any definition causes savit[family] to be True
 	'''
-	for control in savit:
-		savit[control] = False
-	if resetall:
-		return
-	if gv.FXpreset_last not in ["None","Default"]:
-		for mc in gv.MC:
-			if len(mc) > 3:
-				if mc[0] in gv.FXpresets[gv.FXpreset_last]:
-					savit[ gv.CCfamilies[mc[3]] ] = True
+	if resetall != None:
+		for control in savit:
+			savit[control] = False
+		if gp.parseBoolean(resetall):
+			return
+		if gv.FXpreset_last not in ["None","Default"]:
+			for mc in gv.MC:
+				if len(mc) > 3:
+					if mc[0] in gv.FXpresets[gv.FXpreset_last]:
+						savit[ gv.CCfamilies[mc[3]] ] = True
+	return 0
 
 def LFO(val=None):
 	global savit
@@ -202,4 +204,4 @@ def save(val=False):
 								)
 		gp.samples2read()
 		setpreset(presetname)
-	return False
+	return 0

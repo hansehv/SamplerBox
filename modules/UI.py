@@ -871,6 +871,7 @@ cm_setctrlnames = UI_CCmap.setnames
 cm_setvaltabs = UI_CCmap.setvaltabs
 
 # FXpresets I-O fields
+fxp_resetscope = UI_FXpresets.defaults4sav # reset all booleans below
 fxp_LFO = UI_FXpresets.LFO				# Buttons/booleans to set the scope of saving
 fxp_chorus = UI_FXpresets.chorus
 fxp_reverb = UI_FXpresets.reverb
@@ -884,8 +885,6 @@ fxp_autochord = UI_FXpresets.autochord
 fxp_aftertouch = UI_FXpresets.aftertouch
 fxp_name = UI_FXpresets.setname			# Preset name to save
 fxp_save = UI_FXpresets.save			# boolean, requesting save preset if True
-# not in dict, called via dedicated submit button
-fxp_resetscope = UI_FXpresets.defaults4sav
 
 # #################################################################################
 #                         = = = = =   D I C T I O N A R Y   = = = = =
@@ -952,6 +951,7 @@ procs={
 	"cm_reset":["w",cm_reset],						# boolean, requesting rebuild voice-ccmap if True
 	"cm_sav":["w",cm_sav],							# boolean, requesting save voice-ccmap if True
 	"cm_assign":["w",cm_assign],					# assign values to current CCmap
+	"fxp_resetscope":["w",fxp_resetscope],			# reset all booleans below
 	"fxp_LFO":["w",fxp_LFO],						# Buttons/booleans to set the scope of saving
 	"fxp_chorus":["w",fxp_chorus],					#  "
 	"fxp_reverb":["w",fxp_reverb],					#  "
