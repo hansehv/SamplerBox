@@ -1,16 +1,13 @@
-<!DOCTYPE html><HTML><HEAD><meta charset="UTF-8">
-<BR><TITLE>BuildingBlocks</TITLE>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html><HTML><HEAD>
 <meta http-equiv="Content-Script-Type" content="text/javascript">
-<LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
+<script SRC="SamplerBox.API" TYPE="text/javascript"></script>
+<script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+<script>htmlheader("BuildingBlocks");</script>
 </HEAD>
 <BODY>
 
-<TABLE WIDTH="100%"><TR>
-<TD width="125"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Dashboard</BUTTON></TD>
-<TD ALIGN="center"><B>Building Blocks</B></TD>
-<TD ALIGN="center"><BUTTON TYPE="button" onclick='window.location.assign("readme.html");'>back to Readme</BUTTON></TD>
-</TR></TABLE>
+<span ID="header"></span><script>header("readme", "back to Readme");</script>
+
 <style>
 TD {padding: 2px 5px;}
 TD:first-of-type {
@@ -34,7 +31,6 @@ General / miscellaneous
     <BR>input_SB_MIDIdev
     <BR>input_SB_Button
     <BR>input_SB_DefinitionTxt
-    <BR>input_SB_FXpreset
     <BR>input_SB_MidiChannel
     <BR>input_SB_Pitchrange
     <BR>input_SB_Preset
@@ -169,6 +165,23 @@ Aftertouch:<BR>Channel and PolyPhonic
     <BR>input_SB_PAFreverse
     <BR>input_SB_PAFpitchrange
     <BR>input_SB_PAFpanwidth
+</TD></TR><TR><TD>
+Effects presets:<BR>Select and manage FXpresets
+</TD><TD>input_SB_FXpreset
+    <BR>input_SB_fxp_aftertouch
+    <BR>input_SB_fxp_arp
+    <BR>input_SB_fxp_autochord
+    <BR>input_SB_fxp_autowah
+    <BR>input_SB_fxp_chorus
+    <BR>input_SB_fxp_delay
+    <BR>input_SB_fxp_LFO
+    <BR>input_SB_fxp_limiter
+    <BR>input_SB_fxp_moog
+    <BR>input_SB_fxp_name
+    <BR>input_SB_fxp_overdrive
+    <BR>input_SB_fxp_resetscope
+    <BR>input_SB_fxp_reverb
+    <BR>input_SB_fxp_save
 </TD></TR></TABLE>
 
 </BODY>

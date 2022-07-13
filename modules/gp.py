@@ -66,7 +66,9 @@ def parseBoolean(val):
 			val+=0		# is it an integer (~=boolean) ? (Integers !=0 are True)
 		except:			# text is True unless starting with: Of(f), N(one), F(alse)
 			if str(val)[0:2].title()=="Of" or str(val)[0].upper()=="N" or str(val)[0].upper()=="F":
-				return False
+				val = False
+			else:
+				val = True
 	return val
 
 def getvirtualCC():
@@ -92,30 +94,3 @@ def setCCmap(voice):
 					continue
 			if not found:
 				gv.CCmap.append( copy.deepcopy( gv.CCmapSet[i] ) )		# else add entry
-
-def setFXpresets(val, *z):
-	FXset = val
-	try:
-		val =( int(val) ) # isinstance(val,int) doesn't work correctly here :-(
-		try:
-			FXset = gv.FXpresetnames[val]
-		except:
-			FXset = gv.FXpresetnames[0]
-		idx = getindex(FXset,gv.FXpresetnames,True)
-		if idx < 0:
-			idx = 0
-			FXset = gv.FXpresetnames[idx]
-	except:
-		pass
-	if FXset in ["",gv.FXpreset_last]:
-		gv.FXpreset_last = gv.FXpresetnames[0]
-	else:
-		if FXset in gv.FXpresetnames:
-			gv.FXpreset_last = FXset
-			for effect in gv.FXpresets[FXset]:
-				gv.procs_alias[ effect ]( gv.FXpresets[FXset][effect] )
-		else:
-			print ("Effect %s is unspecified, ignored" %FXset)
-	return FXset
-gv.setMC(gv.FXPRESETS,setFXpresets)
-

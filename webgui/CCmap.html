@@ -1,29 +1,20 @@
-<!DOCTYPE html><HTML><HEAD><meta charset="UTF-8">
-	<TITLE>CCmap</TITLE>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html><HTML><HEAD>
 <meta http-equiv="Content-Script-Type" content="text/javascript">
-<LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
 <script SRC="SamplerBox.API" TYPE="text/javascript"></script>
 <script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+<script>htmlheader("CCmap");</script>
 </HEAD>
 <BODY>
 
-<TABLE WIDTH="100%"><TR>
-	<TD width="125"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Dashboard</BUTTON></TD>
-	<TD ALIGN="center"><B>CCmap</B></TD>
-	<TD ALIGN="center">
-		<BUTTON TYPE="button" onclick='window.location.assign("notemap.html");'>Notemapping</BUTTON>
-		<BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON>
-	</TD>
-</TR></TABLE>
+<span ID="header"></span><script>header("notemap", "Notemapping");</script>
 
 <FORM ID="elem_SB_Form" STYLE="line-height:300%;">
 	<TABLE border="0" cellpadding="5"><TR>
 		<TD VALIGN="top">
 			<div ID="elem_SB_Voice">Voice: </div>
 
-			<BUTTON TYPE="button" onclick='window.location.assign("notemap.html");'>
-			&nbsp;Notemap &nbsp;</BUTTON> &nbsp; <span ID="input_SB_Notemap"></span>
+			<script>navbutton("notemap","Notemap");</script>
+			<span ID="input_SB_Notemap"></span>
 
 			<BR><BR>
 			<div ID="input_SB_cm_family">Controlgroup: </div>
@@ -32,10 +23,11 @@
 			<BR>
 			<div ID="input_SB_cm_controlr">Controller: &nbsp; &nbsp; &nbsp;</div>
 			<div ID="input_SB_cm_controlval">Sets value: &nbsp; &nbsp; </div>
-			<BR>
 			<div ID="input_SB_cm_assign">Assign this controller in: </div>
-			<div ID="input_SB_cm_reset">Reset values to last save: </div>
-			<div ID="input_SB_cm_sav">Save this voice&apos;s CCmap: </div>
+			<BR>
+			&nbsp;<span ID="input_SB_cm_reset">Reset values to last save</span>
+			<BR>
+			&nbsp;<span ID="input_SB_cm_sav">&nbsp;Save this voice&apos;s CCmap&nbsp;</span>
 			<div STYLE="line-height:100%;">
 				Unsaved changes are lost on voice change, preset change and poweroff
 			</div>

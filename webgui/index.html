@@ -1,86 +1,86 @@
-<META NAME="Generator" CONTENT="Stone's WebWriter 3.5">
-<!DOCTYPE html><HTML><HEAD><meta charset="UTF-8">
-<!-- Minus AutoDato -->
-	<TITLE>SamplerBox</TITLE>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html><HTML><HEAD>
 <meta http-equiv="Content-Script-Type" content="text/javascript">
-<LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
 <script SRC="SamplerBox.API" TYPE="text/javascript"></script>
 <script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+<script>htmlheader("Dashboard");</script>
 </HEAD>
 <BODY>
 
 <FORM ID="elem_SB_Form">
 
+<span style="line-height:100%;">
 <TABLE WIDTH="100%"><TR>
 <TD WIDTH="80"><IMG SRC="SamplerBox.gif" BORDER="0" WIDTH="80" HEIGHT="27" ALIGN="middle" ALT=""></TD>
 <TD ALIGN="center">
 	<BUTTON TYPE="button" onclick="SB_Refresh();">Refresh</BUTTON>
 	<span ID="input_SB_RenewMedia">New USB</span>
-	<BUTTON TYPE="button" onclick='window.location.assign("lcdmenu.html");'>LCD Menu</BUTTON>
+	<script>navbutton("lcdmenu","LCD Menu");</script>
 	</TD>
 </TR></TABLE>
+</span>
 
-<BUTTON TYPE="button" onclick='window.location.assign("definition.html");'>Preset</BUTTON> &nbsp; <span ID="input_SB_Preset"></span>
+<script>navbutton("definition","SampleSet");</script> &nbsp; <span ID="input_SB_Preset"></span>
 <BR>
 <span ID="input_SB_Voice">Voice: </span>
 <span ID="elem_SB_Mode"></span><span ID="elem_SB_xvoice"> FX:</span>
 <BR>
-<BUTTON TYPE="button" onclick='window.location.assign("notemap.html");'>&nbsp; Notemap &nbsp;</BUTTON>
+<script>navbutton("notemap","&nbsp; Notemap &nbsp;");</script>
  &nbsp; <span ID="input_SB_Notemap"></span>
 <BR>
-<BUTTON TYPE="button">&nbsp;FXpreset &nbsp;</BUTTON>
+<script>navbutton("FXpresets","&nbsp;FXpreset &nbsp;");</script>
  &nbsp; <span ID="input_SB_FXpreset"></span>
 <BR>
-<BUTTON TYPE="button" onclick='window.location.assign("autochord.html");'  >Scale/Chord</BUTTON>
+<script>navbutton("autochord","Scale/Chord");</script>
  &nbsp; <span ID="input_SB_Scale"></span>
 <span ID="input_SB_Chord">/ </span>
 <BR>
-<BUTTON TYPE="button" onclick='window.location.assign("arpeggiator.html");'>Arpeggio&nbsp;</BUTTON>
+<script>navbutton("arpeggiator","Arpeggio&nbsp;");</script>
  &nbsp; <span ID="input_SB_ARPord"></span>
 <BR>
-<BUTTON TYPE="button" onclick='window.location.assign("chorus.html");'>&nbsp;Chorus &nbsp;</BUTTON>
+<script>navbutton("chorus","&nbsp;Chorus &nbsp;");</script>
  &nbsp; <span ID="input_SB_CHOrus"></span>
 <BR>
-<BUTTON TYPE="button" onclick='window.location.assign("modulate.html");'>Modulate&nbsp;</BUTTON>
+<script>navbutton("modulate","Modulate&nbsp;");</script>
  &nbsp; <span ID="input_SB_LFOtype"></span>
 <BR>
-<BUTTON TYPE="button" onclick='window.location.assign("overdrive.html");'>OverDrive</BUTTON>
+<script>navbutton("overdrive","OverDrive");</script>
  &nbsp; <span ID="input_SB_ODtype"></span>
 <BR>
-<BUTTON TYPE="button" onclick='window.location.assign("moog.html");'>&nbsp; Moog &nbsp;&nbsp;</BUTTON>
+<script>navbutton("moog","&nbsp; Moog &nbsp;&nbsp;");</script>
  &nbsp; <span ID="input_SB_LFtype"></span>
 <BR>
-<BUTTON TYPE="button" onclick='window.location.assign("delay.html");'>&nbsp; Delay &nbsp;</BUTTON>
+<script>navbutton("delay","&nbsp; Delay &nbsp;");</script>
  &nbsp; <span ID="input_SB_DLYtype"></span>
 <BR>
-<BUTTON TYPE="button" onclick='window.location.assign("wah.html");'>&nbsp;Wah-Wah&nbsp;</BUTTON>
+<script>navbutton("wah","&nbsp;Wah-Wah&nbsp;");</script>
  &nbsp; <span ID="input_SB_AWtype"></span>
 <BR>
-<BUTTON TYPE="button" onclick='window.location.assign("reverb.html");'>&nbsp;Reverb &nbsp;</BUTTON>
+<script>navbutton("reverb","&nbsp;Reverb &nbsp;");</script>
  &nbsp; <span ID="input_SB_FVtype"></span>
 <BR>
-<BUTTON TYPE="button" onclick='window.location.assign("limiter.html");'>&nbsp;Limiter&nbsp;</BUTTON>
+<script>navbutton("limiter","&nbsp;Limiter&nbsp;");</script>
  &nbsp; <span ID="input_SB_PLtype"></span>
 <span ID="aftertouch_button"></span>
 <BR>
-<BUTTON TYPE="button" onclick='window.location.assign("CCmap.html");'>&nbsp; CCmap &nbsp;</BUTTON>
+<script>navbutton("CCmap","&nbsp; CCmap &nbsp;");</script>
  &nbsp; <span ID="input_SB_FVtype"></span>
 <BR>
 <span ID="input_SB_SoundVolume">Line volume :</span>
 <BR>
 <span ID="input_SB_MidiChannel">Midi channel: </span>
+
+</FORM>
+
 <TABLE cellpadding=10><TR><TD ID="elem_SB_bTracks"></TD></TR></TABLE>
 
-<BUTTON TYPE="button" onclick='window.location.assign("readme.html");'>Read Me</BUTTON>
+<script>navbutton("readme","Read Me");</script>
 &nbsp;
-<BUTTON TYPE="button" onclick='window.location.assign("webdocs/index.html");'>Full Docs</BUTTON>
-</FORM>
+<script>navbutton("webdocs/index","Full Docs");</script>
 
 <script>
 	SB_Update();
 	if (SB_AfterTouchSup==1) {
-		html=`<BR><BUTTON TYPE="button" onclick='window.location.assign("aftertouch.html");'>Aftertouch</BUTTON> &nbsp;`;
+		html='<BR>' + navbutton("aftertouch", "Aftertouch", 1) + ' &nbsp;';
 		a="";
 		if (SB_AfterTouchd[0]==1) {
 			html =  html+"Channel";

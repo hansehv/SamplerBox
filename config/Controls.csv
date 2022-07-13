@@ -9,25 +9,26 @@ Miscellaneous,Fixed,ProgramDown,Switch,# Not needed when standard Program down b
 Miscellaneous,Fixed,PitchWheel,Continuous,# Not needed when standard pitchwheel present
 Miscellaneous,Fixed,PitchSens,Continuous,# Range of the pitchwheel
 Miscellaneous,Fixed,Volume,Continuous,
-Sustain / Damp,Fixed,Sustain,Continuous,"# Pedal: Sustain. Pedal functions are complex to mix, so preferably use only one"
-Sustain / Damp,Fixed,Damp,Continuous,# Pedal: Damp all (conventional damp)
-Sustain / Damp,Fixed,DampNew,Continuous,"# Pedal: Damp only new notes,  a kind of pizzicato effect"
-Sustain / Damp,Fixed,DampLast,Continuous,# Pedal: Notes played during pedal press are damped on pedal release
+Sustain/Damp,Fixed,Sustain,Continuous,"# Pedal: Sustain. Pedal functions are complex to mix, so preferably use only one"
+Sustain/Damp,Fixed,Damp,Continuous,# Pedal: Damp all (conventional damp)
+Sustain/Damp,Fixed,DampNew,Continuous,"# Pedal: Damp only new notes,  a kind of pizzicato effect"
+Sustain/Damp,Fixed,DampLast,Continuous,# Pedal: Notes played during pedal press are damped on pedal release
 ,,,,
 "## LFO effects: vibrato, tremolo, panning and rotate ##",,,,
-Oscillators,Fixed,Rotate,Toggle,
-Oscillators,Fixed,Vibrato,Toggle,
-Oscillators,Fixed,Tremolo,Toggle,
-Oscillators,Fixed,Panning,Toggle,
-Oscillators,Fixed,LFOspeed,Continuous,
-Oscillators,Fixed,VibrDepth,Continuous,
-Oscillators,Fixed,VibrSpeed,Continuous,#Can be set with LFOspeed
-Oscillators,Fixed,VibrTrill,Toggle,
-Oscillators,Fixed,TremDepth,Continuous,
-Oscillators,Fixed,TremSpeed,Continuous,#Can be set with LFOspeed
-Oscillators,Fixed,TremTrill,Toggle,
-Oscillators,Fixed,PanSpeed,Continuous,
-Oscillators,Fixed,PanWidth,Continuous,#Can be set with LFOspeed
+Oscillate,Dummy,LFOtype,NoController,
+Oscillate,Fixed,Rotate,Toggle,
+Oscillate,Fixed,Vibrato,Toggle,
+Oscillate,Fixed,Tremolo,Toggle,
+Oscillate,Fixed,Panning,Toggle,
+Oscillate,Fixed,LFOspeed,Continuous,
+Oscillate,Fixed,VibrDepth,Continuous,
+Oscillate,Fixed,VibrSpeed,Continuous,#Can be set with LFOspeed
+Oscillate,Fixed,VibrTrill,Toggle,
+Oscillate,Fixed,TremDepth,Continuous,
+Oscillate,Fixed,TremSpeed,Continuous,#Can be set with LFOspeed
+Oscillate,Fixed,TremTrill,Toggle,
+Oscillate,Fixed,PanSpeed,Continuous,
+Oscillate,Fixed,PanWidth,Continuous,#Can be set with LFOspeed
 ,,,,
 ## Chorus ##,,,,
 Chorus,Fixed,Chorus,Toggle,
@@ -41,39 +42,41 @@ Reverb,Fixed,ReverbRoom,Continuous,
 Reverb,Fixed,ReverbDamp,Continuous,
 Reverb,Fixed,ReverbWidth,Continuous,
 ,,,,
-"## Various WAH effects (wahpedal, autowah, LFO-wah) ##",,,,
-Wah,Fixed,EnvelopeWah,Toggle,# Choose AutoWah
-Wah,Fixed,LFOwah,Toggle,# Choose Oscillator driven Wah
-Wah,Fixed,ManualWah,Toggle,# Choose manual Wah (usually a pedal)
-Wah,Fixed,WahLvl,Continuous,# Wet/dry mix
-Wah,Fixed,WahMin,Continuous,# Minumum of wah filter range
-Wah,Fixed,WahMax,Continuous,# Maximum of wah filter range
-Wah,Fixed,WahQ,Continuous,# Qfactor
-Wah,Fixed,WahAttack,Continuous,# Auto(envelope)wah attack sensitivity
-Wah,Fixed,WahRelease,Continuous,# Auto(envelope)wah release sensitivity
-Wah,Fixed,WahSpeed,Continuous,# LFOwah oscillator speed
-Wah,Fixed,WahLvlRange,Continuous,# LFO and manual/pedal ‚Äústrength‚Äù
-Wah,Fixed,WahPedal,Continuous,# Manual/pedal controller
+"## Various WAH effects (wahpedal, EnvelopeWah, LFO-wah) ##",,,,
+Wah-Wah,Dummy,WahType,NoController,
+Wah-Wah,Fixed,EnvelopeWah,Toggle,# AutoWah
+Wah-Wah,Fixed,LFOwah,Toggle,# Oscillator driven Wah
+Wah-Wah,Fixed,ManualWah,Toggle,# Usually a pedal
+Wah-Wah,Fixed,WahLvl,Continuous,# Wet/dry mix
+Wah-Wah,Fixed,WahMin,Continuous,
+Wah-Wah,Fixed,WahMax,Continuous,
+Wah-Wah,Fixed,WahQ,Continuous,
+Wah-Wah,Fixed,WahAttack,Continuous,# Auto(envelope)wah attack sensitivity
+Wah-Wah,Fixed,WahRelease,Continuous,# Auto(envelope)wah release sensitivity
+Wah-Wah,Fixed,WahSpeed,Continuous,# LFOwah oscillator speed
+Wah-Wah,Fixed,WahLvlRange,Continuous,# LFO and manual/pedal ìstrengthî
+Wah-Wah,Fixed,WahPedal,Continuous,# Manual/pedal controller
 ,,,,
 ## Echo and Flanger (fast echo) ##,,,,
-Echo / Flanger,Fixed,Echo,Toggle,# Choose Echo
-Echo / Flanger,Fixed,Flanger,Toggle,# Choose Flanger
-Echo / Flanger,Fixed,DelayFeedbackVol,Continuous,# Echo + Flanger
-Echo / Flanger,Fixed,DelayWet,Continuous,# Echo + Flanger
-Echo / Flanger,Fixed,DelayDry,Continuous,# Echo
-Echo / Flanger,Fixed,DelayTime,Continuous,# Echo
-Echo / Flanger,Fixed,DelaySteep,Continuous,# Flanger (gradient)
-Echo / Flanger,Fixed,DelaySteplen,Continuous,# Flanger (cyclelen)
-Echo / Flanger,Fixed,DelayMin,Continuous,# Flanger (minimum of flanger range)
-Echo / Flanger,Fixed,DelayMax,Continuous,# Flanger (maximum of flanger range)
+Delay,Dummy,DelayType,NoController,
+Delay,Fixed,Echo,Toggle,
+Delay,Fixed,Flanger,Toggle,
+Delay,Fixed,DelayFeedbackVol,Continuous,# Echo + Flanger
+Delay,Fixed,DelayWet,Continuous,# Echo + Flanger
+Delay,Fixed,DelayDry,Continuous,# Echo
+Delay,Fixed,DelayTime,Continuous,# Echo
+Delay,Fixed,DelaySteep,Continuous,# Flanger (gradient)
+Delay,Fixed,DelaySteplen,Continuous,# Flanger (cyclelen)
+Delay,Fixed,DelayMin,Continuous,# Flanger (minimum of flanger range)
+Delay,Fixed,DelayMax,Continuous,# Flanger (maximum of flanger range)
 ,,,,
 ## Moog low-pass ##,,,,
-Moog low-pass,Fixed,Moog,Toggle,
-Moog low-pass,Fixed,MoogLvl,Continuous,
-Moog low-pass,Fixed,MoogResonance,Continuous,
-Moog low-pass,Fixed,MoogCutoff,Continuous,
-Moog low-pass,Fixed,MoogDrive,Continuous,
-Moog low-pass,Fixed,MoogGain,Continuous,
+Moog,Fixed,Moog,Toggle,
+Moog,Fixed,MoogLvl,Continuous,
+Moog,Fixed,MoogResonance,Continuous,
+Moog,Fixed,MoogCutoff,Continuous,
+Moog,Fixed,MoogDrive,Continuous,
+Moog,Fixed,MoogGain,Continuous,
 ,,,,
 ## Overdrive ##,,,,
 Overdrive,Fixed,Overdrive,Toggle,
@@ -113,19 +116,19 @@ Miscellaneous,Notemaps,<notemap name>,SwitchOn,# Use None or any not existing no
 Miscellaneous,FXpresets,<effect presetname>,SwitchOn,# Names in box+set csv can be chosen
 ,,,,
 ## Midi files player / recorder ##,,,,
-Midi Player,SMFs,<SMFseq number>,Toggle,"# SMF > 0, seq# starts/stops assigned to a sample"
-Midi Player,Fixed,SMFstop,SwitchOff,# Stops playing sample
-Midi Player,Fixed,SMFloop,Toggle,"# Can make sample loop, if so: pressing stop first ""unloop"" and second press stops immediately"
-Midi Player,Fixed,SMFtempo,Continuous,"# unreliable, use on your own risk"
-Midi Player,Fixed,SMFrecstart,SwitchOn,# Starts recording (at first touch of a key / controller)
-Midi Player,Fixed,SMFreccancel,SwitchOff,# Stops recording without saving
-Midi Player,Fixed,SMFrecsave,SwitchOff,# Stops recording and saves the file
+MidiPlayer,SMFs,<SMFseq number>,Toggle,"# SMF > 0, seq# starts/stops assigned to a sample"
+MidiPlayer,Fixed,SMFstop,SwitchOff,# Stops playing sample
+MidiPlayer,Fixed,SMFloop,Toggle,"# Can make sample loop, if so: pressing stop first ""unloop"" and second press stops immediately"
+MidiPlayer,Fixed,SMFtempo,Continuous,"# unreliable, use on your own risk"
+MidiPlayer,Fixed,SMFrecstart,SwitchOn,# Starts recording (at first touch of a key / controller)
+MidiPlayer,Fixed,SMFreccancel,SwitchOff,# Stops recording without saving
+MidiPlayer,Fixed,SMFrecsave,SwitchOff,# Stops recording and saves the file
 ,,,,
 ## Menu buttons assignment ##,,,,
-Menu buttons,Fixed,Menu_Incr,Switch,# The 4-button menu system
-Menu buttons,Fixed,Menu_Decr,Switch,
-Menu buttons,Fixed,Menu_Sel,Switch,
-Menu buttons,Fixed,Menu_Ret,Switch,
+MenuButtons,Fixed,Menu_Incr,Switch,# The 4-button menu system
+MenuButtons,Fixed,Menu_Decr,Switch,
+MenuButtons,Fixed,Menu_Sel,Switch,
+MenuButtons,Fixed,Menu_Ret,Switch,
 ,,,,
 ## Aftertouch effects ##,,,,
 Aftertouch,Fixed,chafReverse,Toggle,# Inverse pressure reading for channel aftertouch

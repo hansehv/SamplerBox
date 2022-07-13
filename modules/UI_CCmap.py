@@ -52,13 +52,13 @@ def setvaltabs():
 		if gv.btracklist[i][0]>0:
 			btracklist.append([ gv.btracklist[i][0], gv.btracklist[i][1] ])
 	valtabs = {
-			'Chords': [gv.chordname, 1],		# name (starting "")
-			'Scales': [gv.scalename, 1],		# name (starting "")
-			'Voices': [voicelist, 2],			# voice#, name
-			'BackTracks': [btracklist, 2],		# track#, name
-			'SMFs': [gv.smfnames, 2],			# seq#, (file)name
-			'Notemaps': [notemaps, 1],			# name (starting "None")
-			'FXpresets': [gv.FXpresetnames, 1]	# name (starting "None")
+			gv.CHORDS: [gv.chordname, 1],		# name (starting "")
+			gv.SCALES: [gv.scalename, 1],		# name (starting "")
+			gv.VOICES: [voicelist, 2],			# voice#, name
+			gv.BACKTRACKS: [btracklist, 2],		# track#, name
+			gv.SMFS: [gv.smfnames, 2],			# seq#, (file)name
+			gv.NOTEMAPS: [notemaps, 1],			# name (starting "None")
+			gv.FXPRESETS: [gv.FXpresetnames, 1]	# name (starting "None")
 		};
 
 def setnames():
@@ -115,7 +115,8 @@ def controls(*z):					# Controls (defined & activated)
 	for m in gv.MC:
 		if len( m ) > 3:	# name, type, proc, family
 			if m[3] == ctrlfam:
-				if m[2] != gv.safeguard:
+				if (m[1] != 5				# is it a control with controller
+				and m[2] != gv.safeguard):	# and is that control defined ?
 					ctrls.append( i )
 		i += 1
 	return ctrls
@@ -203,6 +204,9 @@ def controllers(*z):
 		ctrl = 0
 	ctrltype = gv.MCtypes[ gv.MC[ctrls[ctrl]][1] ]
 
+	if ctrltype != -1:	# continuous has "unassigned"
+		ctrlrs = [0]	# insert it for the others
+
 	if ctrltype < 0:	# continuous controllers (incl aftertouch)
 		for c in gv.controllerCCs:
 			if c[2] == ctrltype:
@@ -210,7 +214,6 @@ def controllers(*z):
 			i += 1
 
 	else:				# buttons, switches, keys
-		ctrlrs = [0]	# insert the "unassigned"
 		keys = []
 		for n in gv.notemapping:
 			if n[2] == -2:	# key mapped as control

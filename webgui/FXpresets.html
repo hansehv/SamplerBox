@@ -1,0 +1,67 @@
+<!DOCTYPE html><HTML><HEAD>
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<script SRC="SamplerBox.API" TYPE="text/javascript"></script>
+<script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+<script>htmlheader("FXpresets");</script>
+</HEAD>
+<BODY>
+
+<span ID="header"></span><script>header("definition","SampleSet");</script>
+
+<FORM ID="elem_SB_Form" STYLE="line-height:300%;">
+	<DIV style="line-height:200%;">
+		<span ID="input_SB_FXpreset">&nbsp;Last selected:</span>
+		<BR>
+		&nbsp;Settings applying to this preset / to be saved
+		<BR>
+		<span ID="input_SB_fxp_resetscope">Reset all to "No"</span>
+		&nbsp;or select:<BR>
+	</DIV>
+	<script>navbutton("autochord","Autochord&nbsp;");</script>
+	 &nbsp; <span ID="input_SB_fxp_autochord"></span>
+	<BR>
+	<script>navbutton("arpeggiator","&nbsp;Arpeggio&nbsp;");</script>
+	 &nbsp; <span ID="input_SB_fxp_arp"></span>
+	<BR>
+	<script>navbutton("chorus","&nbsp; Chorus &nbsp;");</script>
+	 &nbsp; <span ID="input_SB_fxp_chorus"></span>
+	<BR>
+	<script>navbutton("modulate","&nbsp;Modulate&nbsp;");</script>
+	 &nbsp; <span ID="input_SB_fxp_LFO"></span>
+	<BR>
+	<script>navbutton("overdrive","OverDrive&nbsp;");</script>
+	 &nbsp; <span ID="input_SB_fxp_overdrive"></span>
+	<BR>
+	<script>navbutton("moog","&nbsp;&nbsp; Moog &nbsp;&nbsp;");</script>
+	 &nbsp; <span ID="input_SB_fxp_moog"></span>
+	<BR>
+	<script>navbutton("delay","&nbsp; Delay &nbsp;&nbsp;");</script>
+	 &nbsp; <span ID="input_SB_fxp_delay"></span>
+	<BR>
+	<script>navbutton("wah","&nbsp;Wah-Wah &nbsp;");</script>
+	 &nbsp; <span ID="input_SB_fxp_autowah"></span>
+	<BR>
+	<script>navbutton("reverb","&nbsp; Reverb &nbsp;");</script>
+	 &nbsp; <span ID="input_SB_fxp_reverb"></span>
+	<BR>
+	<script>navbutton("limiter","&nbsp;Limiter &nbsp;");</script>
+	 &nbsp; <span ID="input_SB_fxp_limiter"></span>
+	<BR>
+	<script>navbutton("aftertouch","Aftertouch");</script>
+	 &nbsp; <span ID="input_SB_fxp_aftertouch"></span>
+	<BR>
+	<DIV style="line-height:100%;">
+		&nbsp;Presetname to use (no name => no save !):
+		<BR><span ID="input_SB_fxp_name" ></span>
+		<BUTTON TYPE="submit">Enter</BUTTON>
+		<BR>&nbsp;Press "Enter" after typing a name in above box.
+	</DIV>
+	<span ID="input_SB_fxp_save">Save preset</span>
+	<BR>
+	&nbsp;Saving with all selects set to "No" deletes the preset.
+	
+</FORM>
+
+<script>SB_Update();</script>
+</BODY>
+</HTML>

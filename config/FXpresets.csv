@@ -1,7 +1,7 @@
 Presetname,Parameter,Value,Comment
 ,####      Text parameters are case sensitive !!!!,,
 ,,,
-Box,PitchSens,12,#  pitchwheel range in semitones (max=12 is een octave up&down)
+# Box,PitchSens - ambiguous (also in %% parameters),12,#  pitchwheel range in semitones (max=12 is een octave up&down)
 ,,,
 ,# -------------------------------------------------------------------------------------,,
 ,#         R E V E R B,,
@@ -26,7 +26,7 @@ Box,WahSpeed,500,"# Speed, for LFOwah: speed of the the oscillator 100-1100"
 Box,WahLvlRange,90,"# Lvlrange, for LFO+Manualwah: sensitivity (0-100, 0 = filter without wah)"
 ,,,
 ,# -------------------------------------------------------------------------------------,,
-,#         D E L A Y  /  F L A N G E R,,
+,#         D E L A Y :   E C H O  /  F L A N G E R,,
 ,# -------------------------------------------------------------------------------------,,
 Box,DelayType,Off,# State of the delay: Off/Echo/Flanger
 Box,DelayFeedbackVol,70,"# Feedback (0-100), amount passed to loop (""next bucket"")"

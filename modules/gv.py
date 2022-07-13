@@ -7,9 +7,9 @@
 #   changelog in changelist.txt
 #
 
-# #########################################################
-# Literals
-# #########################################################
+# ################################################################
+# Literals connecting external configuration to internal variables
+# ################################################################
 
 cfg = "config"
 CONFIG_LOC  =  "config/"
@@ -17,6 +17,8 @@ SAMPLESDEF = "definition.txt"
 CTRLMAP_DEF = "CCmap.csv"
 NOTEMAP_DEF = "notemap.csv"
 VOICEMAP_DEF = "MTchannelmap.csv"
+FXPRESETS_DEF = "FXpresets.csv"
+LAYERS_DEF = "layers.csv"
 FIXED = "Fixed"
 VOICES = "Voices"
 NOTEMAPS = "Notemaps"
@@ -33,8 +35,10 @@ MENU_INCR = "Menu_Incr"
 MENU_DECR = "Menu_Decr"
 MENU_SEL = "Menu_Sel"
 MENU_RET = "Menu_Ret"
+AUTOCHORD = "AutoChord"
 CHORDS = "Chords"
 SCALES = "Scales"
+AUTOCHORDOFF = "AutoChordOff"
 PITCHWHEEL = "PitchWheel"
 PROGUP = "ProgramUp"
 PROGDN = "ProgramDown"
@@ -48,7 +52,8 @@ REVERBLVL = "ReverbLvl"
 REVERBROOM = "ReverbRoom"
 REVERBDAMP = "ReverbDamp"
 REVERBWIDTH = "ReverbWidth"
-AUTOWAH = "WahType"
+AUTOWAH = "Wah-Wah"
+AUTOWAHTYPE = "WahType"
 AUTOWAHENV = "EnvelopeWah"
 AUTOWAHLFO = "LFOwah"
 AUTOWAHMAN = "ManualWah"
@@ -61,6 +66,7 @@ AUTOWAHRELEASE = "WahRelease"
 AUTOWAHSPEED = "WahSpeed"
 AUTOWAHLVLRNGE = "WahLvlRange"
 AUTOWAHPEDAL = "WahPedal"
+DELAY = "Delay"
 DELAYTYPE = "DelayType"
 ECHO = "Echo"
 FLANGER = "Flanger"
@@ -88,6 +94,7 @@ LIMITTHRESH = "LimitThreshold"
 LIMITATTACK = "LimitAttack"
 LIMITRELEASE = "LimitRelease"
 PITCHSENS = "PitchSens"
+LFO = "Oscillate"
 LFOTYPE = "LFOtype"
 VIBRATO = "Vibrato"
 TREMOLO = "Tremolo"
@@ -106,7 +113,6 @@ CHORUS = "Chorus"
 CHORUSDEPTH = "ChorusDepth"
 CHORUSGAIN = "ChorusGain"
 EFFECTSOFF = "EffectsOff"
-AUTOCHORDOFF = "AutoChordOff"
 PANIC = "Panic"
 ARP = "Arpeggiator"
 ARPTEMPO = "ArpTime"
@@ -119,6 +125,7 @@ ARPRNDLIN = "ArpRndLin"
 ARPFADE = "ArpFadeout"
 ARPLOOP = "ArpLoop"
 ARP2END = "ArpPlay2end"
+AFTERTOUCH = "Aftertouch"
 CHAFTOUCH = "ChannelAfterTouch"
 CHAFREVERS = "chafReverse"
 PAFTOUCH = "PolyAfterTouch"
@@ -183,15 +190,17 @@ MidiRecorder = False
 MCdevices = {
 	 0 : 'button/(foot)switch', # NOTES_CC is special
 	-1 : 'pot/bar/pedal',
-	-2 : 'key-aftertouch'
+	-2 : 'key-aftertouch',
+	-3 : 'no midi controller'
 	}
-MCmodes = {
-	'continuous': [-1, 0],
-	'toggle'    : [ 0, 1],
-	'switch'    : [ 0, 2],
-	'switchon'  : [ 0, 3],
-	'switchoff' : [ 0, 4],
-	'paftouch'  : [-2, 5]
+MCmodes = {	# pointer MCdevices and pointer to modename
+	'continuous'	: [-1, 0],
+	'toggle'		: [ 0, 1],
+	'switch'		: [ 0, 2],
+	'switchon'		: [ 0, 3],
+	'switchoff'		: [ 0, 4],
+	'paftouch'  	: [-2, 5],
+	'nocontroller'  : [-3, 6]
 	}
 MCmodenames = [
 	"Continuous",
@@ -199,14 +208,16 @@ MCmodenames = [
 	"Switch",
 	"SwitchOn",
 	"SwitchOff",
-	"pAftouch"
+	"pAftouch",
+	"NoController"
 	]
-MCtypes = {
+MCtypes = {	# pointer to the MCdevices supporting the type
 	0 : -1,
 	1 :  0,
 	2 :  0,
 	3 : -1,
-	4 : -2
+	4 : -2,
+	5 : -3
     }
 
 def safeguard (*vals):  # dedicated proc for debugging MC-table
@@ -214,6 +225,8 @@ def safeguard (*vals):  # dedicated proc for debugging MC-table
 	for val in vals :
 		arr.append(val)
 	print("gv.Safeguard: call to unset procedure for %s:%s" %(arr[1],arr[0]))
+def nomidicontrol(*vals):
+	safeguard(vals)
 def setMC( mc, proc ):
 	for x in range( len(MC) ):
 		if mc == MC[x][0]:
@@ -230,6 +243,7 @@ MC = [	# [name,type,procedure,familyindex,MCmodenameindex] where type can be
 		#   - 2= select table value
 		#   - 3= 2 range values switch (a special continuous)
 		#   - 4= polyphonic (key-specific) aftertouch
+		#   - 5= not for MidiControl
 		# FamilyIndex is added icw controls.csv & supported names,
 		# MCmodenameIndex is added in same getcsv.controls() routine.
 	[PROGUP,1,safeguard],
@@ -241,6 +255,7 @@ MC = [	# [name,type,procedure,familyindex,MCmodenameindex] where type can be
 	[DAMP,3,safeguard],
 	[DAMPNEW,3,safeguard],
 	[DAMPLAST,3,safeguard],
+	[LFOTYPE,5,nomidicontrol],
 	[ROTATE,1,safeguard],
 	[VIBRATO,1,safeguard],
 	[TREMOLO,1,safeguard],
@@ -262,6 +277,7 @@ MC = [	# [name,type,procedure,familyindex,MCmodenameindex] where type can be
 	[REVERBROOM,0,safeguard],
 	[REVERBDAMP,0,safeguard],
 	[REVERBWIDTH,0,safeguard],
+	[AUTOWAHTYPE,5,nomidicontrol],
 	[AUTOWAHENV,1,safeguard],
 	[AUTOWAHLFO,1,safeguard],
 	[AUTOWAHMAN,1,safeguard],
@@ -274,6 +290,7 @@ MC = [	# [name,type,procedure,familyindex,MCmodenameindex] where type can be
 	[AUTOWAHSPEED,0,safeguard],
 	[AUTOWAHLVLRNGE,0,safeguard],
 	[AUTOWAHPEDAL,0,safeguard],
+	[DELAYTYPE,5,nomidicontrol],
 	[ECHO,1,safeguard],
 	[FLANGER,1,safeguard],
 	[DELAYFB,0,safeguard],

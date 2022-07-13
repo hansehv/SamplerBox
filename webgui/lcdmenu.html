@@ -1,14 +1,12 @@
-<!DOCTYPE html><HTML><HEAD><meta charset="UTF-8">
-	<TITLE>LCD Menu</TITLE>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html><HTML><HEAD>
 <meta http-equiv="Content-Script-Type" content="text/javascript">
-<LINK REL="stylesheet" TYPE="text/css" HREF="SamplerBox.css">
 <script SRC="SamplerBox.API" TYPE="text/javascript"></script>
 <script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+<script>htmlheader("LCD Menu");</script>
 
 <script>
 	var LCDborder = 2;
-	var LCDpad = 10;
+	var LCDpad = 5;
 	var LCDspace = 5;
 	var LCDwidth = 350;
 
@@ -49,8 +47,10 @@
 </HEAD>
 <BODY>
 
+<FORM ID="elem_SB_Form">
+
 <TABLE WIDTH="100%"><TR>
-<TD width="1"><BUTTON TYPE="button" onclick='window.location.assign("index.html");'>Dashboard</BUTTON></TD>
+<TD width="1"><script>navbutton("index","Dashboard");</script>
 <TD ALIGN="center"><B>LCD Menu</B></TD>
 <TD width="250">
 	<BUTTON TYPE="button" onclick="refreshWithURLparms();">Refresh</BUTTON>
@@ -60,7 +60,6 @@
 
 <div ID="elem_SB_LCDdisplay"></div>
 
-<FORM ID="elem_SB_Form">
 <div ID="input_SB_Button" STYLE="text-align:center;"></div>
 </FORM>
 
