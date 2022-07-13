@@ -199,10 +199,10 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 		//return(text+'<INPUT type="text" size="25" name="'+name+'" value="'+val+'" pattern="[A-Za-z0-9],_\ -" title="Invalid character found"</INPUT>');
 	},
 	input_SB_nm_clr: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+		return(SB_valbutton(input_name,name,1,text));
 	},
 	input_SB_nm_sav: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+		return(SB_valbutton(input_name,name,1,text));
 	},
 	input_SB_cm_family: function(input_name,name,val,text){
 		return(text+SB_listselect(input_name,name,val,SB_CCfamilies,1,SB_CCfamilies.length,1));
@@ -258,10 +258,10 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 		return(text+SB_listselect(input_name,name,val,names,1,names.length,1));
 	},
 	input_SB_cm_sav: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+		return(SB_valbutton(input_name,name,1,text));
 	},
 	input_SB_cm_reset: function(input_name,name,val,text){
-		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+		return(SB_valbutton(input_name,name,1,text));
 	},
 	input_SB_cm_assign: function(input_name,name,val,text){
 		return(SB_radioselect(input_name,name,val,text,SB_cm_assign_levs,1,1));

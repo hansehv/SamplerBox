@@ -763,7 +763,9 @@ def AfterTouchd(*z):				#  Details of aftertouch support
 	if gv.AFTOUCH_ON:
 		chan = 1 if gv.CHAN_AFTOUCH else 0
 		poly = 1 if gv.POLY_AFTOUCH else 0
-		return [chan, AfterTouch.chanproc, poly, AfterTouch.polyproc]
+		chanproc = AfterTouch.control(AfterTouch.chanCCidx)
+		polyproc = AfterTouch.control(AfterTouch.polyCCidx)
+		return [chan, chanproc, poly, polyproc]
 	else:
 		return [0, "", 0, ""]
 def AfterTouchPairs(*z):			# Notepairs of current voice

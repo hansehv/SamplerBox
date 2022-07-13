@@ -93,21 +93,22 @@ def msgRem(msg):
                 msgs.append(m)
         gv.MASTER_MESSAGES = msgs
 
-chanproc = ""
-polyproc = ""
+def control(idx):
+    proc = ""
+    for m in gv.CCmap:
+        if m[0] == idx:
+            proc = gv.MC[m[1]][0]
+            break
+    return proc
+
 def msgFilter():
-    global chanproc, polyproc
     chan = False
     poly = False
-    chanproc = ""
-    polyproc = ""
     for m in gv.CCmap:
         if m[0] == chanCCidx:
             chan = True
-            chanproc = gv.MC[m[1]][0]
         elif m[0] == polyCCidx:
             poly = True
-            polyproc = gv.MC[m[1]][0]
         if (chan and poly):
             break
     if poly and gv.POLY_AFTOUCH:

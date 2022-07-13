@@ -216,7 +216,8 @@ MCtypes = {	# pointer to the MCdevices supporting the type
 	1 :  0,
 	2 :  0,
 	3 : -1,
-	4 : -2
+	4 : -2,
+	5 : -3
     }
 
 def safeguard (*vals):  # dedicated proc for debugging MC-table
