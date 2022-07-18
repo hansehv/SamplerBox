@@ -500,7 +500,7 @@ def PLreset(scope=-1):
         #    load sample set default
         #else:                   # system default
     PLsetType(PLtype)
-gv.setMC(gv.gv.LIMITER,LFsetLimiter)      # announce to CCmap
+gv.setMC(gv.LIMITER,LFsetLimiter)      # announce to CCmap
 gv.setMC(gv.LIMITTHRESH,PLsetThresh)
 gv.setMC(gv.LIMITATTACK,PLsetAttack)
 gv.setMC(gv.LIMITRELEASE,PLsetRelease)
