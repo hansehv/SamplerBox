@@ -34,7 +34,7 @@ print ( "=" *42 )
 
 ########  continue importing  ########
 import wave,rtmidi2
-from chunk import Chunk
+from chunk import Chunk     # deprecated from 7.11: replaced by _Chunk class in wave
 import time,psutil,numpy,struct,copy
 import sys,os,re,operator,threading
 from numpy import random

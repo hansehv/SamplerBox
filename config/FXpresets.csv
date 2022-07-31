@@ -106,3 +106,8 @@ Box,chafReverse,Off,# Channel aftertouch pressure interpretation
 Box,pafReverse,Off,# Polyphonic aftertouch pressure interpretation
 Box,pafPitchRange,4,# 1-12 total semitones
 Box,pafPanWidth,10,"# 0-10, 0 = no pan, 10 = max left/right"
+,,,
+,# -------------------------------------------------------------------------------------,,
+,#         S P E C I A L S,,
+,# -------------------------------------------------------------------------------------,,
+Box,DSPpriority,Overdrive-Moog-Wah-Delay-Reverb-Limiter,

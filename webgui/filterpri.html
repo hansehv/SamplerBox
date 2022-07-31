@@ -1,0 +1,49 @@
+<!DOCTYPE html><HTML><HEAD>
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<script SRC="SamplerBox.API" TYPE="text/javascript"></script>
+<script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+<script>htmlheader("FilterPrio");</script>
+</HEAD>
+<BODY>
+
+<span ID="header"></span><script>header("FXpresets","Presets");</script>
+
+<FORM ID="elem_SB_Form" STYLE="line-height:300%;">
+	
+	<TABLE><TR>
+		<TD>
+			Set process priority:
+			<div ID="input_SB_DSPeffect"  >Effect : &nbsp;</div>
+			<div ID="input_SB_DSPeffprio" >Priority:&nbsp;</div>
+		</TD>
+		<TD>
+			<TABLE cellpadding=10 style="line-height:100%;">
+				<TR><TD ID="elem_SB_DSPpriotab"></TD></TR>
+			</TABLE>
+		</TD>
+	</TR></TABLE>
+	
+	<script>navbutton("overdrive","OverDrive");</script>
+	&nbsp; <span ID="input_SB_ODtype"></span>
+	<BR>
+	<script>navbutton("moog","&nbsp; Moog &nbsp;&nbsp;");</script>
+	&nbsp; <span ID="input_SB_LFtype"></span>
+	<BR>
+	<script>navbutton("delay","&nbsp; Delay &nbsp;");</script>
+	&nbsp; <span ID="input_SB_DLYtype"></span>
+	<BR>
+	<script>navbutton("wah","&nbsp;Wah-Wah&nbsp;");</script>
+	&nbsp; <span ID="input_SB_AWtype"></span>
+	<BR>
+	<script>navbutton("reverb","&nbsp;Reverb &nbsp;");</script>
+	&nbsp; <span ID="input_SB_FVtype"></span>
+	<BR>
+	<script>navbutton("limiter","&nbsp;Limiter&nbsp;");</script>
+	&nbsp; <span ID="input_SB_PLtype"></span>
+	
+</FORM>
+These filters are applied as last step of sound generation.
+
+<script>SB_Update();</script>
+</BODY>
+</HTML>

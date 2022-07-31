@@ -70,8 +70,11 @@ var SB_variables={	// make sure all passed I/O parameters are covered here
 	v_SB_fxp_arp: function(val){SB_fxp_arp=val;},
 	v_SB_fxp_autochord: function(val){SB_fxp_autochord=val;},
 	v_SB_fxp_aftertouch: function(val){SB_fxp_aftertouch=val;},
+	v_SB_fxp_dspprio: function(val){SB_fxp_dspprio=val;},
 	v_SB_fxp_name: function(val){SB_fxp_name=val;},
 	v_SB_fxp_save: function(val){SB_fxp_save=val;},
+	v_SB_DSPeffect: function(val){SB_DSPeffect=val;},
+	v_SB_DSPeffprio: function(val){SB_DSPeffprio=val;},
 	v_SB_Scale: function(val){SB_Scale=val;},
 	v_SB_Chord: function(val){SB_Chord=val;},
 	v_SB_FVtype: function(val){SB_FVtype=val;},
@@ -302,11 +305,24 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 	input_SB_fxp_aftertouch: function(input_name,name,val,text){
 		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
 	},
+	input_SB_fxp_dspprio: function(input_name,name,val,text){
+		return(SB_radioselect(input_name,name,val,text,NoYes,1,1));
+	},
 	input_SB_fxp_name: function(input_name,name,val,text){
 		return(text+'<INPUT type="text" size="25" name="'+name+'" value="'+val+'" onchange=SB_Submit()</INPUT>');
 	},
 	input_SB_fxp_save: function(input_name,name,val,text){
 		return(SB_valbutton(input_name,name,1,text));
+	},
+	input_SB_DSPeffect: function(input_name,name,val,text){
+		names = [];
+		for (i=0; i<SB_DSPpriotab.length; i++) {
+			names.push(SB_DSPpriotab[i][1]);
+		}
+		return(text+SB_listselect(input_name,name,val,names,1,names.length,1));
+	},
+	input_SB_DSPeffprio: function(input_name,name,val,text){
+		return(text+SB_numselect(input_name,name,val,1,SB_DSPpriotab.length,1,1));
 	},
 	input_SB_SoundVolume: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,100,1));
@@ -533,8 +549,8 @@ SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_Voice","e
 			"elem_SB_Aftertouchdc","elem_SB_Aftertouchdp","elem_SB_AftertouchPairs",
 			"elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales",
 			"elem_SB_Notemap","elem_SB_CCmap","elem_SB_cm_current","elem_SB_cm_controlmode",
-			"elem_SB_bTracks","elem_SB_IPlist","elem_SB_Wireless","elem_SB_MIDIdevs",
-			"elem_SB_LCDdisplay"];
+			"elem_SB_DSPpriotab","elem_SB_bTracks","elem_SB_IPlist","elem_SB_Wireless",
+			"elem_SB_MIDIdevs","elem_SB_LCDdisplay"];
 SB_numelems=SB_ElemID.length;
 var SB_element={
 	elem_SB_Form: function(elem_name){
@@ -718,6 +734,19 @@ var SB_element={
 	},
 	elem_SB_cm_controlmode: function(elem_name){
 		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+SB_cm_controlmode+'</SPAN>';
+	},
+
+	elem_SB_DSPpriotab: function(elem_name){
+		if (SB_DSPpriotab.length==0) {document.getElementById(elem_name).innerHTML='';}
+		else {
+			html='<TABLE BORDER="1" CLASS="datatable"><TR><TH>DSP effect</TH><TH>Prio</TH><TH>Active</TH></TR>';
+			for (i=0;i<SB_DSPpriotab.length;i++){
+				html=html+'<TR CLASS="datatable"><TD CLASS="datatable"">'+SB_DSPpriotab[i][1]+
+					'</TD><TD CLASS="datatable"">'+SB_DSPpriotab[i][0]+
+					'</TD><TD CLASS="datatable"">'+NoYes[ SB_DSPpriotab[i][2] ]+'</TD></TR>';
+			}
+			document.getElementById(elem_name).innerHTML=html+'</TABLE><P>';
+		}
 	},
 
 	elem_SB_bTracks: function(elem_name){

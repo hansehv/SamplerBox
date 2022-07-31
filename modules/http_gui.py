@@ -163,6 +163,13 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 			if not scalechange:
 				UI.Chord(int(fields["SB_Chord"][0]))
 
+		specials.extend(["DSPeffect","DSPeffprio"])
+		if "SB_DSPeffect" in fields:
+			DSPnamechange=( UI.DSPeffect() != UI.DSPeffect( int( fields["SB_DSPeffect"][0]) ))
+			if (not DSPnamechange
+			and "SB_DSPeffprio" in fields):
+				UI.DSPprio(int(fields["SB_DSPeffprio"][0]))
+
 		if "SB_Button" in fields:
 			specials.append("Button")
 			display = not (UI.Button(fields["SB_Button"][0])) # if we had succesfull button, a display was shown already

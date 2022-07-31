@@ -14,6 +14,7 @@ Feb-June 2022:
   - Added %pan parameter for positioning mono samples
   - Added CCmap editing in GUI (editing module can be used in/for other UI's).
   - Added FXpresets editing in GUI (editing module can be used in/for other UI's).
+  - Added changing of priorities for the DSP filters in FXpresets.csv and GUI
   - Added rotate parameter for OLED displays
   - Changed web "LCD"screen & building block to accommodate other skins.
   - Renamed remap.py to UI_notemap.py
