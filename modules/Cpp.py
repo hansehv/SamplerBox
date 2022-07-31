@@ -31,20 +31,22 @@ def ResetAll(scope=-1):
     PLreset(scope)
 
 def newprocess():
-    global active
-    tmp = []
+    global proctab, priotab
+    proctab = []     # two tables for playing speed
+    priotab = []
     for m in effects:
+        priotab.append([effects[m][0], m, effects[m][1]] )
         if effects[m][1]:
-            tmp.append([effects[m][0],effects[m][2]])
-    tmp.sort(key=operator.itemgetter(0))
-    active = tmp
+            proctab.append( [effects[m][0], effects[m][2]] )
+    priotab.sort(key=operator.itemgetter(0))
+    proctab.sort(key=operator.itemgetter(0))
 
 def process(inS, frame_count):
     i=0
     while True:
-        if i >= len(active):     # test in advance for safeguard
+        if i >= len(proctab):     # test in advance for safeguard
             break
-        active[i][1](inS.ctypes.data_as(c_float_p), inS.ctypes.data_as(c_float_p), frame_count)
+        proctab[i][1](inS.ctypes.data_as(c_float_p), inS.ctypes.data_as(c_float_p), frame_count)
         i += 1
 
 def seteffect(effect, state):
@@ -55,9 +57,11 @@ def seteffect(effect, state):
          (oldstate and not state) ):
         newprocess()
 
-def setprio (effect, newprio):
+def setprio (effect, newprio, bulk=False):
     if effects[effect][0] != newprio and newprio in range(1,len(effects)+1):
         oldprio = effects[effect][0]
+        if oldprio == newprio:
+            return
         if oldprio < newprio:
             for m in effects:
                 if  effects[m][0] > oldprio and effects[m][0] <= newprio:
@@ -67,7 +71,25 @@ def setprio (effect, newprio):
                 if  effects[m][0] < oldprio and effects[m][0] >= newprio:
                     effects[m][0] += 1
         effects[effect][0] = newprio
-        newprocess()
+        if not bulk:
+            newprocess()
+
+def setprios(prilist):
+    if prilist.find("-") < 0:
+        prios = [prilist]
+    else:
+        if prilist[ len(prilist)-1 ] == "-":
+            prilist = prilist[:-1]
+        prios = prilist.split("-")
+    for prio in prios:
+        if prio not in effects:
+            print( "Cpp.setprios: %s is not a valid DSPeffect / priotab value, skipped %s" %( prio, prilist ))
+            return
+    i=1
+    for prio in prios:
+        setprio( prio, i, bulk=True )
+        i += 1
+    newprocess()
 
 #
 #   = = =   R E V E R B   = = =
@@ -515,7 +537,8 @@ effects = { gv.REVERB: [5, 0, c_filters.reverb, FVsetType],
             gv.OVERDRIVE: [1 , 0, c_filters.overdrive, ODsetType],
             gv.LIMITER: [6 , 0, c_filters.limiter, PLsetType]
         }
-active = []
+proctab = []
+priotab = []
 
 ResetAll(-2)
 newprocess()

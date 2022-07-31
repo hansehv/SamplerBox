@@ -476,11 +476,39 @@ def PLrelease(val=None):					# 1-11
 	except:
 		return 8
 
+DSPeffval = 0
+def DSPeffect(val=None):					# returns priotab index of the selected effect
+	global DSPeffval
+	try:
+		if val != None:
+			if isinstance(val,int):
+				DSPeffval = val
+			else:
+				if val in Cpp.effects:
+					DSPeffval = Cpp.effects[DSPeffnam][0] - 1
+	except:
+		pass
+	return DSPeffval
+def DSPprio(val=None):						# sets&returns the prio of the selected effect
+	global DSPeffval
+	try:
+		if val != None:
+			if isinstance(val,int):
+				if (val <= len(Cpp.priotab)
+				and val > 0 ) :
+					Cpp.setprio( Cpp.priotab[DSPeffval][1], val)
+					DSPeffval = val -1
+	except:
+		pass
+	return ( DSPeffval +1 )
+
 def LFOtype(val=None):						# value in LFOtypes
 	try:
 		if val!=None:
-			if isinstance(val,int): LFO.setType(val)
-			else: LFO.setType(gp.getindex(val,LFO.effects,True))
+			if isinstance(val,int):
+				LFO.setType(val)
+			else:
+				LFO.setType(gp.getindex(val,LFO.effects,True))
 		return LFO.effect
 	except:
 		return 0
@@ -723,6 +751,11 @@ def Notemaps(*z):					# Available notemaps (names)
 def NoteMapping(*z):				# [[keybnote,qfraction,soundnote,retune,voice]...]
 	return gv.notemapping
 
+def DSPpriotab(priolist=None):		# Priority of processing effects in CPP
+	if priolist != None:			# This logic here is not for UI, but for setting the preset
+		Cpp.setprios(priolist)		# via procs_alias when processing FXpresets.csv.
+	return Cpp.priotab				# So for UI it's still a readonly variable !
+
 def MenuDisplay(*z):				# [line1,line2, ..] lines of the characterdisplay of the (button) menu
 	try: return [butmenu.line1(),butmenu.line2(),butmenu.line3()]
 	except: return ["No menu defined",""]
@@ -885,44 +918,55 @@ fxp_limiter = UI_FXpresets.limiter
 fxp_arp = UI_FXpresets.arp
 fxp_autochord = UI_FXpresets.autochord
 fxp_aftertouch = UI_FXpresets.aftertouch
+fxp_dspprio = UI_FXpresets.dspprio
 fxp_name = UI_FXpresets.setname			# Preset name to save
 fxp_save = UI_FXpresets.save			# boolean, requesting save preset if True
 
 # #################################################################################
 #                         = = = = =   D I C T I O N A R Y   = = = = =
 # #################################################################################
+'''
+Quite some variables have range 0-100 to both have some parallel with midi 0-127
+  as well as the human perception
+Others still show values indicating the struggle with tuning :-(
+  or don't fit in the 0-100 mantra
+  (for instance min and max settings should have same scale to avoid confusion)
+etcetera...etcetera... in other words, not completely consistent :-)
 
-# quite some variables have range 0-100 to both have some parallel with midi 0-127 as well as the human perception
-# others still show values indicating the struggle with tuning :-(
-# or don't fit in the 0-100 mantra (for instance min and max settings should have same scale to avoid confusion)
-# etcetera...etcetera... in other words, not completely consistent :-)
+Please look at the webgui to see some hints & practical use;
+					much more educational and easier than explaining all variables here
 
-# Please look at the webgui to see some hints & practical use;
-#						much more educational and easier than explaining all variables here
-# First element:
-#  - w= writable: the ui can change this via a procedure with dictionary name
-#					(NOT via this dictionary !! Use the proper function !)
-#  - v= variable: informational variables/tables that change in normal (play) situation
-#  - f= fixed   : informational variables/tables defined in code or stored in config files on SD or USB
-# Second element:
-#  - procedure with one optional parameter: return=proc(parameter)
-#    depending on the proc, this parameter is either boolean, integer, text or list
-#  - booleans can be:
-#    - True/False
-#    - a number where 0 means False and any other value means True
-#    - a string beginning with "N" or "n" meaning False and any other value meaning True
-#  - return value is an up2date value of the requested parameter (this maybe a list/dict/etc depending requested parameter)
-#    however on update, some procedures return a boolean instead to indicate a change having impact (on others or your logic)
-#  - if parameter is omitted or =None it is just an inquiry
-#    if filled, its value is processed; the user facing procedure should perform error checking
-#    if input contains errors, the proc tries to finish somehow, preferably without changing SB's status
-#  - if procedure is called with the underlying feature not enabled, a default value is returned
-#    this will ofcourse happen in display routines starting in early init stage,
-#                                          where features may NOT YET be enabled :-)
-# Third element (optional):
-#  - Alias = human readable text, used in the configuration files (e.g. the FXpresets.csv)
-#  - After definition an extra dictionary is created below
-#    with this third element as key and the procedure as data
+First element:
+ - w= writable: the ui can change this via a procedure with dictionary name
+					(NOT via this dictionary !! Use the proper function !)
+ - v= variable: informational variables/tables that change in normal (play) situation
+ - f= fixed   : informational variables/tables defined in code or stored in config files on SD or USB
+
+Second element:
+ - procedure with one optional parameter: return=proc(parameter)
+   depending on the proc, this parameter is either boolean, integer, text or list
+ - booleans can be:
+   - True/False
+   - a number where 0 means False and any other value means True
+   - a string beginning with "N" or "n" meaning False and any other value meaning True
+ - return value is an up2date value of the requested parameter
+   (this maybe a list/dict/etc depending requested parameter), however on update
+   some procedures return a boolean instead to indicate a change having impact on related logic.
+ - if parameter is omitted or =None it is just an inquiry
+   if filled, its value is processed; the user facing procedure should perform error checking
+   if input contains errors, the proc tries to finish somehow, preferably without changing SB's status
+ - if procedure is called with the underlying feature not enabled, a default value is returned
+   this will ofcourse happen in display routines starting in early init stage,
+                                         where features may NOT YET be enabled :-)
+Third element (optional):
+ - Alias = human readable text, used in the configuration files (e.g. the FXpresets.csv)
+ - After definition an extra dictionary is created below
+   with this third element as key and the procedure as data
+
+Fourth element (mandatory if third is present)
+ - Either "int" or the actual table/string/whatever of the variable exchange
+ - This is used by setting the presets via the alias method
+'''
 
 procs={
 	"RenewMedia":["w",RenewMedia],	# boolean, True indicates "preset load in progress",
@@ -965,8 +1009,11 @@ procs={
 	"fxp_arp":["w",fxp_arp],						#  "
 	"fxp_autochord":["w",fxp_autochord],			#  "
 	"fxp_aftertouch":["w",fxp_aftertouch],			#  "
+	"fxp_dspprio":["w",fxp_dspprio],				#  "
 	"fxp_name":["w",fxp_name],						# Preset name to save
 	"fxp_save":["w",fxp_save],						# boolean, requesting save preset if True
+	"DSPeffect":["w",DSPeffect],					# priotab index of the selected effect forsetting prio:
+	"DSPeffprio":["w",DSPprio],						# sets&returns the prio of the selected effect
 	"SoundVolume":["w",SoundVolume],				# 0-100
 	"MidiVolume":["w",MidiVolume],					# 0-100
 	"MidiChannel":["w",MidiChannel],				# 1-16
@@ -1057,6 +1104,7 @@ procs={
 	"cm_controllers":["v",cm_controllers],	# indexes of controllers in current control & notemap selection
 	"cm_current":["v",cm_current],			# current CCmap
 	"cm_bTracks":["v",cm_bTracks],			# backtracks with seq# > 0
+	"DSPpriotab":["v",DSPpriotab,gv.DSPPRIOTAB,Cpp.priotab],	# Priority of processing effects in CPP
 	"MenuDisplay":["v",MenuDisplay],		# [line1,line2, ..] lines of the characterdisplay of the (button) menu
 	"IP":["w",IP],							# index of IP addresses found (it's classified "w" to force into the button menu)
 	"IPlist":["v",IPlist],					# SB IP addresses (cable and wireless plus IPv6 if enabled in configuration.txt)
@@ -1104,7 +1152,9 @@ for m in procs:
 	if len(procs[m]) > 2:
 		gv.procs_alias[ procs[m][2] ] = [ procs[m][1], procs[m][3]]
 
-#             = = = = =   Extra procedures and variables linked to via UI   = = = = =
+# #################################################################################
+#     = = = = =   Extra procedures and variables linked to via UI   = = = = =
+# #################################################################################
 
 # access to configuration.txt, example: up=UI.cfg_int("BUT_incr")
 cfg_txt=lambda x: gv.cp.get(gv.cfg,x.lower())
