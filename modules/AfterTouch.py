@@ -20,15 +20,20 @@ chanCC = 0
 polyCC = 0
 chanCCidx = 0
 polyCCidx = 0
-notepairs = None
+notepairs = {}
+
+oneway= gv.cp.getboolean(gv.cfg,"PAF_ONEWAY_PITCHBEND".lower())
 
 # Add virtual controllers for aftertouch,
 #   so they can be assigned as a CC
+#   exception is the hard-coded not-standard "polychoke" via channel aftertouch
 
 if gv.CHAN_AFTOUCH:
-    chanCC = gp.getvirtualCC()
-    chanCCidx = len(gv.controllerCCs)
-    gv.controllerCCs.append([gv.CHAFTOUCH,chanCC,-1])
+    gv.chaf2pafchoke = gv.cp.getboolean(gv.cfg,"CHAF2PAF_CHOKE".lower())
+    if not gv.chaf2pafchoke:
+        chanCC = gp.getvirtualCC()
+        chanCCidx = len(gv.controllerCCs)
+        gv.controllerCCs.append([gv.CHAFTOUCH,chanCC,-1])
 if gv.POLY_AFTOUCH:
     polyCC = gp.getvirtualCC()
     polyCCidx = len(gv.controllerCCs)
@@ -115,7 +120,8 @@ def msgFilter():
         msgAdd(10)
     elif gv.POLY_AFTOUCH:
         msgRem(10)
-    if chan and gv.CHAN_AFTOUCH:
+    if ( (chan or gv.chaf2pafchoke)
+    and gv.CHAN_AFTOUCH):
         msgAdd(13)
     elif gv.CHAN_AFTOUCH:
         msgRem(13)
@@ -124,6 +130,8 @@ def msgFilter():
 ### CHANNEL effects ########################
 
 def Channel(pressure, *z):
+    if gv.chaf2pafchoke:   # this is not standard MIDI and requires special controller:
+        return pafOnAll(paChoke, pressure, 0)   # note info is within pressure byte!
     if pressure > 0:    # pressure=0 is too complicated
         if chanReverse:
             pressure = 128 - pressure
@@ -155,24 +163,30 @@ def Polyphonic(note, pressure, *z):
             pressure = 128 - pressure
         for m in gv.CCmap:
             if m[0] == polyCCidx:
-                if note in gv.playingnotes:
-                    for pn in gv.playingnotes[note]:
-                        # this loops through layers and chorus
-                        gv.MC[m[1]][2](pn, pressure, note)
-                followed = False    # prevent accumulation (e.g. with chorus)
-                voice = gv.currvoice
-                if voice not in notepairs:
-                    voice = 0
-                if voice in notepairs:
-                    if note in notepairs[gv.currvoice] and not followed:
-                        # process the followers, even if the master isn't played
-                        #  (it doesn't hurt for the master, but will catch
-                        #   specials like cymbal center choke via the rim)
-                        for follower in notepairs[gv.currvoice][note]:
-                            if follower in gv.playingnotes:
-                                for fn in gv.playingnotes[follower]:
-                                    gv.MC[m[1]][2](fn, pressure, note)
+                effect = gv.MC[m[1]][2]
+                pafOnAll(effect, note, pressure)
                 break
+    elif pressure == -1:
+        pafOnAll(paChoke, note, pressure)
+
+def pafOnAll(effect, note, pressure):
+    if note in gv.playingnotes:
+        for pn in gv.playingnotes[note]:
+            # this loops through layers and chorus
+            effect(pn, pressure, note)
+    followed = False    # prevent accumulation (e.g. with chorus)
+    voice = gv.currvoice
+    if voice not in notepairs:
+        voice = 0
+    if voice in notepairs:
+        if note in notepairs[gv.currvoice] and not followed:
+            # process the followers, even if the master isn't played
+            #  (it doesn't hurt for the master, but will catch
+            #   specials like cymbal center choke via the rim)
+            for follower in notepairs[gv.currvoice][note]:
+                if follower in gv.playingnotes:
+                    for fn in gv.playingnotes[follower]:
+                        effect(fn, pressure, note)
 
 pafReverse = False
 def pafRevToggle(*z):
@@ -194,7 +208,10 @@ def paPitchSetRange(val,*z):
     global paPitchRange
     paPitchRange = int( val/10 )
 def paPitch(pn, pressure, note, *z):
-    diff = pressure - pn.playingvelocity()
+    if oneway:
+        diff = pressure
+    else:
+        diff = pressure - pn.playingvelocity()
     pn.playingretune(True, diff*paPitchRange)
     # self.retune += (2*val-self.velocity) -> starting velocity is neutral
 

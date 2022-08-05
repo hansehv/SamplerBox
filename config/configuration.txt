@@ -87,10 +87,16 @@ MIDI_CHANNEL = 1
 DRUMPAD_CHANNEL = 0
 DRUMPAD_PROGRAMCHANGE = False
 DRUMPAD_CONTROLCHANGE = False
-# Does the master device have aftertouch capabilities:
+# Does the master device have aftertouch capabilities, and which:
 CHANNEL_AFTERTOUCH = False
 POLYPHONIC_AFTERTOUCH = False
-# Value of "Right side", "Left side" has some notes slack
+# Oneway pitchbend doesn't base on playing velocity, so it only bends "Up"
+PAF_ONEWAY_PITCHBEND = False
+# Use channel aftertouch velocity as note for pafchoke, but take care:
+#    This is not MIDI standard and requires a modified midi controller/instrument.
+#    Any midi through receivers should either ignore channel aftertouch or be modified too.
+CHAF2PAF_CHOKE = False
+# Value of keyboard area "Right side", "Left side" has some notes slack
 #	88-key:	- 108=C8
 #	77-key:	- 103=G7
 #	61-key:	- 96=C7

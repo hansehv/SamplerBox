@@ -796,7 +796,10 @@ def AfterTouchd(*z):				#  Details of aftertouch support
 	if gv.AFTOUCH_ON:
 		chan = 1 if gv.CHAN_AFTOUCH else 0
 		poly = 1 if gv.POLY_AFTOUCH else 0
-		chanproc = AfterTouch.control(AfterTouch.chanCCidx)
+		if chan and gv.chaf2pafchoke:
+			chanproc = gv.PAFCHOKE
+		else:
+			chanproc = AfterTouch.control(AfterTouch.chanCCidx)
 		polyproc = AfterTouch.control(AfterTouch.polyCCidx)
 		return [chan, chanproc, poly, polyproc]
 	else:

@@ -1,9 +1,12 @@
 This file contains changelog of samplerbox.py
 For changes on samplerbox_audio.pyx, see top of the source file
 
-Feb-June 2022:
+Feb-August 2022:
   - Added aftertouch
-    Channel: all "continuous" functions
+    Channel:
+     - all "continuous" functions
+     - non standard MIDI: hardcoded choke where note is taken from the velocity info
+       requires adapted controller and special care when using midi-thru
     PolyPhonic:
      - Volume
      - Pan

@@ -245,6 +245,8 @@ import chorus   # take notice: part of process in midi callback and ARP
 #
 if gv.AFTOUCH_ON:
     import AfterTouch
+else:
+    gv.chaf2pafchoke = False
 
 # SMFplayer for limited playing and recording standard MIDI files
 # Parallel process of sending midinotes to samplerbox midi-in channels
@@ -868,8 +870,14 @@ def MidiCallback(mididev, imessage, time_stamp):
         midinote = message[1]
         mtchnote = MIDIchannel*gv.MTCHNOTES+midinote
         velocity = message[2] if len(message) > 2 else None
+        
+        # -- hard-coded not-standard "polychoke" triggered via channel aftertouch --#
+        if gv.chaf2pafchoke and messagetype == 13:
+            messagetype = 10
+            velocity = -1   # signal to paf
+        # -- hard-coded not-standard "polychoke" triggered via channel aftertouch --#
 
-        if messagetype in [8,9,10]:           # We may have a note on/off or aftertouch
+        if messagetype in [8,9,10]:           # We may have a note on/off or poly-aftertouch
             retune=0
             if not MT_in:
                 i=gp.getindex(midinote,gv.notemapping)
@@ -1014,19 +1022,19 @@ def MidiCallback(mididev, imessage, time_stamp):
                                         PlayRelSample(m.playingrelsample(),m.playingvoice(),m.playingnote(),m.playingvolume(),m.playingretune(),m.playingchannel())
                                         gv.playingnotes[playnote] = []
 
+            elif messagetype == 10: # Polyphonic aftertouch
+                done = False
+                if midinote in gv.playingnotes:
+                    for playnote in range(128):
+                        if gv.triggernotes[playnote] == midinote:   # did we make this one play ?
+                            done = True
+                            AfterTouch.Polyphonic(playnote,velocity)    # velocity=pressure
+                if not done:
+                    # deal with notepair followers missing the master
+                    AfterTouch.Polyphonic(midinote,velocity)    # velocity=pressure
+
             if MT_in:               # restore previous saved voice and some effects
                 CallbackIsolateMT(MT_in, False)
-
-        elif messagetype == 10: # Polyphonic aftertouch
-            done = False
-            if midinote in gv.playingnotes:
-                for playnote in range(128):
-                    if gv.triggernotes[playnote] == midinote:   # did we make this one play ?
-                        done = True
-                        AfterTouch.Polyphonic(playnote,velocity)    # velocity=pressure
-            if not done:
-                # deal with notepair followers missing the master
-                AfterTouch.Polyphonic(midinote,velocity)    # velocity=pressure
 
         elif messagetype == 11: # control change (CC = Continuous Controllers)
             ControlChange(midinote,velocity)    # midinote=CCnum, velocity=CCval
