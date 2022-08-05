@@ -16,14 +16,18 @@ presetname = ''
 	What to save is selected via Y/N buttons "fxp_<effect>".
 	This "effect" refers to a family as defined in controls.csv.
 	These families are also used in CCmapping.
+	Effects which cannot be set from CC's are assigned to families in this module,
+	with names starting with "#" avoiding overlap with user mods.
 	
-	When a preset is selected, the defintions in there will have their
+	When a preset is selected, the definitions in there will have their
 	related "family" button to be defaulted to Y = include.
 	
 	At save all definitions will be removed and replaced according savit-dict.
 	The savit-dict is filled via the related buttons.
 	So: when nothing is selected, the complete preset will disappear
 '''
+
+DSPprio = "# DSP prio"
 
 savit = {
 	gv.LFO: False,
@@ -37,6 +41,11 @@ savit = {
 	gv.ARP: False,
 	gv.AUTOCHORD: False,
 	gv.AFTERTOUCH: False,
+	DSPprio: False,
+	}
+
+noCCsettings = {
+	DSPprio: [gv.DSPPRIOTAB],
 	}
 
 def setpreset(val, *z):
@@ -63,7 +72,7 @@ def setpreset(val, *z):
 				for effect in gv.FXpresets[FXset]:
 					gv.procs_alias[ effect ][0]( gv.FXpresets[FXset][effect] )
 		else:
-			print ("Effect %s is unspecified, ignored" %FXset)
+			print ("Effect preset %s is unspecified, ignored" %FXset)
 	presetname = FXset	# this the 2nd reason for defining the "setpreset" proc in here
 	return FXset
 gv.setMC(gv.FXPRESETS,setpreset)
@@ -81,54 +90,33 @@ def defaults4sav(resetall=None):
 		if gv.FXpreset_last not in ["None","Default"]:
 			for mc in gv.MC:
 				if len(mc) > 3:
-					if mc[0] in gv.FXpresets[gv.FXpreset_last]:
-						savit[ gv.CCfamilies[mc[3]] ] = True
+					if mc[0] in gv.FXpresets[ gv.FXpreset_last ]:
+						savit[ gv.CCfamilies[ mc[3] ]] = True
+			for ncfam in noCCsettings:
+				for nceff in noCCsettings[ ncfam ]:
+					if nceff in gv.FXpresets[ gv.FXpreset_last ]:
+						savit[ ncfam ] = True
+				
 	return 0
 
-def LFO(val=None):
+def savselect( effect, val):
 	global savit
-	if val!=None: savit[gv.LFO] = gp.parseBoolean(val)
-	return savit[gv.LFO]
-def chorus(val=None):
-	global savit
-	if val!=None: savit[gv.CHORUS] = gp.parseBoolean(val)
-	return savit[gv.CHORUS]
-def reverb(val=None):
-	global savit
-	if val!=None: savit[gv.REVERB] = gp.parseBoolean(val)
-	return savit[gv.REVERB]
-def autowah(val=None):
-	global savit
-	if val!=None: savit[gv.AUTOWAH] = gp.parseBoolean(val)
-	return savit[gv.AUTOWAH]
-def delay(val=None):
-	global savit
-	if val!=None: savit[gv.DELAY] = gp.parseBoolean(val)
-	return savit[gv.DELAY]
-def ladder(val=None):
-	global savit
-	if val!=None: savit[gv.LADDER] = gp.parseBoolean(val)
-	return savit[gv.LADDER]
-def overdrive(val=None):
-	global savit
-	if val!=None: savit[gv.OVERDRIVE] = gp.parseBoolean(val)
-	return savit[gv.OVERDRIVE]
-def limiter(val=None):
-	global savit
-	if val!=None: savit[gv.LIMITER] = gp.parseBoolean(val)
-	return savit[gv.LIMITER]
-def arp(val=None):
-	global savit
-	if val!=None: savit[gv.ARP] = gp.parseBoolean(val)
-	return savit[gv.ARP]
-def autochord(val=None):
-	global savit
-	if val!=None: savit[gv.AUTOCHORD] = gp.parseBoolean(val)
-	return savit[gv.AUTOCHORD]
-def aftertouch(val=None):
-	global savit
-	if val!=None: savit[gv.AFTERTOUCH] = gp.parseBoolean(val)
-	return savit[gv.AFTERTOUCH]
+	if val!=None:
+		savit[ effect ] = gp.parseBoolean(val)
+	return savit[ effect ]
+
+def LFO			(val=None): return( savselect( gv.LFO, val ))
+def chorus		(val=None): return( savselect( gv.CHORUS, val ))
+def reverb		(val=None): return( savselect( gv.REVERB, val ))
+def autowah		(val=None): return( savselect( gv.AUTOWAH, val ))
+def delay		(val=None): return( savselect( gv.DELAY, val ))
+def ladder		(val=None): return( savselect( gv.LADDER, val ))
+def overdrive	(val=None): return( savselect( gv.OVERDRIVE, val ))
+def limiter		(val=None): return( savselect( gv.LIMITER, val ))
+def arp			(val=None): return( savselect( gv.ARP, val ))
+def autochord	(val=None): return( savselect( gv.AUTOCHORD, val ))
+def aftertouch	(val=None): return( savselect( gv.AFTERTOUCH, val ))
+def dspprio		(val=None): return( savselect( DSPprio, val ))
 
 def setname(val=None):		# name of preset to save
 	global presetname
@@ -137,6 +125,25 @@ def setname(val=None):		# name of preset to save
 		if presetname in ["Box", "Set"]:
 			presetname = "Default"
 	return presetname
+
+def setFXpreset(setting):
+	if setting in gv.procs_alias:
+		content = gv.procs_alias[ setting ][0]()
+		csvformat = gv.procs_alias[ setting ][1]
+		if csvformat == "int":
+			content = int( content )
+		elif setting == gv.DSPPRIOTAB:
+			prilist = ""
+			for eff in content:
+				prilist += eff[1]
+				prilist += '-'
+			content = prilist[:-1]
+		else:
+			content = csvformat[ content ]
+			if setting in [ gv.CHORDS, gv.SCALES ]:
+				if content == "":
+					content = "Note"
+		gv.FXpresets[presetname].update( {setting: content} )
 
 def save(val=False):
 	if (gp.parseBoolean(val)
@@ -150,28 +157,14 @@ def save(val=False):
 		gv.FXpresets[presetname] = {}	# saves order of existing and places new at end
 		for family in savit:
 			if savit[family]:
-				famidx = gp.getindex(family, gv.CCfamilies, onecol=True)
-				'''
-				search controls for this family
-				- in UI: gv.procs_alias[ procs[m][2] ][0] = procs[m][1]
-				- procs[m][1] is pointer to UI routine => control content
-				- UI.procs[m][2] is key of gv.MC = the controlname in csv's
-				- gv.MC[control][3] is family
-				'''
-				for control in gv.MC:
-					if control[3] == famidx:
-						controlname = control[0]
-						if controlname in gv.procs_alias:
-							content = gv.procs_alias[ controlname ][0]()
-							csvformat = gv.procs_alias[ controlname ][1]
-							if csvformat == "int":
-								content = int( content )
-							else:
-								content = csvformat[ content ]
-								if controlname in [ gv.CHORDS, gv.SCALES ]:
-									if content == "":
-										content = "Note"
-							gv.FXpresets[presetname].update( {controlname: content} )
+				if family in noCCsettings:
+					for setting in noCCsettings[ family ]:
+						setFXpreset( setting )
+				else:
+					famidx = gp.getindex(family, gv.CCfamilies, onecol=True)
+					for control in gv.MC:
+						if control[3] == famidx:
+							setFXpreset( control[0] )
 		'''
 		if nothing was checked, the preset needs to disappear
 		'''

@@ -43,19 +43,19 @@ Reverb,Fixed,ReverbDamp,Continuous,
 Reverb,Fixed,ReverbWidth,Continuous,
 ,,,,
 "## Various WAH effects (wahpedal, EnvelopeWah, LFO-wah) ##",,,,
-Wah-Wah,Dummy,WahType,NoController,
-Wah-Wah,Fixed,EnvelopeWah,Toggle,# AutoWah
-Wah-Wah,Fixed,LFOwah,Toggle,# Oscillator driven Wah
-Wah-Wah,Fixed,ManualWah,Toggle,# Usually a pedal
-Wah-Wah,Fixed,WahLvl,Continuous,# Wet/dry mix
-Wah-Wah,Fixed,WahMin,Continuous,
-Wah-Wah,Fixed,WahMax,Continuous,
-Wah-Wah,Fixed,WahQ,Continuous,
-Wah-Wah,Fixed,WahAttack,Continuous,# Auto(envelope)wah attack sensitivity
-Wah-Wah,Fixed,WahRelease,Continuous,# Auto(envelope)wah release sensitivity
-Wah-Wah,Fixed,WahSpeed,Continuous,# LFOwah oscillator speed
-Wah-Wah,Fixed,WahLvlRange,Continuous,# LFO and manual/pedal “strength”
-Wah-Wah,Fixed,WahPedal,Continuous,# Manual/pedal controller
+Wah,Dummy,WahType,NoController,
+Wah,Fixed,EnvelopeWah,Toggle,# AutoWah
+Wah,Fixed,LFOwah,Toggle,# Oscillator driven Wah
+Wah,Fixed,ManualWah,Toggle,# Usually a pedal
+Wah,Fixed,WahLvl,Continuous,# Wet/dry mix
+Wah,Fixed,WahMin,Continuous,
+Wah,Fixed,WahMax,Continuous,
+Wah,Fixed,WahQ,Continuous,
+Wah,Fixed,WahAttack,Continuous,# Auto(envelope)wah attack sensitivity
+Wah,Fixed,WahRelease,Continuous,# Auto(envelope)wah release sensitivity
+Wah,Fixed,WahSpeed,Continuous,# LFOwah oscillator speed
+Wah,Fixed,WahLvlRange,Continuous,# LFO and manual/pedal strength
+Wah,Fixed,WahPedal,Continuous,# Manual/pedal controller
 ,,,,
 ## Echo and Flanger (fast echo) ##,,,,
 Delay,Dummy,DelayType,NoController,
