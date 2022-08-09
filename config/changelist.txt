@@ -21,6 +21,7 @@ Feb-August 2022:
   - Added rotate parameter for OLED displays
   - Changed web "LCD"screen & building block to accommodate other skins.
   - Renamed remap.py to UI_notemap.py
+  - Split off wavs/sounds handling from main module to sounds.py
   - Lots of bug fixes
   - Lots of code cosmetics/cleanups
 Jan-Feb 2022:

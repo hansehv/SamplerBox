@@ -142,8 +142,17 @@ PAFCHOKE = "pafChoke"
 UA = "UA"
 
 # #########################################################
-# Internal variables
+# Internal literals & variables
 # #########################################################
+
+PLAYLIVE = "Keyb"			# reacts on "keyboard" interaction
+PLAYBACK = "Once"			# ignores loop markers ("just play the sample with option to stop")
+PLAYBACK2X = "Onc2"			# ignores loop markers with note-off by same note
+PLAYLOOP = "Loos"			# recognize loop markers, note-off by 127-note
+PLAYLOOP2X = "Loop"			# recognize loop markers, note-off by same note
+BACKTRACK = "Back"			# recognize loop markers, loop-off by same note or controller
+VELSAMPLE = "Sample"		# velocity equals sampled value, requires multiple samples to get differentation
+VELACCURATE = "Accurate"	# velocity as played, allows for multiple (normalized!) samples for timbre
 
 ConfigErr = False
 LEDblink = False
