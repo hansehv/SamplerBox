@@ -34,7 +34,7 @@ print ( "=" *42 )
 
 ########  continue importing  ########
 import rtmidi2
-import time,psutil,numpy,struct,copy
+import time,psutil,numpy,copy
 import sys,os,re,operator,threading
 from numpy import random
 import configparser
@@ -256,12 +256,13 @@ gv.CCmapBox = getcsv.CCmap(gv.CONFIG_LOC + gv.CTRLMAP_DEF)
 
 # Sounddevice setup (detect/determine/check soundcard etc) & callback routine (the actual sound generator)
 # Alsamixer setup for volume control (optional)
-#
 import audio    # import after effects settings to avoid unassigned pointers.
 UI.USE_ALSA_MIXER=audio.USE_ALSA_MIXER
 
+# Now we have all prereqs for setting the presets
 getcsv.FXpresets(gv.CONFIG_LOC + gv.FXPRESETS_DEF)
 
+# sound coordination can be loaded too
 from sounds import Sound
 from sounds import GetStopmode
 from sounds import GetLoopmode
@@ -835,6 +836,7 @@ def ActuallyLoad():
     PREFXPRESET=""
     PRETRANSPOSE=0
     PREMUTEGROUP=0
+    PREPORTAMENTO=0
     PREFILLNOTE = 'Y'
     PRELAYERS = ''
     if gv.POLY_AFTOUCH:
@@ -918,6 +920,10 @@ def ActuallyLoad():
                         if m in ['R','D','Y']:
                             PRERETRIGGER = m
                         continue
+                    if r'%%mutegroup' in pattern:
+                        PREMUTEGROUP = (int(pattern.split('=')[1].strip()))
+                    if r'%%portamento' in pattern:
+                        PREPORTAMENTO = (int(pattern.split('=')[1].strip()))
                     if r'%%xfadeout' in pattern:
                         PREXFADEOUT = (int(pattern.split('=')[1].strip()))
                         #127#if PREXFADEOUT > 127:
@@ -1000,16 +1006,19 @@ def ActuallyLoad():
                     if r'%%layers' in pattern:
                         PRELAYERS = pattern.split('=')[1].strip().title()
                         continue
-                    defaultparams = { 'midinote':'-128', 'velocity':'-1', 'gain':'1', 'notename':'', 'voice':'1', 'velolevs':PREVELOLEVS, 'mode':gv.sample_mode, 'velmode':PREVELMODE,\
-                                      'transpose':PRETRANSPOSE, 'release':PRERELEASE, 'damp':PREDAMP, 'dampnoise':PREDAMPNOISE, 'retrigger':PRERETRIGGER, 'mutegroup':PREMUTEGROUP,\
-                                      'relsample':PRERELSAMPLE, 'xfadeout':PREXFADEOUT, 'xfadein':PREXFADEIN, 'xfadevol':PREXFADEVOL, 'qnote':PREQNOTE, 'notemap':PRENOTEMAP, 'pan':'64',\
-                                      'fxpreset':PREFXPRESET, 'layers':PRELAYERS, 'pafpair':PREPAFPAIR, 'fillnote':PREFILLNOTE, 'rnds':'1', 'smfseq':'1', 'voicemap':"", 'backtrack':'-1'}
+                    defaultparams = { 'midinote':'-128', 'velocity':'-1', 'gain':'1', 'notename':'', 'voice':'1', 'velolevs':PREVELOLEVS,\
+                                      'mode':gv.sample_mode, 'velmode':PREVELMODE, 'transpose':PRETRANSPOSE, 'release':PRERELEASE, 'damp':PREDAMP, 'dampnoise':PREDAMPNOISE,\
+                                      'retrigger':PRERETRIGGER, 'mutegroup':PREMUTEGROUP, 'portamento':PREPORTAMENTO,\
+                                      'relsample':PRERELSAMPLE, 'xfadeout':PREXFADEOUT, 'xfadein':PREXFADEIN, 'xfadevol':PREXFADEVOL, 'qnote':PREQNOTE,\
+                                      'notemap':PRENOTEMAP, 'pan':'64', 'fxpreset':PREFXPRESET, 'layers':PRELAYERS, 'pafpair':PREPAFPAIR,\
+                                      'fillnote':PREFILLNOTE, 'rnds':'1', 'smfseq':'1', 'voicemap':"", 'backtrack':'-1'}
                     if len(pattern.split(',')) > 1:
                         defaultparams.update(dict([item.split('=') for item in pattern.split(',', 1)[1].replace(' ','').replace('%', '').split(',')]))
                     pattern = pattern.split(',')[0]
                     pattern = re.escape(pattern.strip())
                     pattern = pattern.replace(r"%midinote", r"(?P<midinote>\d+)").replace(r"%velocity", r"(?P<velocity>\d+)").replace(r"%gain", r"(?P<gain>[-+]?\d*\.?\d+)")\
-                                    .replace(r"%voice", r"(?P<voice>\d+)").replace(r"%velolevs", r"(?P<velolevs>\d+)").replace(r"%mutegroup", r"(?P<mutegroup>\d+)")\
+                                    .replace(r"%voice", r"(?P<voice>\d+)").replace(r"%velolevs", r"(?P<velolevs>\d+)")\
+                                    .replace(r"%mutegroup", r"(?P<mutegroup>\d+)").replace(r"%portamento", r"(?P<portamento>\d+)")\
                                     .replace(r"%fillnote", r"(?P<fillnote>[YNFynf])").replace(r"%mode", r"(?P<mode>[A-Za-z0-9])").replace(r"%velmode", r"(?P<velmode>[A-Za-z])")\
                                     .replace(r"%transpose", r"(?P<transpose>\d+)").replace(r"%release", r"(?P<release>\d+)").replace(r"%damp", r"(?P<damp>\d+)").replace(r"%pan", r"(?P<pan>\d+)")\
                                     .replace(r"%dampnoise", r"(?P<dampnoise>\[YNyn])").replace(r"%retrigger", r"(?P<retrigger>[YyRrDd])").replace(r"%relsample", r"(?P<relsample>[NnSsEe])")\
@@ -1129,6 +1138,7 @@ def ActuallyLoad():
                                 print("%s: ignored sample as velocity %d higher than velolevs %d for voice %d" %(fname, velocity, velolevs, voice))
                                 continue
                             mutegroup = int(info.get('mutegroup', defaultparams['mutegroup']))
+                            portamento = int(info.get('portamento', defaultparams['portamento']))
                             gain = abs(float((info.get('gain', defaultparams['gain']))))
                             pan = int(info.get('pan', defaultparams['pan']))
                             if not (0 < pan < 128):
@@ -1165,14 +1175,14 @@ def ActuallyLoad():
                             try:
                                 if backtrack>-1:    # Backtracks are intended for start/stop via controller, so we can use unplayable notes
                                     if (gv.BTNOTES+backtrack, velocity, voice) in gv.samples:
-                                        gv.samples[gv.BTNOTES+backtrack, velocity, voice].append(Sound(os.path.join(dirname, fname), voice, gv.BTNOTES+backtrack, rnds, velocity, velmode, mode, release, damp, dampnoise, retrigger, gain, mutegroup, relsample, xfadeout, xfadein, xfadevol, fractions, pan))
+                                        gv.samples[gv.BTNOTES+backtrack, velocity, voice].append(Sound(os.path.join(dirname, fname), voice, gv.BTNOTES+backtrack, rnds, velocity, velmode, mode, release, damp, dampnoise, retrigger, gain, mutegroup, portamento, relsample, xfadeout, xfadein, xfadevol, fractions, pan))
                                     else:
-                                        gv.samples[gv.BTNOTES+backtrack, velocity, voice] = [Sound(os.path.join(dirname, fname), voice, gv.BTNOTES+backtrack, rnds, velocity, velmode, mode, release, damp, dampnoise, retrigger, gain, mutegroup, relsample, xfadeout, xfadein, xfadevol, fractions, pan)]
+                                        gv.samples[gv.BTNOTES+backtrack, velocity, voice] = [Sound(os.path.join(dirname, fname), voice, gv.BTNOTES+backtrack, rnds, velocity, velmode, mode, release, damp, dampnoise, retrigger, gain, mutegroup, portamento, relsample, xfadeout, xfadein, xfadevol, fractions, pan)]
                                 if midinote>-1:
                                     if (midinote, velocity, voice) in gv.samples:
-                                        gv.samples[midinote, velocity, voice].append(Sound(os.path.join(dirname, fname), voice, midinote, rnds, velocity, velmode, mode, release, damp, dampnoise, retrigger, gain, mutegroup, relsample, xfadeout, xfadein, xfadevol, fractions, pan))
+                                        gv.samples[midinote, velocity, voice].append(Sound(os.path.join(dirname, fname), voice, midinote, rnds, velocity, velmode, mode, release, damp, dampnoise, retrigger, gain, mutegroup, portamento, relsample, xfadeout, xfadein, xfadevol, fractions, pan))
                                     else:
-                                        gv.samples[midinote, velocity, voice] = [Sound(os.path.join(dirname, fname), voice, midinote, rnds, velocity, velmode, mode, release, damp, dampnoise, retrigger, gain, mutegroup, relsample, xfadeout, xfadein, xfadevol, fractions, pan)]
+                                        gv.samples[midinote, velocity, voice] = [Sound(os.path.join(dirname, fname), voice, midinote, rnds, velocity, velmode, mode, release, damp, dampnoise, retrigger, gain, mutegroup, portamento, relsample, xfadeout, xfadein, xfadevol, fractions, pan)]
                                         fillnotes[midinote, voice] = fillnote
                                         if gv.voicelist[voicex][2] == "":
                                             gv.voicelist[voicex][2] = mode
@@ -1194,7 +1204,7 @@ def ActuallyLoad():
             file = os.path.join(dirname, "%d.wav" % midinote)
             #print "Trying " + file
             if os.path.isfile(file):
-                gv.samples[midinote,1,1] = [Sound(file, 1, midinote, 1, PREVELOLEVS, PREVELMODE, gv.sample_mode, PRERELEASE, PREDAMP, PREDAMPNOISE, PRERETRIGGER, gv.globalgain, PREMUTEGROUP, BOXRELSAMPLE, PREXFADEOUT, PREXFADEIN, PREXFADEVOL, PREFRACTIONS, 64)]
+                gv.samples[midinote,1,1] = [Sound(file, 1, midinote, 1, PREVELOLEVS, PREVELMODE, gv.sample_mode, PRERELEASE, PREDAMP, PREDAMPNOISE, PRERETRIGGER, gv.globalgain, PREMUTEGROUP, PREPORTAMENTO, BOXRELSAMPLE, PREXFADEOUT, PREXFADEIN, PREXFADEVOL, PREFRACTIONS, 64)]
                 fillnotes[midinote,1] = PREFILLNOTE
         voicenames=[[1,"Default"]]
         # 0=voice#, 1=descr, 2=mode, 3=notemap, 4=velocitylevels, 5=fxpreset, 6=layers
