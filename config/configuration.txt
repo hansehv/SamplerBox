@@ -167,8 +167,7 @@ PRESETBASE = 0
 PRESET = 0
 
 # Pitchrange: default range of the pitchwheel in semitones (max=12 is een octave up&down)
-# Pitchbits: pitchwheel resolution, 0=disable, max=14 (=16384 steps)
-#            values below 7 will produce bad results
+# Pitchbits: pitchwheel/portamento resolution, min=7, max=14 (=16384 steps)
 PITCHRANGE = 12
 PITCHBITS = 7
 

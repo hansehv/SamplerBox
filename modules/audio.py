@@ -19,6 +19,10 @@ BLOCKSIZES=[]
 MAX_POLYPHONY = gv.cp.getint(gv.cfg,"MAX_POLYPHONY".lower())
 gv.PITCHRANGE = gv.cp.getint(gv.cfg,"PITCHRANGE".lower())*2	 # actually it is 12 up and 12 down
 PITCHBITS = gv.cp.getint(gv.cfg,"PITCHBITS".lower())
+if PITCHBITS < 7:	# useless and will break some of the code
+	PITCHBITS = 7	# so end of discussion!
+if PITCHBITS > 14:
+	PITCHBITS = 14	# more dumbo protection
 
 gv.pitchnotes = gv.PITCHRANGE
 PITCHSTEPS = 2**PITCHBITS

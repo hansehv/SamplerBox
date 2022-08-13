@@ -144,9 +144,16 @@ class PlayingSound:
         self.retune = retune
         if self.sound.portamento and portadelta:
             self.portadelta = portadelta / self.sound.fractions * audio.PITCHSTEPS
-            self.portastep = int( self.portadelta / self.sound.portamento )
-            # Make sure we'll end at zero by starting with an offset if needed
-            self.portadelta = self.portastep * self.sound.portamento
+            if self.sound.portamento > 0:   # LCT (Linear Constant Time)
+                self.portastep = int( self.portadelta / self.sound.portamento )
+                # Make sure we'll end at zero by starting with an offset if needed
+                self.portadelta = self.portastep * self.sound.portamento
+            else:                           # LCR (Linear Constant Rate)
+                self.portastep = int( self.sound.portamento * self.sound.fractions * audio.PITCHSTEPS / 64 )
+                if portadelta > 0:
+                    self.portastep *= -1
+                steps = int( self.portadelta / self.portastep )
+                self.portadelta = self.portastep * steps
         else:
             self.portastep = 0
             self.portadelta = 0
@@ -309,8 +316,9 @@ class Sound:
         if self.mutegroup > 0 and len(gv.playingsounds) > 0: #mute all sounds with same mutegroup of triggering/played key
             for ps in gv.playingsounds:
                 if self.mutegroup==ps.playingmutegroup():
-                    if ps.note == ps.playednote:
-                        portadelta = playednote - ps.playednote
+                    if (ps.playednote == ps.note
+                    and ps.playednote != playednote):   # we may need portamento here,
+                        portadelta = playednote - ps.playednote     # so note the gap.
                     if playednote != ps.playednote: # don't mute notes played by ourself (like chords & chorus)
                         ps.fadeout(False)   # fadeout the mutegroup sound(s) and cleanup admin where possible
                         try:
