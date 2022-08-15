@@ -46,6 +46,8 @@
 #        Intermediate rounding of formulas with mixed int/float variables changed
 #  February 2022
 #      - Added possibility for sounds having adapted panorama per note
+#  August 2022
+#      - Added portamento=glide
 
 import cython
 import numpy
@@ -76,8 +78,8 @@ def mixaudiobuffers(list rmlist, int frame_count, numpy.ndarray FADEOUT, int FAD
 
         # Below overflow protection values correspond with tables in samplerbox.py
         # The way of coding is longer than necessary, but faster. Optimizing leads to crippled sounds
-        if snd.channel>0:           # Exclude sequencer from pitchbend and panning
-            i = (SPEEDRANGE+snd.note-snd.sound.midinote) * PITCHSTEPS + snd.retune
+        if snd.channel>0:           # Exclude sequencer from pitchbend, portamento and panning
+            i = (SPEEDRANGE+snd.note-snd.sound.midinote)*PITCHSTEPS + snd.retune
             if i < 0:                                # below zero is out of limits
                 i = 0                                # save the program by ruining the pitch :-(
             else:
@@ -87,12 +89,15 @@ def mixaudiobuffers(list rmlist, int frame_count, numpy.ndarray FADEOUT, int FAD
             speed = SPEED[i]
             lpan = snd.sound.leftpan    # values of the..
             rpan = snd.sound.rightpan   # ..definition.txt
-        elif snd.sound.voice==0:    # Exclude FXtrack from notefill, pitchbend and panning
+        elif snd.sound.voice==0:    # Exclude FXtrack from notefill, pitchbend, portamento and panning
             speed = SPEED[SPEEDRANGE*PITCHSTEPS]
             lpan = snd.sound.leftpan    # values of the..
             rpan = snd.sound.rightpan   # ..definition.txt
         else:
-            i = (SPEEDRANGE+(snd.note-snd.sound.midinote)/fractions) * PITCHSTEPS + snd.retune + PITCHBEND
+            # Do the portamento-glide first if needed
+            if snd.portadelta:
+                snd.portadelta -= snd.portastep
+            i = (SPEEDRANGE+(snd.note-snd.sound.midinote)/fractions)*PITCHSTEPS + snd.retune + PITCHBEND - snd.portadelta
             if i < 0:                                # below zero is out of limits
                 i = 0                                # save the program by ruining the pitch :-(
             else:

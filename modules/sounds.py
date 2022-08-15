@@ -9,7 +9,7 @@
 
 import wave, struct, numpy
 from chunk import Chunk		# deprecated from 7.11: replaced by _Chunk class in wave
-import samplerbox_audio, gv, arp
+import samplerbox_audio, audio, gv, arp
 
 #########################################
 ##  Playmode identifiers
@@ -126,7 +126,7 @@ class waveread(wave.Wave_read):
 ############################################################
 
 class PlayingSound:
-    def __init__(self, sound, voice, playednote, note, velocity, pos, end, loop, stopnote, retune, channel=0):
+    def __init__(self, sound, voice, playednote, note, velocity, pos, end, loop, stopnote, retune, portadelta, channel):
         self.sound = sound
         self.pos = pos
         self.end = end
@@ -142,6 +142,21 @@ class PlayingSound:
         self.note = note
         self.retune_played = retune
         self.retune = retune
+        if self.sound.portamento and portadelta:
+            self.portadelta = portadelta / self.sound.fractions * audio.PITCHSTEPS
+            if self.sound.portamento > 0:   # LCT (Linear Constant Time)
+                self.portastep = int( self.portadelta / self.sound.portamento )
+                # Make sure we'll end at zero by starting with an offset if needed
+                self.portadelta = self.portastep * self.sound.portamento
+            else:                           # LCR (Linear Constant Rate)
+                self.portastep = int( self.sound.portamento * self.sound.fractions * audio.PITCHSTEPS / 64 )
+                if portadelta > 0:
+                    self.portastep *= -1
+                steps = int( self.portadelta / self.portastep )
+                self.portadelta = self.portastep * steps
+        else:
+            self.portastep = 0
+            self.portadelta = 0
         self.velocity = velocity
         self.vel = velocity * gv.globalgain
         self.stopnote = stopnote
@@ -203,7 +218,7 @@ class PlayingSound:
 
 class Sound:
     def __init__(self,filename,voice,midinote,rnds,velocity,velmode,mode,release,damp,dampnoise,
-                    retrigger,gain,mutegroup,relsample,xfadeout,xfadein,xfadevol,fractions,pan):
+                    retrigger,gain,mutegroup,portamento,relsample,xfadeout,xfadein,xfadevol,fractions,pan):
         read = False
         for m in gv.samples:
             for i in range(len(gv.samples[m])):
@@ -238,6 +253,7 @@ class Sound:
         self.retrigger = retrigger
         self.gain = gain
         self.mutegroup = mutegroup
+        self.portamento = 10 * portamento
         self.relsample = relsample
         self.xfadein = xfadein
         self.xfadeout = xfadeout
@@ -274,6 +290,7 @@ class Sound:
             self.nframes = self.eof         # and use full length (with default samplerbox release processing)
 
     def play(self, playednote, note, velocity, startparm, retune, channel=0):
+        portadelta = 0
         if self.velsample: velocity=127
         if startparm < 0:       # playing of sampled release is requested
             loop = -1           # a release sample does not loop
@@ -298,26 +315,30 @@ class Sound:
                     stopnote = 127-note
         if self.mutegroup > 0 and len(gv.playingsounds) > 0: #mute all sounds with same mutegroup of triggering/played key
             for ps in gv.playingsounds:
-                if self.mutegroup==ps.playingmutegroup() and playednote!=ps.playednote: # don't mute notes played by ourself (like chords & chorus)
-                    ps.fadeout(False)   # fadeout the mutegroup sound(s) and cleanup admin where possible
-                    try:
-                        gv.playingnotes[ps.playednote]=[]
-                    except:
-                        pass
-                    if ps.playednote>=gv.BTNOTES and ps.playednote<gv.MTCHNOTES:
-                        gv.playingbacktracks-=1
-                    try:
-                        gv.triggernotes[ps.note]=128
-                        gv.playingnotes[ps.note]=[]
-                        for triggerednote in range(128):   # also mute chordnotes triggered by this muted note
-                            if gv.triggernotes[triggerednote] == ps.note:   # did we make this one play ?
-                                if triggerednote in gv.playingnotes:
-                                    for m in gv.playingnotes[triggerednote]:
-                                        m.fadeout()
-                                        gv.playingnotes[triggerednote] = []
-                                        gv.triggernotes[triggerednote] = 128  # housekeeping
-                    except: pass
-        snd = PlayingSound(self, self.voice, playednote, note, velocity, pos, end, loop, stopnote, retune, channel)
+                if self.mutegroup==ps.playingmutegroup():
+                    if (ps.playednote == ps.note
+                    and ps.playednote != playednote):   # we may need portamento here,
+                        portadelta = playednote - ps.playednote     # so note the gap.
+                    if playednote != ps.playednote: # don't mute notes played by ourself (like chords & chorus)
+                        ps.fadeout(False)   # fadeout the mutegroup sound(s) and cleanup admin where possible
+                        try:
+                            gv.playingnotes[ps.playednote]=[]
+                        except:
+                            pass
+                        if ps.playednote>=gv.BTNOTES and ps.playednote<gv.MTCHNOTES:
+                            gv.playingbacktracks-=1
+                        try:
+                            gv.triggernotes[ps.note]=128
+                            gv.playingnotes[ps.note]=[]
+                            for triggerednote in range(128):   # also mute chordnotes triggered by this muted note
+                                if gv.triggernotes[triggerednote] == ps.note:   # did we make this one play ?
+                                    if triggerednote in gv.playingnotes:
+                                        for m in gv.playingnotes[triggerednote]:
+                                            m.fadeout()
+                                            gv.playingnotes[triggerednote] = []
+                                            gv.triggernotes[triggerednote] = 128  # housekeeping
+                        except: pass
+        snd = PlayingSound(self, self.voice, playednote, note, velocity, pos, end, loop, stopnote, retune, portadelta, channel)
         gv.playingsounds.append(snd)
         return snd
 

@@ -163,8 +163,9 @@ def save(val=False):
 				else:
 					famidx = gp.getindex(family, gv.CCfamilies, onecol=True)
 					for control in gv.MC:
-						if control[3] == famidx:
-							setFXpreset( control[0] )
+						if len(control) > 3:	# don't stumble over disabled controls
+							if control[3] == famidx:
+								setFXpreset( control[0] )
 		'''
 		if nothing was checked, the preset needs to disappear
 		'''

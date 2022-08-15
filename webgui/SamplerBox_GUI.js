@@ -741,9 +741,13 @@ var SB_element={
 		else {
 			html='<TABLE BORDER="1" CLASS="datatable"><TR><TH>DSP effect</TH><TH>Prio</TH><TH>Active</TH></TR>';
 			for (i=0;i<SB_DSPpriotab.length;i++){
+				act = 0;
+				if ( SB_DSPpriotab[i][2] > 0 ) {
+					act = 1;
+				}
 				html=html+'<TR CLASS="datatable"><TD CLASS="datatable"">'+SB_DSPpriotab[i][1]+
 					'</TD><TD CLASS="datatable"">'+SB_DSPpriotab[i][0]+
-					'</TD><TD CLASS="datatable"">'+NoYes[ SB_DSPpriotab[i][2] ]+'</TD></TR>';
+					'</TD><TD CLASS="datatable"">'+NoYes[ act ]+'</TD></TR>';
 			}
 			document.getElementById(elem_name).innerHTML=html+'</TABLE><P>';
 		}
