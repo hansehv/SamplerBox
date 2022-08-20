@@ -414,28 +414,38 @@ def FXpresets(ifile, override=False):
 	return 
 
 def layers(ifile):
-	gv.layers=[]		# layers
+	gv.layers=[]		# layers [voice, volume, presence]
 	gv.layernames=[]	# layernames	
 	try:
-		sheet=readcsv(ifile,100,False)
+		sheet=readcsv(ifile)
 		for i in range(len(sheet)):
 			if len(sheet[i]) > 1:	# skip useless lines
 				values=[]
-				for j in range(1,len(sheet[i])):
+				for j in range( 1, len(sheet[i]) ):
 					OK = False
+					layer = [0, 1.0, 127]
 					if sheet[i][j].isdigit():
-						values.append( [ int(sheet[i][j]), 1 ] )
+						layer[0] = int( sheet[i][j] )
 						OK = True
 					else:
 						try:
 							vals = sheet[i][j].split(":")
-							if len(vals) == 2:
-								values.append( [ int(vals[0]), float(vals[1]) ] )
-								OK = True
+							for l in range( len(vals) ):
+								if l == 0:
+									layer[l] = int( vals[l] )
+								elif l == 1:
+									layer[l] = float( vals[l] )
+								else:
+									layer[l] = int(round( 12.7 * vals[l] ))
+									if layer[l] == 0:
+										layer[l] = 1	# we have to leak
+							OK = True
 						except:
 							pass
-					if not OK:
-						print ("%s: ignored %s,%s because this is not a valid 'voice:velocity' defintion" %(ifile, sheet[i], sheet[i][j]))
+					if OK and layer[0] > 0:
+						values.append( layer )
+					else:
+						print ("%s - %s: ignored %s, because this is not a valid 'voice:volume:presence' definition" %(ifile, sheet[i], sheet[i][j]))
 				if values:
 					gv.layernames.append(sheet[i][0])
 					gv.layers.append(values)

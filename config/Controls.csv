@@ -13,6 +13,12 @@ Sustain/Damp,Fixed,Sustain,Continuous,"# Pedal: Sustain. Pedal functions are com
 Sustain/Damp,Fixed,Damp,Continuous,# Pedal: Damp all (conventional damp)
 Sustain/Damp,Fixed,DampNew,Continuous,"# Pedal: Damp only new notes,  a kind of pizzicato effect"
 Sustain/Damp,Fixed,DampLast,Continuous,# Pedal: Notes played during pedal press are damped on pedal release
+Layers,Fixed,Layer0Pres,Continuous,# Presence layer0 (base voice)
+Layers,Fixed,Layer1Pres,Continuous,# Presence layer1
+Layers,Fixed,Layer2Pres,Continuous,# ..etc..
+Layers,Fixed,Layer3Pres,Continuous,# ..etc..
+Layers,Fixed,Layer4Pres,Continuous,# ..etc..
+Layers,Fixed,Layer5Pres,Continuous,# ..etc..
 ,,,,
 "## LFO effects: vibrato, tremolo, panning and rotate ##",,,,
 Oscillate,Dummy,LFOtype,NoController,

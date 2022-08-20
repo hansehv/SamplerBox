@@ -143,6 +143,13 @@ var SB_variables={	// make sure all passed I/O parameters are covered here
 	v_SB_PAFreverse: function(val){SB_PAFreverse=val;},
 	v_SB_PAFpitchrange: function(val){SB_PAFpitchrange=val;},
 	v_SB_PAFpanwidth: function(val){SB_PAFpanwidth=val;},
+	v_SB_PAFpanwidth: function(val){SB_PAFpanwidth=val;},
+	v_SB_Layer0Pres: function(val){SB_Layer0Pres=val;},
+	v_SB_Layer1Pres: function(val){SB_Layer1Pres=val;},
+	v_SB_Layer2Pres: function(val){SB_Layer2Pres=val;},
+	v_SB_Layer3Pres: function(val){SB_Layer3Pres=val;},
+	v_SB_Layer4Pres: function(val){SB_Layer4Pres=val;},
+	v_SB_Layer5Pres: function(val){SB_Layer5Pres=val;},
 	v_SB_DefinitionTxt: function(val){SB_DefinitionTxt=val;}
 }
 
@@ -535,6 +542,24 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 		return(text+SB_slider(input_name,name,val,1,12,1)+SB_numselect(input_name,name,val,1,12,1,1));
 	},
 	input_SB_PAFpanwidth: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,0,10,1)+SB_numselect(input_name,name,val,0,10,1,1));
+	},
+	input_SB_Layer0Pres: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,0,10,1)+SB_numselect(input_name,name,val,0,10,1,1));
+	},
+	input_SB_Layer1Pres: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,0,10,1)+SB_numselect(input_name,name,val,0,10,1,1));
+	},
+	input_SB_Layer2Pres: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,0,10,1)+SB_numselect(input_name,name,val,0,10,1,1));
+	},
+	input_SB_Layer3Pres: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,0,10,1)+SB_numselect(input_name,name,val,0,10,1,1));
+	},
+	input_SB_Layer4Pres: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,0,10,1)+SB_numselect(input_name,name,val,0,10,1,1));
+	},
+	input_SB_Layer5Pres: function(input_name,name,val,text){
 		return(text+SB_slider(input_name,name,val,0,10,1)+SB_numselect(input_name,name,val,0,10,1,1));
 	},
 	input_SB_DefinitionTxt: function(input_name,name,val,text){

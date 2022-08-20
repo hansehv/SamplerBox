@@ -66,7 +66,7 @@ def setVoice(x,iv=0,*z):
             gv.currvoice = voice
             gv.sample_mode = gv.voicelist[xvoice][2]
             if iv >- 2:   # not MT voice change so layering can be changed
-                gv.currlayers = [ [gv.currvoice, 1] ]   # the voice = base = first layer
+                gv.currlayers = [ [gv.currvoice, 1.0, 127] ]   # the voice = base = first layer
                 gv.currlayername = ""
                 if gv.voicelist[xvoice][6]:         # construct this voice's layer setup
                     x = gp.getindex( gv.voicelist[xvoice][6], gv.layernames, True, False )
@@ -231,6 +231,11 @@ import LFO      # take notice: part of process in audio callback
 #
 import chorus   # take notice: part of process in midi callback and ARP
 
+# Layers (add extra voices to the active note)
+# Process incorporated in the note-on logic, so rather cheap as well
+#
+import layers   # take notice: part of process in midi callback, not ARP !! (yet)
+
 # Aftertouch capabilities (if supported by device),
 # real time enabling is done depending on definitions
 #
@@ -286,6 +291,7 @@ def ControlChange(CCnum, CCval):
             break
     if not mc and (CCnum==120 or CCnum==123):   # "All sounds off" or "all notes off"
         AllNotesOff()
+
 def AllNotesOff(scope=-1,*z):
     # scope: see EffectsOff below
     # stop the robots first
@@ -304,6 +310,7 @@ def AllNotesOff(scope=-1,*z):
     EffectsOff(scope)
     CallbackState()
     gv.display("")
+
 def EffectsOff(scope=-1,*z):
     # scope:
     #   -1 = switch off effects without affecting parameters
@@ -315,31 +322,39 @@ def EffectsOff(scope=-1,*z):
     LFO.reset(scope)
     chorus.reset(scope)
     #AutoChordOff()
+
 def ProgramUp(CCval,*z):
     x=gp.getindex(gv.PRESET,gv.presetlist)+1
     if x>=len(gv.presetlist): x=0
     gv.PRESET=gv.presetlist[x][0]
     gv.LoadSamples()
+
 def ProgramDown(CCval,*z):
     x=gp.getindex(gv.PRESET,gv.presetlist)-1
     if x<0: x=len(gv.presetlist)-1
     gv.PRESET=gv.presetlist[x][0]
     gv.LoadSamples()
+
 def MidiVolume(CCval,*z):
     gv.volumeCC = CCval / 127.0
+
 def AutoChordOff(x=0,*z):
     gv.currchord = 0
     gv.currscale = 0
     gv.display("")
+
 def PitchWheel(LSB,MSB=0,*z):   # This allows for single and double precision.
     try: MSB+=0 # If mapped to a double precision pitch wheel, it should work.
     except:     # But the use/result of double precision controllers does not
         MSB=LSB # justify the complexity it will introduce in the mapping.
         LSB=0   # So I ignore them here. If you want to try, plse share with me.
     gv.PITCHBEND=(((128*MSB+LSB)/gv.pitchdiv)-gv.pitchneutral)*gv.pitchnotes
+
 def PitchSens(CCval,*z):
     gv.pitchnotes = (24*CCval+100)/127
+
 sustain=False
+damp=False
 def Sustain(CCval,*z):
     global sustain
     if gv.sample_mode==gv.PLAYLIVE:
@@ -351,7 +366,6 @@ def Sustain(CCval,*z):
             gv.sustainplayingnotes = []
         else:               # sustain on
             sustain = True
-damp=False
 def Damp(CCval,*z):
     global damp
     if (CCval > 0):
@@ -386,6 +400,7 @@ def DampLast(CCval,*z):
             m.fadeout(False)
             DampNoise(m)
         gv.sustainplayingnotes = []
+
 def DampNoise(m):
     if m.playingdampnoise():
         PlayRelSample(m.playingrelsample(),m.playingvoice(),m.playingnote(),m.playingvolume(),m.playingretune(),m.playingchannel(),True)
@@ -397,13 +412,13 @@ def PlayRelSample(relsample,voice,playnote,velocity,retune,channel=0,play_as_is=
             startparm=-2
             voice=-voice
         PlaySample(playnote,playnote,voice,velocity,startparm,retune,channel,play_as_is)
+
 lastrnds = {}
 def PlaySample(midinote,playnote,voice,velocity,startparm,retune,channel=0,play_as_is=False):
     global lastrnds
     velolevs=gv.voicelist[gp.getindex(voice,gv.voicelist)][4]
     velidx=int(1.0*(velocity*velolevs)/128+.9999)   # roundup without math
     if (playnote,velidx,voice) not in gv.samples:
-        print("Note not loaded or filled")
         return
     if startparm==-1:
         sample=lastrnds[playnote][0][lastrnds[playnote][1]]      # use the same sample for the release sample
@@ -425,6 +440,7 @@ def PlaySample(midinote,playnote,voice,velocity,startparm,retune,channel=0,play_
         sample.play(midinote,playnote,velocity,startparm,retune,channel)
     else:
         gv.playingnotes.setdefault(channel*gv.MTCHNOTES+playnote,[]).append(sample.play(midinote,playnote,velocity,startparm,retune,channel))
+
 gv.playingbacktracks=0
 def playBackTrack(x,*z):
     playnote=int(x)+gv.BTNOTES
@@ -614,7 +630,7 @@ def MidiCallback(mididev, imessage, time_stamp):
                                             messagetype = 8
 
             if messagetype == 9:    # Note on
-                try:
+                if True:#try:
                     gv.last_midinote=midinote      # save original midinote for the webgui
                     if keyboardarea and not MT_in:
                         gv.last_musicnote=midinote-12*int(midinote/12) # do a "remainder midinote/12" without having to import the full math module
@@ -626,7 +642,7 @@ def MidiCallback(mididev, imessage, time_stamp):
                     else:
                         gv.last_musicnote=12 # Set musicnotesymbol to "effects" in webgui
                         playchord=0       # no chords outside keyboardrange / in effects channel.
-                        layers = [ [gv.currvoice, 1] ] # no layering either
+                        layers = [ [gv.currvoice, 1.0, 127] ] # no layering either
                     for n in range (len(gv.chordnote[playchord])):
                         playnote=midinote+gv.chordnote[playchord][n]
                         if sustain:   # don't pile up sustain
@@ -645,7 +661,9 @@ def MidiCallback(mididev, imessage, time_stamp):
                         #voice=gv.currvoice
                         for layer in layers:
                             voice = layer[0]
-                            layvel = layer[1] * velocity
+                            layvel = layer[1] * layer[2]/127 * velocity
+                            if layvel == 0: # in order to fade in, a sound has to be there
+                                layvel = 1  # this starts it, be it as low as possible.
                             if layvel>127:
                                 layvel = 127    # prevent distortion
                             #print "start playingnotes playnote %d, velocity %d, voice %d, retune %d" %(playnote, velocity, voice, retune)
@@ -672,7 +690,7 @@ def MidiCallback(mididev, imessage, time_stamp):
                                             gv.triggernotes[playnote]=128
                                             gv.playingnotes[playnote]=[]
                         # hier stopt de layer iteratie, gaat er iets fout met de except??
-                except:
+                else:#except:
                     err = 'Unassigned note or other exception in note %d, voice %d' % (midinote,voice)
                     if MT_in:               # restore previous saved voice and some effects
                         err = '%s, MT channel %d' %MIDIchannel

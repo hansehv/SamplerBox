@@ -1,4 +1,5 @@
 Main Menu,Item,Specs,Show as,API comment
+,,,,
 General,Preset,Presetlist,,"#: #,name"
 -,Voice,Voicelist,,"#: #,name"
 -,Scale,Scalename,,name: name > name
@@ -13,11 +14,13 @@ General,Preset,Presetlist,,"#: #,name"
 -,MIDIdev,MIDIdevs,MIDI devices,
 -,IP,IPlist,IP-addresses,
 -,SSID,Wireless,WlessNetw,
+,,,,
 Reverb,FVtype,FVtypes,On-off,name: name > x
 -,FVroomsize,0-100,Roomsize,
 -,FVdamp,0-100,Damp,
 -,FVlevel,0-100,WetDry,
 -,FVwidth,0-100,Width,
+,,,,
 Wah,AWtype,AWtypes,Type,name: name > x
 -,AWmixing,0-100,WetDry,
 -,AWlvlrange,0-100,Range,
@@ -27,6 +30,7 @@ Wah,AWtype,AWtypes,Type,name: name > x
 -,AWminfreq,20-500-20,MinFreq,
 -,AWmaxfreq,1000-10000-500,MaxFreq,
 -,AWspeed,100-1100-20,LFOspeed,
+,,,,
 Delay/Flanger,DLYtype,DLYtypes,Effect,name: name > x
 -,DLYfb,0-100,Feedback,
 -,DLYwet,0-100,Wet,
@@ -36,6 +40,7 @@ Delay/Flanger,DLYtype,DLYtypes,Effect,name: name > x
 -,DLYsteplen,300-3300-50,FlangSteplen,
 -,DLYmin,5-25-5,FlangMin,
 -,DLYmax,50-150-10,FlangMax,
+,,,,
 VibrTremPanRotat,LFOtype,LFOtypes,Effect,name: name > name
 -,VIBRpitch,1-64,VibrPitch,
 -,VIBRspeed,1-32,VibrSpeed,
@@ -45,31 +50,44 @@ VibrTremPanRotat,LFOtype,LFOtypes,Effect,name: name > name
 -,TREMtrill,boolean,TremTrill,
 -,PANwidth,2-20-2,PanWidth,
 -,PANspeed,1-32,Panspeed,
+,,,,
 Chorus,CHOrus,CHOtypes,On-off,name: name > boolean
 -,CHOdepth,2-15,Depth,
 -,CHOgain,30-80,Gain,
+,,,,
 Moog low pass,LFtype,LFtypes,On-off,name: name > x
 -,LFresonance,0-38-2,Resonance,
 -,LFcutoff,1000-11000-1000,Cutoff,
 -,LFdrive,1-20,Drive,
 -,LFlvl,0-100-10,WetDry,
 -,LFgain,10-110-5,Gain(care!),# Carefully test before using values above 50
+,,,,
 Overdrive,ODtype,ODtypes,On-off,name: name > x
 -,ODboost,15-65-5,Gain,
 -,ODdrive,1-11,Distortion,
 -,ODtone,0-95-5,Low pass,
 -,ODmix,1-10,WetDry,
+,,,,
 Peak limiter,PLtype,PLtypes,On-off,name: name > x
 -,PLthresh,70-110-5,Threshold,
 -,PLattack,1-11,Attack,
 -,PLrelease,1-11,Release,
+,,,,
 Arpeggiator,ARPord,ARPordlist,Order,name: name > x
 -,ARPstep,10-100,StepLength,
 -,ARPsustain,0-100,NoteLength,
 -,ARPloop,boolean,Loop,
 -,ARP2end,boolean,Play2end,
 -,ARPfade,0-100,Fadeout,"# 100 means ""no fadeout"""
+,,,,
 Aftertouch,CHAFreverse,boolean,ChanRevers,
 -,PAFreverse,boolean,KeyRevers,
 -,PAFpitchrange,1-12,Pitchrange,
 -,PAFpanwidth,0-10,Panwidth,
+,,,,
+SoundLayers,Layer0Pres,0-10,,
+-,Layer1Pres,0-10,,
+-,Layer2Pres,0-10,,
+-,Layer3Pres,0-10,,
+-,Layer4Pres,0-10,,
+-,Layer5Pres,0-10,,

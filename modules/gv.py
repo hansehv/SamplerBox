@@ -19,6 +19,12 @@ NOTEMAP_DEF = "notemap.csv"
 VOICEMAP_DEF = "MTchannelmap.csv"
 FXPRESETS_DEF = "FXpresets.csv"
 LAYERS_DEF = "layers.csv"
+LAYER0PRESENCE = "Layer0Pres"
+LAYER1PRESENCE = "Layer1Pres"
+LAYER2PRESENCE = "Layer2Pres"
+LAYER3PRESENCE = "Layer3Pres"
+LAYER4PRESENCE = "Layer4Pres"
+LAYER5PRESENCE = "Layer5Pres"
 FIXED = "Fixed"
 VOICES = "Voices"
 NOTEMAPS = "Notemaps"
@@ -358,7 +364,14 @@ MC = [	# [name,type,procedure,familyindex,MCmodenameindex] where type can be
 	[MENU_SEL,1,safeguard],
 	[MENU_RET,1,safeguard],
 	[NOTEMAPS,2,safeguard],
+	[LAYER0PRESENCE,0,safeguard],
+	[LAYER1PRESENCE,0,safeguard],
+	[LAYER2PRESENCE,0,safeguard],
+	[LAYER3PRESENCE,0,safeguard],
+	[LAYER4PRESENCE,0,safeguard],
+	[LAYER5PRESENCE,0,safeguard],
 	[FXPRESETS,2,safeguard],
+	# leave these at the end, as they need not be present !
 	[CHAFREVERS,1,safeguard],
 	[PAFREVERS,1,safeguard],
 	[PAFVOLUME,4,safeguard],

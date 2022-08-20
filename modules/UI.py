@@ -7,15 +7,13 @@
 #   control functions needing no user interaction.
 #
 #   SamplerBox extended by HansEhv (https://github.com/hansehv)
-#   see docs at https://homspace.nl/samplerbox
-#   changelog in changelist.txt
 #
 ###############################################################
 
 import re
-import gv,gp
-import UI_notemap,UI_CCmap,UI_FXpresets
-import arp,chorus,Cpp,LFO,network
+import gv, gp
+import UI_notemap, UI_CCmap, UI_FXpresets
+import arp, chorus, layers, Cpp, LFO, network
 if gv.AFTOUCH_ON:
 	import AfterTouch
 import menu as butmenu
@@ -700,6 +698,13 @@ def PAFpanwidth(val=None):							# 0-10 5=center
 			pass
 	return 5
 
+def L0Pres( val=None ): return( layers.Presence(0,val,10) )	# L0 is the always present base sound
+def L1Pres( val=None ): return( layers.Presence(1,val,10) )
+def L2Pres( val=None ): return( layers.Presence(2,val,10) )
+def L3Pres( val=None ): return( layers.Presence(3,val,10) )
+def L4Pres( val=None ): return( layers.Presence(4,val,10) )
+def L5Pres( val=None ): return( layers.Presence(5,val,10) )
+
 def Button(val=None):
 	try:
 		if val!=None:
@@ -757,8 +762,10 @@ def DSPpriotab(priolist=None):		# Priority of processing effects in CPP
 	return Cpp.priotab				# So for UI it's still a readonly variable !
 
 def MenuDisplay(*z):				# [line1,line2, ..] lines of the characterdisplay of the (button) menu
-	try: return [butmenu.line1(),butmenu.line2(),butmenu.line3()]
-	except: return ["No menu defined",""]
+	if True:#try:
+		return [butmenu.line1(),butmenu.line2(),butmenu.line3()]
+	else:#except:
+		return ["No menu defined",""]
 
 IP = network.IP
 IPlist = network.IPlist
@@ -1022,6 +1029,12 @@ procs={
 	"MidiChannel":["w",MidiChannel],				# 1-16
 	"Button":["w",Button],							# index of Buttons, where 0 has no function (no button touched)
 	"Gain":["w",Gain],								# 0-300 (100 is neutral
+	"Layer0Pres":["w",L0Pres],						# 0-10, L0 is the always present base sound
+	"Layer1Pres":["w",L1Pres],						#  "
+	"Layer2Pres":["w",L2Pres],						#  "
+	"Layer3Pres":["w",L3Pres],						#  "
+	"Layer4Pres":["w",L4Pres],						#  "
+	"Layer5Pres":["w",L5Pres],						#  "
 	"Scale":["w",Scale,gv.SCALES,gv.chordname],			# index of ScaleName (& ScaleChord)
 	"Chord":["w",Chord,gv.CHORDS,gv.scalename],			# index of Chordname
 	"Pitchrange":["w",Pitchrange,gv.PITCHSENS,"int"],	# 0-12 (so max 1 octave up & down)
