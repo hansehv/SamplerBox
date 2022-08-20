@@ -17,6 +17,7 @@ Feb-August 2022:
     - added missing %%mutegroup (we only had %mutegroup)
     - added (%)%portamento. Default=0=no. See docs
   - Added fade-in/out for layered sounds(voices)
+  - Added the sound layers to the arpeggiator
   - Lifted "127" restriction on %release and %xfadein/out
   - Added %pan parameter for positioning mono samples
   - Added CCmap editing in GUI (editing module can be used in/for other UI's).

@@ -38,3 +38,11 @@ gv.setMC(gv.LAYER2PRESENCE,L2Pres)
 gv.setMC(gv.LAYER3PRESENCE,L3Pres)
 gv.setMC(gv.LAYER4PRESENCE,L4Pres)
 gv.setMC(gv.LAYER5PRESENCE,L5Pres)
+
+def layvel(layer, velocity):
+	newvel = layer[1] * layer[2]/127 * velocity
+	if newvel == 0:		# in order to fade in, a sound has to be there
+		newvel = 1		# this starts it, be it as low as possible.
+	if newvel > 127:
+		newvel = 127	# prevent distortion
+	return newvel

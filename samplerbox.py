@@ -637,12 +637,12 @@ def MidiCallback(mididev, imessage, time_stamp):
                         if gv.currscale>0:               # scales require a chords mix
                             gv.currchord = gv.scalechord[gv.currscale][gv.last_musicnote]
                         playchord=gv.currchord
-                        layers = gv.currlayers  # master keyboard area can be layered
+                        currlayers = gv.currlayers  # master keyboard area can be layered
                         gv.lastvel = velocity   # reference for the aftertouch
                     else:
-                        gv.last_musicnote=12 # Set musicnotesymbol to "effects" in webgui
-                        playchord=0       # no chords outside keyboardrange / in effects channel.
-                        layers = [ [gv.currvoice, 1.0, 127] ] # no layering either
+                        gv.last_musicnote=12    # Set musicnotesymbol to "effects" in webgui
+                        playchord=0             # no chords outside keyboardrange / in effects channel.
+                        currlayers = [ [gv.currvoice, 1.0, 127] ] # no layering either
                     for n in range (len(gv.chordnote[playchord])):
                         playnote=midinote+gv.chordnote[playchord][n]
                         if sustain:   # don't pile up sustain
@@ -658,14 +658,10 @@ def MidiCallback(mididev, imessage, time_stamp):
                                         else:
                                             m.fadeout(False)    # ..or damp without optional dampnoise (considered unsuitable, based on current knowledge)
                                     #gv.playingnotes[playnote]=[]   # unnecessary housekeeping as we will refill it immediately..
-                        #voice=gv.currvoice
-                        for layer in layers:
+                        #voice in first layer is gv.currvoice
+                        for layer in currlayers:
                             voice = layer[0]
-                            layvel = layer[1] * layer[2]/127 * velocity
-                            if layvel == 0: # in order to fade in, a sound has to be there
-                                layvel = 1  # this starts it, be it as low as possible.
-                            if layvel>127:
-                                layvel = 127    # prevent distortion
+                            layvel = layers.layvel(layer, velocity)
                             #print "start playingnotes playnote %d, velocity %d, voice %d, retune %d" %(playnote, velocity, voice, retune)
                             if chorus.effect:
                                 PlaySample(midinote,playnote,voice,layvel*chorus.gain,0,retune,MIDIchannel)
