@@ -90,13 +90,33 @@ def Notemap(val=None):						# active notemap, either index in notemap or "notema
 			if isinstance(val, int):
 				newnotemap=gv.notemaps[val-1] if val>0 	else ""
 			else:
-				if val in gv.notemaps: newnotemap=val
-			mapchange=(currnotemap!=newnotemap)
+				if val in gv.notemaps:
+					newnotemap=val
+			mapchange=(currnotemap != newnotemap)
 			if mapchange:
 				gv.setNotemap(val)
 				UI_notemap.nm_inote=-1			# restart the mapping circus when underlying table shifted
 			return mapchange
 		return gv.currnotemap
+	except:
+		return ""
+
+def SoundLayer(val=None):						# active layer, either index in layers or "layer name"
+	try:
+		if val!=None:
+			currlayer=gv.currlayername
+			newlayer=""
+			if isinstance(val, int):
+				newlayer=gv.layernames[val-1] if val>0 	else ""
+			else:
+				if val in gv.layernames:
+					newlayer=val
+			SLchange=(currlayer != newlayer)
+			if SLchange:
+				gv.currlayername = ""
+				layers.load(newlayer)
+			return SLchange
+		return gv.currlayername
 	except:
 		return ""
 
@@ -698,6 +718,8 @@ def PAFpanwidth(val=None):							# 0-10 5=center
 			pass
 	return 5
 
+# Layers directy addressed addressed by menu and/or gpio buttons
+# This makes them also available as webgui building blocks - unused at time of making this
 def L0Pres( val=None ): return( layers.Presence(0,val,10) )	# L0 is the always present base sound
 def L1Pres( val=None ): return( layers.Presence(1,val,10) )
 def L2Pres( val=None ): return( layers.Presence(2,val,10) )
@@ -762,9 +784,9 @@ def DSPpriotab(priolist=None):		# Priority of processing effects in CPP
 	return Cpp.priotab				# So for UI it's still a readonly variable !
 
 def MenuDisplay(*z):				# [line1,line2, ..] lines of the characterdisplay of the (button) menu
-	if True:#try:
+	try:
 		return [butmenu.line1(),butmenu.line2(),butmenu.line3()]
-	else:#except:
+	except:
 		return ["No menu defined",""]
 
 IP = network.IP
@@ -835,6 +857,8 @@ def NotesCC(*z):					# Controller# for notes used as CC.
 	return gv.NOTES_CC
 def FXpresets(*z):					# Defined effects presetlist for the current sample set
 	return gv.FXpresetnames
+def SoundLayers(*z):				# Defined layernames for the current sample set
+	return gv.layernames
 def Chordname(*z):					# Chordnames as defined in chord.csv
 	return gv.chordname
 def Chordnote(*z):					# Chordnotes as defined in chord.csv
@@ -873,7 +897,7 @@ def CSSname(*z):					# webGUI "skin"
 	return("SamplerBox.css")
 
 # #######################################################
-#       Functionalities split off in sub UI-modules
+#       Functionalities split off in sub (UI-)modules
 # #######################################################
 
 # notemap I-O fields
@@ -931,6 +955,18 @@ fxp_aftertouch = UI_FXpresets.aftertouch
 fxp_dspprio = UI_FXpresets.dspprio
 fxp_name = UI_FXpresets.setname			# Preset name to save
 fxp_save = UI_FXpresets.save			# boolean, requesting save preset if True
+
+# (sound)layers I-O fields
+sl_name = layers.name
+sl_layer = layers.layer
+sl_name = layers.name
+sl_voice = layers.voice
+sl_volume = layers.volume
+sl_presence = layers.pres
+sl_clear = layers.clear
+sl_save = layers.save
+# currlayers detail table
+sl_details = layers.details
 
 # #################################################################################
 #                         = = = = =   D I C T I O N A R Y   = = = = =
@@ -992,6 +1028,9 @@ procs={
 	"nm_inote":["w",nm_inote],				# (string) Keyname or (integer) index in KeyNames for keyboardnote
 	"cm_family":["w",cm_family],			# (string) Familyname or (integer) index of control family to limit the dropdown
 	"cm_control":["w",cm_control],			# (string) Controlname or (integer) index of control within family
+	"SoundLayer":["w",SoundLayer],			# (string) Layername or (integer) index in layernames of active notemap, returns layername or layerchange
+	"sl_layer":["w",sl_layer],				# layer#
+	"sl_voice":["w",sl_voice],				# voice of this layer
 
 		# next procedures always return the value of the respective parameter
 	"nm_Q":["w",nm_Q],								# (integer) index of qFractions or (string) tones, so currently either "Semi" or "Quarter"
@@ -1022,6 +1061,11 @@ procs={
 	"fxp_dspprio":["w",fxp_dspprio],				#  "
 	"fxp_name":["w",fxp_name],						# Preset name to save
 	"fxp_save":["w",fxp_save],						# boolean, requesting save preset if True
+	"sl_name":["w",sl_name],						# layers name to save
+	"sl_volume":["w",sl_volume],					# volume/gain of this layer (0-30, 10=normal/default)
+	"sl_presence":["w",sl_presence],				# presence of this layer (0-10, 10 = full presence)
+	"sl_clear":["w",sl_clear],						# boolean, requesting clear=remove layers if True
+	"sl_save":["w",sl_save],						# boolean, requesting save layers if True
 	"DSPeffect":["w",DSPeffect],					# priotab index of the selected effect forsetting prio:
 	"DSPeffprio":["w",DSPprio],						# sets&returns the prio of the selected effect
 	"SoundVolume":["w",SoundVolume],				# 0-100
@@ -1120,6 +1164,8 @@ procs={
 	"cm_controllers":["v",cm_controllers],	# indexes of controllers in current control & notemap selection
 	"cm_current":["v",cm_current],			# current CCmap
 	"cm_bTracks":["v",cm_bTracks],			# backtracks with seq# > 0
+	"SoundLayers":["v",SoundLayers],		# Available layers (names)	
+	"sl_details":["v",sl_details],			# currlayers detail table
 	"DSPpriotab":["v",DSPpriotab,gv.DSPPRIOTAB,Cpp.priotab],	# Priority of processing effects in CPP
 	"MenuDisplay":["v",MenuDisplay],		# [line1,line2, ..] lines of the characterdisplay of the (button) menu
 	"IP":["w",IP],							# index of IP addresses found (it's classified "w" to force into the button menu)
@@ -1160,7 +1206,7 @@ procs={
 	"cm_ctrlmodes":["f",cm_ctrlmodes],		# index of button mode/function
 	"cm_ctrlrnames":["f",cm_ctrlrnames],	# mappable Controller names
 	"Buttons":["f",Buttons],				# Buttons supported by button menu
-	"CSSname":["f",CSSname]					# webGUI "skin"
+	"CSSname":["f","SamplerBox.css"]		# webGUI "skin"
 	}
 
 gv.procs_alias = {}

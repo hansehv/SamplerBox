@@ -1,7 +1,7 @@
 This file contains changelog of samplerbox.py
 For changes on samplerbox_audio.pyx, see top of the source file
 
-Feb-August 2022:
+Feb-Oct 2022:
   - Added aftertouch
     Channel:
      - all "continuous" functions
@@ -21,8 +21,9 @@ Feb-August 2022:
   - Lifted "127" restriction on %release and %xfadein/out
   - Added %pan parameter for positioning mono samples
   - Added CCmap editing in GUI (editing module can be used in/for other UI's).
-  - Added FXpresets editing in GUI (editing module can be used in/for other UI's).
   - Added changing of priorities for the DSP filters in FXpresets.csv and GUI
+  - Added FXpresets editing in GUI (editing module can be used in/for other UI's).
+  - Added Layers editing in GUI (editing module can be used in/for other UI's).
   - Added rotate parameter for OLED displays
   - Changed web "LCD"screen & building block to accommodate other skins.
   - Renamed remap.py to UI_notemap.py

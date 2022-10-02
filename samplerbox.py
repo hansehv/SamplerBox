@@ -34,8 +34,8 @@ print ( "=" *42 )
 
 ########  continue importing  ########
 import rtmidi2
-import time,psutil,numpy,copy
-import sys,os,re,operator,threading
+import time, psutil, numpy, copy
+import sys, os, re, operator, threading
 from numpy import random
 import configparser
 import samplerbox_audio   # audio-module (cython)
@@ -66,14 +66,8 @@ def setVoice(x,iv=0,*z):
             gv.currvoice = voice
             gv.sample_mode = gv.voicelist[xvoice][2]
             if iv >- 2:   # not MT voice change so layering can be changed
-                gv.currlayers = [ [gv.currvoice, 1.0, 127] ]   # the voice = base = first layer
-                gv.currlayername = ""
-                if gv.voicelist[xvoice][6]:         # construct this voice's layer setup
-                    x = gp.getindex( gv.voicelist[xvoice][6], gv.layernames, True, False )
-                    if x > -1:
-                        gv.currlayername = gv.voicelist[xvoice][6]
-                        for layer in gv.layers[x]:
-                            gv.currlayers.append( layer )
+                gv.currlayers = [ layers.init( gv.currvoice ) ]   # the voice = base = first layer
+                layers.load( gv.voicelist[xvoice][6] )  # construct this voice's layer setup
                 if iv >- 1:   # not map change so mappings can be changed
                     gv.setNotemap( gv.voicelist[xvoice][3] )
                     FXset = gv.voicelist[xvoice][5]
@@ -630,7 +624,7 @@ def MidiCallback(mididev, imessage, time_stamp):
                                             messagetype = 8
 
             if messagetype == 9:    # Note on
-                if True:#try:
+                try:
                     gv.last_midinote=midinote      # save original midinote for the webgui
                     if keyboardarea and not MT_in:
                         gv.last_musicnote=midinote-12*int(midinote/12) # do a "remainder midinote/12" without having to import the full math module
@@ -642,7 +636,7 @@ def MidiCallback(mididev, imessage, time_stamp):
                     else:
                         gv.last_musicnote=12    # Set musicnotesymbol to "effects" in webgui
                         playchord=0             # no chords outside keyboardrange / in effects channel.
-                        currlayers = [ [gv.currvoice, 1.0, 127] ] # no layering either
+                        currlayers = [ layers.init( gv.currvoice ) ]    # no layering either
                     for n in range (len(gv.chordnote[playchord])):
                         playnote=midinote+gv.chordnote[playchord][n]
                         if sustain:   # don't pile up sustain
@@ -661,6 +655,8 @@ def MidiCallback(mididev, imessage, time_stamp):
                         #voice in first layer is gv.currvoice
                         for layer in currlayers:
                             voice = layer[0]
+                            if voice < 0:   # only valid & initialized voices
+                                continue
                             layvel = layers.layvel(layer, velocity)
                             #print "start playingnotes playnote %d, velocity %d, voice %d, retune %d" %(playnote, velocity, voice, retune)
                             if chorus.effect:
@@ -686,7 +682,7 @@ def MidiCallback(mididev, imessage, time_stamp):
                                             gv.triggernotes[playnote]=128
                                             gv.playingnotes[playnote]=[]
                         # hier stopt de layer iteratie, gaat er iets fout met de except??
-                else:#except:
+                except:
                     err = 'Unassigned note or other exception in note %d, voice %d' % (midinote,voice)
                     if MT_in:               # restore previous saved voice and some effects
                         err = '%s, MT channel %d' %MIDIchannel

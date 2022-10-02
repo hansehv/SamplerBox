@@ -423,7 +423,7 @@ def layers(ifile):
 				values=[]
 				for j in range( 1, len(sheet[i]) ):
 					OK = False
-					layer = [0, 1.0, 127]
+					layer = copy.deepcopy( gv.layerinit )
 					if sheet[i][j].isdigit():
 						layer[0] = int( sheet[i][j] )
 						OK = True
@@ -436,9 +436,11 @@ def layers(ifile):
 								elif l == 1:
 									layer[l] = float( vals[l] )
 								else:
-									layer[l] = int(round( 12.7 * vals[l] ))
+									layer[l] = int(round( 12.7 * float( vals[l] )))
 									if layer[l] == 0:
 										layer[l] = 1	# we have to leak
+									elif layer[l] > 127:
+										layer[l] = 127
 							OK = True
 						except:
 							pass
@@ -447,8 +449,8 @@ def layers(ifile):
 					else:
 						print ("%s - %s: ignored %s, because this is not a valid 'voice:volume:presence' definition" %(ifile, sheet[i], sheet[i][j]))
 				if values:
-					gv.layernames.append(sheet[i][0])
-					gv.layers.append(values)
+					gv.layernames.append( sheet[i][0].title() )
+					gv.layers.append( values )
 	except:
 		pass	# layers are optional
 	return 

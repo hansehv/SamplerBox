@@ -1,0 +1,49 @@
+<!DOCTYPE html><HTML><HEAD>
+<meta http-equiv="Content-Script-Type" content="text/javascript">
+<script SRC="SamplerBox.API" TYPE="text/javascript"></script>
+<script SRC="SamplerBox_GUI.js" TYPE="text/javascript"></script>
+<script>htmlheader("SoundLayers");</script>
+</HEAD>
+<BODY>
+
+<span ID="header"></span><script>header();</script>
+
+<FORM ID="elem_SB_Form">
+	<TABLE border="0" cellpadding="5" style="line-height:100%;"><TR>
+		<TD VALIGN="top">
+			&nbsp;Layer definition:<BR>
+			<span ID="input_SB_SoundLayer"></span>
+
+			<HR>
+
+			<B><span ID="input_SB_sl_layer">&nbsp;Layer &nbsp;: </span></B>
+			<BR>&nbsp;can also be selected by clicking table row =>
+			<DIV style="line-height:300%;">
+				<span ID="input_SB_sl_voice" >&nbsp;Voice &nbsp; : </span>
+				<span ID="input_SB_sl_volume" >&nbsp;Volume : </span>
+				<span ID="input_SB_sl_presence">&nbsp;Presence: </span></DIV>
+				&nbsp; <span ID="input_SB_sl_clear" >Clear definition</span>
+				<HR>
+			</DIV>
+			&nbsp;definition name to use (no name => no save !):
+			<BR><span ID="input_SB_sl_name" ></span>
+			<BUTTON TYPE="submit">Enter</BUTTON>
+			<BR>&nbsp;Press "Enter" after typing a name in above box.
+			<BR><BR>&nbsp; <span ID="input_SB_sl_save">Save definition</span>
+			<HR>
+			Synchronize the right side table values with midi controller
+			and / or buttons by pressing refresh button.
+			<BR>This overrides any unsaved changes made in this screen.
+		</TD><TD VALIGN="top">
+			<span ID="elem_SB_sl_details" CLASS="inline valign_top">?</span>
+			<P><b>Layer 0 cannot be edited !</b>
+		</TD>
+	</TR></TABLE>
+</FORM>
+
+<script>
+	SB_Update();
+	window.onload=SB_tablerowselect("TableID_sl_details","select_SB_sl_layer");
+</script>
+</BODY>
+</HTML>

@@ -81,10 +81,16 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 			return
 		UI.procs[nam][1](val)	# catch-all for the strings, arrays and dicts
 
+	def set_UI_parms(self, fields, namlist):
+		for nam in namlist:
+			if "SB_%s"%nam in fields:
+				self.set_UI_parm(nam,fields["SB_%s"%nam][0])
+
 	def do_POST(self):
 		length = int(self.headers.get('content-length'))
 		field_data = self.rfile.read(length)
 		fields=parse_qs(field_data.decode())
+		#print("http_gui.do_Post, fields:",fields)
 		display=True
 
 		#----------------------------------------------#
@@ -124,6 +130,11 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 			UI.fxp_resetscope(True)
 			self.do_GET()   # answer the browser
 			return
+		if "SB_SoundLayer" in fields:
+			specials.append("SoundLayer")
+			if ( UI.SoundLayer(int(fields["SB_SoundLayer"][0])) ):
+				self.do_GET()   # answer the browser
+				return
 
 		mapchange=False
 		if "SB_Notemap" in fields:
@@ -133,17 +144,20 @@ class HTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 			specials.extend(["nm_inote","nm_Q","nm_unote","nm_onote","nm_retune","nm_voice"])	  #"nm_map","nm_sav" have special logic
 			if not (mapchange):
 				if UI.nm_inote(int(fields["SB_nm_inote"][0])):   # so now we know something has changed on a screen containing remapping fields
-					if "SB_nm_Q" in fields:
-						UI.nm_Q(int(fields["SB_nm_Q"][0]))	# needs to be before onote to get proper name2note translation
-					if "SB_nm_unote" in fields:
-						UI.nm_unote(int(fields["SB_nm_unote"][0]))	# needs to be before onote, so onote can reset it
-					if "SB_nm_onote" in fields:
-						UI.nm_onote(int(fields["SB_nm_onote"][0]))
-					if "SB_nm_retune" in fields:
-						UI.nm_retune(int(fields["SB_nm_retune"][0]))
+					self.set_UI_parms( fields, ["nm_Q","nm_unote","nm_onote","nm_retune"] )
 					if "SB_nm_voice" in fields:
 						UI.nm_voice(int(fields["SB_nm_voice"][0])-1)
 					UI.nm_consolidate()
+
+		layerchange=False
+		if "SB_sl_layer" in fields:	# layer used as signal, all other fields depend on it
+			specials.extend(["sl_layer","sl_voice","sl_volume","sl_presence"])	# "sl_name","sl_save" have special logic
+			if not (layerchange):
+				layerchange = UI.sl_layer(int(fields["SB_sl_layer"][0]))
+				if not (layerchange):
+					layerchange = UI.sl_voice(int(fields["SB_sl_voice"][0]))
+					if not (layerchange):
+						self.set_UI_parms( fields, ["sl_volume","sl_presence"] )
 
 		if "SB_cm_control" in fields:   # control is used as a signal (all fields have to be in :-)  )
 			specials.extend(["cm_family","cm_control","cm_controlr","cm_controlval"])	  #"cm_sav" has special logic
