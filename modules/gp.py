@@ -11,24 +11,26 @@ import gv
 def NoProc(*vals):		# Dummy
 	pass
 
-def samples2write():
+def samples2write(setting=False):
 	if gv.RUN_FROM_IMAGE:
-		print ( "Remount %s as RW" %gv.samplesdir)
-		if ( gv.samplesdir == gv.SAMPLES_ONUSB ):
-			subprocess.call( ['mount', '-vo', 'remount,rw', gv.samplesdir] )
+		samplesdir=gv.SAMPLES_INBOX if setting else gv.samplesdir
+		print ( "Remount %s as RW" %samplesdir)
+		if ( samplesdir == gv.SAMPLES_ONUSB ):
+			subprocess.call( ['mount', '-vo', 'remount,rw', samplesdir] )
 		else:
-			subprocess.call( ['umount', gv.samplesdir] )
-			subprocess.call( ['mount', '-v', '/dev/mmcblk0p3', gv.samplesdir] )
+			subprocess.call( ['umount', samplesdir] )
+			subprocess.call( ['mount', '-v', '/dev/mmcblk0p3', samplesdir] )
 	else:
 		print ("Not running dedicated, so no remount as we're most likely already R/W")
-def samples2read():
+def samples2read(setting=False):
 	if gv.RUN_FROM_IMAGE:
-		print ( "Remount %s as RO" %gv.samplesdir )
-		if ( gv.samplesdir == gv.SAMPLES_ONUSB ):
-			subprocess.call(['mount', '-vo', 'remount,ro', gv.samplesdir])
+		samplesdir=gv.SAMPLES_INBOX if setting else gv.samplesdir
+		print ( "Remount %s as RO" %samplesdir )
+		if ( samplesdir == gv.SAMPLES_ONUSB ):
+			subprocess.call(['mount', '-vo', 'remount,ro', samplesdir])
 		else:
-			subprocess.call( ['umount', gv.samplesdir] )
-			subprocess.call( ['mount', '-vr', '/dev/mmcblk0p3', gv.samplesdir] )
+			subprocess.call( ['umount', samplesdir] )
+			subprocess.call( ['mount', '-vr', '/dev/mmcblk0p3', samplesdir] )
 
 def no_delimiters(raw):	# crude but effective for failsafe operation :-)
 	return raw.replace(",",".").replace(";",":").replace("\t"," ")

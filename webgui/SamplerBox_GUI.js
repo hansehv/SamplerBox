@@ -73,6 +73,14 @@ var SB_variables={	// make sure all passed I/O parameters are covered here
 	v_SB_fxp_dspprio: function(val){SB_fxp_dspprio=val;},
 	v_SB_fxp_name: function(val){SB_fxp_name=val;},
 	v_SB_fxp_save: function(val){SB_fxp_save=val;},
+	v_SB_SoundLayer: function(val){SB_SoundLayer=val;},
+	v_SB_sl_name: function(val){SB_sl_name=val;},
+	v_SB_sl_layer: function(val){SB_sl_layer=val;},
+	v_SB_sl_voice: function(val){SB_sl_voice=val;},
+	v_SB_sl_volume: function(val){SB_sl_volume=val;},
+	v_SB_sl_presence: function(val){SB_sl_presence=val;},
+	v_SB_sl_clear: function(val){SB_sl_clear=val;},
+	v_SB_sl_save: function(val){SB_sl_save=val;},
 	v_SB_DSPeffect: function(val){SB_DSPeffect=val;},
 	v_SB_DSPeffprio: function(val){SB_DSPeffprio=val;},
 	v_SB_Scale: function(val){SB_Scale=val;},
@@ -319,6 +327,43 @@ var SB_input={	// make sure all passed I/O parameters are covered here, be it wi
 		return(text+'<INPUT type="text" size="25" name="'+name+'" value="'+val+'" onchange=SB_Submit()</INPUT>');
 	},
 	input_SB_fxp_save: function(input_name,name,val,text){
+		return(SB_valbutton(input_name,name,1,text));
+	},
+	input_SB_SoundLayer: function(input_name,name,val,text){
+		names = [""];
+		for (i=0; i<SB_SoundLayers.length; i++) {
+			names.push(SB_SoundLayers[i]);
+		}
+		for (i=1;i<names.length;i++){if (names[i]==val) break;}
+		return(text+SB_listselect(input_name,name,i,names,1,names.length,1));
+	},
+	input_SB_sl_name: function(input_name,name,val,text){
+		return(text+'<INPUT type="text" size="25" name="'+name+'" value="'+val+'" onchange=SB_Submit()</INPUT>');
+	},
+	input_SB_sl_layer: function(input_name,name,val,text){
+		layers = [0];	// we need a list for the table select method
+		for (i=0; i<SB_sl_details.length; i++) {
+			layers.push(i+1);
+		}
+		return(text+SB_listselect(input_name,name,val,layers,1,layers.length,1));
+	},
+	input_SB_sl_voice: function(input_name,name,val,text){
+		voicelist = [ [1, "Delete this layer"] ]
+		for (i=0; i<SB_Voicelist.length; i++) {
+			voicelist.push(SB_Voicelist[i]);
+		}
+		return(text+SB_listselect(input_name,name,val,voicelist,2,voicelist.length,1));
+	},
+	input_SB_sl_volume: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,1,30,1)+SB_numselect(input_name,name,val,1,30,1,1));
+	},
+	input_SB_sl_presence: function(input_name,name,val,text){
+		return(text+SB_slider(input_name,name,val,0,10,1)+SB_numselect(input_name,name,val,0,10,1,1));
+	},
+	input_SB_sl_clear: function(input_name,name,val,text){
+		return(SB_valbutton(input_name,name,1,text));
+	},
+	input_SB_sl_save: function(input_name,name,val,text){
 		return(SB_valbutton(input_name,name,1,text));
 	},
 	input_SB_DSPeffect: function(input_name,name,val,text){
@@ -574,8 +619,8 @@ SB_ElemID=["elem_SB_Form","elem_SB_Samplesdir","elem_SB_Mode","elem_SB_Voice","e
 			"elem_SB_Aftertouchdc","elem_SB_Aftertouchdp","elem_SB_AftertouchPairs",
 			"elem_SB_Scale","elem_SB_Chord","elem_SB_Chords","elem_SB_Scales",
 			"elem_SB_Notemap","elem_SB_CCmap","elem_SB_cm_current","elem_SB_cm_controlmode",
-			"elem_SB_DSPpriotab","elem_SB_bTracks","elem_SB_IPlist","elem_SB_Wireless",
-			"elem_SB_MIDIdevs","elem_SB_LCDdisplay"];
+			"elem_SB_sl_details","elem_SB_DSPpriotab","elem_SB_bTracks",
+			"elem_SB_IPlist","elem_SB_Wireless","elem_SB_MIDIdevs","elem_SB_LCDdisplay"];
 SB_numelems=SB_ElemID.length;
 var SB_element={
 	elem_SB_Form: function(elem_name){
@@ -761,6 +806,25 @@ var SB_element={
 		document.getElementById(elem_name).innerHTML=text+'<SPAN CLASS="value">'+SB_cm_controlmode+'</SPAN>';
 	},
 
+	elem_SB_sl_details: function(elem_name){
+		html='<TABLE CLASS="datatable" ID="TableID_sl_details"><TR><TH style="display:none;">' +
+			'<TH style="display:none;"><TH>Layer</TH><TH>Voice</TH><TH>Volume</TH><TH>Presence</TH>' +
+			'</TR>';
+		for (var i=0; i<SB_sl_details.length; i++) {
+			var k='CLASS="datatable"';
+			if ( i==SB_sl_layer && i!=0 ) {
+				k='CLASS="rowsel"';
+			}
+			html = html + '<TR ' +k+ '>' +
+				'<TD CLASS="datatable">' +i+ '</TD>' +
+				'<TD CLASS="datatable">' +SB_sl_details[i][0]+ '</TD>' +
+				'<TD CLASS="datatable">' +SB_sl_details[i][1]+ '</TD>' +
+				'<TD CLASS="datatable">' +SB_sl_details[i][2]+ '</TD>' +
+				'<TD></TR>';
+		}
+		document.getElementById(elem_name).innerHTML=html+'</TABLE>';
+	},
+
 	elem_SB_DSPpriotab: function(elem_name){
 		if (SB_DSPpriotab.length==0) {document.getElementById(elem_name).innerHTML='';}
 		else {
@@ -857,13 +921,13 @@ function SB_slidersync(IDslider, IDvar, sliderchange){
 		else document.getElementById(IDslider).value=document.getElementById(IDvar).value;}
 	SB_Submit();
 }
+
 function SB_listselect(input_name,name,val,table,dims,size,update){
 	html='<SELECT class="custom-dropdown__select custom-dropdown__select--white" name="'+name+
 			'" id="select_'+name+'" SIZE="1"';
 	if (update==1) {
 		html=html+' onchange=SB_Submit()';
 		}
-	//else {html=html+' onchange=SB_updateval(this)';}
 	html=html+'>';
 	for(var i=0;i<size;i++){
 		j="";
@@ -894,13 +958,14 @@ function SB_radioselect(input_name,name,val,text,table,dims,update){
 	return(text+html+'</div>');
 }
 
-function SB_notemapselect() {
-    var rows = document.getElementById("TableID_Notemap").rows;
+function SB_tablerowselect(tableid, dropdownselect) {
+    var rows = document.getElementById(tableid).rows;
     for (i = 0; i < rows.length; i++) {
         rows[i].onclick = function(){ return function(){
-			document.getElementById("select_SB_nm_inote").value = this.cells[0].innerHTML;
+			document.getElementById(dropdownselect).value = this.cells[0].innerHTML;
             SB_Submit();
-        };}(rows[i]);
+			};
+		}(rows[i]);
     }
 }
 function SB_unote_options(onote){
