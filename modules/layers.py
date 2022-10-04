@@ -28,6 +28,7 @@ def init( voice=0 ):
 	global sl_layer
 	sl_layer = 0
 	return [ voice, gv.layerinit[1], gv.layerinit[2] ]
+gv.currlayers = [ init(1) ]
 
 # load definition set
 def load(val):

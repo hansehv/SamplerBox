@@ -1206,7 +1206,7 @@ procs={
 	"cm_ctrlmodes":["f",cm_ctrlmodes],		# index of button mode/function
 	"cm_ctrlrnames":["f",cm_ctrlrnames],	# mappable Controller names
 	"Buttons":["f",Buttons],				# Buttons supported by button menu
-	"CSSname":["f","SamplerBox.css"]		# webGUI "skin"
+	"CSSname":["f",CSSname]					# webGUI "skin"
 	}
 
 gv.procs_alias = {}
