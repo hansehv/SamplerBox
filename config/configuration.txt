@@ -50,9 +50,9 @@ USE_HD44780_16x2_LCD = False
 ## Set True or 16x2 (=True) or 20x4 to use a 16x2 or 20x4 I2C connected HD44780 LCD
 USE_I2C_LCD = False
 ## Set True to use an OLED display, configure GPIO pins below
-USE_OLED = True
+USE_OLED = False
 ## Set to: SPI or I2C
-OLED_PROTOCOL = I2C 
+OLED_PROTOCOL = SPI
 ## Set True to use LCD of Pimoroni PirateAudio hat. Configure GPIO pins below
 USE_PIMORONI_LCD = False
 ## Set True to use a 7-segment display via I2C
@@ -226,7 +226,7 @@ OLED_ROTATE=2
 #     -- OLED_PROTOCOL = SPI -- connection and device settings (SPI connection)
 # Set to the correct OLED driver chip, one of: SH1106 or SSD1306 (more to come)
 # RSt=Reset, CS=ChipsSelect, DC=data/command
-OLED_DRIVER = SSD1306
+OLED_DRIVER = SH1106
 OLED_RST=25
 OLED_CS=8
 OLED_DC=24
