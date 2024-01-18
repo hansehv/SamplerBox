@@ -40,7 +40,15 @@ class oled:
         CS = gv.cp.getint(gv.cfg,"OLED_CS".lower())
         DC = gv.cp.getint(gv.cfg,"OLED_DC".lower())
         port = gv.cp.getint(gv.cfg,"OLED_PORT".lower())
-        print( "Starting OLED %s, using SPI port %d and GPIO RST=%d, CS=%d, DC=%d" %(driver, port, RST, CS, DC) )
+        protocol = gv.cp.get(gv.cfg,"OLED_PROTOCOL".lower())
+        i2c_address = int(gv.cp.get(gv.cfg,"OLED_I2C_ADDRESS".lower()),16)
+        i2c_port = gv.cp.getint(gv.cfg,"OLED_I2C_PORT".lower())
+        print( "Starting OLED %s, using protocol %s" %(driver, protocol) )
+        if protocol=="SPI":
+            print ("   on Port %d, and GPIO RST=%d, CS=%d, DC=%d" %(port, RST, CS, DC) )
+        if protocol=="I2C":
+            print ("   on Port %d, I2C target address %d" %(i2c_port, i2c_address) )
+
         # Load default font.
         self.font = ImageFont.load_default()
         
@@ -57,8 +65,11 @@ class oled:
         self.bottom = self.height-self.padding
         # Move left to right keeping track of the current x position for drawing shapes.
         self.x = 0
-        serial = spi(device=port, port=port, bus_speed_hz = 8000000, transfer_size = 4096, gpio_DC = DC, gpio_RST = RST)
-        
+        if protocol=="SPI":
+            serial = spi(device=port, port=port, bus_speed_hz = 8000000, transfer_size = 4096, gpio_DC = DC, gpio_RST = RST)
+        elif protocol=="I2C":
+            serial = i2c(port=i2c_port, address=i2c_address)
+
         rot = gv.cp.getint(gv.cfg,"OLED_ROTATE".lower())
         if driver=="SH1106":
             self.device = sh1106(serial, rotate=rot)
